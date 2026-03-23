@@ -35,7 +35,7 @@ export default async function handler(req, res) {
     },
     body: JSON.stringify({
       from: 'CampConnect <onboarding@resend.dev>',
-      to: ['contact@campconnect.fr'],
+      to: ['abitboljohan@gmail.com'],
       subject: `Nouvelle candidature — ${record.camping}`,
       html,
     }),
