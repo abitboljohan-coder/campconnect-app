@@ -1,8 +1,18 @@
 # CampConnect
 
-Application mobile native (iOS + Android) pour campings — une seule app pour tous les campings, centrée sur le lien entre vacanciers.
+Application mobile (PWA) pour campings — une seule app pour tous les campings, centrée sur le lien entre vacanciers.
 
-> Le frontend est développé en React/Vite, puis empaqueté en application native via **Capacitor** pour distribution sur l'App Store et le Play Store.
+> Développée en React/Vite, déployée sur Vercel en tant que PWA. Fonctionne sur iOS et Android sans passer par les stores.
+
+---
+
+## Liens
+
+| | URL |
+|---|---|
+| App (vacanciers + admin) | https://app.campconnect.fr |
+| Site vitrine | https://www.campconnect.fr |
+| Supabase | https://hsebtpliwimyidudajmi.supabase.co |
 
 ---
 
@@ -10,16 +20,15 @@ Application mobile native (iOS + Android) pour campings — une seule app pour t
 
 | Couche | Technologie |
 |---|---|
-| Frontend | React 19 + Vite 8 |
+| Frontend | React 19 + Vite |
 | Routing | React Router v7 |
 | Base de données | Supabase (PostgreSQL) |
 | Temps réel | Supabase Realtime (`postgres_changes`) |
 | Cartes | Leaflet + tuiles satellite ESRI |
-| Charts | Recharts |
-| QR Code | qrcode.react |
-| App native | Capacitor (iOS + Android) |
-| Distribution | App Store + Google Play Store |
-| Backend / API | Vercel + campconnect.fr |
+| Notifications email | Resend (domaine campconnect.fr vérifié) |
+| API serverless | Vercel (`/api/notify.js`) |
+| Hébergement app | Vercel (`app.campconnect.fr`) |
+| Hébergement site vitrine | GitHub Pages (`www.campconnect.fr`) |
 
 ---
 
@@ -55,12 +64,10 @@ Recherche manuelle
 
 Si `carte_config.center` n'est pas défini (nouveau camping) :
 - Le premier vacancier qui vérifie par GPS → sa position est sauvegardée comme centre du camping
-- Calibration automatique, l'admin n'a rien à faire
 
 ### Code tournant horaire
 
 ```js
-// Fonctionne avec UUID
 function getHourlyCode(campingId) {
   const h = Math.floor(Date.now() / 3_600_000)
   const str = String(campingId) + String(h)
@@ -72,226 +79,134 @@ function getHourlyCode(campingId) {
 }
 ```
 
-Affiché sur le dashboard admin, change chaque heure.
-
 ### Anti-doublons (Device ID)
 
-- À chaque ouverture : génération d'un `deviceId` UUID stocké en localStorage (`crypto.randomUUID()`)
-- Sauvegardé en base dans `vacanciers.device_id`
+- `deviceId` UUID généré à chaque ouverture, stocké en localStorage
+- Sauvegardé dans `vacanciers.device_id`
 - Au rechargement : lookup par `device_id + camping_id` → restauration automatique de session
-- Fallback localStorage pour les anciens comptes (migration automatique)
 
 ---
 
 ## Pages vacancier
 
-### Accueil (`/`)
-- Fil d'activité du camping
-- Prochaines animations
-- Groupes actifs
-
-### Carte (`/map`)
-- **Satellite par défaut** — tuiles ESRI World Imagery
-- **Toggle Satellite | Plan** en haut (si l'admin a uploadé un plan)
-- Pins interactifs : lieux, animations, groupes
-- GPS auto-follow : la carte suit la position de l'utilisateur
-- Bouton 🎯 pour re-synchroniser après un déplacement manuel
-- Drag → désynchronisation automatique du suivi
-- Realtime Supabase : pins mis à jour instantanément quand l'admin sauvegarde
-- Mode simulation GPS (pour les tests dev)
-
-### Groupes (`/groupes`)
-- Création de groupes spontanés (volley, rando, soirée...)
-- Rejoindre en un clic
-
-### Chat (`/chat/:groupeId`)
-- Messagerie temps réel entre membres d'un groupe
-
-### Agenda (`/agenda`)
-- Animations publiées par l'admin
-- Inscription en un clic
-
-### Profil (`/profil`)
-- Avatar emoji, pseudo, numéro d'emplacement
-- Déconnexion
+| Page | Route | Description |
+|---|---|---|
+| Accueil | `/` | Fil d'activité, prochaines animations, groupes actifs |
+| Carte | `/map` | Satellite ESRI, pins interactifs, GPS auto-follow |
+| Groupes | `/groupes` | Groupes spontanés, rejoindre en 1 clic |
+| Chat | `/chat/:groupeId` | Messagerie temps réel entre membres |
+| Agenda | `/agenda` | Animations du camping, inscription en 1 clic |
+| Profil | `/profil` | Avatar emoji, pseudo, emplacement, déconnexion |
 
 ---
 
 ## Interface admin (`/admin`)
 
-Accessible via login/mot de passe distinct des vacanciers.
+Accessible via login/mot de passe gérant (table `gerants`).
 
-### Dashboard
-- Vue d'ensemble du camping
-- Code d'accès horaire en cours (à afficher à la réception)
-- Statistiques temps réel
-
-### Apparence
-- Nom, couleur principale, logo
-- **MapEditor** — carte satellite interactive :
-  - Recherche Google Maps-style pré-remplie avec le nom du camping
-  - Ajout/déplacement/suppression de pins (lieux, animations, groupes)
-  - Sauvegarde en `carte_config.pins` dans Supabase
-  - Panel flottant, carte pleine largeur (560px)
-
-### Animations
-- Création/édition d'animations avec lieu, date, places max, emoji
-- Publication immédiate côté vacanciers
-
-### Statistiques
-- Fréquentation, inscriptions, groupes populaires
-
-### Paramètres
-- Configuration générale du camping
+- **Dashboard** — vue d'ensemble, code horaire, stats temps réel
+- **MapEditor** — carte satellite, ajout/déplacement de pins
+- **Animations** — création/édition, publication immédiate
+- **Statistiques** — fréquentation, inscriptions, groupes populaires
+- **Paramètres** — nom, couleurs, logo du camping
 
 ---
 
 ## Base de données Supabase
 
-### Tables principales
+### Tables
 
 ```sql
-campings (
-  id uuid PRIMARY KEY,
-  nom text,
-  slug text UNIQUE,           -- identifiant URL (ex: "camping-les-pins")
-  couleur_principale text,    -- couleur hex du camping
-  logo_url text,
-  plan_url text,              -- image du plan du camping (optionnel)
-  carte_config jsonb,         -- { center: {lat, lng}, pins: [...] }
-  created_at timestamptz
-)
-
-vacanciers (
-  id uuid PRIMARY KEY,
-  camping_id uuid REFERENCES campings,
-  pseudo text,
-  avatar_emoji text,
-  emplacement text,
-  device_id text,             -- identifiant unique du téléphone
-  created_at timestamptz
-)
-
-animations (
-  id uuid PRIMARY KEY,
-  camping_id uuid REFERENCES campings,
-  titre text,
-  emoji text,
-  lieu text,
-  debut timestamptz,
-  places_max int,
-  publiee boolean
-)
-
-groupes (
-  id uuid PRIMARY KEY,
-  camping_id uuid REFERENCES campings,
-  titre text,
-  emoji text,
-  lieu text,
-  heure timestamptz,
-  actif boolean
-)
-
-inscriptions (
-  animation_id uuid,
-  vacancier_id uuid
-)
-
-membres_groupes (
-  groupe_id uuid,
-  vacancier_id uuid
-)
+campings        — id, nom, slug, couleur_principale, logo_url, plan_url, carte_config
+vacanciers      — id, camping_id, pseudo, avatar_emoji, emplacement, device_id
+animations      — id, camping_id, titre, emoji, lieu, debut, places_max, publiee
+groupes         — id, camping_id, titre, emoji, lieu, heure, actif
+inscriptions    — animation_id, vacancier_id
+membres_groupes — groupe_id, vacancier_id
+messages        — id, groupe_id, vacancier_id, contenu, created_at
+gerants         — id, camping_id, email, mot_de_passe_hash
+candidatures    — id, created_at, nom, email, camping, emplacements, message
 ```
 
-### SQL à exécuter dans Supabase SQL Editor
+### Migrations SQL
 
 ```sql
--- Colonne device_id pour anti-doublons
+-- Device ID (anti-doublons)
 ALTER TABLE vacanciers ADD COLUMN IF NOT EXISTS device_id text;
 CREATE INDEX IF NOT EXISTS idx_vacanciers_device_id ON vacanciers(device_id, camping_id);
 
--- Carte config et Realtime
+-- Carte config + Realtime
 ALTER TABLE campings ADD COLUMN IF NOT EXISTS carte_config jsonb DEFAULT '{}'::jsonb;
 ALTER PUBLICATION supabase_realtime ADD TABLE campings;
+
+-- Candidatures pilote
+CREATE TABLE candidatures (
+  id uuid DEFAULT gen_random_uuid() PRIMARY KEY,
+  created_at timestamptz DEFAULT now(),
+  nom text NOT NULL, email text NOT NULL,
+  camping text NOT NULL, emplacements text, message text
+);
+ALTER TABLE candidatures ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "anon_insert" ON candidatures FOR INSERT WITH CHECK (true);
 ```
+
+---
+
+## Notifications email (Resend)
+
+Chaque nouvelle candidature pilote déclenche un email vers `contact@campconnect.fr`.
+
+**Flux :** `candidatures` INSERT → Supabase Database Webhook → `POST /api/notify` → Resend API
+
+- Domaine `campconnect.fr` vérifié dans Resend
+- Fonction serverless : `api/notify.js` (Vercel)
+- Clé API Resend : dans le code (à migrer en variable d'env)
 
 ---
 
 ## Lancer le projet
 
 ```bash
-# Installer les dépendances
 npm install
-
-# Dev local (accès réseau pour tester sur mobile)
-npx vite --host 0.0.0.0 --port 5173
-
-# Build production
-npm run build
+npx vite --host 0.0.0.0 --port 5173   # dev local (accessible sur mobile)
+npm run build                           # build production
 ```
 
 ### Variables d'environnement (`.env.local`)
 
 ```
-VITE_SUPABASE_URL=https://[projet].supabase.co
+VITE_SUPABASE_URL=https://hsebtpliwimyidudajmi.supabase.co
 VITE_SUPABASE_ANON_KEY=[clé anon]
-SUPABASE_SERVICE_ROLE_KEY=[clé service role]
 ```
 
 ---
 
-## Carte satellite — détails techniques
+## Site vitrine (`/site-web`)
 
-- Tuiles : ESRI World Imagery
-- `maxZoom: 19`, `maxNativeZoom: 19` (évite "Map data not yet available")
-- Initialisation protégée contre React StrictMode double-invoke : `isMounted` flag + `lfRef.current` guard
-- Le suivi GPS utilise `followingRef` (pas le state) pour éviter les closures périmées
+| Fichier | Description |
+|---|---|
+| `index.html` | Landing page principale |
+| `tarifs.html` | Tarifs + simulateur ROI + mises en situation |
+| `pour-les-campings.html` | Landing page gérants |
+| `comment.html` | Comment ça marche |
+| `apropos.html` | À propos |
+| `deploy.py` | Script de déploiement GitHub Pages via API |
 
----
-
-## Distribution mobile — Capacitor
-
-Le code React est empaqueté via **Capacitor** pour produire une vraie application native distribuée sur les stores.
-
-### iOS (App Store)
-- Build Capacitor → projet Xcode → soumission App Store Connect
-- Accès GPS natif, push notifications, icône sur l'écran d'accueil comme n'importe quelle app
-
-### Android (Google Play)
-- Build Capacitor → projet Android Studio → soumission Play Console
-
-### Installation vacancier
-1. Chercher "CampConnect" sur l'App Store ou Play Store
-2. Télécharger → ouvrir → rejoindre son camping (QR code ou recherche)
-
-### Avantages vs PWA
-- Push notifications iOS sans restriction
-- Accès GPS haute précision en arrière-plan
-- Visibilité store (recherche, featured)
-- Expérience native complète (animations, gestures)
-- Pas de friction "Ajouter à l'écran d'accueil"
-
----
-
-## Site vitrine
-
-Situé dans `campconnect-main/`
-
-- `index.html` — Landing page principale
-- `tarifs.html` — Tarifs
-- `apropos.html` — À propos
-- `comment.html` — Comment ça marche
-
-Servir en local : `npx serve . --listen 3000`
+```bash
+cd site-web
+python deploy.py               # déploie tous les fichiers
+python deploy.py tarifs.html   # déploie un seul fichier
+```
 
 ---
 
 ## Roadmap
 
-- [ ] Intégration Capacitor (iOS + Android)
-- [ ] Déploiement Vercel + domaine campconnect.fr
-- [ ] Soumission App Store (Apple) + Play Store (Google)
-- [ ] Push notifications natives iOS/Android
-- [ ] Mise à jour site vitrine (style Apple, contenu app native)
-- [ ] Pilote saison 2025 — 3 campings pionniers
+- [x] App PWA déployée sur `app.campconnect.fr`
+- [x] Site vitrine sur `www.campconnect.fr`
+- [x] Formulaire candidature pilote → Supabase + email automatique
+- [x] Un camping en base (Les Naïades Port Grimaud)
+- [ ] Dashboard gérant complet
+- [ ] Onboarding gérant (création compte depuis le site)
+- [ ] Push notifications
+- [ ] Pilote saison 2026 — 3 campings pionniers
