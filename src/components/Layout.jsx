@@ -1,11 +1,11 @@
-import { Outlet, NavLink, useLocation } from 'react-router-dom'
+import { Outlet, NavLink, useLocation, Link } from 'react-router-dom'
 
 const NAV = [
   { to: '/', label: 'Accueil', icon: '🏕️' },
   { to: '/groupes', label: 'Groupes', icon: '👥' },
   { to: '/map', label: 'Carte', icon: '🗺️' },
   { to: '/agenda', label: 'Agenda', icon: '📅' },
-  { to: '/profil', label: 'Profil', icon: '👤' },
+  { to: '/infos', label: 'Infos', icon: 'ℹ️' },
 ]
 
 export default function Layout({ camping }) {
@@ -44,7 +44,7 @@ export default function Layout({ camping }) {
               {camping?.nom || 'CampConnect'}
             </div>
           </div>
-          <div style={{ marginLeft: 'auto', fontSize: 20 }}>🌲</div>
+          <Link to="/profil" style={{ marginLeft: 'auto', fontSize: 22, textDecoration: 'none' }}>👤</Link>
         </header>
       )}
 

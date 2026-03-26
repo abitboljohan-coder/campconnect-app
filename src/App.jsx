@@ -9,6 +9,7 @@ import Chat from './pages/Chat'
 import Agenda from './pages/Agenda'
 import Profil from './pages/Profil'
 import Map from './pages/Map'
+import Infos from './pages/Infos'
 import Layout from './components/Layout'
 
 // Génère un identifiant unique et permanent pour cet appareil
@@ -118,6 +119,7 @@ function App() {
             <Route path="/chat/:groupeId" element={<Chat vacancier={vacancier} />} />
             <Route path="/map" element={<Map camping={camping} vacancier={vacancier} />} />
             <Route path="/agenda" element={<Agenda camping={camping} vacancier={vacancier} />} />
+            <Route path="/infos" element={<Infos camping={camping} />} />
             <Route path="/profil" element={
               <Profil camping={camping} vacancier={vacancier} onLogout={() => {
                 localStorage.removeItem('vacancier')
