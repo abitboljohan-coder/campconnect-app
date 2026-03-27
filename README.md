@@ -1,8 +1,10 @@
 # CampConnect
 
-Application mobile (PWA) pour campings — une seule app pour tous les campings, centrée sur le lien entre vacanciers.
+**L'application mobile qui recrée le lien entre vacanciers.**
 
-> Développée en React/Vite, déployée sur Vercel en tant que PWA. Fonctionne sur iOS et Android sans passer par les stores.
+CampConnect est une PWA (Progressive Web App) déployée sur `app.campconnect.fr`, accessible sur iOS et Android sans passer par les stores. Une seule app sert tous les campings clients — chacun a son propre espace brandé (logo, couleurs, plan).
+
+> En camping, trois heures suffisent pour passer d'inconnus à complices. CampConnect donne aux vacanciers les outils pour que ça arrive encore.
 
 ---
 
@@ -10,9 +12,88 @@ Application mobile (PWA) pour campings — une seule app pour tous les campings,
 
 | | URL |
 |---|---|
-| App (vacanciers + admin) | https://app.campconnect.fr |
+| App vacanciers + admin | https://app.campconnect.fr |
 | Site vitrine | https://www.campconnect.fr |
 | Supabase | https://hsebtpliwimyidudajmi.supabase.co |
+
+---
+
+## Fonctionnalités — côté vacancier
+
+### Carte interactive GPS
+Carte satellite ESRI avec le plan personnalisé du camping en overlay. Affiche les points d'intérêt (piscine, bar, terrains de sport…), les groupes actifs et les animations à venir. Suivi GPS automatique.
+
+### Groupes spontanés
+Les vacanciers créent des groupes thématiques (randonnée, pétanque, soirée barbecue, apéro plage…) visibles de tous les autres vacanciers du camping. Rejoindre en 1 clic.
+
+### Chat en temps réel
+Messagerie instantanée par groupe via Supabase Realtime. Fini les numéros de téléphone échangés maladroitement.
+
+### Agenda des animations
+Programme complet des animations publiées par le gérant. Inscription en 1 clic, compteur de participants visible. Notifications si l'animation est complète.
+
+### Livret d'accueil numérique
+Sections dépliables : horaires piscine, code Wi-Fi, règlement intérieur, bar/snack, laverie, poubelles, animaux, numéros d'urgence. Configuré par le gérant, consulté dans l'app sans déranger la réception.
+
+### Profil vacancier
+Avatar emoji, pseudo, numéro d'emplacement, tranche d'âge, avec qui on voyage. Pas d'email requis — friction zéro.
+
+### Accès sécurisé
+- **QR code** imprimé à la réception → scan → accès immédiat
+- **GPS** : vérification automatique si le vacancier est à moins de 800 m du camping
+- **Code horaire** : code à 4 chiffres qui change toutes les heures (affiché à la réception)
+
+---
+
+## Fonctionnalités — interface gérant (`/admin`)
+
+### Accueil (dashboard)
+Métriques en temps réel : nombre de vacanciers inscrits, groupes actifs, inscriptions du jour, taux de remplissage animations. Code horaire affiché pour la réception. Activité récente (derniers groupes créés, dernières inscriptions).
+
+### Animations
+Créer, modifier, publier ou dépublier des animations. Voir la liste des inscrits (pseudo, emplacement, tranche d'âge). Gestion des capacités max. Suppression avec cascade sur les inscriptions.
+
+### Carte
+Upload du plan image du camping (JPG/PNG, compression automatique). Éditeur de carte satellite : placer des points d'intérêt sur la carte (47 types de lieux disponibles : piscine, tennis, bar, sanitaires, wifi, parking…). Les pins sont visibles par les vacanciers dans l'app.
+
+### Apparence
+Nom du camping, couleurs principale et secondaire (avec aperçu live de l'app), logo (PNG/JPG/SVG). Tout se reflète immédiatement sur l'app des vacanciers.
+
+### Statistiques
+Graphiques sur 30 jours : nouveaux vacanciers par jour, top animations par inscriptions, répartition par tranche d'âge, avec qui voyagent-ils, top centres d'intérêt, groupes créés par jour.
+
+### Paramètres
+Modifier email et mot de passe du compte gérant. Générer et télécharger le QR code du camping. Réinitialisation des données de saison (conserve les animations et la config).
+
+---
+
+## Tarifs (saison 2026)
+
+| Formule | Prix | Emplacements |
+|---|---|---|
+| Découverte | **490 € / an** | Jusqu'à 50 emplacements |
+| Essentiel | **790 € / an** | Jusqu'à 200 emplacements |
+| Premium | **1 290 € / an** | 200+ emplacements |
+
+**Offre pilote saison 2026 : GRATUIT** — 3 campings sélectionnés, déployé en 48h, accompagnement personnalisé toute la saison.
+
+Toutes les formules incluent : app branded (logo + couleurs), dashboard gérant, support, mises à jour.
+
+---
+
+## Camping de démonstration
+
+Un camping de test est disponible pour les démos :
+
+| | |
+|---|---|
+| Camping | Les Pins Verts |
+| Slug | `les-pins-verts` |
+| URL vacancier | https://app.campconnect.fr/join/les-pins-verts |
+| Login gérant | gerant@les-pins-verts.fr / PinsVerts2026! |
+| URL admin | https://app.campconnect.fr/admin |
+
+Le camping de demo contient 12 animations pré-créées et 4 groupes actifs.
 
 ---
 
@@ -23,190 +104,77 @@ Application mobile (PWA) pour campings — une seule app pour tous les campings,
 | Frontend | React 19 + Vite |
 | Routing | React Router v7 |
 | Base de données | Supabase (PostgreSQL) |
-| Temps réel | Supabase Realtime (`postgres_changes`) |
-| Cartes | Leaflet + tuiles satellite ESRI |
-| Notifications email | Resend (domaine campconnect.fr vérifié) |
+| Temps réel | Supabase Realtime |
+| Cartes | Leaflet + tuiles satellite ESRI + Nominatim |
+| Email | Resend (domaine campconnect.fr vérifié) |
 | API serverless | Vercel (`/api/notify.js`) |
-| Hébergement app | Vercel (`app.campconnect.fr`) |
-| Hébergement site vitrine | GitHub Pages (`www.campconnect.fr`) |
+| Hébergement app | Vercel |
+| Hébergement site vitrine | GitHub Pages |
+| Analytics | Google Analytics G-PRTR7LJLGD |
 
 ---
 
-## Architecture multi-camping
-
-Une seule app sert tous les campings. Le camping est identifié par :
-
-1. L'URL `/join/[slug]` (QR code imprimé à la réception)
-2. Le paramètre `?camping=[slug]` (dev)
-3. Le `campingSlug` en localStorage (retour sur l'app)
-4. Fallback `demo` en local (dev uniquement)
-
----
-
-## Accès vacancier — Onboarding
-
-### Flux d'entrée
-
-```
-QR code scanné (/join/slug)
-  → camping chargé automatiquement
-  → formulaire profil directement (pas de vérification)
-
-Recherche manuelle
-  → rechercher le camping par nom
-  → vérification de présence :
-      GPS < 800m du camping → accès auto ✅
-      GPS indisponible → code à 4 chiffres (change toutes les heures)
-  → formulaire profil
-```
-
-### Auto-calibration du camping
-
-Si `carte_config.center` n'est pas défini (nouveau camping) :
-- Le premier vacancier qui vérifie par GPS → sa position est sauvegardée comme centre du camping
-
-### Code tournant horaire
-
-```js
-function getHourlyCode(campingId) {
-  const h = Math.floor(Date.now() / 3_600_000)
-  const str = String(campingId) + String(h)
-  let hash = 0
-  for (let i = 0; i < str.length; i++) {
-    hash = Math.imul(31, hash) + str.charCodeAt(i) | 0
-  }
-  return String((Math.abs(hash) % 9000) + 1000)
-}
-```
-
-### Anti-doublons (Device ID)
-
-- `deviceId` UUID généré à chaque ouverture, stocké en localStorage
-- Sauvegardé dans `vacanciers.device_id`
-- Au rechargement : lookup par `device_id + camping_id` → restauration automatique de session
-
----
-
-## Pages vacancier
-
-| Page | Route | Description |
-|---|---|---|
-| Accueil | `/` | Fil d'activité, prochaines animations, groupes actifs |
-| Carte | `/map` | Satellite ESRI, pins interactifs, GPS auto-follow |
-| Groupes | `/groupes` | Groupes spontanés, rejoindre en 1 clic |
-| Chat | `/chat/:groupeId` | Messagerie temps réel entre membres |
-| Agenda | `/agenda` | Animations du camping, inscription en 1 clic |
-| Profil | `/profil` | Avatar emoji, pseudo, emplacement, déconnexion |
-
----
-
-## Interface admin (`/admin`)
-
-Accessible via login/mot de passe gérant (table `gerants`).
-
-- **Dashboard** — vue d'ensemble, code horaire, stats temps réel
-- **MapEditor** — carte satellite, ajout/déplacement de pins
-- **Animations** — création/édition, publication immédiate
-- **Statistiques** — fréquentation, inscriptions, groupes populaires
-- **Paramètres** — nom, couleurs, logo du camping
-
----
-
-## Base de données Supabase
-
-### Tables
+## Base de données (Supabase)
 
 ```sql
-campings        — id, nom, slug, couleur_principale, logo_url, plan_url, carte_config
-vacanciers      — id, camping_id, pseudo, avatar_emoji, emplacement, device_id
-animations      — id, camping_id, titre, emoji, lieu, debut, places_max, publiee
+campings        — id, nom, slug, couleur_principale, couleur_secondaire, logo_url, plan_url, carte_config, infos
+vacanciers      — id, camping_id, pseudo, avatar_emoji, emplacement, tranche_age, avec, interests, device_id
+animations      — id, camping_id, titre, emoji, lieu, debut, places_max, publiee, description
 groupes         — id, camping_id, titre, emoji, lieu, heure, actif
 inscriptions    — animation_id, vacancier_id
 membres_groupes — groupe_id, vacancier_id
 messages        — id, groupe_id, vacancier_id, contenu, created_at
-gerants         — id, camping_id, email, mot_de_passe_hash
+gerants         — id, camping_id, email
 candidatures    — id, created_at, nom, email, camping, emplacements, message
 ```
 
-### Migrations SQL
+---
 
-```sql
--- Device ID (anti-doublons)
-ALTER TABLE vacanciers ADD COLUMN IF NOT EXISTS device_id text;
-CREATE INDEX IF NOT EXISTS idx_vacanciers_device_id ON vacanciers(device_id, camping_id);
+## Notifications email
 
--- Carte config + Realtime
-ALTER TABLE campings ADD COLUMN IF NOT EXISTS carte_config jsonb DEFAULT '{}'::jsonb;
-ALTER PUBLICATION supabase_realtime ADD TABLE campings;
+Chaque nouvelle candidature pilote (formulaire sur le site vitrine) déclenche un email vers `contact@campconnect.fr`.
 
--- Candidatures pilote
-CREATE TABLE candidatures (
-  id uuid DEFAULT gen_random_uuid() PRIMARY KEY,
-  created_at timestamptz DEFAULT now(),
-  nom text NOT NULL, email text NOT NULL,
-  camping text NOT NULL, emplacements text, message text
-);
-ALTER TABLE candidatures ENABLE ROW LEVEL SECURITY;
-CREATE POLICY "anon_insert" ON candidatures FOR INSERT WITH CHECK (true);
-```
+**Flux :** `candidatures` INSERT → Supabase Webhook → `POST /api/notify` → Resend API → email reçu
 
 ---
 
-## Notifications email (Resend)
+## Site vitrine (`www.campconnect.fr`)
 
-Chaque nouvelle candidature pilote déclenche un email vers `contact@campconnect.fr`.
-
-**Flux :** `candidatures` INSERT → Supabase Database Webhook → `POST /api/notify` → Resend API
-
-- Domaine `campconnect.fr` vérifié dans Resend
-- Fonction serverless : `api/notify.js` (Vercel)
-- Clé API Resend : dans le code (à migrer en variable d'env)
-
----
-
-## Lancer le projet
-
-```bash
-npm install
-npx vite --host 0.0.0.0 --port 5173   # dev local (accessible sur mobile)
-npm run build                           # build production
-```
-
-### Variables d'environnement (`.env.local`)
-
-```
-VITE_SUPABASE_URL=https://hsebtpliwimyidudajmi.supabase.co
-VITE_SUPABASE_ANON_KEY=[clé anon]
-```
-
----
-
-## Site vitrine (`/site-web`)
-
-| Fichier | Description |
+| Page | Description |
 |---|---|
-| `index.html` | Landing page principale |
-| `tarifs.html` | Tarifs + simulateur ROI + mises en situation |
-| `pour-les-campings.html` | Landing page gérants |
-| `comment.html` | Comment ça marche |
-| `apropos.html` | À propos |
-| `deploy.py` | Script de déploiement GitHub Pages via API |
+| `index.html` | Landing principale + formulaire candidature pilote |
+| `pour-les-campings.html` | Landing gérants, bento grid fonctionnalités |
+| `tarifs.html` | Tarifs + simulateur ROI interactif |
+| `comment.html` | Comment ça marche (4 étapes) |
+| `apropos.html` | Histoire et vision |
+| `mentions-legales.html` | Mentions légales |
+| `confidentialite.html` | Politique de confidentialité |
 
-```bash
-cd site-web
-python deploy.py               # déploie tous les fichiers
-python deploy.py tarifs.html   # déploie un seul fichier
-```
+Déploiement via `python deploy.py [fichier.html]` → GitHub Pages.
 
 ---
 
 ## Roadmap
 
-- [x] App PWA déployée sur `app.campconnect.fr`
-- [x] Site vitrine sur `www.campconnect.fr`
-- [x] Formulaire candidature pilote → Supabase + email automatique
-- [x] Un camping en base (Les Naïades Port Grimaud)
-- [ ] Dashboard gérant complet
-- [ ] Onboarding gérant (création compte depuis le site)
-- [ ] Push notifications
+### Fait ✅
+- App PWA déployée (`app.campconnect.fr`)
+- Site vitrine déployé (`www.campconnect.fr`) avec GA4
+- Formulaire candidature pilote → Supabase + email auto (Resend)
+- Architecture multi-camping (un slug par camping)
+- Accès vacancier : QR code / GPS 800m / code horaire
+- Carte interactive GPS + points d'intérêt (MapEditor)
+- Groupes spontanés + chat temps réel
+- Agenda animations + inscriptions
+- Livret d'accueil numérique
+- Interface admin complète (dashboard, animations, carte, apparence, stats, paramètres)
+- Camping démo "Les Pins Verts" opérationnel
+- Favicon + Google Search Console validée
+- Tarifs marché (490 / 790 / 1290 €/an)
+
+### En cours / À venir
+- [ ] Onboarding gérant en self-service (création compte depuis le site)
+- [ ] Push notifications (Expo / Web Push)
+- [ ] Export des données vacanciers (CSV)
+- [ ] Clé Resend en variable d'environnement Vercel
+- [ ] RLS Supabase (sécurisation des tables)
 - [ ] Pilote saison 2026 — 3 campings pionniers
