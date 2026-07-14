@@ -2,7 +2,7 @@
 
 **L'application mobile qui recrée le lien entre vacanciers.**
 
-CampConnect est une PWA (Progressive Web App) déployée sur `app.campconnect.fr`, accessible sur iOS et Android sans passer par les stores. Une seule app sert tous les campings clients — chacun a son propre espace brandé (logo, couleurs, plan).
+CampConnect est une application mobile native déployée sur `app.campconnect.fr`, accessible sur iOS et Android. Une seule app sert tous les campings clients — chacun a son propre espace brandé (logo, couleurs, plan).
 
 > En camping, trois heures suffisent pour passer d'inconnus à complices. CampConnect donne aux vacanciers les outils pour que ça arrive encore.
 
@@ -157,7 +157,7 @@ Déploiement via `python deploy.py [fichier.html]` → GitHub Pages.
 ## Roadmap
 
 ### Fait ✅
-- App PWA déployée (`app.campconnect.fr`)
+- Application mobile déployée (`app.campconnect.fr`)
 - Site vitrine déployé (`www.campconnect.fr`) avec GA4
 - Formulaire candidature pilote → Supabase + email auto (Resend)
 - Architecture multi-camping (un slug par camping)
