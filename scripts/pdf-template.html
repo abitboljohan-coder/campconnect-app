@@ -1,0 +1,688 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CampConnect — Prospection</title>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    html {
+      font-size: 16px;
+    }
+
+    body {
+      font-family: 'DM Sans', sans-serif;
+      background: #fafaf8;
+      color: #1c1c1c;
+      line-height: 1.7;
+    }
+
+    @page {
+      size: A4;
+      margin: 0;
+      padding: 0;
+    }
+
+    /* PAGE BASE */
+    .page {
+      page-break-after: always;
+      width: 210mm;
+      height: 297mm;
+      padding: 45mm;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      background: #fafaf8;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .page::before {
+      content: '';
+      position: absolute;
+      top: -50%;
+      right: -30%;
+      width: 600px;
+      height: 600px;
+      background: radial-gradient(circle, rgba(99, 153, 34, 0.08) 0%, transparent 70%);
+      border-radius: 50%;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    .page::after {
+      content: '';
+      position: absolute;
+      bottom: -40%;
+      left: -20%;
+      width: 500px;
+      height: 500px;
+      background: radial-gradient(circle, rgba(151, 196, 89, 0.06) 0%, transparent 70%);
+      border-radius: 50%;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    .page-content {
+      position: relative;
+      z-index: 1;
+    }
+
+    /* HERO PAGE */
+    .page.hero {
+      background: linear-gradient(135deg, #0d1f0d 0%, #1a3a1a 100%);
+      color: #fff;
+      padding: 50mm 45mm 40mm;
+      justify-content: flex-start;
+    }
+
+    .page.hero::before,
+    .page.hero::after {
+      display: none;
+    }
+
+    .logo {
+      font-family: 'Playfair Display', serif;
+      font-size: 36px;
+      font-weight: 900;
+      margin-bottom: 50mm;
+      color: #fff;
+      letter-spacing: -1px;
+    }
+
+    .logo span {
+      color: #97C459;
+    }
+
+    .hero-content h1 {
+      font-family: 'Playfair Display', serif;
+      font-size: 56px;
+      font-weight: 900;
+      line-height: 1.05;
+      margin-bottom: 28px;
+      color: #fff;
+      letter-spacing: -1.5px;
+    }
+
+    .hero-content h1 em {
+      color: #A8D56E;
+      font-style: italic;
+      font-weight: 900;
+    }
+
+    .hero-content p {
+      font-size: 17px;
+      color: rgba(192, 221, 151, 0.85);
+      margin-bottom: 50px;
+      max-width: 520px;
+      line-height: 1.7;
+      font-weight: 400;
+    }
+
+    .cta-box {
+      background: linear-gradient(135deg, #639922 0%, #75ad2d 100%);
+      color: #fff;
+      padding: 16px 36px;
+      border-radius: 40px;
+      font-weight: 700;
+      font-size: 15px;
+      display: inline-block;
+      margin-bottom: 80mm;
+      box-shadow: 0 8px 28px rgba(99, 153, 34, 0.25);
+      letter-spacing: 0.3px;
+    }
+
+    .footer-text {
+      font-size: 13px;
+      color: rgba(192, 221, 151, 0.55);
+      font-weight: 500;
+    }
+
+    /* CONTENT PAGES */
+    .section-title {
+      font-family: 'Playfair Display', serif;
+      font-size: 38px;
+      font-weight: 900;
+      color: #0d1f0d;
+      margin-bottom: 32px;
+      letter-spacing: -1px;
+      line-height: 1.1;
+    }
+
+    .section-title em {
+      color: #639922;
+      font-style: italic;
+      font-weight: 900;
+    }
+
+    .section-title span {
+      color: #639922;
+    }
+
+    .features-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 24px;
+      margin-bottom: 32px;
+    }
+
+    .feature-item {
+      background: linear-gradient(135deg, #ffffff 0%, #fafaf8 100%);
+      border: 1px solid rgba(99, 153, 34, 0.12);
+      border-radius: 16px;
+      padding: 26px;
+      page-break-inside: avoid;
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.04);
+      transition: transform 0.2s;
+    }
+
+    .feature-item:hover {
+      border-color: rgba(99, 153, 34, 0.25);
+      box-shadow: 0 8px 24px rgba(99, 153, 34, 0.1);
+    }
+
+    .feature-icon {
+      font-size: 32px;
+      margin-bottom: 14px;
+      display: block;
+    }
+
+    .feature-title {
+      font-weight: 700;
+      color: #0d1f0d;
+      font-size: 15px;
+      margin-bottom: 8px;
+      font-family: 'DM Sans', sans-serif;
+      letter-spacing: -0.2px;
+    }
+
+    .feature-desc {
+      font-size: 13px;
+      color: #6b6b6b;
+      line-height: 1.6;
+    }
+
+    .pricing-section {
+      background: linear-gradient(135deg, #0d1f0d 0%, #1a3a1a 100%);
+      color: #fff;
+      border-radius: 16px;
+      padding: 32px;
+      margin-bottom: 28px;
+      page-break-inside: avoid;
+      box-shadow: 0 16px 40px rgba(13, 31, 13, 0.15);
+    }
+
+    .pricing-title {
+      font-family: 'Playfair Display', serif;
+      font-size: 28px;
+      font-weight: 900;
+      margin-bottom: 24px;
+      color: #fff;
+      letter-spacing: -0.5px;
+    }
+
+    .pricing-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 18px;
+    }
+
+    .price-item {
+      background: rgba(255, 255, 255, 0.08);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      border-radius: 12px;
+      padding: 20px;
+      text-align: center;
+      backdrop-filter: blur(10px);
+    }
+
+    .price-name {
+      font-weight: 700;
+      font-size: 14px;
+      margin-bottom: 10px;
+      letter-spacing: 0.2px;
+    }
+
+    .price-amount {
+      font-family: 'Playfair Display', serif;
+      font-size: 28px;
+      font-weight: 900;
+      color: #A8D56E;
+      margin-bottom: 6px;
+      letter-spacing: -0.5px;
+    }
+
+    .price-desc {
+      font-size: 12px;
+      color: rgba(255, 255, 255, 0.75);
+      font-weight: 500;
+    }
+
+    .contact-section {
+      background: linear-gradient(135deg, #d4e8b8 0%, #e8f5d9 100%);
+      border-left: 5px solid #639922;
+      border-radius: 12px;
+      padding: 24px;
+      page-break-inside: avoid;
+      box-shadow: 0 6px 20px rgba(99, 153, 34, 0.12);
+    }
+
+    .contact-label {
+      font-size: 12px;
+      color: #0d1f0d;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 1.2px;
+      margin-bottom: 10px;
+    }
+
+    .contact-text {
+      font-weight: 700;
+      color: #0d1f0d;
+      margin-bottom: 6px;
+      font-size: 16px;
+      font-family: 'Playfair Display', serif;
+    }
+
+    .contact-info {
+      font-size: 13px;
+      color: #1a3a1a;
+      font-weight: 500;
+    }
+
+    /* PAGE 3 BEFORE/AFTER */
+    .before-after-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 24px;
+      margin-bottom: 28px;
+    }
+
+    .ba-card {
+      border-radius: 16px;
+      padding: 26px;
+      page-break-inside: avoid;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.06);
+    }
+
+    .ba-before {
+      background: linear-gradient(135deg, #fef2f2 0%, #fde8e8 100%);
+      border: 1.5px solid #fca5a5;
+    }
+
+    .ba-after {
+      background: linear-gradient(135deg, #f0fdf4 0%, #dcf8e0 100%);
+      border: 1.5px solid #86efac;
+    }
+
+    .ba-label {
+      font-size: 12px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 1.2px;
+      margin-bottom: 16px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .ba-before .ba-label {
+      color: #dc2626;
+    }
+
+    .ba-after .ba-label {
+      color: #16a34a;
+    }
+
+    .ba-item {
+      font-size: 13px;
+      margin-bottom: 10px;
+      line-height: 1.6;
+      font-weight: 500;
+    }
+
+    .ba-before .ba-item {
+      color: #7f1d1d;
+    }
+
+    .ba-after .ba-item {
+      color: #15803d;
+    }
+
+    /* CASE STUDIES */
+    .case-item {
+      background: linear-gradient(135deg, #ffffff 0%, #fafaf8 100%);
+      border: 1px solid rgba(99, 153, 34, 0.12);
+      border-radius: 16px;
+      padding: 22px;
+      margin-bottom: 14px;
+      page-break-inside: avoid;
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.04);
+    }
+
+    .case-title {
+      font-weight: 700;
+      color: #0d1f0d;
+      font-size: 15px;
+      margin-bottom: 10px;
+      font-family: 'Playfair Display', serif;
+      letter-spacing: -0.3px;
+    }
+
+    .case-desc {
+      font-size: 12px;
+      color: #6b6b6b;
+      line-height: 1.6;
+      margin-bottom: 10px;
+      font-weight: 400;
+    }
+
+    .case-metric {
+      font-size: 12px;
+      color: #639922;
+      font-weight: 700;
+      letter-spacing: 0.2px;
+    }
+
+    /* FAQ SECTION */
+    .faq-item {
+      background: #ffffff;
+      border-left: 4px solid #639922;
+      padding: 16px 18px;
+      margin-bottom: 12px;
+      page-break-inside: avoid;
+      border-radius: 8px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+    }
+
+    .faq-q {
+      font-weight: 700;
+      color: #0d1f0d;
+      font-size: 13px;
+      margin-bottom: 8px;
+      letter-spacing: -0.2px;
+    }
+
+    .faq-a {
+      font-size: 12px;
+      color: #6b6b6b;
+      line-height: 1.6;
+      font-weight: 400;
+    }
+
+    /* STATS BAND */
+    .stats-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 16px;
+      margin: 24px 0;
+    }
+
+    .stat-box {
+      background: linear-gradient(135deg, #639922 0%, #75ad2d 100%);
+      color: #fff;
+      padding: 20px;
+      border-radius: 12px;
+      text-align: center;
+      page-break-inside: avoid;
+      box-shadow: 0 8px 24px rgba(99, 153, 34, 0.2);
+    }
+
+    .stat-num {
+      font-family: 'Playfair Display', serif;
+      font-size: 28px;
+      font-weight: 900;
+      margin-bottom: 6px;
+      letter-spacing: -0.5px;
+    }
+
+    .stat-label {
+      font-size: 12px;
+      opacity: 0.95;
+      font-weight: 600;
+      letter-spacing: 0.3px;
+    }
+
+    /* PRINT OPTIMIZATIONS */
+    @media print {
+      body {
+        margin: 0;
+        padding: 0;
+      }
+      .page {
+        page-break-after: always;
+        margin: 0;
+        padding: 0;
+        width: 210mm;
+        height: 297mm;
+      }
+    }
+  </style>
+  </style>
+</head>
+<body>
+  <!-- PAGE 1: HERO -->
+  <div class="page hero">
+    <div class="page-content">
+      <div class="logo">Camp<span>Connect</span></div>
+      <div class="hero-content">
+        <h1>Transformez l'expérience<br>de vos <em>vacanciers</em><br>en 48h</h1>
+        <p>Application mobile white-label pour campings 3-5 étoiles. Carte GPS, groupes spontanés, chat temps réel, agenda animations — avec un tableau de bord gérant complet.</p>
+        <div class="cta-box">Parlons-en dès aujourd'hui</div>
+      </div>
+    </div>
+    <div class="footer-text">CampConnect © 2026 — Créé par des gens qui aiment le camping</div>
+  </div>
+
+  <!-- PAGE 2: FEATURES & PRICING -->
+  <div class="page content">
+    <div class="page-content">
+      <h2 class="section-title">Les 6 piliers de votre <em>succès</em></h2>
+
+      <div class="features-grid">
+        <div class="feature-item">
+          <div class="feature-icon">🗺️</div>
+          <div class="feature-title">Carte satellite GPS</div>
+          <div class="feature-desc">Plan interactif du camping avec points d'intérêt et suivi temps réel</div>
+        </div>
+
+        <div class="feature-item">
+          <div class="feature-icon">👥</div>
+          <div class="feature-title">Groupes spontanés</div>
+          <div class="feature-desc">Vacanciers créent leurs propres groupes (randonnée, pétanque, apéro...)</div>
+        </div>
+
+        <div class="feature-item">
+          <div class="feature-icon">💬</div>
+          <div class="feature-title">Chat temps réel</div>
+          <div class="feature-desc">Messagerie instantanée par groupe — zéro numéros échangés</div>
+        </div>
+
+        <div class="feature-item">
+          <div class="feature-icon">📅</div>
+          <div class="feature-title">Agenda animations</div>
+          <div class="feature-desc">Programme complet avec inscriptions et compteur de participants</div>
+        </div>
+
+        <div class="feature-item">
+          <div class="feature-icon">📖</div>
+          <div class="feature-title">Livret d'accueil</div>
+          <div class="feature-desc">WiFi, horaires piscine, règlement, urgences — tout accessible de l'app</div>
+        </div>
+
+        <div class="feature-item">
+          <div class="feature-icon">📊</div>
+          <div class="feature-title">Dashboard gérant</div>
+          <div class="feature-desc">Métriques temps réel, gestion des animations et configuration complète</div>
+        </div>
+      </div>
+
+      <div class="pricing-section">
+        <div class="pricing-title">Tarifs 2026</div>
+        <div class="pricing-grid">
+          <div class="price-item">
+            <div class="price-name">Découverte</div>
+            <div class="price-amount">490 €</div>
+            <div class="price-desc">Jusqu'à 50 emplacements</div>
+          </div>
+          <div class="price-item">
+            <div class="price-name">Essentiel</div>
+            <div class="price-amount">790 €</div>
+            <div class="price-desc">Jusqu'à 200 emplacements</div>
+          </div>
+          <div class="price-item">
+            <div class="price-name">Premium</div>
+            <div class="price-amount">1 290 €</div>
+            <div class="price-desc">200+ emplacements</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="contact-section">
+        <div class="contact-label">📧 Intéressé ?</div>
+        <div class="contact-text">contact@campconnect.fr</div>
+        <div class="contact-info">Déploiement en 48h • Support personnalisé • Configuration incluse</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- PAGE 3: AVANT/APRÈS -->
+  <div class="page content">
+    <div class="page-content">
+      <h2 class="section-title">Avant / Après Camp<span>Connect</span></h2>
+
+      <div class="before-after-grid">
+        <div class="ba-card ba-before">
+          <div class="ba-label">❌ Avant CampConnect</div>
+          <div class="ba-item">Vacanciers éparpillés, isolation</div>
+          <div class="ba-item">Communication fragmentée (Facebook, WhatsApp)</div>
+          <div class="ba-item">Agenda papier, perte d'inscriptions</div>
+          <div class="ba-item">Map physique, orientation difficile</div>
+          <div class="ba-item">Charge admin élevée</div>
+          <div class="ba-item">Faible taux de participation aux animations</div>
+        </div>
+
+        <div class="ba-card ba-after">
+          <div class="ba-label">✅ Avec CampConnect</div>
+          <div class="ba-item">Communauté connectée et active</div>
+          <div class="ba-item">Engagement regroupé dans 1 app</div>
+          <div class="ba-item">Animations digitales, inscriptions sans masse</div>
+          <div class="ba-item">GPS + carte interactive, aucune approche</div>
+          <div class="ba-item">Dashboard gérant, 10 min/jour</div>
+          <div class="ba-item">Participation +35% en moyenne</div>
+        </div>
+      </div>
+
+      <h3 style="font-size: 16px; color: #0d1f0d; font-weight: 700; margin: 20px 0 12px;">Impacts mesurables</h3>
+      <div class="stats-row">
+        <div class="stat-box">
+          <div class="stat-num">+35%</div>
+          <div class="stat-label">Participation animations</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-num">5x</div>
+          <div class="stat-label">Plus d'interactions</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-num">90%</div>
+          <div class="stat-label">Satisfaction client</div>
+        </div>
+      </div>
+
+      <h3 style="font-size: 16px; color: #0d1f0d; font-weight: 700; margin: 16px 0 12px;">ROI en 6 mois</h3>
+      <p style="font-size: 12px; color: #6b6b6b; line-height: 1.6; margin-bottom: 8px;">
+        <strong>Investissement :</strong> 490-1 290 € /an<br>
+        <strong>Retour estimé :</strong> satisfaction client accrue → fidélité → reboking +15% (= +1500-3000 € CA direct) + réduction charge admin (-5h/mois).
+      </p>
+    </div>
+  </div>
+
+  <!-- PAGE 4: CAS D'USAGE -->
+  <div class="page content">
+    <div class="page-content">
+      <h2 class="section-title">3 profils clients <em>gagnants</em></h2>
+
+      <div class="case-item">
+        <div class="case-title">🏕️ Camping familial 50-100 emplacements</div>
+        <div class="case-desc">Souvent actifs sur les animations (piscine, jeux enfants, apéro). CampConnect booste l'engagement : +40% inscriptions, réseautage entre familles → meilleure expérience → 4.8★ sur Google.</div>
+        <div class="case-metric">Formule : Découverte (490 €/an) | ROI : 2-3 mois</div>
+      </div>
+
+      <div class="case-item">
+        <div class="case-title">🌳 Camping nature 150-250 emplacements</div>
+        <div class="case-desc">Clientèle âgée et techno-friendly mélangée. L'app crée un tiers-lieu digital : groupes randonnée, quiz camping, infos pratiques centralisées. Réduit calls à la réception (-20%).</div>
+        <div class="case-metric">Formule : Essentiel (790 €/an) | ROI : 4-5 mois</div>
+      </div>
+
+      <div class="case-item">
+        <div class="case-title">⭐ Resort 3-4 étoiles 300+ emplacements</div>
+        <div class="case-desc">Gestion d'équipe renforcée. Dashboard gérant : voir en temps réel les groupes les plus actifs, adapter l'offre d'animations, exporter les données vacanciers. Support du branding complet.</div>
+        <div class="case-metric">Formule : Premium (1 290 €/an) | ROI : 6 mois | Déploiement white-label en 48h</div>
+      </div>
+
+      <h3 style="font-size: 16px; color: #0d1f0d; font-weight: 700; margin: 16px 0 12px;">Camping de démo opérationnel</h3>
+      <p style="font-size: 12px; color: #6b6b6b; line-height: 1.6;">
+        <strong>Les Pins Verts</strong> — accédez gratuitement à une démo live avec 12 animations réelles, 4 groupes actifs et 50 vacanciers simulés.<br>
+        👉 Slug : <code style="background: #f0f0f0; padding: 2px 6px; border-radius: 3px;">les-pins-verts</code>
+      </p>
+    </div>
+  </div>
+
+  <!-- PAGE 5: FAQ & CONTACT -->
+  <div class="page content">
+    <div class="page-content">
+      <h2 class="section-title">Questions <em>fréquentes</em></h2>
+
+      <div class="faq-item">
+        <div class="faq-q">Q. Faut-il une compétence technique pour configurer CampConnect ?</div>
+        <div class="faq-a">Non. Tout est guidé : vous remplissez nom, logo, couleurs, plan du camping. En 30 minutes, c'est en ligne.</div>
+      </div>
+
+      <div class="faq-item">
+        <div class="faq-q">Q. Comment les vacanciers y accèdent-ils ?</div>
+        <div class="faq-a">3 façons : (1) QR code imprimé à la réception, (2) GPS automatique si à moins de 800m du camping, (3) code horaire affiché à l'accueil.</div>
+      </div>
+
+      <div class="faq-item">
+        <div class="faq-q">Q. Est-ce une app native ou web ?</div>
+        <div class="faq-a">PWA (Progressive Web App) — fonctionne sur tous les smartphones (iOS/Android) sans téléchargement obligatoire depuis l'App Store.</div>
+      </div>
+
+      <div class="faq-item">
+        <div class="faq-q">Q. Qui gère la modération des messages ?</div>
+        <div class="faq-a">Vous. Le dashboard vous donne les outils pour modérer, supprimer des messages ou groupes non conformes. Analytics intégrées.</div>
+      </div>
+
+      <div class="faq-item">
+        <div class="faq-q">Q. Quelle est la durée du déploiement ?</div>
+        <div class="faq-a"><strong>48 heures.</strong> Configuration le jour 1 (vous + notre équipe), app en ligne jour 2. Accompagnement personnalisé inclus.</div>
+      </div>
+
+      <div class="faq-item">
+        <div class="faq-q">Q. Pouvez-vous exporter les données vacanciers ?</div>
+        <div class="faq-a">Oui, dès la saison 2026, export CSV complet : pseudo, emplacement, tranche d'âge, groupes rejoints, interactions.</div>
+      </div>
+
+      <h3 style="font-size: 18px; color: #639922; font-weight: 700; margin: 20px 0 12px;">🚀 Prochaines étapes</h3>
+      <ol style="font-size: 13px; color: #6b6b6b; line-height: 1.8; margin-left: 16px;">
+        <li><strong>Accédez à la démo</strong> — 5 min, camping Les Pins Verts</li>
+        <li><strong>Parlons de votre camping</strong> — call 20 min, 0 engagement</li>
+        <li><strong>Déploiement en 48h</strong> — vous êtes opérationnel</li>
+        <li><strong>Support gratuit toute la saison</strong> — nous sommes avec vous</li>
+      </ol>
+
+      <div class="contact-section" style="margin-top: 20px;">
+        <div class="contact-label">📧 Contactez-nous</div>
+        <div class="contact-text">contact@campconnect.fr</div>
+        <div class="contact-info">Tél (WhatsApp) : +336 XX XX XX XX | Réponse en 24h</div>
+      </div>
+    </div>
+  </div>
+</body>
+</html>
