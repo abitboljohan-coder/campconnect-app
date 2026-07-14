@@ -109,8 +109,29 @@ export default function Animations({ camping }) {
           {[1, 2, 3].map(i => <div key={i} style={{ height: 90, borderRadius: 14, background: '#e8e4da' }} />)}
         </div>
       ) : animations.length === 0 ? (
-        <div style={{ textAlign: 'center', padding: '48px 0', color: '#9ca3af', fontSize: 14 }}>
-          Aucune animation. Créez-en une !
+        <div style={{
+          textAlign: 'center', padding: '52px 24px',
+          background: '#fff', borderRadius: 16,
+          border: '2px dashed #d1d5db',
+        }}>
+          <div style={{ fontSize: 52, marginBottom: 14 }}>📅</div>
+          <div style={{ fontWeight: 700, fontSize: 17, color: '#1a1a1a', marginBottom: 8 }}>
+            Aucune animation pour le moment
+          </div>
+          <div style={{ fontSize: 14, color: '#6b7280', marginBottom: 24, maxWidth: 320, margin: '0 auto 24px', lineHeight: 1.65 }}>
+            Cours de natation, tournoi de pétanque, soirée barbecue… créez votre première animation !
+          </div>
+          <button
+            onClick={() => { setEditAnim(null); setShowForm(true) }}
+            style={{
+              padding: '12px 24px', borderRadius: 10,
+              background: '#639922', color: '#fff',
+              fontWeight: 700, fontSize: 14,
+              boxShadow: '0 4px 12px rgba(99,153,34,0.35)',
+            }}
+          >
+            + Créer ma première animation
+          </button>
         </div>
       ) : (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>

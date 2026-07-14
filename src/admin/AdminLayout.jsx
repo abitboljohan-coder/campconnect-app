@@ -2,10 +2,11 @@ import { useEffect, useState } from 'react'
 import { Outlet, NavLink, useNavigate } from 'react-router-dom'
 
 const NAV_ITEMS = [
-  { path: '/admin/overview',    icon: '🏠', label: "Vue d'ensemble" },
-  { path: '/admin/apparence',   icon: '🎨', label: 'Apparence' },
+  { path: '/admin/overview',    icon: '🏠', label: 'Accueil' },
   { path: '/admin/animations',  icon: '📅', label: 'Animations' },
-  { path: '/admin/stats',       icon: '📊', label: 'Statistiques' },
+  { path: '/admin/carte',       icon: '🗺️', label: 'Carte' },
+  { path: '/admin/apparence',   icon: '🎨', label: 'Apparence' },
+  { path: '/admin/stats',       icon: '📊', label: 'Stats' },
   { path: '/admin/parametres',  icon: '⚙️', label: 'Paramètres' },
 ]
 
@@ -137,20 +138,20 @@ export default function AdminLayout({ gerant, camping, onLogout }) {
           background: '#0d1f0d', borderTop: '1px solid rgba(255,255,255,0.08)',
           display: 'flex', zIndex: 100,
           paddingBottom: 'env(safe-area-inset-bottom)',
+          height: 56,
         }}>
           {NAV_ITEMS.map(item => (
             <NavLink
               key={item.path}
               to={item.path}
               style={({ isActive }) => ({
-                flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center',
-                padding: '8px 0', gap: 2, textDecoration: 'none',
-                color: isActive ? '#C0DD97' : 'rgba(192,221,151,0.4)',
-                fontSize: 10, fontWeight: isActive ? 600 : 400,
+                flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center',
+                textDecoration: 'none',
+                color: isActive ? '#C0DD97' : 'rgba(192,221,151,0.35)',
+                fontSize: 24,
               })}
             >
-              <span style={{ fontSize: 20 }}>{item.icon}</span>
-              {item.label.split(' ')[0]}
+              {item.icon}
             </NavLink>
           ))}
         </nav>

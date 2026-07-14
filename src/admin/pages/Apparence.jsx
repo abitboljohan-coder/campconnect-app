@@ -1,23 +1,17 @@
 import { useState } from 'react'
 import { supabase } from '../../supabase'
 import ColorPicker from '../components/ColorPicker'
-import MapEditor from '../components/MapEditor'
 
-// Compresse une image en JPEG et retourne un data URL
-function compressImage(file, maxWidth = 1600, quality = 0.75) {
+function compressImage(file, maxWidth = 800, quality = 0.75) {
   return new Promise((resolve, reject) => {
     const img = new Image()
     const url = URL.createObjectURL(file)
     img.onload = () => {
       URL.revokeObjectURL(url)
       let { width, height } = img
-      if (width > maxWidth) {
-        height = Math.round((height / width) * maxWidth)
-        width = maxWidth
-      }
+      if (width > maxWidth) { height = Math.round((height / width) * maxWidth); width = maxWidth }
       const canvas = document.createElement('canvas')
-      canvas.width = width
-      canvas.height = height
+      canvas.width = width; canvas.height = height
       canvas.getContext('2d').drawImage(img, 0, 0, width, height)
       resolve(canvas.toDataURL('image/jpeg', quality))
     }
@@ -34,9 +28,7 @@ export default function Apparence({ camping, setCamping }) {
   const [success, setSuccess]   = useState('')
   const [error, setError]       = useState('')
   const [uploadingLogo, setUploadingLogo] = useState(false)
-  const [uploadingPlan, setUploadingPlan] = useState(false)
   const [logoPreview, setLogoPreview] = useState(camping?.logo_url || null)
-  const [planPreview, setPlanPreview] = useState(camping?.plan_url || null)
 
   function flash(type, msg) {
     if (type === 'success') { setSuccess(msg); setError('') }
@@ -45,39 +37,21 @@ export default function Apparence({ camping, setCamping }) {
 
   async function handleImageUpload(file, field, maxMB, setUploading, setPreview) {
     if (!file) return
-    if (file.size > maxMB * 1024 * 1024) {
-      flash('error', `Fichier trop lourd (max ${maxMB}MB).`)
-      return
-    }
-    setUploading(true)
-    setError('')
+    if (file.size > maxMB * 1024 * 1024) { flash('error', `Fichier trop lourd (max ${maxMB}MB).`); return }
+    setUploading(true); setError('')
     try {
-      const dataUrl = await compressImage(file, field === 'plan_url' ? 1600 : 800, 0.75)
-
-      // Vérifier la taille après compression
-      const sizeKB = Math.round(dataUrl.length * 0.75 / 1024)
-      if (sizeKB > 900) {
-        flash('error', `Image trop lourde même après compression (${sizeKB}KB). Réduisez la résolution.`)
-        setUploading(false)
-        return
-      }
-
-      const { error: dbErr } = await supabase
-        .from('campings')
-        .update({ [field]: dataUrl })
-        .eq('id', camping.id)
-
-      if (dbErr) {
-        flash('error', `Erreur DB : ${dbErr.message}`)
-      } else {
+      const dataUrl = await compressImage(file)
+      const sizeKB  = Math.round(dataUrl.length * 0.75 / 1024)
+      if (sizeKB > 900) { flash('error', `Image trop lourde (${sizeKB}KB). Réduisez la résolution.`); setUploading(false); return }
+      const { error: dbErr } = await supabase.from('campings').update({ [field]: dataUrl }).eq('id', camping.id)
+      if (dbErr) { flash('error', `Erreur DB : ${dbErr.message}`) }
+      else {
         setPreview(dataUrl)
         setCamping(c => ({ ...c, [field]: dataUrl }))
         flash('success', 'Image mise à jour !')
         setTimeout(() => setSuccess(''), 3000)
       }
-    } catch (err) {
-      flash('error', `Erreur : ${err.message}`)
-    }
+    } catch (err) { flash('error', `Erreur : ${err.message}`) }
     setUploading(false)
   }
 
@@ -103,7 +77,7 @@ export default function Apparence({ camping, setCamping }) {
     <div>
       <div style={{ marginBottom: 28 }}>
         <h1 style={{ fontSize: 24, fontWeight: 700, color: '#1a1a1a' }}>Apparence</h1>
-        <p style={{ color: '#6b7280', fontSize: 14, marginTop: 4 }}>Personnalisez l'application de vos vacanciers.</p>
+        <p style={{ color: '#6b7280', fontSize: 14, marginTop: 4 }}>Nom, couleurs et logo de votre camping dans l'app.</p>
       </div>
 
       {success && <Alert type="success">{success}</Alert>}
@@ -167,44 +141,6 @@ export default function Apparence({ camping, setCamping }) {
               {uploadingLogo && <UploadProgress label="Compression et enregistrement..." />}
             </div>
           </div>
-        </Card>
-
-        {/* Plan du camping */}
-        <Card title="Plan du camping">
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
-            {planPreview && (
-              <div style={{ position: 'relative', display: 'inline-block' }}>
-                <img src={planPreview} alt="Plan" style={{ width: '100%', maxWidth: 380, height: 180, objectFit: 'cover', borderRadius: 12, border: '1px solid #e5e7eb', display: 'block' }} />
-                <button
-                  onClick={async () => {
-                    await supabase.from('campings').update({ plan_url: null }).eq('id', camping.id)
-                    setPlanPreview(null)
-                    setCamping(c => ({ ...c, plan_url: null }))
-                  }}
-                  style={{ position: 'absolute', top: 8, right: 8, width: 28, height: 28, borderRadius: '50%', background: 'rgba(0,0,0,0.6)', color: '#fff', fontSize: 16, display: 'flex', alignItems: 'center', justifyContent: 'center' }}
-                >×</button>
-              </div>
-            )}
-            <div>
-              <label style={labelStyle}>
-                {planPreview ? 'REMPLACER LE PLAN (JPG/PNG, max 5MB)' : 'FICHIER (JPG/PNG, max 5MB)'}
-              </label>
-              <input
-                type="file" accept="image/png,image/jpeg"
-                onChange={e => handleImageUpload(e.target.files[0], 'plan_url', 5, setUploadingPlan, setPlanPreview)}
-                style={{ display: 'block', marginTop: 8, fontSize: 14, color: '#374151' }}
-              />
-              {uploadingPlan && <UploadProgress label="Compression de la carte en cours..." />}
-              <div style={{ fontSize: 12, color: '#9ca3af', marginTop: 6 }}>
-                L'image sera automatiquement compressée et optimisée.
-              </div>
-            </div>
-          </div>
-        </Card>
-
-        {/* Éditeur de carte satellite */}
-        <Card title="Carte du camping">
-          <MapEditor camping={camping} setCamping={setCamping} />
         </Card>
 
         {/* Bouton enregistrer */}
