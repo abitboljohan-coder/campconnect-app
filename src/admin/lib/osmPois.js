@@ -56,6 +56,20 @@ function matchPoi(tags) {
   return null
 }
 
+// Ne garde que les POI "sûrs" pour lesquels on est confiant
+// Un POI est "sûr" si :
+//   - il a un tag amenity/leisure/sport/tourism spécifique bien mappé (POI_MAP l'a trouvé)
+//   - ET il a un nom OU c'est un type non-ambigu (piscine, tennis, resto...)
+const NAMELESS_OK = new Set([
+  '🏊', '🎾', '🎳', '🏓', '🏀', '🏐', '⚽',      // équipements sportifs identifiables sans nom
+  '🚻', '🚿', '🚰',                              // sanitaires évidents
+  '🅿️', '🍖', '🎠',                             // parking, BBQ, aire de jeux
+])
+function isConfident(poi, tags) {
+  if (tags?.name) return true
+  return NAMELESS_OK.has(poi.emoji)
+}
+
 // Bounding box d'un polygone [[lat,lng], ...]
 function bbox(polygon) {
   let minLat = Infinity, maxLat = -Infinity, minLng = Infinity, maxLng = -Infinity
@@ -124,11 +138,7 @@ export async function detectPois(perimeter, fallbackCenter) {
     // Si périmètre défini, filtrer aux POI inside
     if (perimeter?.length >= 3 && !pointInPoly([lat, lng], perimeter)) continue
 
-    const key = `${info.emoji}-${lat.toFixed(5)}-${lng.toFixed(5)}`
-    if (seen.has(key)) continue
-    seen.add(key)
-
-    pois.push({
+    const poi = {
       ref_id:   `osm-${el.type}-${el.id}`,
       ref_type: 'lieu',
       label:    tags.name || info.label,
@@ -136,7 +146,55 @@ export async function detectPois(perimeter, fallbackCenter) {
       color:    info.color,
       lat, lng,
       osm:      true,
-    })
+    }
+    if (!isConfident(poi, tags)) continue
+
+    const key = `${info.emoji}-${lat.toFixed(5)}-${lng.toFixed(5)}`
+    if (seen.has(key)) continue
+    seen.add(key)
+    pois.push(poi)
   }
   return pois
+}
+
+// Recherche Nominatim + retourne { lat, lng, display_name } de la meilleure correspondance
+export async function geocodeCamping(query) {
+  const r = await fetch(
+    `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(query)}&format=json&limit=3&polygon_geojson=1&addressdetails=1`,
+    { headers: { 'Accept-Language': 'fr' } })
+  const j = await r.json()
+  return j
+}
+
+// Cherche un polygone camping dans un rayon
+export async function findCampsitePolygon(lat, lng, radius = 800) {
+  const q = `[out:json][timeout:20];
+    (
+      way(around:${radius},${lat},${lng})["tourism"="camp_site"];
+      relation(around:${radius},${lat},${lng})["tourism"="camp_site"];
+      way(around:${radius},${lat},${lng})["leisure"="campsite"];
+      relation(around:${radius},${lat},${lng})["leisure"="campsite"];
+    );
+    out geom tags;`
+  const j = await overpass(q)
+  const polys = []
+  for (const el of j.elements || []) {
+    if (el.type === 'way' && el.geometry?.length >= 3) {
+      polys.push({ poly: el.geometry.map(g => [g.lat, g.lon]), tags: el.tags })
+    }
+    if (el.type === 'relation' && el.members) {
+      const outer = el.members.find(m => m.role === 'outer' && m.geometry)
+      if (outer && outer.geometry.length >= 3) {
+        polys.push({ poly: outer.geometry.map(g => [g.lat, g.lon]), tags: el.tags })
+      }
+    }
+  }
+  if (!polys.length) return null
+  // Prend le plus proche du point cliqué
+  polys.sort((a, b) => {
+    const ca = a.poly.reduce((s, [x, y]) => [s[0] + x, s[1] + y], [0, 0]).map(v => v / a.poly.length)
+    const cb = b.poly.reduce((s, [x, y]) => [s[0] + x, s[1] + y], [0, 0]).map(v => v / b.poly.length)
+    return ((ca[0] - lat) ** 2 + (ca[1] - lng) ** 2) - ((cb[0] - lat) ** 2 + (cb[1] - lng) ** 2)
+  })
+  return polys[0].poly
 }

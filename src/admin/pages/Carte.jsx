@@ -3,7 +3,7 @@ import { supabase } from '../../supabase'
 import MapEditor from '../components/MapEditor'
 import PlanCalibrator from '../components/PlanCalibrator'
 import PerimeterEditor from '../components/PerimeterEditor'
-import { detectPois } from '../lib/osmPois'
+import { detectPois, geocodeCamping, findCampsitePolygon } from '../lib/osmPois'
 
 async function compressToBlob(file, maxWidth = 2000, quality = 0.82) {
   const bmp = await createImageBitmap(file)
@@ -22,6 +22,9 @@ export default function Carte({ camping, setCamping }) {
   const [showCalibrator, setShowCalibrator] = useState(false)
   const [showPerimeter, setShowPerimeter]   = useState(false)
   const [detecting, setDetecting]           = useState(false)
+  const [autoAddress, setAutoAddress]       = useState('')
+  const [autoRunning, setAutoRunning]       = useState(false)
+  const [autoLog, setAutoLog]               = useState([])
 
   const planUrl    = camping?.plan_url
   const planBounds = camping?.plan_bounds
@@ -50,6 +53,48 @@ export default function Carte({ camping, setCamping }) {
       setTimeout(() => setSuccess(''), 4000)
     } catch (err) { setError(err.message) }
     setUploading(false)
+  }
+
+  async function autoConfigure() {
+    if (autoRunning) return
+    setAutoRunning(true); setError(''); setSuccess(''); setAutoLog([])
+    const log = (msg) => setAutoLog(prev => [...prev, msg])
+    try {
+      const query = `${camping.nom}${autoAddress ? ' ' + autoAddress : ''} France`
+      log(`🔎 Recherche : « ${query} »`)
+      const geo = await geocodeCamping(query)
+      if (!geo.length) throw new Error('Adresse introuvable — précisez l\'adresse.')
+      const best = geo[0]
+      const lat = +best.lat, lng = +best.lon
+      log(`📍 Localisé : ${best.display_name.split(',').slice(0, 3).join(',')}`)
+
+      log(`🗺️  Recherche du contour dans OSM…`)
+      const poly = await findCampsitePolygon(lat, lng, 800)
+      let newCfg = { ...(camping.carte_config || {}) }
+      if (poly) {
+        newCfg.perimeter = poly
+        log(`✅ Contour importé (${poly.length} points)`)
+      } else {
+        log(`⚠️  Pas de contour dans OSM — utilisez « Tracer le contour »`)
+      }
+
+      log(`🎯 Détection des POI fiables…`)
+      const pois = await detectPois(poly || null, { lat, lng })
+      const existing = camping?.carte_config?.pins || []
+      const existingIds = new Set(existing.map(p => p.ref_id))
+      const merged = [...existing, ...pois.filter(p => !existingIds.has(p.ref_id))]
+      newCfg.pins = merged
+      log(`✅ ${pois.length} POI détectés (seuls les plus fiables)`)
+
+      const { error: dbErr } = await supabase.from('campings')
+        .update({ carte_config: newCfg }).eq('id', camping.id)
+      if (dbErr) throw dbErr
+      setCamping(c => ({ ...c, carte_config: newCfg }))
+      log(`💾 Configuration enregistrée`)
+      setSuccess('Auto-configuration terminée !')
+      setTimeout(() => setSuccess(''), 5000)
+    } catch (e) { setError('Erreur : ' + e.message); log(`❌ ${e.message}`) }
+    setAutoRunning(false)
   }
 
   async function autoDetectPois() {
@@ -96,6 +141,33 @@ export default function Carte({ camping, setCamping }) {
       {error   && <Alert type="error">{error}</Alert>}
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
+
+        <Card title="🚀 Auto-configuration">
+          <p style={{ fontSize: 13, color: '#6b7280', marginBottom: 12, lineHeight: 1.6 }}>
+            Un clic : géolocalise votre camping ({camping?.nom || '—'}), importe son contour depuis OpenStreetMap
+            et détecte automatiquement les équipements (piscine, sanitaires, terrains, restaurant…).
+          </p>
+          <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', alignItems: 'center' }}>
+            <input
+              value={autoAddress}
+              onChange={e => setAutoAddress(e.target.value)}
+              placeholder="Adresse (facultatif, ex : Fréjus, Var)"
+              style={{ flex: '1 1 240px', padding: '10px 14px', border: '1px solid #d1d5db',
+                       borderRadius: 8, fontSize: 13, outline: 'none' }} />
+            <button onClick={autoConfigure} disabled={autoRunning}
+              style={{ background: '#639922', color: '#fff', padding: '10px 20px',
+                       borderRadius: 8, border: 'none', fontSize: 14, fontWeight: 700,
+                       cursor: autoRunning ? 'wait' : 'pointer' }}>
+              {autoRunning ? '⏳ En cours…' : '🚀 Auto-configurer'}
+            </button>
+          </div>
+          {autoLog.length > 0 && (
+            <div style={{ marginTop: 14, padding: 12, background: '#0f172a', color: '#e2e8f0',
+                          borderRadius: 8, fontFamily: 'monospace', fontSize: 12, lineHeight: 1.7 }}>
+              {autoLog.map((l, i) => <div key={i}>{l}</div>)}
+            </div>
+          )}
+        </Card>
 
         <Card title="Contour du camping">
           <p style={{ fontSize: 13, color: '#6b7280', marginBottom: 14, lineHeight: 1.6 }}>
