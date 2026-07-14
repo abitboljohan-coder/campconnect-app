@@ -144,6 +144,18 @@ CREATE POLICY "auth write camping-assets" ON storage.objects
   USING (bucket_id = 'camping-assets')
   WITH CHECK (bucket_id = 'camping-assets');
 
+-- === 3.5 RLS DÉSACTIVÉE (comme l'ancien projet — à sécuriser plus tard)
+ALTER TABLE campings         DISABLE ROW LEVEL SECURITY;
+ALTER TABLE gerants          DISABLE ROW LEVEL SECURITY;
+ALTER TABLE vacanciers       DISABLE ROW LEVEL SECURITY;
+ALTER TABLE animations       DISABLE ROW LEVEL SECURITY;
+ALTER TABLE groupes          DISABLE ROW LEVEL SECURITY;
+ALTER TABLE membres_groupes  DISABLE ROW LEVEL SECURITY;
+ALTER TABLE inscriptions     DISABLE ROW LEVEL SECURITY;
+ALTER TABLE messages         DISABLE ROW LEVEL SECURITY;
+ALTER TABLE positions        DISABLE ROW LEVEL SECURITY;
+ALTER TABLE candidatures     DISABLE ROW LEVEL SECURITY;
+
 -- === 4. REALTIME =============================================
 ALTER PUBLICATION supabase_realtime ADD TABLE campings;
 ALTER PUBLICATION supabase_realtime ADD TABLE messages;

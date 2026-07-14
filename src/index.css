@@ -70,3 +70,23 @@ input, textarea, select {
   from { transform: translateY(100%); }
   to { transform: translateY(0); }
 }
+
+/* --- Filtre "cartoon" appliqué aux tuiles satellite de la Map vacancier --- */
+.cc-toon-tiles {
+  filter: saturate(1.7) contrast(0.85) brightness(1.12) hue-rotate(-5deg);
+}
+
+/* Label rond avec le nom du camping */
+.cc-camping-label {
+  background: rgba(255,255,255,0.95);
+  padding: 6px 14px;
+  border-radius: 999px;
+  font-size: 13px;
+  font-weight: 700;
+  color: #1a4d1a;
+  box-shadow: 0 3px 12px rgba(0,0,0,0.25);
+  border: 2px solid #639922;
+  white-space: nowrap;
+  letter-spacing: 0.2px;
+  pointer-events: none;
+}

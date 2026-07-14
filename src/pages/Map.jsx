@@ -178,7 +178,8 @@ export default function Map({ camping: campingProp, vacancier }) {
 
       Lf.tileLayer(
         'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
-        { attribution: '© Esri, Maxar, Earthstar Geographics', maxZoom: 19, maxNativeZoom: 19 }
+        { attribution: '© Esri, Maxar, Earthstar Geographics', maxZoom: 19, maxNativeZoom: 19,
+          className: 'cc-toon-tiles' }
       ).addTo(map)
 
       Lf.control.zoom({ position: 'topright' }).addTo(map)
@@ -189,9 +190,33 @@ export default function Map({ camping: campingProp, vacancier }) {
         iconSize: [44, 44],
         iconAnchor: [22, 44],
       })
-      Lf.marker([coords.lat, coords.lng], { icon: campingIcon })
-        .addTo(map)
-        .bindPopup(`<b>${camping?.nom || 'Camping'}</b>`)
+      // Contour du camping (défini par l'admin) + label nom
+      const perim = camping?.carte_config?.perimeter
+      if (perim && perim.length >= 3) {
+        const poly = Lf.polygon(perim, {
+          color: couleur, weight: 3, fillColor: couleur, fillOpacity: 0.15,
+          interactive: false,
+        }).addTo(map)
+        map.fitBounds(poly.getBounds(), { padding: [30, 30] })
+
+        // Label au bord nord du polygone (haut) pour ne pas cacher les POI du centre
+        const bnds = poly.getBounds()
+        const labelPos = [bnds.getNorth(), (bnds.getWest() + bnds.getEast()) / 2]
+        const labelIcon = Lf.divIcon({
+          html: `<div class="cc-camping-label">🌲 ${camping.nom}</div>`,
+          className: '', iconSize: [0, 0],
+        })
+        Lf.marker(labelPos, { icon: labelIcon, interactive: false, zIndexOffset: 500 }).addTo(map)
+      } else {
+        // Pas de contour : pin classique + label au-dessus
+        Lf.marker([coords.lat, coords.lng], { icon: campingIcon })
+          .addTo(map).bindPopup(`<b>${camping?.nom || 'Camping'}</b>`)
+        const labelIcon = Lf.divIcon({
+          html: `<div class="cc-camping-label" style="transform:translateY(-58px)">🌲 ${camping?.nom || 'Camping'}</div>`,
+          className: '', iconSize: [0, 0],
+        })
+        Lf.marker([coords.lat, coords.lng], { icon: labelIcon, interactive: false, zIndexOffset: 500 }).addTo(map)
+      }
 
       // Drag → désync du suivi GPS
       map.on('dragstart', () => {
@@ -306,6 +331,17 @@ export default function Map({ camping: campingProp, vacancier }) {
     setSimPos(p => p ? { lat: p.lat + dlat, lng: p.lng + dlng } : p)
   }
 
+  // Clic sur la carte quand simulation active → téléporte le marker
+  useEffect(() => {
+    if (!simulating || !leafletMap.current) return
+    const map = leafletMap.current
+    function onMapClick(e) {
+      setSimPos({ lat: e.latlng.lat, lng: e.latlng.lng })
+    }
+    map.on('click', onMapClick)
+    return () => { map.off('click', onMapClick) }
+  }, [simulating, mapReady])
+
   // Flèches clavier quand simulation active
   useEffect(() => {
     if (!simulating) return
@@ -359,6 +395,9 @@ export default function Map({ camping: campingProp, vacancier }) {
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
             <span style={{ fontSize: 12, fontWeight: 700, color: '#f472b6' }}>🎮 Simulation GPS</span>
             <button onClick={stopSim} style={{ background: 'rgba(255,255,255,0.1)', border: 'none', color: '#fff', borderRadius: 6, padding: '2px 8px', cursor: 'pointer', fontSize: 12 }}>Stop ✕</button>
+          </div>
+          <div style={{ fontSize: 10, color: '#cbd5e1', marginBottom: 8, lineHeight: 1.4 }}>
+            💡 Cliquez sur la carte pour vous téléporter · flèches ou boutons pour marcher
           </div>
 
           {/* Coords */}
