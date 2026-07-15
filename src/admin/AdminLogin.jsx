@@ -1,9 +1,18 @@
 import { useState } from 'react'
 import { supabase } from '../supabase'
 
+function slugify(nom) {
+  return nom.toLowerCase()
+    .normalize('NFD').replace(/[̀-ͯ]/g, '')
+    .replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '')
+    .slice(0, 40)
+}
+
 export default function AdminLogin({ onLogin }) {
+  const [mode, setMode]         = useState('login') // 'login' | 'signup'
   const [email, setEmail]       = useState('')
   const [password, setPassword] = useState('')
+  const [nomCamping, setNomCamping] = useState('')
   const [error, setError]       = useState('')
   const [loading, setLoading]   = useState(false)
 
@@ -36,6 +45,41 @@ export default function AdminLogin({ onLogin }) {
     onLogin(data.session)
   }
 
+  async function handleSignup(e) {
+    e.preventDefault()
+    setError('')
+    if (!nomCamping.trim()) { setError('Indiquez le nom de votre camping.'); return }
+    if (password.length < 8) { setError('Mot de passe : 8 caractères minimum.'); return }
+    setLoading(true)
+
+    // 1. Compte auth
+    const { data, error: signErr } = await supabase.auth.signUp({ email, password })
+    if (signErr) {
+      setError(signErr.message.includes('already') ? 'Un compte existe déjà avec cet email.' : signErr.message)
+      setLoading(false); return
+    }
+    if (!data.session) {
+      setError('Vérifiez votre boîte mail pour confirmer votre compte, puis connectez-vous.')
+      setLoading(false); setMode('login'); return
+    }
+
+    // 2. Camping (slug unique)
+    let slug = slugify(nomCamping)
+    const { data: existing } = await supabase.from('campings').select('id').eq('slug', slug).maybeSingle()
+    if (existing) slug = `${slug}-${Math.floor(Math.random() * 900 + 100)}`
+
+    const { data: newCamping, error: campErr } = await supabase.from('campings')
+      .insert({ nom: nomCamping.trim(), slug }).select().single()
+    if (campErr) { setError('Erreur création camping : ' + campErr.message); setLoading(false); return }
+
+    // 3. Lien gérant
+    const { error: gerErr } = await supabase.from('gerants')
+      .insert({ user_id: data.session.user.id, camping_id: newCamping.id, email })
+    if (gerErr) { setError('Erreur : ' + gerErr.message); setLoading(false); return }
+
+    onLogin(data.session)
+  }
+
   return (
     <div style={{
       minHeight: '100vh', background: '#0d1f0d',
@@ -51,7 +95,21 @@ export default function AdminLogin({ onLogin }) {
         </div>
 
         {/* Formulaire */}
-        <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+        <form onSubmit={mode === 'login' ? handleSubmit : handleSignup}
+              style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+          {mode === 'signup' && (
+            <div>
+              <label style={labelStyle}>Nom de votre camping</label>
+              <input
+                type="text"
+                value={nomCamping}
+                onChange={e => setNomCamping(e.target.value)}
+                required
+                placeholder="ex: Camping Les Flots Bleus"
+                style={inputStyle}
+              />
+            </div>
+          )}
           <div>
             <label style={labelStyle}>Email</label>
             <input
@@ -71,7 +129,7 @@ export default function AdminLogin({ onLogin }) {
               value={password}
               onChange={e => setPassword(e.target.value)}
               required
-              placeholder="••••••••"
+              placeholder={mode === 'signup' ? '8 caractères minimum' : '••••••••'}
               style={inputStyle}
             />
           </div>
@@ -92,7 +150,19 @@ export default function AdminLogin({ onLogin }) {
               marginTop: 4, transition: 'background 0.15s',
             }}
           >
-            {loading ? 'Connexion...' : 'Se connecter'}
+            {loading
+              ? (mode === 'login' ? 'Connexion...' : 'Création...')
+              : (mode === 'login' ? 'Se connecter' : '🚀 Créer mon espace camping')}
+          </button>
+
+          <button
+            type="button"
+            onClick={() => { setMode(mode === 'login' ? 'signup' : 'login'); setError('') }}
+            style={{ background: 'none', border: 'none', color: '#C0DD97', fontSize: 13, cursor: 'pointer', marginTop: 6, textDecoration: 'underline' }}
+          >
+            {mode === 'login'
+              ? "Nouveau ? Créer l'espace de mon camping"
+              : 'Déjà un compte ? Se connecter'}
           </button>
         </form>
       </div>

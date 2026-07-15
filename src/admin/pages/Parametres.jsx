@@ -164,6 +164,39 @@ export default function Parametres({ gerant, camping, session }) {
           <QRCodeGenerator url={appUrl} campingNom={camping?.nom} />
         </Card>
 
+        {/* Export CSV */}
+        <Card title="Export des données">
+          <p style={{ fontSize: 14, color: '#6b7280', marginBottom: 16 }}>
+            Téléchargez la liste de vos vacanciers au format CSV (Excel).
+          </p>
+          <button
+            onClick={async () => {
+              const { data } = await supabase.from('vacanciers')
+                .select('pseudo, emplacement, tranche_age, avec, created_at')
+                .eq('camping_id', camping.id).order('created_at')
+              const rows = data || []
+              const header = 'Pseudo;Emplacement;Tranche d\'age;Avec;Inscrit le'
+              const lines = rows.map(v => [
+                v.pseudo, v.emplacement || '', v.tranche_age || '', v.avec || '',
+                new Date(v.created_at).toLocaleDateString('fr-FR'),
+              ].map(x => `"${String(x).replace(/"/g, '""')}"`).join(';'))
+              const csv = '﻿' + [header, ...lines].join('\r\n')
+              const blob = new Blob([csv], { type: 'text/csv;charset=utf-8' })
+              const a = document.createElement('a')
+              a.href = URL.createObjectURL(blob)
+              a.download = `vacanciers-${camping.slug}-${new Date().toISOString().slice(0, 10)}.csv`
+              a.click()
+              URL.revokeObjectURL(a.href)
+            }}
+            style={{
+              background: '#639922', color: '#fff', padding: '11px 20px',
+              borderRadius: 10, border: 'none', fontSize: 14, fontWeight: 600, cursor: 'pointer',
+            }}
+          >
+            📥 Exporter les vacanciers (CSV)
+          </button>
+        </Card>
+
         {/* Zone danger */}
         <div style={{
           background: '#fff5f5', borderRadius: 14, padding: '20px 22px',

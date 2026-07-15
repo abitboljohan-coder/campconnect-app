@@ -353,6 +353,18 @@ export default function Onboarding({ initialCamping, onDone }) {
             />
           </label>
 
+          {/* Consentement RGPD */}
+          <label style={{ display: 'flex', alignItems: 'flex-start', gap: 10, cursor: 'pointer', fontSize: 12, color: '#6b7280', lineHeight: 1.5 }}>
+            <input type="checkbox" required style={{ marginTop: 2, width: 16, height: 16, flexShrink: 0 }} />
+            <span>
+              J'accepte que mon pseudo, mon avatar et mon emplacement soient visibles
+              par les autres vacanciers du camping pendant mon séjour. Mes données sont
+              supprimées en fin de saison.{' '}
+              <a href="https://www.campconnect.fr/confidentialite.html" target="_blank" rel="noreferrer"
+                 style={{ color: '#639922' }}>Politique de confidentialité</a>
+            </span>
+          </label>
+
           {formError && (
             <p style={{ color: '#dc2626', fontSize: 13, padding: '10px 12px', background: '#fef2f2', borderRadius: 8 }}>
               {formError}

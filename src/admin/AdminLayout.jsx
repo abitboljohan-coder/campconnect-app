@@ -7,6 +7,7 @@ const NAV_ITEMS = [
   { path: '/admin/carte',       icon: '🗺️', label: 'Carte' },
   { path: '/admin/apparence',   icon: '🎨', label: 'Apparence' },
   { path: '/admin/stats',       icon: '📊', label: 'Stats' },
+  { path: '/admin/moderation',  icon: '🛡️', label: 'Modération' },
   { path: '/admin/parametres',  icon: '⚙️', label: 'Paramètres' },
 ]
 
