@@ -4,8 +4,19 @@ import { supabase } from '../supabase'
 
 const EMOJIS = ['🏐', '🔥', '🚶', '🎮', '🎤', '🏊', '🚴', '🎯', '♟️', '🧘', '🎸', '🍕']
 
+const TEMPLATES = [
+  { emoji: '🎳', titre: 'Pétanque',        lieu: 'Terrain de pétanque' },
+  { emoji: '🍻', titre: 'Apéro ce soir',   lieu: '' },
+  { emoji: '🥾', titre: 'Rando demain matin', lieu: 'Accueil' },
+  { emoji: '🏐', titre: 'Volley',          lieu: 'Terrain de sport' },
+  { emoji: '🏊', titre: 'Piscine',         lieu: 'Piscine' },
+  { emoji: '🍖', titre: 'BBQ',             lieu: '' },
+  { emoji: '🎮', titre: 'Jeux / soirée',   lieu: '' },
+]
+
 export default function Groupes({ camping, vacancier }) {
   const [groupes, setGroupes]     = useState([])
+  const [membresMap, setMembresMap] = useState({})
   const [mesGroupes, setMesGroupes] = useState([])
   const [loading, setLoading]     = useState(true)
   const [showModal, setShowModal] = useState(false)
@@ -22,6 +33,19 @@ export default function Groupes({ camping, vacancier }) {
     setGroupes(grps || [])
     setMesGroupes((membres || []).map(m => m.groupe_id))
     setLoading(false)
+
+    // Avatars des membres par groupe
+    const ids = (grps || []).map(g => g.id)
+    if (ids.length) {
+      const { data: allMembres } = await supabase
+        .from('membres_groupes').select('groupe_id, vacanciers(avatar_emoji)').in('groupe_id', ids)
+      const map = {}
+      for (const m of allMembres || []) {
+        if (!map[m.groupe_id]) map[m.groupe_id] = []
+        map[m.groupe_id].push(m.vacanciers?.avatar_emoji || '🙂')
+      }
+      setMembresMap(map)
+    }
   }
 
   useEffect(() => { load() }, [camping.id, vacancier.id])
@@ -83,7 +107,7 @@ export default function Groupes({ camping, vacancier }) {
             <Section title="Mes groupes">
               {mesGrps.map(g => (
                 <GroupRow key={g.id} groupe={g} couleur={couleur} isMember={true}
-                  onAction={() => navigate(`/chat/${g.id}`)} />
+                  avatars={membresMap[g.id]} onAction={() => navigate(`/chat/${g.id}`)} />
               ))}
             </Section>
           )}
@@ -96,7 +120,7 @@ export default function Groupes({ camping, vacancier }) {
             ) : (
               autresGrps.map(g => (
                 <GroupRow key={g.id} groupe={g} couleur={couleur} isMember={false}
-                  onAction={() => rejoindre(g.id)} />
+                  avatars={membresMap[g.id]} onAction={() => rejoindre(g.id)} />
               ))
             )}
           </Section>
@@ -134,7 +158,23 @@ export default function Groupes({ camping, vacancier }) {
             onClick={e => e.stopPropagation()}
           >
             <div style={{ width: 40, height: 4, background: '#e5e7eb', borderRadius: 2, margin: '0 auto 20px' }} />
-            <h2 style={{ fontSize: 20, marginBottom: 20, color: '#1a1a1a' }}>Créer un groupe</h2>
+            <h2 style={{ fontSize: 20, marginBottom: 14, color: '#1a1a1a' }}>Créer un groupe</h2>
+
+            {/* Templates 1-tap */}
+            <div style={{ display: 'flex', gap: 8, overflowX: 'auto', paddingBottom: 10, marginBottom: 8 }}>
+              {TEMPLATES.map(t => (
+                <button key={t.titre} type="button"
+                  onClick={() => setForm(f => ({ ...f, titre: t.titre, emoji: t.emoji, lieu: t.lieu }))}
+                  style={{
+                    flexShrink: 0, padding: '8px 13px', borderRadius: 20,
+                    border: form.titre === t.titre ? `2px solid ${couleur}` : '1.5px solid #e5e7eb',
+                    background: form.titre === t.titre ? `${couleur}15` : '#fafafa',
+                    fontSize: 13, fontWeight: 600, color: '#374151', cursor: 'pointer',
+                  }}>
+                  {t.emoji} {t.titre}
+                </button>
+              ))}
+            </div>
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
               {/* Emoji picker */}
@@ -245,7 +285,32 @@ function Section({ title, children }) {
   )
 }
 
-function GroupRow({ groupe, couleur, isMember, onAction }) {
+function AvatarStack({ avatars, couleur }) {
+  if (!avatars?.length) return null
+  const shown = avatars.slice(0, 4)
+  return (
+    <div style={{ display: 'flex', alignItems: 'center', marginTop: 5 }}>
+      {shown.map((a, i) => (
+        <div key={i} style={{
+          width: 22, height: 22, borderRadius: '50%', background: '#fff',
+          border: '1.5px solid #eee', display: 'flex', alignItems: 'center', justifyContent: 'center',
+          fontSize: 12, marginLeft: i === 0 ? 0 : -7, zIndex: 5 - i,
+          boxShadow: '0 1px 3px rgba(0,0,0,0.12)',
+        }}>{a}</div>
+      ))}
+      {avatars.length > 4 && (
+        <span style={{ fontSize: 11, fontWeight: 700, color: couleur, marginLeft: 4 }}>
+          +{avatars.length - 4}
+        </span>
+      )}
+      <span style={{ fontSize: 11, color: '#9ca3af', marginLeft: 6 }}>
+        {avatars.length} membre{avatars.length > 1 ? 's' : ''}
+      </span>
+    </div>
+  )
+}
+
+function GroupRow({ groupe, couleur, isMember, onAction, avatars }) {
   const heureStr = groupe.heure
     ? new Date(groupe.heure).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })
     : null
@@ -270,6 +335,7 @@ function GroupRow({ groupe, couleur, isMember, onAction }) {
           {groupe.titre}
         </div>
         {meta && <div style={{ fontSize: 12, color: '#6b7280', marginTop: 2, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{meta}</div>}
+        <AvatarStack avatars={avatars} couleur={couleur} />
       </div>
       <button
         onClick={onAction}

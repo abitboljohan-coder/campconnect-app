@@ -1,7 +1,77 @@
 import { useEffect, useState } from 'react'
+import { Link } from 'react-router-dom'
 import { supabase } from '../../supabase'
 import StatCard from '../components/StatCard'
 import { getHourlyCode } from '../../pages/Onboarding'
+
+function OnboardingChecklist({ camping, stats }) {
+  const hasLogo      = !!camping?.logo_url
+  const hasColor     = !!camping?.couleur_principale && camping.couleur_principale !== '#639922'
+  const perimeter    = camping?.carte_config?.perimeter || []
+  const pins         = camping?.carte_config?.pins || []
+  const hasContour   = perimeter.length >= 3
+  const hasPois      = pins.length > 0
+  const hasAnim      = stats.vacanciers >= 0 // placeholder — always show for now
+
+  const steps = [
+    { done: hasLogo || hasColor, label: 'Personnalisez l\'apparence (logo, couleurs)', to: '/admin/apparence', icon: '🎨' },
+    { done: hasContour,          label: 'Tracez le contour de votre camping',          to: '/admin/carte',     icon: '🗺️' },
+    { done: hasPois,             label: 'Ajoutez vos points d\'intérêt (piscine, sanitaires…)', to: '/admin/carte', icon: '📍' },
+    { done: false,               label: 'Créez votre première animation',              to: '/admin/animations', icon: '🎉' },
+  ]
+  const doneCount = steps.filter(s => s.done).length
+  if (doneCount === steps.length) return null // tout est fait → on masque
+
+  return (
+    <div style={{
+      background: 'linear-gradient(135deg, #f0fdf4, #ecfccb)',
+      borderRadius: 16, padding: '20px 22px', marginBottom: 24,
+      border: '1px solid #bbf7d0',
+    }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 }}>
+        <div>
+          <div style={{ fontSize: 16, fontWeight: 700, color: '#1a4d1a' }}>
+            🚀 Bienvenue ! Configurez votre camping en 4 étapes
+          </div>
+          <div style={{ fontSize: 12, color: '#166534', marginTop: 2 }}>
+            {doneCount}/{steps.length} étapes complétées
+          </div>
+        </div>
+        <div style={{ fontSize: 26, fontWeight: 800, color: '#166534' }}>
+          {Math.round((doneCount / steps.length) * 100)}%
+        </div>
+      </div>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+        {steps.map((s, i) => (
+          <Link key={i} to={s.to} style={{
+            display: 'flex', alignItems: 'center', gap: 12, padding: '10px 14px',
+            background: s.done ? 'rgba(22,101,52,0.08)' : '#fff',
+            borderRadius: 10, textDecoration: 'none',
+            border: '1px solid ' + (s.done ? 'transparent' : 'rgba(0,0,0,0.06)'),
+            opacity: s.done ? 0.7 : 1,
+          }}>
+            <div style={{
+              width: 26, height: 26, borderRadius: '50%',
+              background: s.done ? '#639922' : '#fff',
+              border: '2px solid ' + (s.done ? '#639922' : '#d1d5db'),
+              color: '#fff', fontSize: 14, fontWeight: 800,
+              display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
+            }}>
+              {s.done ? '✓' : ''}
+            </div>
+            <span style={{ fontSize: 20 }}>{s.icon}</span>
+            <span style={{ flex: 1, fontSize: 14, fontWeight: 600,
+                           color: s.done ? '#6b7280' : '#1a1a1a',
+                           textDecoration: s.done ? 'line-through' : 'none' }}>
+              {s.label}
+            </span>
+            {!s.done && <span style={{ fontSize: 12, color: '#639922', fontWeight: 700 }}>Commencer →</span>}
+          </Link>
+        ))}
+      </div>
+    </div>
+  )
+}
 
 export default function Overview({ camping }) {
   const [stats, setStats]           = useState({ vacanciers: 0, groupes: 0, inscriptions: 0, taux: 0 })
@@ -75,6 +145,9 @@ export default function Overview({ camping }) {
           {new Date().toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}
         </p>
       </div>
+
+      {/* Guide de démarrage — masqué quand tout est configuré */}
+      <OnboardingChecklist camping={camping} stats={stats} />
 
       {/* Code d'accès + QR */}
       <AccessCodeCard camping={camping} />

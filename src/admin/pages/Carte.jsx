@@ -3,7 +3,7 @@ import { supabase } from '../../supabase'
 import MapEditor from '../components/MapEditor'
 import PlanCalibrator from '../components/PlanCalibrator'
 import PerimeterEditor from '../components/PerimeterEditor'
-import { detectPois, geocodeCamping, findCampsitePolygon } from '../lib/osmPois'
+import { detectPois, geocodeCamping, findCampsitePolygon, searchCampsiteByName } from '../lib/osmPois'
 
 async function compressToBlob(file, maxWidth = 2000, quality = 0.82) {
   const bmp = await createImageBitmap(file)
@@ -59,41 +59,112 @@ export default function Carte({ camping, setCamping }) {
     if (autoRunning) return
     setAutoRunning(true); setError(''); setSuccess(''); setAutoLog([])
     const log = (msg) => setAutoLog(prev => [...prev, msg])
+    let savedSomething = false
     try {
-      const query = `${camping.nom}${autoAddress ? ' ' + autoAddress : ''} France`
-      log(`🔎 Recherche : « ${query} »`)
-      const geo = await geocodeCamping(query)
-      if (!geo.length) throw new Error('Adresse introuvable — précisez l\'adresse.')
-      const best = geo[0]
-      const lat = +best.lat, lng = +best.lon
-      log(`📍 Localisé : ${best.display_name.split(',').slice(0, 3).join(',')}`)
+      const addr = autoAddress.trim()
+      const cityHint = addr ? (addr.split(',').pop() || '').replace(/\d{5}/, '').trim() : ''
 
-      log(`🗺️  Recherche du contour dans OSM…`)
-      const poly = await findCampsitePolygon(lat, lng, 800)
+      // ⚡ Lancement PARALLÈLE : Overpass-par-nom + plusieurs variantes Nominatim
+      log(`⚡ Recherche parallèle (OSM + géocodage)…`)
+
+      const nomQueries = []
+      if (addr) {
+        nomQueries.push(addr + ' France')
+        const parts = addr.split(',').map(s => s.trim()).filter(Boolean)
+        if (parts.length > 1) {
+          nomQueries.push(parts.slice(-2).join(', ') + ' France')
+          nomQueries.push(parts[parts.length - 1] + ' France')
+        }
+        if (addr.includes('-')) nomQueries.push(addr.split('-')[0].trim() + ' France')
+      }
+      nomQueries.push(`${camping.nom} ${cityHint} France`.replace(/\s+/g, ' ').trim())
+      nomQueries.push(`${camping.nom} France`)
+      nomQueries.push(camping.nom)
+
+      // On lance tout en parallèle
+      const osmPromise = searchCampsiteByName(camping.nom, cityHint)
+        .then(r => ({ src: 'osm', results: r }))
+        .catch(e => ({ src: 'osm', results: [], err: e.message }))
+      const nomPromises = nomQueries.map(q =>
+        geocodeCamping(q).then(r => ({ src: 'nom', query: q, results: r }))
+                         .catch(() => ({ src: 'nom', query: q, results: [] }))
+      )
+
+      // On attend TOUS pour départager (OSM > Nominatim si les 2 trouvent)
+      const all = await Promise.all([osmPromise, ...nomPromises])
+      const osm = all.find(a => a.src === 'osm' && a.results.length)
+      const nom = all.find(a => a.src === 'nom' && a.results.length)
+
+      let poly = null, lat, lng
+      if (osm) {
+        const best = osm.results.sort((a, b) => (b.poly ? 1 : 0) - (a.poly ? 1 : 0))[0]
+        lat = best.center.lat; lng = best.center.lng
+        if (best.poly) poly = best.poly
+        log(`✅ OSM : « ${best.name} »${best.addr ? ' — ' + best.addr : ''} (${osm.results.length} match${osm.results.length > 1 ? 's' : ''})`)
+      } else if (nom) {
+        const b = nom.results[0]
+        lat = +b.lat; lng = +b.lon
+        log(`📍 Géocodé (${nom.query}) : ${b.display_name.split(',').slice(0, 3).join(',')}`)
+      } else {
+        throw new Error('Introuvable partout. Utilisez « Tracer le contour » à la main.')
+      }
+
+      if (!poly) {
+        log(`🗺️  Recherche du contour dans un rayon de 800 m…`)
+        try {
+          poly = await findCampsitePolygon(lat, lng, 800)
+          if (poly) log(`✅ Contour importé (${poly.length} points)`)
+          else     log(`⚠️  Pas de contour dans OSM autour de ce point`)
+        } catch (e) {
+          log(`⚠️  Recherche contour indisponible (${e.message})`)
+        }
+      } else {
+        log(`✅ Contour déjà obtenu via OSM (${poly.length} points)`)
+      }
+
       let newCfg = { ...(camping.carte_config || {}) }
+
+      // Sauvegarde intermédiaire : si on a un contour, on l'enregistre TOUT DE SUITE
       if (poly) {
         newCfg.perimeter = poly
-        log(`✅ Contour importé (${poly.length} points)`)
-      } else {
-        log(`⚠️  Pas de contour dans OSM — utilisez « Tracer le contour »`)
+        const { error: dbErr1 } = await supabase.from('campings')
+          .update({ carte_config: newCfg }).eq('id', camping.id)
+        if (!dbErr1) {
+          setCamping(c => ({ ...c, carte_config: newCfg }))
+          savedSomething = true
+        }
       }
 
       log(`🎯 Détection des POI fiables…`)
-      const pois = await detectPois(poly || null, { lat, lng })
-      const existing = camping?.carte_config?.pins || []
-      const existingIds = new Set(existing.map(p => p.ref_id))
-      const merged = [...existing, ...pois.filter(p => !existingIds.has(p.ref_id))]
-      newCfg.pins = merged
-      log(`✅ ${pois.length} POI détectés (seuls les plus fiables)`)
+      let pois = []
+      try {
+        pois = await detectPois(poly || null, { lat, lng })
+        log(`✅ ${pois.length} POI détectés`)
+      } catch (e) {
+        log(`⚠️  POI OSM indisponibles (retry a échoué) — le contour est enregistré, ajoutez les POI à la main.`)
+      }
+      const manuals = (camping?.carte_config?.pins || []).filter(p => !p.osm)
+      newCfg.pins = [...manuals, ...pois]
+      if (pois.length) log(`   (${manuals.length} POI manuels conservés)`)
 
       const { error: dbErr } = await supabase.from('campings')
         .update({ carte_config: newCfg }).eq('id', camping.id)
       if (dbErr) throw dbErr
       setCamping(c => ({ ...c, carte_config: newCfg }))
+      savedSomething = true
       log(`💾 Configuration enregistrée`)
       setSuccess('Auto-configuration terminée !')
       setTimeout(() => setSuccess(''), 5000)
-    } catch (e) { setError('Erreur : ' + e.message); log(`❌ ${e.message}`) }
+    } catch (e) {
+      log(`❌ ${e.message}`)
+      // Si on a déjà sauvé quelque chose (le contour), on ne montre PAS d'erreur globale
+      if (savedSomething) {
+        setSuccess('Contour enregistré (POI à ajouter manuellement)')
+        setTimeout(() => setSuccess(''), 5000)
+      } else {
+        setError('Erreur : ' + e.message)
+      }
+    }
     setAutoRunning(false)
   }
 
@@ -109,10 +180,9 @@ export default function Carte({ camping, setCamping }) {
         setError('Aucun POI détecté dans OSM. Ajoutez-les manuellement.')
         setDetecting(false); return
       }
-      const existing = camping?.carte_config?.pins || []
-      const existingIds = new Set(existing.map(p => p.ref_id))
-      const merged = [...existing, ...pois.filter(p => !existingIds.has(p.ref_id))]
-      const newCfg = { ...(camping.carte_config || {}), pins: merged }
+      // Remplace tous les POI OSM par la détection fraîche ; garde uniquement les manuels
+      const manuals = (camping?.carte_config?.pins || []).filter(p => !p.osm)
+      const newCfg = { ...(camping.carte_config || {}), pins: [...manuals, ...pois] }
       const { error: dbErr } = await supabase.from('campings')
         .update({ carte_config: newCfg }).eq('id', camping.id)
       if (dbErr) throw dbErr
@@ -142,57 +212,54 @@ export default function Carte({ camping, setCamping }) {
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
 
-        <Card title="🚀 Auto-configuration">
-          <p style={{ fontSize: 13, color: '#6b7280', marginBottom: 12, lineHeight: 1.6 }}>
-            Un clic : géolocalise votre camping ({camping?.nom || '—'}), importe son contour depuis OpenStreetMap
-            et détecte automatiquement les équipements (piscine, sanitaires, terrains, restaurant…).
-          </p>
-          <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', alignItems: 'center' }}>
-            <input
-              value={autoAddress}
-              onChange={e => setAutoAddress(e.target.value)}
-              placeholder="Adresse (facultatif, ex : Fréjus, Var)"
-              style={{ flex: '1 1 240px', padding: '10px 14px', border: '1px solid #d1d5db',
-                       borderRadius: 8, fontSize: 13, outline: 'none' }} />
-            <button onClick={autoConfigure} disabled={autoRunning}
-              style={{ background: '#639922', color: '#fff', padding: '10px 20px',
-                       borderRadius: 8, border: 'none', fontSize: 14, fontWeight: 700,
-                       cursor: autoRunning ? 'wait' : 'pointer' }}>
-              {autoRunning ? '⏳ En cours…' : '🚀 Auto-configurer'}
-            </button>
-          </div>
-          {autoLog.length > 0 && (
-            <div style={{ marginTop: 14, padding: 12, background: '#0f172a', color: '#e2e8f0',
-                          borderRadius: 8, fontFamily: 'monospace', fontSize: 12, lineHeight: 1.7 }}>
-              {autoLog.map((l, i) => <div key={i}>{l}</div>)}
-            </div>
-          )}
-        </Card>
-
-        <Card title="Contour du camping">
-          <p style={{ fontSize: 13, color: '#6b7280', marginBottom: 14, lineHeight: 1.6 }}>
-            Délimitez votre camping sur le satellite. Ce contour sert de zone d'accès pour les vacanciers
-            et de repère avant même d'ajouter un plan.
-          </p>
+        {/* ÉTAPE 1 — CONTOUR */}
+        <Step n={1} title="Tracer le contour du camping"
+              subtitle="Délimitez votre camping sur le satellite. Sert de repère à vos vacanciers et prépare la détection des équipements."
+              done={perimeter.length >= 3}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
-            <div style={{
-              padding: '8px 14px', borderRadius: 10, fontSize: 13, fontWeight: 500,
-              background: perimeter.length >= 3 ? '#dcfce7' : '#fef3c7',
-              color:      perimeter.length >= 3 ? '#166534' : '#92400e',
-            }}>
-              {perimeter.length >= 3
-                ? `✅ Contour tracé (${perimeter.length} points)`
-                : '⚠️ Aucun contour tracé'}
-            </div>
+            {perimeter.length >= 3
+              ? <Badge ok>✅ Contour tracé ({perimeter.length} points)</Badge>
+              : <Badge>⚠️ Pas encore tracé</Badge>}
             <button onClick={() => setShowPerimeter(true)}
-              style={{ background: '#639922', color: '#fff', padding: '10px 18px',
-                       borderRadius: 8, border: 'none', fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>
+              style={btnPrimary}>
               🗺️ {perimeter.length >= 3 ? 'Modifier le contour' : 'Tracer le contour'}
             </button>
+            <span style={{ fontSize: 12, color: '#6b7280' }}>
+              (import OSM auto, rectangle ou clic-à-clic — au choix dans l'éditeur)
+            </span>
           </div>
-        </Card>
+        </Step>
 
-        <Card title="Plan du camping">
+        {/* ÉTAPE 2 — POI AUTO */}
+        <Step n={2} title="Détecter les points d'intérêt"
+              subtitle="Piscine, sanitaires, restaurant, tennis, pétanque, aire de jeux… récupérés automatiquement depuis OpenStreetMap."
+              done={(camping?.carte_config?.pins || []).some(p => p.osm)}
+              disabled={perimeter.length < 3}
+              disabledReason="Terminez l'étape 1 (contour) pour un ciblage précis.">
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
+            {(camping?.carte_config?.pins || []).some(p => p.osm)
+              ? <Badge ok>✅ {(camping?.carte_config?.pins || []).filter(p => p.osm).length} POI détectés</Badge>
+              : <Badge>⚠️ Pas encore détectés</Badge>}
+            <button onClick={autoDetectPois}
+              disabled={detecting || perimeter.length < 3}
+              style={perimeter.length < 3 ? btnDisabled : btnPrimary}>
+              {detecting ? '⏳ Détection…' : '🎯 Détecter automatiquement'}
+            </button>
+          </div>
+          <div style={{ marginTop: 14 }}>
+            <MapEditor
+              key={`${camping?.id}-${(camping?.carte_config?.pins || []).length}-${(camping?.carte_config?.perimeter || []).length}`}
+              camping={camping}
+              setCamping={setCamping}
+            />
+          </div>
+        </Step>
+
+        {/* ÉTAPE 3 — PLAN (OPTIONNEL) */}
+        <Step n={3} title="Ajouter votre plan (optionnel)"
+              subtitle="Si vous avez un plan illustré du camping, uploadez-le et calez-le sur le satellite."
+              done={!!planUrl && !!planBounds}
+              optional>
           {!planUrl ? (
             <label style={{ display: 'block', cursor: 'pointer' }}>
               <div style={{
@@ -259,27 +326,7 @@ export default function Carte({ camping, setCamping }) {
             </div>
           )}
           {uploading && <UploadProgress label="Compression et upload..." />}
-        </Card>
-
-        <Card title="Points d'intérêt">
-          <p style={{ fontSize: 13, color: '#6b7280', marginBottom: 12, lineHeight: 1.6 }}>
-            Placez les équipements sur la carte satellite ou sur le plan.
-            Vos vacanciers les verront dans l'app.
-          </p>
-          <div style={{ marginBottom: 16 }}>
-            <button onClick={autoDetectPois} disabled={detecting}
-              style={{ background: '#eef2ff', color: '#4338ca', border: '1px solid #c7d2fe',
-                       padding: '10px 16px', borderRadius: 8, fontSize: 13, fontWeight: 600,
-                       cursor: detecting ? 'wait' : 'pointer' }}>
-              {detecting ? '⏳ Détection en cours…' : '🎯 Détecter les POI automatiquement (OSM)'}
-            </button>
-            <div style={{ fontSize: 11, color: '#6b7280', marginTop: 6 }}>
-              Piscine, sanitaires, restaurant, pétanque, tennis, aire de jeux… récupérés depuis OpenStreetMap.
-              {perimeter.length >= 3 ? ' Limité au contour du camping.' : ' Astuce : tracez d\'abord le contour pour un meilleur ciblage.'}
-            </div>
-          </div>
-          <MapEditor camping={camping} setCamping={setCamping} />
-        </Card>
+        </Step>
       </div>
 
       {showCalibrator && (
@@ -307,6 +354,72 @@ function UploadProgress({ label }) {
       <div style={{ width: 16, height: 16, border: '2px solid #639922', borderTopColor: 'transparent',
                     borderRadius: '50%', animation: 'spin 0.8s linear infinite', flexShrink: 0 }} />
       <span style={{ fontSize: 13, color: '#166534', fontWeight: 500 }}>{label}</span>
+    </div>
+  )
+}
+
+const btnPrimary = {
+  background: '#639922', color: '#fff', padding: '10px 18px',
+  borderRadius: 8, border: 'none', fontSize: 13, fontWeight: 600, cursor: 'pointer',
+}
+const btnDisabled = {
+  ...btnPrimary, background: '#e5e7eb', color: '#9ca3af', cursor: 'not-allowed',
+}
+
+function Badge({ ok, children }) {
+  return (
+    <span style={{
+      padding: '6px 12px', borderRadius: 999, fontSize: 12, fontWeight: 600,
+      background: ok ? '#dcfce7' : '#fef3c7',
+      color:      ok ? '#166534' : '#92400e',
+      whiteSpace: 'nowrap',
+    }}>{children}</span>
+  )
+}
+
+function Step({ n, title, subtitle, done, disabled, disabledReason, optional, children }) {
+  const state = disabled ? 'disabled' : done ? 'done' : 'active'
+  const numBg = state === 'done'     ? '#639922'
+              : state === 'disabled' ? '#e5e7eb'
+                                     : '#1a4d1a'
+  const numFg = state === 'disabled' ? '#9ca3af' : '#fff'
+  return (
+    <div style={{
+      background: '#fff', borderRadius: 16,
+      border: '1px solid ' + (state === 'active' ? '#639922' : 'rgba(0,0,0,0.07)'),
+      boxShadow: state === 'active' ? '0 4px 20px rgba(99,153,34,0.10)' : 'none',
+      opacity: state === 'disabled' ? 0.55 : 1,
+      overflow: 'hidden', transition: 'all 0.2s',
+    }}>
+      <div style={{ display: 'flex', gap: 14, padding: '18px 22px', alignItems: 'flex-start',
+                    borderBottom: '1px solid rgba(0,0,0,0.05)' }}>
+        <div style={{
+          width: 36, height: 36, borderRadius: 12, background: numBg, color: numFg,
+          fontSize: 16, fontWeight: 800, display: 'flex', alignItems: 'center', justifyContent: 'center',
+          flexShrink: 0,
+        }}>
+          {state === 'done' ? '✓' : n}
+        </div>
+        <div style={{ flex: 1 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            <h2 style={{ fontSize: 16, fontWeight: 700, color: '#1a1a1a', margin: 0 }}>{title}</h2>
+            {optional && <span style={{ fontSize: 11, padding: '2px 8px', borderRadius: 6,
+                                        background: '#f3f4f6', color: '#6b7280', fontWeight: 600 }}>
+              OPTIONNEL
+            </span>}
+          </div>
+          <p style={{ margin: '4px 0 0', fontSize: 13, color: '#6b7280', lineHeight: 1.5 }}>
+            {subtitle}
+          </p>
+        </div>
+      </div>
+      <div style={{ padding: '18px 22px' }}>
+        {disabled ? (
+          <div style={{ fontSize: 13, color: '#9ca3af', fontStyle: 'italic' }}>
+            🔒 {disabledReason || 'Terminez l\'étape précédente.'}
+          </div>
+        ) : children}
+      </div>
     </div>
   )
 }

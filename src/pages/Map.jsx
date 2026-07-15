@@ -318,29 +318,63 @@ export default function Map({ camping: campingProp, vacancier }) {
     return null
   })() : null
 
+  const walkAnimRef = useRef(null)
+
   function startSim() {
-    const start = userPos || campingCoords || { lat: 44.5, lng: 6.3 }
+    // Démarre au centre du contour si dispo, sinon GPS réel, sinon coords camping
+    const perim = camping?.carte_config?.perimeter
+    let start
+    if (perim?.length >= 3) {
+      const lat = perim.reduce((s, p) => s + p[0], 0) / perim.length
+      const lng = perim.reduce((s, p) => s + p[1], 0) / perim.length
+      start = { lat, lng }
+    } else {
+      start = userPos || campingCoords || { lat: 44.5, lng: 6.3 }
+    }
     setSimPos(start)
     setSimulating(true)
     followingRef.current = true
     setFollowing(true)
   }
-  function stopSim() { setSimulating(false); setSimPos(null) }
+  function stopSim() {
+    if (walkAnimRef.current) cancelAnimationFrame(walkAnimRef.current)
+    setSimulating(false); setSimPos(null)
+  }
 
   function moveSimPos(dlat, dlng) {
+    if (walkAnimRef.current) cancelAnimationFrame(walkAnimRef.current)
     setSimPos(p => p ? { lat: p.lat + dlat, lng: p.lng + dlng } : p)
   }
 
-  // Clic sur la carte quand simulation active → téléporte le marker
+  // Marche animée vers une destination (vitesse ~ 1.4 m/s x20 pour la démo)
+  function walkTo(dest) {
+    if (walkAnimRef.current) cancelAnimationFrame(walkAnimRef.current)
+    const from = simPosRef.current
+    if (!from) { setSimPos(dest); return }
+    const distM = haversineM(from, dest)
+    const durationMs = Math.min(8000, Math.max(600, distM / 28 * 1000)) // 28 m/s ≈ marche x20
+    const t0 = performance.now()
+    function step(now) {
+      const k = Math.min(1, (now - t0) / durationMs)
+      setSimPos({
+        lat: from.lat + (dest.lat - from.lat) * k,
+        lng: from.lng + (dest.lng - from.lng) * k,
+      })
+      if (k < 1) walkAnimRef.current = requestAnimationFrame(step)
+    }
+    walkAnimRef.current = requestAnimationFrame(step)
+  }
+
+  // Clic sur la carte quand simulation active → marche animée vers ce point
   useEffect(() => {
     if (!simulating || !leafletMap.current) return
     const map = leafletMap.current
     function onMapClick(e) {
-      setSimPos({ lat: e.latlng.lat, lng: e.latlng.lng })
+      walkTo({ lat: e.latlng.lat, lng: e.latlng.lng })
     }
     map.on('click', onMapClick)
     return () => { map.off('click', onMapClick) }
-  }, [simulating, mapReady])
+  }, [simulating, mapReady]) // eslint-disable-line
 
   // Flèches clavier quand simulation active
   useEffect(() => {
@@ -397,7 +431,7 @@ export default function Map({ camping: campingProp, vacancier }) {
             <button onClick={stopSim} style={{ background: 'rgba(255,255,255,0.1)', border: 'none', color: '#fff', borderRadius: 6, padding: '2px 8px', cursor: 'pointer', fontSize: 12 }}>Stop ✕</button>
           </div>
           <div style={{ fontSize: 10, color: '#cbd5e1', marginBottom: 8, lineHeight: 1.4 }}>
-            💡 Cliquez sur la carte pour vous téléporter · flèches ou boutons pour marcher
+            💡 Cliquez sur la carte : l'avatar s'y déplace en marchant · flèches pour ajuster
           </div>
 
           {/* Coords */}

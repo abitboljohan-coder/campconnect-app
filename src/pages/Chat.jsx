@@ -2,6 +2,8 @@ import { useEffect, useState, useRef } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { supabase } from '../supabase'
 
+const REACTIONS = ['❤️', '😂', '👍', '🔥', '🎉']
+
 export default function Chat({ vacancier }) {
   const { groupeId } = useParams()
   const navigate = useNavigate()
@@ -10,6 +12,7 @@ export default function Chat({ vacancier }) {
   const [messages, setMessages]     = useState([])
   const [texte, setTexte]           = useState('')
   const [sending, setSending]       = useState(false)
+  const [pickerFor, setPickerFor]   = useState(null)
   const bottomRef = useRef(null)
   const inputRef  = useRef(null)
 
@@ -39,6 +42,14 @@ export default function Chat({ vacancier }) {
           .from('vacanciers').select('pseudo, avatar_emoji').eq('id', payload.new.auteur_id).single()
         setMessages(prev => [...prev, { ...payload.new, vacanciers: vac }])
       })
+      .on('postgres_changes', {
+        event: 'UPDATE', schema: 'public', table: 'messages',
+        filter: `groupe_id=eq.${groupeId}`,
+      }, (payload) => {
+        setMessages(prev => prev.map(m =>
+          m.id === payload.new.id ? { ...m, reactions: payload.new.reactions } : m
+        ))
+      })
       .subscribe()
     return () => supabase.removeChannel(channel)
   }, [groupeId])
@@ -57,6 +68,18 @@ export default function Chat({ vacancier }) {
     await supabase.from('messages').insert({ groupe_id: groupeId, auteur_id: vacancier.id, contenu })
     setSending(false)
     inputRef.current?.focus()
+  }
+
+  async function toggleReaction(msg, emoji) {
+    setPickerFor(null)
+    const reactions = { ...(msg.reactions || {}) }
+    const list = reactions[emoji] || []
+    reactions[emoji] = list.includes(vacancier.id)
+      ? list.filter(id => id !== vacancier.id)
+      : [...list, vacancier.id]
+    if (!reactions[emoji].length) delete reactions[emoji]
+    setMessages(prev => prev.map(m => m.id === msg.id ? { ...m, reactions } : m))
+    await supabase.from('messages').update({ reactions }).eq('id', msg.id)
   }
 
   // Grouper messages par date pour les séparateurs
@@ -153,17 +176,57 @@ export default function Chat({ vacancier }) {
                         {auteur?.avatar_emoji || '🏕️'}
                       </div>
                     )}
-                    <div style={{
-                      background: isMine ? '#639922' : 'rgba(255,255,255,0.92)',
-                      color: isMine ? '#fff' : '#1a1a1a',
-                      padding: '10px 14px',
-                      borderRadius: isMine ? '18px 18px 3px 18px' : '18px 18px 18px 3px',
-                      maxWidth: '72%',
-                      fontSize: 15, lineHeight: 1.45,
-                      boxShadow: isMine ? `0 2px 8px ${['#639922']}44` : '0 1px 4px rgba(0,0,0,0.08)',
-                      wordBreak: 'break-word',
-                    }}>
-                      {msg.contenu}
+                    <div style={{ position: 'relative', maxWidth: '72%' }}>
+                      <div
+                        onClick={() => setPickerFor(pickerFor === msg.id ? null : msg.id)}
+                        style={{
+                          background: isMine ? '#639922' : 'rgba(255,255,255,0.92)',
+                          color: isMine ? '#fff' : '#1a1a1a',
+                          padding: '10px 14px',
+                          borderRadius: isMine ? '18px 18px 3px 18px' : '18px 18px 18px 3px',
+                          fontSize: 15, lineHeight: 1.45,
+                          boxShadow: isMine ? '0 2px 8px rgba(99,153,34,0.27)' : '0 1px 4px rgba(0,0,0,0.08)',
+                          wordBreak: 'break-word',
+                          cursor: 'pointer',
+                        }}>
+                        {msg.contenu}
+                      </div>
+                      {/* Picker réactions */}
+                      {pickerFor === msg.id && (
+                        <div style={{
+                          position: 'absolute', bottom: '100%', marginBottom: 6,
+                          [isMine ? 'right' : 'left']: 0,
+                          background: '#fff', borderRadius: 24, padding: '6px 10px',
+                          display: 'flex', gap: 6, zIndex: 30,
+                          boxShadow: '0 4px 18px rgba(0,0,0,0.18)',
+                        }}>
+                          {REACTIONS.map(e => (
+                            <button key={e} onClick={ev => { ev.stopPropagation(); toggleReaction(msg, e) }}
+                              style={{ fontSize: 20, background: 'none', border: 'none', cursor: 'pointer', padding: 2 }}>
+                              {e}
+                            </button>
+                          ))}
+                        </div>
+                      )}
+                      {/* Réactions affichées */}
+                      {msg.reactions && Object.keys(msg.reactions).length > 0 && (
+                        <div style={{
+                          display: 'flex', gap: 4, marginTop: 3,
+                          justifyContent: isMine ? 'flex-end' : 'flex-start',
+                        }}>
+                          {Object.entries(msg.reactions).map(([e, ids]) => ids.length > 0 && (
+                            <button key={e} onClick={() => toggleReaction(msg, e)}
+                              style={{
+                                fontSize: 12, padding: '2px 7px', borderRadius: 12,
+                                background: ids.includes(vacancier.id) ? '#63992222' : '#fff',
+                                border: '1px solid ' + (ids.includes(vacancier.id) ? '#639922' : '#e5e7eb'),
+                                cursor: 'pointer', fontWeight: 600, color: '#374151',
+                              }}>
+                              {e} {ids.length > 1 ? ids.length : ''}
+                            </button>
+                          ))}
+                        </div>
+                      )}
                     </div>
                   </div>
                   <div style={{

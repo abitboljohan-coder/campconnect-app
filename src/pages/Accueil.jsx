@@ -22,6 +22,7 @@ export default function Accueil({ camping, vacancier }) {
   const [animations, setAnimations]     = useState([])
   const [vacancierCount, setVacancierCount] = useState(0)
   const [mesGroupes, setMesGroupes]     = useState([])
+  const [membresMap, setMembresMap]     = useState({})
   const [loading, setLoading]           = useState(true)
   const navigate = useNavigate()
   const couleur = camping?.couleur_principale || '#639922'
@@ -45,6 +46,18 @@ export default function Accueil({ camping, vacancier }) {
       setVacancierCount(vCount || 0)
       setMesGroupes((membres || []).map(m => m.groupe_id))
       setLoading(false)
+
+      const ids = (grps || []).map(g => g.id)
+      if (ids.length) {
+        const { data: allMembres } = await supabase
+          .from('membres_groupes').select('groupe_id, vacanciers(avatar_emoji)').in('groupe_id', ids)
+        const map = {}
+        for (const m of allMembres || []) {
+          if (!map[m.groupe_id]) map[m.groupe_id] = []
+          map[m.groupe_id].push(m.vacanciers?.avatar_emoji || '🙂')
+        }
+        setMembresMap(map)
+      }
     }
     load()
   }, [camping.id, vacancier.id])
@@ -56,25 +69,24 @@ export default function Accueil({ camping, vacancier }) {
   }
 
   return (
-    <div style={{ background: '#f5f2eb', minHeight: '100%', paddingBottom: 20 }}>
+    <div style={{ background: '#faf7f0', minHeight: '100%', paddingBottom: 20 }}>
 
-      {/* === CARTE DU CAMPING === */}
+      {/* === HERO ESTIVAL === */}
       <div style={{ margin: '16px 16px 0' }}>
-        {camping?.plan_url
-          ? <InteractiveMap
-              camping={camping}
-              vacancier={vacancier}
-              couleur={couleur}
-            />
-          : <FakeMap
-              groupes={groupes}
-              animations={animations}
-              vacancier={vacancier}
-              vacancierCount={vacancierCount}
-              couleur={couleur}
-            />
-        }
+        <Hero
+          camping={camping}
+          vacancier={vacancier}
+          vacancierCount={vacancierCount}
+          groupesCount={groupes.length}
+          animationsCount={animations.length}
+          couleur={couleur}
+          onMap={() => navigate('/map')}
+          onAgenda={() => navigate('/agenda')}
+        />
       </div>
+
+      {/* === STATUTS ÉPHÉMÈRES === */}
+      <StatutsStrip camping={camping} vacancier={vacancier} couleur={couleur} />
 
       {/* === GROUPES ACTIFS === */}
       <div style={{ padding: '20px 16px 0' }}>
@@ -102,6 +114,7 @@ export default function Accueil({ camping, vacancier }) {
                 key={g.id}
                 groupe={g}
                 couleur={couleur}
+                avatars={membresMap[g.id]}
                 isMember={mesGroupes.includes(g.id)}
                 onAction={mesGroupes.includes(g.id)
                   ? () => navigate(`/chat/${g.id}`)
@@ -122,6 +135,197 @@ export default function Accueil({ camping, vacancier }) {
           }}
         >
           + Créer un groupe
+        </button>
+      </div>
+    </div>
+  )
+}
+
+/* ─── Statuts éphémères 24h ─── */
+const STATUT_EMOJIS = ['🔥', '🍻', '🎳', '🏊', '🎉', '🍖', '🎾', '📣']
+
+function StatutsStrip({ camping, vacancier, couleur }) {
+  const [statuts, setStatuts] = useState([])
+  const [showModal, setShowModal] = useState(false)
+  const [texte, setTexte] = useState('')
+  const [emoji, setEmoji] = useState('🔥')
+  const [saving, setSaving] = useState(false)
+
+  useEffect(() => {
+    async function load() {
+      const since = new Date(Date.now() - 24 * 3600 * 1000).toISOString()
+      const { data } = await supabase
+        .from('statuts')
+        .select('*, vacanciers(pseudo, avatar_emoji)')
+        .eq('camping_id', camping.id)
+        .gte('created_at', since)
+        .order('created_at', { ascending: false })
+        .limit(20)
+      setStatuts(data || [])
+    }
+    load()
+    const channel = supabase
+      .channel(`statuts_${camping.id}`)
+      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'statuts', filter: `camping_id=eq.${camping.id}` },
+        async (payload) => {
+          const { data: vac } = await supabase
+            .from('vacanciers').select('pseudo, avatar_emoji').eq('id', payload.new.vacancier_id).single()
+          setStatuts(prev => [{ ...payload.new, vacanciers: vac }, ...prev])
+        })
+      .subscribe()
+    return () => supabase.removeChannel(channel)
+  }, [camping.id])
+
+  async function poster() {
+    if (!texte.trim() || saving) return
+    setSaving(true)
+    await supabase.from('statuts').insert({
+      camping_id: camping.id, vacancier_id: vacancier.id,
+      emoji, texte: texte.trim(),
+    })
+    setTexte(''); setShowModal(false); setSaving(false)
+  }
+
+  function timeAgo(iso) {
+    const min = Math.floor((Date.now() - new Date(iso)) / 60000)
+    if (min < 1) return 'à l\'instant'
+    if (min < 60) return `il y a ${min} min`
+    return `il y a ${Math.floor(min / 60)}h`
+  }
+
+  return (
+    <div style={{ padding: '18px 0 0' }}>
+      <div style={{ display: 'flex', gap: 10, overflowX: 'auto', padding: '0 16px 4px' }}>
+        {/* Bouton poster */}
+        <button onClick={() => setShowModal(true)} style={{
+          flexShrink: 0, width: 74, borderRadius: 16,
+          border: `2px dashed ${couleur}66`, background: `${couleur}0d`,
+          display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
+          gap: 4, padding: '12px 8px', cursor: 'pointer',
+        }}>
+          <div style={{
+            width: 32, height: 32, borderRadius: '50%', background: couleur, color: '#fff',
+            display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20, fontWeight: 300,
+          }}>+</div>
+          <span style={{ fontSize: 10.5, fontWeight: 700, color: couleur }}>Quoi de neuf ?</span>
+        </button>
+
+        {statuts.map(s => (
+          <div key={s.id} style={{
+            flexShrink: 0, maxWidth: 200, borderRadius: 16,
+            background: '#fff', padding: '10px 14px',
+            boxShadow: '0 1px 5px rgba(0,0,0,0.08)',
+          }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 4 }}>
+              <span style={{ fontSize: 16 }}>{s.vacanciers?.avatar_emoji || '🙂'}</span>
+              <span style={{ fontSize: 12, fontWeight: 700, color: '#1a1a1a' }}>{s.vacanciers?.pseudo}</span>
+              <span style={{ fontSize: 10, color: '#9ca3af', marginLeft: 'auto', whiteSpace: 'nowrap' }}>{timeAgo(s.created_at)}</span>
+            </div>
+            <div style={{ fontSize: 13, color: '#374151', lineHeight: 1.4 }}>
+              {s.emoji} {s.texte}
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {/* Modal poster */}
+      {showModal && (
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.55)', display: 'flex', alignItems: 'flex-end', zIndex: 200 }}
+             onClick={() => setShowModal(false)}>
+          <div style={{ background: '#fff', borderRadius: '22px 22px 0 0', padding: '22px 20px 36px', width: '100%', maxWidth: 600, margin: '0 auto' }}
+               onClick={e => e.stopPropagation()}>
+            <div style={{ width: 40, height: 4, background: '#e5e7eb', borderRadius: 2, margin: '0 auto 18px' }} />
+            <h3 style={{ fontSize: 18, fontWeight: 800, marginBottom: 14, color: '#1a1a1a' }}>Quoi de neuf ? <span style={{ fontSize: 12, fontWeight: 500, color: '#9ca3af' }}>(visible 24h)</span></h3>
+            <div style={{ display: 'flex', gap: 6, marginBottom: 12, flexWrap: 'wrap' }}>
+              {STATUT_EMOJIS.map(e => (
+                <button key={e} onClick={() => setEmoji(e)} style={{
+                  width: 40, height: 40, fontSize: 20, borderRadius: 10, cursor: 'pointer',
+                  border: emoji === e ? `2px solid ${couleur}` : '2px solid #e5e7eb',
+                  background: emoji === e ? `${couleur}15` : '#fafafa',
+                }}>{e}</button>
+              ))}
+            </div>
+            <input value={texte} onChange={e => setTexte(e.target.value)}
+              onKeyDown={e => e.key === 'Enter' && poster()}
+              placeholder="ex : BBQ ce soir emplacement 47, tous invités !"
+              autoFocus maxLength={90}
+              style={{ width: '100%', padding: '12px 14px', borderRadius: 12, border: '1.5px solid #e5e7eb', fontSize: 15, outline: 'none', background: '#fafafa', marginBottom: 14 }} />
+            <button onClick={poster} disabled={!texte.trim() || saving}
+              style={{
+                width: '100%', padding: 13, borderRadius: 12, border: 'none',
+                background: !texte.trim() || saving ? '#9ca3af' : couleur,
+                color: '#fff', fontWeight: 800, fontSize: 15, cursor: 'pointer',
+              }}>
+              {saving ? 'Publication…' : `${emoji} Publier`}
+            </button>
+          </div>
+        </div>
+      )}
+    </div>
+  )
+}
+
+/* ─── Hero estival ─── */
+function Hero({ camping, vacancier, vacancierCount, groupesCount, animationsCount, couleur, onMap, onAgenda }) {
+  const h = new Date().getHours()
+  const greeting = h < 6 ? 'Bonne nuit' : h < 12 ? 'Bonjour' : h < 18 ? 'Bel après-midi' : 'Bonne soirée'
+  const sun = h < 6 ? '🌙' : h < 12 ? '🌅' : h < 18 ? '☀️' : '🌇'
+
+  return (
+    <div style={{
+      borderRadius: 24,
+      background: `linear-gradient(135deg, ${couleur} 0%, ${couleur}cc 60%, #f0b429 140%)`,
+      padding: '22px 20px 18px',
+      color: '#fff',
+      position: 'relative',
+      overflow: 'hidden',
+      boxShadow: `0 10px 30px ${couleur}45`,
+    }}>
+      {/* Déco */}
+      <div style={{ position: 'absolute', top: -22, right: -14, fontSize: 110, opacity: 0.14, transform: 'rotate(12deg)', pointerEvents: 'none' }}>⛺</div>
+      <div style={{ position: 'absolute', bottom: -18, left: -10, fontSize: 80, opacity: 0.12, pointerEvents: 'none' }}>🌲</div>
+
+      <div style={{ fontSize: 14, fontWeight: 600, opacity: 0.92 }}>
+        {greeting} {sun}
+      </div>
+      <div style={{ fontSize: 24, fontWeight: 800, letterSpacing: '-0.5px', margin: '2px 0 14px' }}>
+        {vacancier?.avatar_emoji} {vacancier?.pseudo || 'Campeur'}
+      </div>
+
+      {/* Chips stats */}
+      <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 16 }}>
+        {[
+          [`${vacancierCount}`, 'vacanciers ici'],
+          [`${groupesCount}`, 'groupes actifs'],
+          [`${animationsCount}`, 'animations à venir'],
+        ].map(([n, l]) => (
+          <div key={l} style={{
+            background: 'rgba(255,255,255,0.18)',
+            backdropFilter: 'blur(6px)',
+            borderRadius: 14, padding: '7px 12px',
+            fontSize: 12.5, fontWeight: 600,
+            border: '1px solid rgba(255,255,255,0.25)',
+          }}>
+            <span style={{ fontWeight: 800, fontSize: 14 }}>{n}</span> {l}
+          </div>
+        ))}
+      </div>
+
+      {/* Actions */}
+      <div style={{ display: 'flex', gap: 10 }}>
+        <button onClick={onMap} style={{
+          flex: 1, background: '#fff', color: couleur,
+          padding: '12px', borderRadius: 16, fontSize: 14, fontWeight: 800,
+          border: 'none', cursor: 'pointer', boxShadow: '0 3px 10px rgba(0,0,0,0.15)',
+        }}>
+          🗺️ Explorer la carte
+        </button>
+        <button onClick={onAgenda} style={{
+          flex: 1, background: 'rgba(255,255,255,0.16)', color: '#fff',
+          padding: '12px', borderRadius: 16, fontSize: 14, fontWeight: 700,
+          border: '1.5px solid rgba(255,255,255,0.4)', cursor: 'pointer',
+        }}>
+          📅 Programme
         </button>
       </div>
     </div>
@@ -384,7 +588,7 @@ function FakeMap({ groupes, animations, vacancier, vacancierCount, couleur }) {
   )
 }
 
-function GroupCard({ groupe, couleur, isMember, onAction }) {
+function GroupCard({ groupe, couleur, isMember, onAction, avatars }) {
   const heureStr = groupe.heure
     ? new Date(groupe.heure).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })
     : null
@@ -407,6 +611,20 @@ function GroupCard({ groupe, couleur, isMember, onAction }) {
       <div style={{ flex: 1, overflow: 'hidden' }}>
         <div style={{ fontWeight: 600, fontSize: 15, color: '#1a1a1a', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{groupe.titre}</div>
         {meta && <div style={{ fontSize: 12, color: '#6b7280', marginTop: 2 }}>{meta}</div>}
+        {avatars?.length > 0 && (
+          <div style={{ display: 'flex', alignItems: 'center', marginTop: 5 }}>
+            {avatars.slice(0, 4).map((a, i) => (
+              <div key={i} style={{
+                width: 20, height: 20, borderRadius: '50%', background: '#fff',
+                border: '1.5px solid #eee', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                fontSize: 11, marginLeft: i === 0 ? 0 : -6, boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
+              }}>{a}</div>
+            ))}
+            <span style={{ fontSize: 11, color: '#9ca3af', marginLeft: 6 }}>
+              {avatars.length} membre{avatars.length > 1 ? 's' : ''}
+            </span>
+          </div>
+        )}
       </div>
       <button
         onClick={onAction}

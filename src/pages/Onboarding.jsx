@@ -91,17 +91,25 @@ export default function Onboarding({ initialCamping, onDone }) {
     )
   }
 
+  // Liste initiale : tous les campings (affichée avant toute saisie)
+  useEffect(() => {
+    if (step !== 'search') return
+    supabase.from('campings')
+      .select('id, nom, slug, couleur_principale, logo_url')
+      .order('nom').limit(20)
+      .then(({ data }) => { if (data && !query) setResults(data) })
+  }, [step]) // eslint-disable-line
+
   function handleQueryChange(q) {
     setQuery(q)
     clearTimeout(searchTimeout.current)
-    if (q.length < 2) { setResults([]); return }
     searchTimeout.current = setTimeout(async () => {
       setSearching(true)
-      const { data } = await supabase
-        .from('campings')
+      let req = supabase.from('campings')
         .select('id, nom, slug, couleur_principale, logo_url')
-        .ilike('nom', `%${q}%`)
-        .limit(6)
+        .order('nom').limit(q.length >= 2 ? 6 : 20)
+      if (q.length >= 2) req = req.ilike('nom', `%${q}%`)
+      const { data } = await req
       setResults(data || [])
       setSearching(false)
     }, 300)

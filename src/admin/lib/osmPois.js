@@ -6,17 +6,46 @@ const OVERPASS_ENDPOINTS = [
   'https://overpass.private.coffee/api/interpreter',
 ]
 
-async function overpass(q) {
+function tryOne(url, q, timeoutMs) {
+  const ctrl = new AbortController()
+  const t = setTimeout(() => ctrl.abort(), timeoutMs)
+  return fetch(url, { method: 'POST', body: q, headers: { 'Content-Type': 'text/plain' }, signal: ctrl.signal })
+    .then(async r => {
+      const txt = await r.text()
+      if (!txt.trim().startsWith('{')) throw new Error(`${new URL(url).host}: rejeté (surcharge)`)
+      return JSON.parse(txt)
+    })
+    .finally(() => clearTimeout(t))
+}
+
+const sleep = (ms) => new Promise(r => setTimeout(r, ms))
+
+// Retry robuste : 3 miroirs en parallèle, jusqu'à 2 passes avec backoff
+async function overpass(q, timeoutMs = 25000) {
   let lastErr
-  for (const url of OVERPASS_ENDPOINTS) {
+  for (let pass = 0; pass < 2; pass++) {
+    if (pass > 0) await sleep(800)
     try {
-      const r = await fetch(url, { method: 'POST', body: q, headers: { 'Content-Type': 'text/plain' } })
-      const t = await r.text()
-      if (!t.trim().startsWith('{')) { lastErr = new Error('non-JSON'); continue }
-      return JSON.parse(t)
-    } catch (e) { lastErr = e }
+      return await Promise.any(OVERPASS_ENDPOINTS.map(u => tryOne(u, q, timeoutMs)))
+    } catch (e) {
+      lastErr = e
+      const errs = e.errors || []
+      const msgs = errs.map(x => x?.message || String(x)).join(' | ')
+      lastErr = new Error(msgs || 'timeout ' + timeoutMs + 'ms')
+    }
   }
-  throw lastErr || new Error('Overpass indisponible')
+  throw lastErr
+}
+
+async function overpassRace(q, msMax = 8000) {
+  return Promise.race([
+    overpass(q, msMax),
+    new Promise((_, rej) => setTimeout(() => rej(new Error('overpass-slow')), msMax)),
+  ])
+}
+
+function stripAccents(s) {
+  return (s || '').normalize('NFD').replace(/[̀-ͯ]/g, '')
 }
 
 // Map (tags OSM) → { emoji, label, color }. Ordre = priorité (premier match gagne).
@@ -60,12 +89,13 @@ function matchPoi(tags) {
 // Un POI est "sûr" si :
 //   - il a un tag amenity/leisure/sport/tourism spécifique bien mappé (POI_MAP l'a trouvé)
 //   - ET il a un nom OU c'est un type non-ambigu (piscine, tennis, resto...)
-const NAMELESS_OK = new Set([
-  '🏊', '🎾', '🎳', '🏓', '🏀', '🏐', '⚽',      // équipements sportifs identifiables sans nom
-  '🚻', '🚿', '🚰',                              // sanitaires évidents
-  '🅿️', '🍖', '🎠',                             // parking, BBQ, aire de jeux
-])
+// Sans nom, on n'accepte QUE ce qui est visuellement non-ambigu et qui échappe rarement au mauvais tag
+const NAMELESS_OK = new Set(['🏊', '🚻', '🚿', '🚰', '🍖', '🎠'])
+// Types trop souvent mal taggués dans OSM (loisirs à côté d'une piscine, etc.) → nom obligatoire
+const NAME_REQUIRED = new Set(['🎾', '🎳', '🏓', '🏀', '🏐', '⚽', '🏟️', '🍽️', '🍺', '☕', '🍔', '🍦', '💪'])
+
 function isConfident(poi, tags) {
+  if (NAME_REQUIRED.has(poi.emoji)) return !!tags?.name
   if (tags?.name) return true
   return NAMELESS_OK.has(poi.emoji)
 }
@@ -122,7 +152,7 @@ export async function detectPois(perimeter, fallbackCenter) {
     );
     out center tags;`
 
-  const j = await overpass(q)
+  const j = await overpass(q, 30000)  // POI = requête lourde, 30s max
   const pois = []
   const seen = new Set()
 
@@ -164,6 +194,54 @@ export async function geocodeCamping(query) {
     { headers: { 'Accept-Language': 'fr' } })
   const j = await r.json()
   return j
+}
+
+// Cherche DIRECTEMENT un camping par son nom dans tout OSM
+// Renvoie [{ poly: [[lat,lng]], name, center: {lat,lng}, tags }]
+export async function searchCampsiteByName(name, hintCity = '') {
+  // Nettoie : enlève "camping" du début, articles, et accents pour un match large
+  const cleaned = name.replace(/^camping\s+/i, '').trim()
+  const noArticle = cleaned.replace(/^(les|la|le|l')\s+/i, '').trim()
+  const noAccent = stripAccents(noArticle)
+  // Mots significatifs (>3 lettres, sans articles)
+  const words = noAccent.split(/\s+/).filter(w => w.length > 3)
+  const patterns = new Set([cleaned, noArticle, noAccent, ...words].filter(Boolean))
+  const regex = [...patterns].map(p => p.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).join('|')
+
+  const cityFilter = hintCity ? `["addr:city"~"${hintCity.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}",i]` : ''
+
+  const q = `[out:json][timeout:12];
+    (
+      way["tourism"="camp_site"]["name"~"${regex}",i]${cityFilter};
+      relation["tourism"="camp_site"]["name"~"${regex}",i]${cityFilter};
+      node["tourism"="camp_site"]["name"~"${regex}",i]${cityFilter};
+      way["leisure"="campsite"]["name"~"${regex}",i]${cityFilter};
+      way["tourism"="caravan_site"]["name"~"${regex}",i]${cityFilter};
+    );
+    out geom tags center;`
+
+  const j = await overpassRace(q, 10000)
+  const results = []
+  for (const el of j.elements || []) {
+    let poly = null, center = null
+    if (el.type === 'way' && el.geometry?.length >= 3) {
+      poly = el.geometry.map(g => [g.lat, g.lon])
+      center = { lat: poly[0][0], lng: poly[0][1] }
+    } else if (el.type === 'relation' && el.members) {
+      const outer = el.members.find(m => m.role === 'outer' && m.geometry)
+      if (outer && outer.geometry.length >= 3) {
+        poly = outer.geometry.map(g => [g.lat, g.lon])
+        center = { lat: poly[0][0], lng: poly[0][1] }
+      }
+    } else if (el.type === 'node') {
+      center = { lat: el.lat, lng: el.lon }
+    } else if (el.center) {
+      center = { lat: el.center.lat, lng: el.center.lon }
+    }
+    if (!center) continue
+    results.push({ poly, center, name: el.tags?.name, tags: el.tags, addr: el.tags?.['addr:city'] || el.tags?.['addr:street'] || '' })
+  }
+  return results
 }
 
 // Cherche un polygone camping dans un rayon
