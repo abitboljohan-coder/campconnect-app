@@ -6,6 +6,7 @@ const NAV_ITEMS = [
   { path: '/admin/animations',  icon: '📅', label: 'Animations' },
   { path: '/admin/carte',       icon: '🗺️', label: 'Carte' },
   { path: '/admin/apparence',   icon: '🎨', label: 'Apparence' },
+  { path: '/admin/infos',       icon: 'ℹ️', label: 'Infos pratiques' },
   { path: '/admin/stats',       icon: '📊', label: 'Stats' },
   { path: '/admin/moderation',  icon: '🛡️', label: 'Modération' },
   { path: '/admin/parametres',  icon: '⚙️', label: 'Paramètres' },
@@ -87,6 +88,7 @@ export default function AdminLayout({ gerant, camping, onLogout }) {
         {isMobile && (
           <div style={{
             background: '#0d1f0d', padding: '14px 16px',
+            paddingTop: 'calc(14px + env(safe-area-inset-top))',
             display: 'flex', alignItems: 'center', justifyContent: 'space-between',
             position: 'sticky', top: 0, zIndex: 50,
           }}>

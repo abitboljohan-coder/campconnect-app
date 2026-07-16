@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { supabase } from '../supabase'
+import { supabase, presentFilter } from '../supabase'
 
 const TREE_POS = [
   { x: '6%',  y: '18%', s: 26 }, { x: '14%', y: '62%', s: 20 },
@@ -38,7 +38,7 @@ export default function Accueil({ camping, vacancier }) {
       ] = await Promise.all([
         supabase.from('groupes').select('*').eq('camping_id', camping.id).eq('actif', true).order('created_at', { ascending: false }).limit(5),
         supabase.from('animations').select('*').eq('camping_id', camping.id).eq('publiee', true).gte('debut', now).order('debut').limit(4),
-        supabase.from('vacanciers').select('*', { count: 'exact', head: true }).eq('camping_id', camping.id),
+        supabase.from('vacanciers').select('*', { count: 'exact', head: true }).eq('camping_id', camping.id).or(presentFilter()),
         supabase.from('membres_groupes').select('groupe_id').eq('vacancier_id', vacancier.id),
       ])
       setGroupes(grps || [])
@@ -50,7 +50,8 @@ export default function Accueil({ camping, vacancier }) {
       const ids = (grps || []).map(g => g.id)
       if (ids.length) {
         const { data: allMembres } = await supabase
-          .from('membres_groupes').select('groupe_id, vacanciers(avatar_emoji)').in('groupe_id', ids)
+          .from('membres_groupes').select('groupe_id, vacanciers!inner(avatar_emoji)').in('groupe_id', ids)
+          .or(presentFilter(), { foreignTable: 'vacanciers' })
         const map = {}
         for (const m of allMembres || []) {
           if (!map[m.groupe_id]) map[m.groupe_id] = []

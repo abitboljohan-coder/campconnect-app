@@ -1,6 +1,6 @@
 import { useEffect, useState, useRef } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
-import { supabase } from '../supabase'
+import { supabase, presentFilter } from '../supabase'
 
 const REACTIONS = ['❤️', '😂', '👍', '🔥', '🎉']
 
@@ -20,7 +20,7 @@ export default function Chat({ vacancier }) {
     async function init() {
       const [{ data: grp }, { count }, { data: msgs }] = await Promise.all([
         supabase.from('groupes').select('*').eq('id', groupeId).single(),
-        supabase.from('membres_groupes').select('*', { count: 'exact', head: true }).eq('groupe_id', groupeId),
+        supabase.from('membres_groupes').select('*, vacanciers!inner(id)', { count: 'exact', head: true }).eq('groupe_id', groupeId).or(presentFilter(), { foreignTable: 'vacanciers' }),
         supabase.from('messages').select('*, vacanciers(pseudo, avatar_emoji)').eq('groupe_id', groupeId).order('created_at', { ascending: true }),
       ])
       setGroupe(grp)
@@ -145,7 +145,7 @@ export default function Chat({ vacancier }) {
 
             {msgs.map((msg, idx) => {
               const isMine = msg.auteur_id === vacancier.id
-              const auteur = msg.vacanciers
+              const auteur = msg.vacanciers || { pseudo: 'Vacancier parti', avatar_emoji: '👋' }
               const prevMsg = idx > 0 ? msgs[idx - 1] : null
               const showAuthor = !isMine && (!prevMsg || prevMsg.auteur_id !== msg.auteur_id)
 

@@ -1,6 +1,7 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { useEffect, useState } from 'react'
 import { supabase } from './supabase'
+import { isNative } from './native'
 
 import Onboarding from './pages/Onboarding'
 import Accueil from './pages/Accueil'
@@ -24,7 +25,7 @@ function getDeviceId() {
 
 function getCampingSlug() {
   const pathMatch = window.location.pathname.match(/^\/join\/([^/?#]+)/)
-  const isDev = window.location.hostname === 'localhost' || window.location.hostname.startsWith('192.168.')
+  const isDev = !isNative && (window.location.hostname === 'localhost' || window.location.hostname.startsWith('192.168.'))
   return pathMatch?.[1]
     || new URLSearchParams(window.location.search).get('camping')
     || localStorage.getItem('campingSlug')
@@ -34,7 +35,10 @@ function getCampingSlug() {
 function App() {
   const [camping, setCamping] = useState(null)
   const [vacancier, setVacancier] = useState(null)
+  const [finSejour, setFinSejour] = useState(null) // vacancier dont le séjour est terminé
   const [loading, setLoading] = useState(true)
+
+  const sejourTermine = v => v?.date_depart && v.date_depart < new Date().toISOString().slice(0, 10)
 
   useEffect(() => {
     const deviceId = getDeviceId()
@@ -61,8 +65,13 @@ function App() {
         .maybeSingle()
 
       if (byDevice) {
-        setVacancier(byDevice)
-        localStorage.setItem('vacancier', JSON.stringify(byDevice))
+        if (sejourTermine(byDevice)) {
+          localStorage.removeItem('vacancier')
+          setFinSejour(byDevice)
+        } else {
+          setVacancier(byDevice)
+          localStorage.setItem('vacancier', JSON.stringify(byDevice))
+        }
         setLoading(false)
         return
       }
@@ -72,7 +81,7 @@ function App() {
       if (saved) {
         try {
           const v = JSON.parse(saved)
-          if (v.camping_id === campingData.id) {
+          if (v.camping_id === campingData.id && !sejourTermine(v)) {
             setVacancier(v)
             // Migrer : sauvegarder le device_id pour cet ancien compte
             supabase.from('vacanciers').update({ device_id: deviceId }).eq('id', v.id)
@@ -96,6 +105,14 @@ function App() {
   }, [])
 
   if (loading) return <Splash />
+
+  if (finSejour) return (
+    <FinSejour
+      vacancier={finSejour}
+      camping={camping}
+      onRestart={() => setFinSejour(null)}
+    />
+  )
 
   return (
     <BrowserRouter>
@@ -133,6 +150,34 @@ function App() {
         )}
       </Routes>
     </BrowserRouter>
+  )
+}
+
+function FinSejour({ vacancier, camping, onRestart }) {
+  return (
+    <div style={{
+      minHeight: '100dvh', background: 'linear-gradient(160deg, #0d1f0d 0%, #1b4332 100%)',
+      display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
+      padding: '24px 20px', textAlign: 'center', fontFamily: 'sans-serif',
+    }}>
+      <div style={{ fontSize: 56, marginBottom: 16 }}>👋</div>
+      <h1 style={{ color: '#fff', fontSize: 24, fontWeight: 700, margin: 0 }}>
+        Bon retour, {vacancier.pseudo} !
+      </h1>
+      <p style={{ color: 'rgba(255,255,255,0.6)', marginTop: 12, fontSize: 15, maxWidth: 320, lineHeight: 1.6 }}>
+        Votre séjour {camping ? `au ${camping.nom} ` : ''}est terminé.
+        Vos données seront automatiquement supprimées. À l'année prochaine ! 🌲
+      </p>
+      <button
+        onClick={onRestart}
+        style={{
+          marginTop: 28, padding: '14px 28px', borderRadius: 12, border: 'none',
+          background: '#639922', color: '#fff', fontSize: 15, fontWeight: 700, cursor: 'pointer',
+        }}
+      >
+        Je suis de retour au camping 🏕️
+      </button>
+    </div>
   )
 }
 

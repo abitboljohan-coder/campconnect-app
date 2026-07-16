@@ -1,0 +1,21 @@
+{
+  "appId": "com.campconnect.app",
+  "appName": "CampConnect",
+  "webDir": "dist",
+  "android": {
+    "allowMixedContent": false
+  },
+  "ios": {
+    "contentInset": "always"
+  },
+  "server": {
+    "androidScheme": "https"
+  },
+  "plugins": {
+    "SplashScreen": {
+      "launchShowDuration": 800,
+      "backgroundColor": "#0ea5e9",
+      "showSpinner": false
+    }
+  }
+}

@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
 import { supabase } from '../supabase'
+import { isNative, setAppMode } from '../native'
 
 const AVATARS = ['🏕️', '🌲', '⛺', '🎯', '🚴', '🏊', '🎣', '🌻', '🦜', '🌈']
 
@@ -44,7 +45,7 @@ export default function Onboarding({ initialCamping, onDone }) {
   const [codeError, setCodeError] = useState('')
 
   // Formulaire profil
-  const [form, setForm] = useState({ pseudo: '', emplacement: '', avatar_emoji: '🏕️' })
+  const [form, setForm] = useState({ pseudo: '', emplacement: '', avatar_emoji: '🏕️', date_depart: '' })
   const [formError, setFormError] = useState('')
   const [saving, setSaving] = useState(false)
 
@@ -108,7 +109,11 @@ export default function Onboarding({ initialCamping, onDone }) {
       let req = supabase.from('campings')
         .select('id, nom, slug, couleur_principale, logo_url')
         .order('nom').limit(q.length >= 2 ? 6 : 20)
-      if (q.length >= 2) req = req.ilike('nom', `%${q}%`)
+      if (q.length >= 2) {
+        // Insensible aux accents : on cherche sur nom ET slug (slug = nom sans accents)
+        const slugQ = q.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^a-z0-9]+/g, '-')
+        req = req.or(`nom.ilike.%${q}%,slug.ilike.%${slugQ}%`)
+      }
       const { data } = await req
       setResults(data || [])
       setSearching(false)
@@ -134,16 +139,26 @@ export default function Onboarding({ initialCamping, onDone }) {
     if (!form.pseudo.trim()) { setFormError('Le pseudo est obligatoire.'); return }
     setSaving(true)
     setFormError('')
-    const { data, error } = await supabase
-      .from('vacanciers')
-      .insert({
-        camping_id: camping.id,
-        pseudo: form.pseudo.trim(),
-        avatar_emoji: form.avatar_emoji,
-        emplacement: form.emplacement.trim() || null,
-        device_id: localStorage.getItem('deviceId'),
-      })
-      .select().single()
+    const deviceId = localStorage.getItem('deviceId')
+    const profil = {
+      camping_id: camping.id,
+      pseudo: form.pseudo.trim(),
+      avatar_emoji: form.avatar_emoji,
+      emplacement: form.emplacement.trim() || null,
+      date_depart: form.date_depart || null,
+      device_id: deviceId,
+    }
+
+    // Re-séjour sur le même appareil (ex: retour l'année suivante) → réutiliser le profil
+    const { data: existing } = await supabase
+      .from('vacanciers').select('id')
+      .eq('device_id', deviceId).eq('camping_id', camping.id)
+      .maybeSingle()
+
+    const { data, error } = existing
+      ? await supabase.from('vacanciers').update(profil).eq('id', existing.id).select().single()
+      : await supabase.from('vacanciers').insert(profil).select().single()
+
     if (error) { setFormError('Erreur. Réessayez.'); setSaving(false); return }
     onDone(camping, data)
   }
@@ -217,6 +232,15 @@ export default function Onboarding({ initialCamping, onDone }) {
         <div style={{ marginTop: 20, padding: '12px 14px', background: '#f5f2eb', borderRadius: 10, fontSize: 12, color: '#6b7280', textAlign: 'center' }}>
           💡 Ou scannez le QR code affiché à la réception de votre camping
         </div>
+
+        {isNative && (
+          <button
+            onClick={() => setAppMode('gerant')}
+            style={{ marginTop: 14, width: '100%', background: 'none', border: 'none', fontSize: 12, color: '#9ca3af', textDecoration: 'underline', cursor: 'pointer' }}
+          >
+            Je suis gérant de camping
+          </button>
+        )}
       </Card>
     </Screen>
   )
@@ -351,6 +375,19 @@ export default function Onboarding({ initialCamping, onDone }) {
               onChange={e => setForm(f => ({ ...f, emplacement: e.target.value }))}
               placeholder="ex: A42 (optionnel)" style={inputStyle}
             />
+          </label>
+
+          <label style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+            <span style={labelStyle}>DATE DE DÉPART</span>
+            <input
+              type="date" value={form.date_depart}
+              min={new Date().toISOString().slice(0, 10)}
+              onChange={e => setForm(f => ({ ...f, date_depart: e.target.value }))}
+              style={inputStyle}
+            />
+            <span style={{ fontSize: 11, color: '#9ca3af' }}>
+              Jusqu'à quand restez-vous ? Modifiable dans votre profil si vous prolongez.
+            </span>
           </label>
 
           {/* Consentement RGPD */}

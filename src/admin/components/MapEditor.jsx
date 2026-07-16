@@ -104,14 +104,28 @@ export default function MapEditor({ camping, setCamping }) {
         { attribution: '© Esri, Maxar, Earthstar Geographics', maxZoom: 19, maxNativeZoom: 19 }
       ).addTo(lf)
 
-      // Centrer sur le camping par géocodage
-      fetch(
-        `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(camping.nom + ' camping')}&format=json&limit=1`,
-        { headers: { 'Accept-Language': 'fr' } }
-      ).then(r => r.json()).then(data => {
-        if (data[0] && lfRef.current)
-          lfRef.current.setView([parseFloat(data[0].lat), parseFloat(data[0].lon)], 17)
-      }).catch(() => {})
+      // Centrer sur l'emplacement RÉEL réglé par le gérant (contour puis pins) ;
+      // géocodage du nom seulement si le camping n'est pas encore configuré.
+      const cfg0  = camping.carte_config || loadLocal(camping.id) || {}
+      const peri0 = cfg0.perimeter || []
+      const pin0  = (cfg0.pins || []).find(p => p.lat && p.lng)
+      if (peri0.length >= 1) {
+        const lat = peri0.reduce((s, p) => s + p[0], 0) / peri0.length
+        const lng = peri0.reduce((s, p) => s + p[1], 0) / peri0.length
+        lf.setView([lat, lng], 17)
+      } else if (cfg0.lat && cfg0.lng) {
+        lf.setView([cfg0.lat, cfg0.lng], 17)
+      } else if (pin0) {
+        lf.setView([pin0.lat, pin0.lng], 17)
+      } else {
+        fetch(
+          `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(camping.nom + ' camping')}&format=json&limit=1`,
+          { headers: { 'Accept-Language': 'fr' } }
+        ).then(r => r.json()).then(data => {
+          if (data[0] && lfRef.current)
+            lfRef.current.setView([parseFloat(data[0].lat), parseFloat(data[0].lon)], 17)
+        }).catch(() => {})
+      }
 
       // Clic sur la carte → place le pin sélectionné en GPS
       lf.on('click', e => {
