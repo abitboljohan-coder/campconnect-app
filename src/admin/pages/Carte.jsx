@@ -225,7 +225,7 @@ export default function Carte({ camping, setCamping }) {
               🗺️ {perimeter.length >= 3 ? 'Modifier le contour' : 'Tracer le contour'}
             </button>
             <span style={{ fontSize: 12, color: '#6b7280' }}>
-              (import OSM auto, rectangle ou clic-à-clic — au choix dans l'éditeur)
+              (détection auto, rectangle ou clic-à-clic — au choix dans l'éditeur)
             </span>
           </div>
         </Step>
