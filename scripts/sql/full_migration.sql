@@ -101,8 +101,9 @@ CREATE TABLE IF NOT EXISTS messages (
   id            uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   created_at    timestamptz DEFAULT now(),
   groupe_id     uuid REFERENCES groupes(id) ON DELETE CASCADE,
-  vacancier_id  uuid REFERENCES vacanciers(id) ON DELETE CASCADE,
-  contenu       text NOT NULL
+  auteur_id     uuid REFERENCES vacanciers(id) ON DELETE CASCADE,
+  contenu       text NOT NULL,
+  reactions     jsonb DEFAULT '{}'::jsonb
 );
 CREATE INDEX IF NOT EXISTS idx_messages_groupe ON messages(groupe_id, created_at);
 
