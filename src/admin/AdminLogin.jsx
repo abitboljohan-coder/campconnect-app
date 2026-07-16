@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { supabase } from '../supabase'
+import { isNative, setAppMode } from '../native'
 
 function slugify(nom) {
   return nom.toLowerCase()
@@ -164,6 +165,16 @@ export default function AdminLogin({ onLogin }) {
               ? "Nouveau ? Créer l'espace de mon camping"
               : 'Déjà un compte ? Se connecter'}
           </button>
+
+          {isNative && (
+            <button
+              type="button"
+              onClick={() => setAppMode('vacancier')}
+              style={{ background: 'none', border: 'none', color: 'rgba(255,255,255,0.35)', fontSize: 12, cursor: 'pointer', textDecoration: 'underline' }}
+            >
+              ← Retour à l'espace vacancier
+            </button>
+          )}
         </form>
       </div>
     </div>

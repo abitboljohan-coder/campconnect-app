@@ -87,6 +87,7 @@ export default function AdminLayout({ gerant, camping, onLogout }) {
         {isMobile && (
           <div style={{
             background: '#0d1f0d', padding: '14px 16px',
+            paddingTop: 'calc(14px + env(safe-area-inset-top))',
             display: 'flex', alignItems: 'center', justifyContent: 'space-between',
             position: 'sticky', top: 0, zIndex: 50,
           }}>

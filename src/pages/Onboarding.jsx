@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
 import { supabase } from '../supabase'
+import { isNative, setAppMode } from '../native'
 
 const AVATARS = ['🏕️', '🌲', '⛺', '🎯', '🚴', '🏊', '🎣', '🌻', '🦜', '🌈']
 
@@ -217,6 +218,15 @@ export default function Onboarding({ initialCamping, onDone }) {
         <div style={{ marginTop: 20, padding: '12px 14px', background: '#f5f2eb', borderRadius: 10, fontSize: 12, color: '#6b7280', textAlign: 'center' }}>
           💡 Ou scannez le QR code affiché à la réception de votre camping
         </div>
+
+        {isNative && (
+          <button
+            onClick={() => setAppMode('gerant')}
+            style={{ marginTop: 14, width: '100%', background: 'none', border: 'none', fontSize: 12, color: '#9ca3af', textDecoration: 'underline', cursor: 'pointer' }}
+          >
+            Je suis gérant de camping
+          </button>
+        )}
       </Card>
     </Screen>
   )

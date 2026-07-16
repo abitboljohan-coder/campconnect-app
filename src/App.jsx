@@ -1,6 +1,7 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { useEffect, useState } from 'react'
 import { supabase } from './supabase'
+import { isNative } from './native'
 
 import Onboarding from './pages/Onboarding'
 import Accueil from './pages/Accueil'
@@ -24,7 +25,7 @@ function getDeviceId() {
 
 function getCampingSlug() {
   const pathMatch = window.location.pathname.match(/^\/join\/([^/?#]+)/)
-  const isDev = window.location.hostname === 'localhost' || window.location.hostname.startsWith('192.168.')
+  const isDev = !isNative && (window.location.hostname === 'localhost' || window.location.hostname.startsWith('192.168.'))
   return pathMatch?.[1]
     || new URLSearchParams(window.location.search).get('camping')
     || localStorage.getItem('campingSlug')

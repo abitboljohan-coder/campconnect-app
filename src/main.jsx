@@ -3,8 +3,11 @@ import { createRoot } from 'react-dom/client'
 import './index.css'
 import App from './App.jsx'
 import AdminApp from './admin/AdminApp.jsx'
+import { getAppMode, initNative } from './native.js'
 
-const isAdmin = window.location.pathname.startsWith('/admin')
+initNative()
+
+const isAdmin = getAppMode() === 'gerant'
 
 createRoot(document.getElementById('root')).render(
   <StrictMode>

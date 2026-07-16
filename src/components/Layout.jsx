@@ -23,6 +23,7 @@ export default function Layout({ camping }) {
           backdropFilter: 'blur(12px)',
           WebkitBackdropFilter: 'blur(12px)',
           padding: '12px 18px',
+          paddingTop: 'calc(12px + env(safe-area-inset-top))',
           display: 'flex',
           alignItems: 'center',
           gap: 10,
@@ -65,7 +66,7 @@ export default function Layout({ camping }) {
       {!hideNav && (
         <nav style={{
           position: 'fixed',
-          bottom: 12,
+          bottom: 'calc(12px + env(safe-area-inset-bottom))',
           left: 12,
           right: 12,
           maxWidth: 500,
@@ -76,7 +77,6 @@ export default function Layout({ camping }) {
           borderRadius: 24,
           display: 'flex',
           height: 64,
-          paddingBottom: 'env(safe-area-inset-bottom)',
           zIndex: 100,
           boxShadow: '0 8px 30px rgba(0,0,0,0.14)',
           border: '1px solid rgba(0,0,0,0.05)',
