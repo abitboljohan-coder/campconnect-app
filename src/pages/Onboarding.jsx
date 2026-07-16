@@ -109,7 +109,11 @@ export default function Onboarding({ initialCamping, onDone }) {
       let req = supabase.from('campings')
         .select('id, nom, slug, couleur_principale, logo_url')
         .order('nom').limit(q.length >= 2 ? 6 : 20)
-      if (q.length >= 2) req = req.ilike('nom', `%${q}%`)
+      if (q.length >= 2) {
+        // Insensible aux accents : on cherche sur nom ET slug (slug = nom sans accents)
+        const slugQ = q.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^a-z0-9]+/g, '-')
+        req = req.or(`nom.ilike.%${q}%,slug.ilike.%${slugQ}%`)
+      }
       const { data } = await req
       setResults(data || [])
       setSearching(false)

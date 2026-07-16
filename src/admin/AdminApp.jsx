@@ -10,6 +10,7 @@ import Carte from './pages/Carte'
 import Stats from './pages/Stats'
 import Moderation from './pages/Moderation'
 import Parametres from './pages/Parametres'
+import InfosAdmin from './pages/Infos'
 
 export default function AdminApp() {
   const [session, setSession] = useState(null)
@@ -79,6 +80,7 @@ export default function AdminApp() {
             } />
             <Route path="/admin/animations" element={<Animations camping={camping} />} />
             <Route path="/admin/carte" element={<Carte camping={camping} setCamping={setCamping} />} />
+            <Route path="/admin/infos" element={<InfosAdmin camping={camping} setCamping={setCamping} />} />
             <Route path="/admin/stats" element={<Stats camping={camping} />} />
             <Route path="/admin/moderation" element={<Moderation camping={camping} />} />
             <Route path="/admin/parametres" element={
