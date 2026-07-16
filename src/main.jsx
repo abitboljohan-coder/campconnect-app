@@ -3,6 +3,7 @@ import { createRoot } from 'react-dom/client'
 import './index.css'
 import App from './App.jsx'
 import AdminApp from './admin/AdminApp.jsx'
+import ErrorBoundary from './components/ErrorBoundary.jsx'
 import { getAppMode, initNative } from './native.js'
 
 initNative()
@@ -11,6 +12,8 @@ const isAdmin = getAppMode() === 'gerant'
 
 createRoot(document.getElementById('root')).render(
   <StrictMode>
-    {isAdmin ? <AdminApp /> : <App />}
+    <ErrorBoundary>
+      {isAdmin ? <AdminApp /> : <App />}
+    </ErrorBoundary>
   </StrictMode>,
 )

@@ -1,6 +1,6 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { useEffect, useState } from 'react'
-import { supabase } from './supabase'
+import { supabase, ensureAnonSession } from './supabase'
 import { isNative } from './native'
 
 import Onboarding from './pages/Onboarding'
@@ -41,10 +41,15 @@ function App() {
   const sejourTermine = v => v?.date_depart && v.date_depart < new Date().toISOString().slice(0, 10)
 
   useEffect(() => {
-    const deviceId = getDeviceId()
+    getDeviceId() // garantit un device_id en localStorage (info gérant)
     const slug = getCampingSlug()
 
     async function init() {
+      // Identité anonyme vérifiable → cloisonnement RLS par camping
+      await ensureAnonSession()
+      const { data: { user } } = await supabase.auth.getUser()
+      const uid = user?.id
+
       if (!slug) { setLoading(false); return }
 
       // 1. Charger le camping
@@ -56,37 +61,24 @@ function App() {
       setCamping(campingData)
       localStorage.setItem('campingSlug', campingData.slug)
 
-      // 2. Récupérer le vacancier par deviceId (même si localStorage effacé)
-      const { data: byDevice } = await supabase
-        .from('vacanciers')
-        .select('*')
-        .eq('device_id', deviceId)
-        .eq('camping_id', campingData.id)
-        .maybeSingle()
-
-      if (byDevice) {
-        if (sejourTermine(byDevice)) {
-          localStorage.removeItem('vacancier')
-          setFinSejour(byDevice)
-        } else {
-          setVacancier(byDevice)
-          localStorage.setItem('vacancier', JSON.stringify(byDevice))
-        }
-        setLoading(false)
-        return
+      // 2. Récupérer le vacancier par son identité auth (accès cloisonné au camping)
+      let v = null
+      if (uid) {
+        const { data } = await supabase
+          .from('vacanciers').select('*')
+          .eq('user_id', uid).eq('camping_id', campingData.id)
+          .maybeSingle()
+        v = data
       }
 
-      // 3. Fallback : localStorage (anciens comptes sans device_id)
-      const saved = localStorage.getItem('vacancier')
-      if (saved) {
-        try {
-          const v = JSON.parse(saved)
-          if (v.camping_id === campingData.id && !sejourTermine(v)) {
-            setVacancier(v)
-            // Migrer : sauvegarder le device_id pour cet ancien compte
-            supabase.from('vacanciers').update({ device_id: deviceId }).eq('id', v.id)
-          }
-        } catch {}
+      if (v) {
+        if (sejourTermine(v)) {
+          localStorage.removeItem('vacancier')
+          setFinSejour(v)
+        } else {
+          setVacancier(v)
+          localStorage.setItem('vacancier', JSON.stringify(v))
+        }
       }
 
       setLoading(false)

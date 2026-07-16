@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { supabase } from '../supabase'
+import { esc } from '../utils/esc'
 
 let L = null
 
@@ -205,7 +206,7 @@ export default function Map({ camping: campingProp, vacancier }) {
         const bnds = poly.getBounds()
         const labelPos = [bnds.getNorth(), (bnds.getWest() + bnds.getEast()) / 2]
         const labelIcon = Lf.divIcon({
-          html: `<div class="cc-camping-label">🌲 ${camping.nom}</div>`,
+          html: `<div class="cc-camping-label">🌲 ${esc(camping.nom)}</div>`,
           className: '', iconSize: [0, 0],
         })
         Lf.marker(labelPos, { icon: labelIcon, interactive: false, zIndexOffset: 500 }).addTo(map)
@@ -214,7 +215,7 @@ export default function Map({ camping: campingProp, vacancier }) {
         Lf.marker([coords.lat, coords.lng], { icon: campingIcon })
           .addTo(map).bindPopup(`<b>${camping?.nom || 'Camping'}</b>`)
         const labelIcon = Lf.divIcon({
-          html: `<div class="cc-camping-label" style="transform:translateY(-58px)">🌲 ${camping?.nom || 'Camping'}</div>`,
+          html: `<div class="cc-camping-label" style="transform:translateY(-58px)">🌲 ${esc(camping?.nom || 'Camping')}</div>`,
           className: '', iconSize: [0, 0],
         })
         Lf.marker([coords.lat, coords.lng], { icon: labelIcon, interactive: false, zIndexOffset: 500 }).addTo(map)
@@ -256,7 +257,7 @@ export default function Map({ camping: campingProp, vacancier }) {
     // Lieux
     pins.filter(p => p.ref_type === 'lieu' && p.lat && p.lng).forEach(pin => {
       const icon = Lf.divIcon({
-        html: `<div style="background:${pin.color || '#60a5fa'};width:38px;height:38px;border-radius:50%;border:2.5px solid white;box-shadow:0 2px 8px rgba(0,0,0,0.3);display:flex;align-items:center;justify-content:center;font-size:18px">${pin.emoji}</div>`,
+        html: `<div style="background:${esc(pin.color || '#60a5fa')};width:38px;height:38px;border-radius:50%;border:2.5px solid white;box-shadow:0 2px 8px rgba(0,0,0,0.3);display:flex;align-items:center;justify-content:center;font-size:18px">${esc(pin.emoji)}</div>`,
         className: '', iconSize: [38, 38], iconAnchor: [19, 19],
       })
       const m = Lf.marker([pin.lat, pin.lng], { icon })
@@ -270,7 +271,7 @@ export default function Map({ camping: campingProp, vacancier }) {
       const matchPin = pinForLieu(anim.lieu)
       if (!matchPin) return
       const icon = Lf.divIcon({
-        html: `<div style="background:#f472b6;width:34px;height:34px;border-radius:50%;border:2.5px solid white;box-shadow:0 2px 8px rgba(0,0,0,0.3);display:flex;align-items:center;justify-content:center;font-size:16px">${anim.emoji || '🎉'}</div>`,
+        html: `<div style="background:#f472b6;width:34px;height:34px;border-radius:50%;border:2.5px solid white;box-shadow:0 2px 8px rgba(0,0,0,0.3);display:flex;align-items:center;justify-content:center;font-size:16px">${esc(anim.emoji || '🎉')}</div>`,
         className: '', iconSize: [34, 34], iconAnchor: [17, 17],
       })
       const m = Lf.marker([matchPin.lat, matchPin.lng], { icon, zIndexOffset: 20 })
@@ -284,7 +285,7 @@ export default function Map({ camping: campingProp, vacancier }) {
       const matchPin = pinForLieu(grp.lieu)
       if (!matchPin) return
       const icon = Lf.divIcon({
-        html: `<div style="background:#fb923c;width:34px;height:34px;border-radius:50%;border:2.5px solid white;box-shadow:0 2px 8px rgba(0,0,0,0.3);display:flex;align-items:center;justify-content:center;font-size:16px">${grp.emoji || '👥'}</div>`,
+        html: `<div style="background:#fb923c;width:34px;height:34px;border-radius:50%;border:2.5px solid white;box-shadow:0 2px 8px rgba(0,0,0,0.3);display:flex;align-items:center;justify-content:center;font-size:16px">${esc(grp.emoji || '👥')}</div>`,
         className: '', iconSize: [34, 34], iconAnchor: [17, 17],
       })
       const m = Lf.marker([matchPin.lat, matchPin.lng], { icon, zIndexOffset: 20 })
@@ -299,7 +300,7 @@ export default function Map({ camping: campingProp, vacancier }) {
     if (!leafletMap.current || !effectivePos || !L) return
     if (userMarker.current) userMarker.current.remove()
 
-    const avatar = vacancier?.avatar_emoji || '🏕️'
+    const avatar = esc(vacancier?.avatar_emoji || '🏕️')
     const icon = L.divIcon({
       html: `<div style="background:${couleur};width:46px;height:46px;border-radius:50%;border:3px solid white;box-shadow:0 0 0 5px ${couleur}40, 0 3px 14px rgba(0,0,0,0.35);display:flex;align-items:center;justify-content:center;font-size:24px;">${avatar}</div>`,
       className: '', iconSize: [46, 46], iconAnchor: [23, 23],

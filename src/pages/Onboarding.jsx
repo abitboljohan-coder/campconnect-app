@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react'
-import { supabase } from '../supabase'
+import { supabase, ensureAnonSession } from '../supabase'
 import { isNative, setAppMode } from '../native'
 
 const AVATARS = ['🏕️', '🌲', '⛺', '🎯', '🚴', '🏊', '🎣', '🌻', '🦜', '🌈']
@@ -139,6 +139,9 @@ export default function Onboarding({ initialCamping, onDone }) {
     if (!form.pseudo.trim()) { setFormError('Le pseudo est obligatoire.'); return }
     setSaving(true)
     setFormError('')
+    await ensureAnonSession()
+    const { data: { user } } = await supabase.auth.getUser()
+    const uid = user?.id
     const deviceId = localStorage.getItem('deviceId')
     const profil = {
       camping_id: camping.id,
@@ -147,12 +150,13 @@ export default function Onboarding({ initialCamping, onDone }) {
       emplacement: form.emplacement.trim() || null,
       date_depart: form.date_depart || null,
       device_id: deviceId,
+      user_id: uid,
     }
 
-    // Re-séjour sur le même appareil (ex: retour l'année suivante) → réutiliser le profil
+    // Re-séjour avec la même identité (ex: retour l'année suivante) → réutiliser le profil
     const { data: existing } = await supabase
       .from('vacanciers').select('id')
-      .eq('device_id', deviceId).eq('camping_id', camping.id)
+      .eq('user_id', uid).eq('camping_id', camping.id)
       .maybeSingle()
 
     const { data, error } = existing
