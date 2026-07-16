@@ -53,16 +53,26 @@ export default function AdminLogin({ onLogin }) {
     if (password.length < 8) { setError('Mot de passe : 8 caractères minimum.'); return }
     setLoading(true)
 
-    // 1. Compte auth
+    // 1. Compte auth (réutilise un compte orphelin, ex: après remise à zéro)
     const { data, error: signErr } = await supabase.auth.signUp({ email, password })
+    let session = data?.session
     if (signErr) {
-      setError(signErr.message.includes('already') ? 'Un compte existe déjà avec cet email.' : signErr.message)
-      setLoading(false); return
+      if (signErr.message.includes('already')) {
+        const { data: si, error: siErr } = await supabase.auth.signInWithPassword({ email, password })
+        if (siErr) { setError('Un compte existe déjà avec cet email (mot de passe différent ?).'); setLoading(false); return }
+        session = si.session
+      } else {
+        setError(signErr.message); setLoading(false); return
+      }
     }
-    if (!data.session) {
+    if (!session) {
       setError('Vérifiez votre boîte mail pour confirmer votre compte, puis connectez-vous.')
       setLoading(false); setMode('login'); return
     }
+
+    // Ce compte gère-t-il déjà un camping ? (contrainte 1 compte = 1 camping)
+    const { data: dejaGerant } = await supabase.from('gerants').select('id').eq('user_id', session.user.id).maybeSingle()
+    if (dejaGerant) { setError('Ce compte gère déjà un camping.'); setLoading(false); return }
 
     // 2. Camping (slug unique)
     let slug = slugify(nomCamping)
@@ -75,10 +85,10 @@ export default function AdminLogin({ onLogin }) {
 
     // 3. Lien gérant
     const { error: gerErr } = await supabase.from('gerants')
-      .insert({ user_id: data.session.user.id, camping_id: newCamping.id, email })
+      .insert({ user_id: session.user.id, camping_id: newCamping.id, email })
     if (gerErr) { setError('Erreur : ' + gerErr.message); setLoading(false); return }
 
-    onLogin(data.session)
+    onLogin(session)
   }
 
   return (
