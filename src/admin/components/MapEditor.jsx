@@ -156,9 +156,17 @@ export default function MapEditor({ camping, setCamping }) {
         html: `<div style="background:${color};width:36px;height:36px;border-radius:50%;border:3px solid white;box-shadow:0 2px 10px rgba(0,0,0,0.5);display:flex;align-items:center;justify-content:center;font-size:18px">${pin.emoji}</div>`,
         className: '', iconSize: [36, 36], iconAnchor: [18, 18],
       })
-      markersRef.current[pin.ref_id] = _L.marker([pin.lat, pin.lng], { icon })
-        .addTo(lf)
-        .bindPopup(`<b>${pin.emoji} ${pin.label}</b>`)
+      const marker = _L.marker([pin.lat, pin.lng], { icon }).addTo(lf)
+      const popupEl = document.createElement('div')
+      popupEl.style.textAlign = 'center'
+      popupEl.innerHTML = `<b style="font-size:14px">${pin.emoji} ${pin.label}</b>`
+      const delBtn = document.createElement('button')
+      delBtn.textContent = '🗑 Supprimer'
+      delBtn.style.cssText = 'display:block;margin:8px auto 0;padding:6px 14px;border:none;border-radius:8px;background:#fef2f2;color:#dc2626;font-weight:600;font-size:13px;cursor:pointer'
+      delBtn.onclick = () => { marker.closePopup(); removePin(pin.ref_id) }
+      popupEl.appendChild(delBtn)
+      marker.bindPopup(popupEl)
+      markersRef.current[pin.ref_id] = marker
     })
   }, [pins])
 
