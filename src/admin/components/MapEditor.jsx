@@ -59,7 +59,8 @@ export default function MapEditor({ camping, setCamping }) {
 
   async function saveConfig(newPins) {
     setSaving(true)
-    const config = { pins: newPins }
+    // Fusionne avec l'existant pour NE PAS écraser le contour / lat-lng déjà réglés
+    const config = { ...(camping.carte_config || loadLocal(camping.id) || {}), pins: newPins }
     const { error } = await supabase.from('campings').update({ carte_config: config }).eq('id', camping.id)
     if (error) { setDbSupport(false); saveLocal(camping.id, config) }
     else { setDbSupport(true); saveLocal(camping.id, config) }

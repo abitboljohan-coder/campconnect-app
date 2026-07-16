@@ -332,7 +332,7 @@ export default function PerimeterEditor({ camping, onClose, onSaved }) {
         <button onClick={importFromOSM} disabled={importing}
           style={{ padding: '7px 12px', borderRadius: 8, fontSize: 13, cursor: 'pointer', fontWeight: 600,
                    background: '#eef2ff', color: '#4338ca', border: '1px solid #c7d2fe' }}>
-          {importing ? '⏳ Import…' : '🌐 Importer OSM'}
+          {importing ? '⏳ Détection…' : '🔍 Détecter le camping'}
         </button>
 
         <button onClick={() => setPoints([])} disabled={!points.length}
