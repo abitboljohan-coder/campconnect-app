@@ -50,6 +50,7 @@ export default function Map({ camping: campingProp, vacancier }) {
   const leafletMap    = useRef(null)
   const markersRef    = useRef([])
   const userMarker    = useRef(null)
+  const guideLineRef  = useRef(null)
 
   const [camping, setCampingLocal]      = useState(campingProp)
   const [animations, setAnimations]     = useState([])
@@ -58,6 +59,7 @@ export default function Map({ camping: campingProp, vacancier }) {
   const [mesGroupes, setMesGroupes]     = useState([])
   const [counts, setCounts]             = useState({})
   const [activePin, setActivePin]       = useState(null)
+  const [guideTarget, setGuideTarget]   = useState(null) // POI vers lequel on guide
   const [pins, setPins]                 = useState([])
   const [userPos, setUserPos]           = useState(null)
   const [mapReady, setMapReady]         = useState(false)
@@ -311,6 +313,18 @@ export default function Map({ camping: campingProp, vacancier }) {
     }
   }, [effectivePos, mapReady])
 
+  // Trait de guidage entre l'utilisateur et le POI cible
+  useEffect(() => {
+    if (!leafletMap.current || !L) return
+    if (guideLineRef.current) { guideLineRef.current.remove(); guideLineRef.current = null }
+    if (guideTarget?.lat && guideTarget?.lng && effectivePos) {
+      guideLineRef.current = L.polyline(
+        [[effectivePos.lat, effectivePos.lng], [guideTarget.lat, guideTarget.lng]],
+        { color: couleur, weight: 4, dashArray: '2 10', opacity: 0.9, lineCap: 'round' }
+      ).addTo(leafletMap.current)
+    }
+  }, [guideTarget, effectivePos, mapReady, couleur])
+
   const pinData = activePin ? (() => {
     if (activePin.ref_type === 'animation') return animations.find(a => a.id === activePin.ref_id)
     if (activePin.ref_type === 'groupe')    return groupes.find(g => g.id === activePin.ref_id)
@@ -415,7 +429,7 @@ export default function Map({ camping: campingProp, vacancier }) {
   const planUrl = camping?.plan_url
 
   return (
-    <div style={{ position: 'relative', height: 'calc(100dvh - 64px)', overflow: 'hidden', background: '#0d1f0d' }}>
+    <div style={{ position: 'relative', height: 'calc(100dvh - 88px - env(safe-area-inset-bottom))', overflow: 'hidden', background: '#0d1f0d' }}>
 
       {/* Panneau simulation GPS */}
       {simulating && simPos && (
@@ -621,11 +635,86 @@ export default function Map({ camping: campingProp, vacancier }) {
                 <button onClick={() => setActivePin(null)} style={{ color: '#9ca3af', fontSize: 22, background: 'none', border: 'none', cursor: 'pointer' }}>×</button>
               </div>
             )}
+
+            {activePin.lat && activePin.lng && (
+              <button
+                onClick={() => { setGuideTarget(activePin); setActivePin(null); setFollowing(true); followingRef.current = true }}
+                style={{
+                  marginTop: 16, width: '100%', padding: '13px', borderRadius: 12, border: 'none',
+                  background: couleur, color: '#fff', fontSize: 15, fontWeight: 700, cursor: 'pointer',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
+                }}
+              >
+                🧭 M'y guider
+              </button>
+            )}
           </div>
         </div>
       )}
+
+      {/* Bandeau de guidage GPS simplifié */}
+      {guideTarget && (
+        <GuideBanner
+          target={guideTarget}
+          pos={effectivePos}
+          couleur={couleur}
+          onClose={() => setGuideTarget(null)}
+        />
+      )}
     </div>
   )
+}
+
+function GuideBanner({ target, pos, couleur, onClose }) {
+  if (!pos) {
+    return (
+      <div style={guideBannerBox}>
+        <div style={{ flex: 1, fontSize: 13, color: '#fff', fontWeight: 600 }}>
+          📍 Activez votre position pour être guidé vers « {target.label} »
+        </div>
+        <button onClick={onClose} style={guideCloseBtn}>×</button>
+      </div>
+    )
+  }
+  const dist = haversineM(pos, target)
+  const bearing = bearingDeg(pos, target)
+  const arrived = dist < 8
+  return (
+    <div style={{ ...guideBannerBox, background: arrived ? '#166534' : 'rgba(13,31,13,0.94)' }}>
+      {arrived ? (
+        <div style={{ fontSize: 30, lineHeight: 1 }}>✅</div>
+      ) : (
+        <div style={{
+          width: 46, height: 46, borderRadius: '50%', background: `${couleur}`, flexShrink: 0,
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          boxShadow: '0 2px 10px rgba(0,0,0,0.35)',
+        }}>
+          <span style={{ fontSize: 26, color: '#fff', transform: `rotate(${bearing}deg)`, display: 'inline-block', lineHeight: 1 }}>↑</span>
+        </div>
+      )}
+      <div style={{ flex: 1, minWidth: 0 }}>
+        <div style={{ fontSize: 15, fontWeight: 700, color: '#fff', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+          {target.emoji} {target.label}
+        </div>
+        <div style={{ fontSize: 13, color: arrived ? '#bbf7d0' : '#C0DD97', fontWeight: 600, marginTop: 2 }}>
+          {arrived ? 'Vous y êtes ! 🎉' : `${fmtDist(dist)} · tout droit dans le sens de la flèche`}
+        </div>
+      </div>
+      <button onClick={onClose} style={guideCloseBtn}>×</button>
+    </div>
+  )
+}
+
+const guideBannerBox = {
+  position: 'absolute', top: 'calc(12px + env(safe-area-inset-top))', left: 12, right: 12, zIndex: 2500,
+  background: 'rgba(13,31,13,0.94)', backdropFilter: 'blur(10px)',
+  borderRadius: 16, padding: '12px 14px', display: 'flex', alignItems: 'center', gap: 12,
+  boxShadow: '0 6px 24px rgba(0,0,0,0.4)', border: '1px solid rgba(255,255,255,0.12)',
+}
+const guideCloseBtn = {
+  width: 30, height: 30, borderRadius: '50%', flexShrink: 0,
+  background: 'rgba(255,255,255,0.15)', color: '#fff', border: 'none',
+  fontSize: 18, cursor: 'pointer', lineHeight: 1,
 }
 
 /* ─── Fiches ─── */
