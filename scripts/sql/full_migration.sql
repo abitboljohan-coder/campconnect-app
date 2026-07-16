@@ -45,7 +45,8 @@ CREATE TABLE IF NOT EXISTS vacanciers (
   emplacement   text,
   tranche_age   text,
   avec          text,
-  interests     text[]
+  interests     text[],
+  date_depart   date
 );
 CREATE INDEX IF NOT EXISTS idx_vacanciers_device ON vacanciers(device_id, camping_id);
 CREATE INDEX IF NOT EXISTS idx_vacanciers_camping ON vacanciers(camping_id);

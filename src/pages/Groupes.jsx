@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { supabase } from '../supabase'
+import { supabase, presentFilter } from '../supabase'
 
 const EMOJIS = ['🏐', '🔥', '🚶', '🎮', '🎤', '🏊', '🚴', '🎯', '♟️', '🧘', '🎸', '🍕']
 
@@ -38,7 +38,8 @@ export default function Groupes({ camping, vacancier }) {
     const ids = (grps || []).map(g => g.id)
     if (ids.length) {
       const { data: allMembres } = await supabase
-        .from('membres_groupes').select('groupe_id, vacanciers(avatar_emoji)').in('groupe_id', ids)
+        .from('membres_groupes').select('groupe_id, vacanciers!inner(avatar_emoji)').in('groupe_id', ids)
+        .or(presentFilter(), { foreignTable: 'vacanciers' })
       const map = {}
       for (const m of allMembres || []) {
         if (!map[m.groupe_id]) map[m.groupe_id] = []

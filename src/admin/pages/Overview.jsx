@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { supabase } from '../../supabase'
+import { supabase, presentFilter, todayISO } from '../../supabase'
 import StatCard from '../components/StatCard'
 import { getHourlyCode } from '../../pages/Onboarding'
 
@@ -75,6 +75,7 @@ function OnboardingChecklist({ camping, stats }) {
 
 export default function Overview({ camping }) {
   const [stats, setStats]           = useState({ vacanciers: 0, groupes: 0, inscriptions: 0, taux: 0 })
+  const [departs, setDeparts]       = useState({ aujourdhui: [], semaine: 0 })
   const [recentGroupes, setRecentGroupes]       = useState([])
   const [recentInscriptions, setRecentInscriptions] = useState([])
   const [loading, setLoading]       = useState(true)
@@ -91,16 +92,23 @@ export default function Overview({ camping }) {
     const todayStart = new Date()
     todayStart.setHours(0, 0, 0, 0)
 
+    const today = todayISO()
+    const in7j = new Date(Date.now() + 7 * 86400000).toISOString().slice(0, 10)
+
     const [
       { count: vacCount },
       { count: grpCount },
       { data: anims },
       { data: grps },
+      { data: departsAuj },
+      { count: departsSem },
     ] = await Promise.all([
-      supabase.from('vacanciers').select('*', { count: 'exact', head: true }).eq('camping_id', camping.id),
+      supabase.from('vacanciers').select('*', { count: 'exact', head: true }).eq('camping_id', camping.id).or(presentFilter()),
       supabase.from('groupes').select('*', { count: 'exact', head: true }).eq('camping_id', camping.id).eq('actif', true),
       supabase.from('animations').select('id, titre, places_max').eq('camping_id', camping.id).eq('publiee', true),
       supabase.from('groupes').select('*').eq('camping_id', camping.id).order('created_at', { ascending: false }).limit(5),
+      supabase.from('vacanciers').select('pseudo, avatar_emoji, emplacement').eq('camping_id', camping.id).eq('date_depart', today).order('pseudo'),
+      supabase.from('vacanciers').select('*', { count: 'exact', head: true }).eq('camping_id', camping.id).gte('date_depart', today).lte('date_depart', in7j),
     ])
 
     const animIds = (anims || []).map(a => a.id)
@@ -132,6 +140,7 @@ export default function Overview({ camping }) {
     }
 
     setStats({ vacanciers: vacCount || 0, groupes: grpCount || 0, inscriptions: inscCount, taux })
+    setDeparts({ aujourdhui: departsAuj || [], semaine: departsSem || 0 })
     setRecentGroupes(grps || [])
     setRecentInscriptions(recentInscs)
     setLoading(false)
@@ -154,13 +163,37 @@ export default function Overview({ camping }) {
 
       {/* Stats cards */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 14, marginBottom: 32 }}>
-        <StatCard icon="🏕️" value={stats.vacanciers} label="Vacanciers inscrits" sub="Total du camping" />
+        <StatCard icon="🏕️" value={stats.vacanciers} label="Vacanciers présents" sub="Actuellement au camping" />
+        <StatCard icon="👋" value={departs.semaine} label="Départs sous 7 jours" sub={departs.aujourdhui.length ? `dont ${departs.aujourdhui.length} aujourd'hui` : 'Aucun aujourd\'hui'} color="#0ea5e9" />
         <StatCard icon="👥" value={stats.groupes} label="Groupes actifs" sub="En ce moment" color="#f59e0b" />
         <StatCard icon="📅" value={stats.inscriptions} label="Inscriptions aujourd'hui" sub="Nouvelles inscriptions" color="#8b5cf6" />
         <StatCard icon="📈" value={`${stats.taux}%`} label="Taux de remplissage" sub="Animations publiées" color="#ef4444" />
       </div>
 
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: 20 }}>
+
+        {/* Départs du jour */}
+        {departs.aujourdhui.length > 0 && (
+          <div style={{ background: '#fff', borderRadius: 14, padding: '20px', border: '1px solid rgba(0,0,0,0.07)' }}>
+            <h2 style={{ fontSize: 16, fontWeight: 700, color: '#1a1a1a', marginBottom: 16 }}>👋 Départs aujourd'hui</h2>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+              {departs.aujourdhui.map((v, idx) => (
+                <div key={idx} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '10px 0', borderBottom: '1px solid #f5f2eb' }}>
+                  <div style={{
+                    width: 38, height: 38, borderRadius: '50%', background: '#e0f2fe',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18, flexShrink: 0,
+                  }}>
+                    {v.avatar_emoji || '🙂'}
+                  </div>
+                  <div style={{ flex: 1 }}>
+                    <div style={{ fontWeight: 600, fontSize: 14, color: '#1a1a1a' }}>{v.pseudo}</div>
+                    {v.emplacement && <div style={{ fontSize: 12, color: '#9ca3af', marginTop: 2 }}>📍 Emplacement {v.emplacement}</div>}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
 
         {/* Derniers groupes */}
         <div style={{ background: '#fff', borderRadius: 14, padding: '20px', border: '1px solid rgba(0,0,0,0.07)' }}>

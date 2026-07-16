@@ -45,7 +45,7 @@ export default function Onboarding({ initialCamping, onDone }) {
   const [codeError, setCodeError] = useState('')
 
   // Formulaire profil
-  const [form, setForm] = useState({ pseudo: '', emplacement: '', avatar_emoji: '🏕️' })
+  const [form, setForm] = useState({ pseudo: '', emplacement: '', avatar_emoji: '🏕️', date_depart: '' })
   const [formError, setFormError] = useState('')
   const [saving, setSaving] = useState(false)
 
@@ -135,16 +135,26 @@ export default function Onboarding({ initialCamping, onDone }) {
     if (!form.pseudo.trim()) { setFormError('Le pseudo est obligatoire.'); return }
     setSaving(true)
     setFormError('')
-    const { data, error } = await supabase
-      .from('vacanciers')
-      .insert({
-        camping_id: camping.id,
-        pseudo: form.pseudo.trim(),
-        avatar_emoji: form.avatar_emoji,
-        emplacement: form.emplacement.trim() || null,
-        device_id: localStorage.getItem('deviceId'),
-      })
-      .select().single()
+    const deviceId = localStorage.getItem('deviceId')
+    const profil = {
+      camping_id: camping.id,
+      pseudo: form.pseudo.trim(),
+      avatar_emoji: form.avatar_emoji,
+      emplacement: form.emplacement.trim() || null,
+      date_depart: form.date_depart || null,
+      device_id: deviceId,
+    }
+
+    // Re-séjour sur le même appareil (ex: retour l'année suivante) → réutiliser le profil
+    const { data: existing } = await supabase
+      .from('vacanciers').select('id')
+      .eq('device_id', deviceId).eq('camping_id', camping.id)
+      .maybeSingle()
+
+    const { data, error } = existing
+      ? await supabase.from('vacanciers').update(profil).eq('id', existing.id).select().single()
+      : await supabase.from('vacanciers').insert(profil).select().single()
+
     if (error) { setFormError('Erreur. Réessayez.'); setSaving(false); return }
     onDone(camping, data)
   }
@@ -361,6 +371,19 @@ export default function Onboarding({ initialCamping, onDone }) {
               onChange={e => setForm(f => ({ ...f, emplacement: e.target.value }))}
               placeholder="ex: A42 (optionnel)" style={inputStyle}
             />
+          </label>
+
+          <label style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+            <span style={labelStyle}>DATE DE DÉPART</span>
+            <input
+              type="date" value={form.date_depart}
+              min={new Date().toISOString().slice(0, 10)}
+              onChange={e => setForm(f => ({ ...f, date_depart: e.target.value }))}
+              style={inputStyle}
+            />
+            <span style={{ fontSize: 11, color: '#9ca3af' }}>
+              Jusqu'à quand restez-vous ? Modifiable dans votre profil si vous prolongez.
+            </span>
           </label>
 
           {/* Consentement RGPD */}

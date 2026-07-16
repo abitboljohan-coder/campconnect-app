@@ -13,6 +13,7 @@ export default function Profil({ camping, vacancier, onLogout }) {
     tranche_age:  vacancier.tranche_age || '',
     avec:         vacancier.avec || '',
     interets:     Array.isArray(vacancier.interets) ? vacancier.interets : [],
+    date_depart:  vacancier.date_depart || '',
   })
   const [saving, setSaving]     = useState(false)
   const [success, setSuccess]   = useState(false)
@@ -45,6 +46,7 @@ export default function Profil({ camping, vacancier, onLogout }) {
       tranche_age: form.tranche_age || null,
       avec:        form.avec || null,
       interets:    form.interets.length > 0 ? form.interets : null,
+      date_depart: form.date_depart || null,
     }).eq('id', vacancier.id)
 
     if (!error) {
@@ -153,6 +155,9 @@ export default function Profil({ camping, vacancier, onLogout }) {
               <Field label="N° Emplacement">
                 <input type="text" value={form.emplacement} onChange={e => setForm(f => ({ ...f, emplacement: e.target.value }))} placeholder="ex: A42" style={inputStyle} />
               </Field>
+              <Field label="Date de départ">
+                <input type="date" value={form.date_depart} min={new Date().toISOString().slice(0, 10)} onChange={e => setForm(f => ({ ...f, date_depart: e.target.value }))} style={inputStyle} />
+              </Field>
               <Field label="Tranche d'âge">
                 <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
                   {TRANCHES.map(t => (
@@ -177,7 +182,7 @@ export default function Profil({ camping, vacancier, onLogout }) {
 
               <div style={{ display: 'flex', gap: 10, marginTop: 4 }}>
                 <button
-                  onClick={() => { setEditing(false); setForm({ pseudo: vacancier.pseudo || '', emplacement: vacancier.emplacement || '', tranche_age: vacancier.tranche_age || '', avec: vacancier.avec || '', interets: Array.isArray(vacancier.interets) ? vacancier.interets : [] }) }}
+                  onClick={() => { setEditing(false); setForm({ pseudo: vacancier.pseudo || '', emplacement: vacancier.emplacement || '', tranche_age: vacancier.tranche_age || '', avec: vacancier.avec || '', interets: Array.isArray(vacancier.interets) ? vacancier.interets : [], date_depart: vacancier.date_depart || '' }) }}
                   style={{ flex: 1, padding: '12px', borderRadius: 10, background: '#f3f4f6', color: '#374151', fontWeight: 600 }}
                 >
                   Annuler
@@ -195,6 +200,7 @@ export default function Profil({ camping, vacancier, onLogout }) {
             <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
               <InfoRow label="Pseudo" value={vacancier.pseudo} />
               <InfoRow label="Emplacement" value={vacancier.emplacement || '—'} />
+              <InfoRow label="Départ" value={vacancier.date_depart ? new Date(vacancier.date_depart + 'T12:00').toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' }) : '—'} />
               {vacancier.tranche_age && <InfoRow label="Tranche d'âge" value={vacancier.tranche_age} />}
               {vacancier.avec && <InfoRow label="Je voyage" value={vacancier.avec} />}
             </div>
