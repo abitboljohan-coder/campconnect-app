@@ -36,8 +36,6 @@ export default function MapEditor({ camping, setCamping }) {
   const [saving, setSaving]         = useState(false)
   const [selected, setSelected]     = useState(null)
   const [dbSupport, setDbSupport]   = useState(true)
-  const [addrSearch, setAddrSearch] = useState(camping.nom || '')
-  const [addrLoading, setAddrLoading] = useState(false)
 
   useEffect(() => { selectedRef.current = selected }, [selected])
   useEffect(() => { pinsRef.current = pins }, [pins])
@@ -69,20 +67,6 @@ export default function MapEditor({ camping, setCamping }) {
   }
 
   useEffect(() => { saveFnRef.current = saveConfig }, [camping]) // eslint-disable-line
-
-  async function searchAddress() {
-    if (!addrSearch.trim() || !lfRef.current) return
-    setAddrLoading(true)
-    try {
-      const res = await fetch(
-        `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(addrSearch)}&format=json&limit=1`,
-        { headers: { 'Accept-Language': 'fr' } }
-      )
-      const data = await res.json()
-      if (data[0]) lfRef.current.setView([parseFloat(data[0].lat), parseFloat(data[0].lon)], 17)
-    } catch {}
-    setAddrLoading(false)
-  }
 
   function removePin(refId) {
     const newPins = pins.filter(p => p.ref_id !== refId)
@@ -182,26 +166,6 @@ export default function MapEditor({ camping, setCamping }) {
           </code>
         </div>
       )}
-
-      {/* Barre de recherche style Google Maps */}
-      <div style={{ display: 'flex', gap: 8, marginBottom: 10 }}>
-        <input
-          value={addrSearch}
-          onChange={e => setAddrSearch(e.target.value)}
-          onKeyDown={e => e.key === 'Enter' && searchAddress()}
-          placeholder="Ex: Camping Les Naïades, Fréjus..."
-          style={{ flex: 1, padding: '10px 18px', borderRadius: 28, border: '2px solid #e5e7eb', fontSize: 14, outline: 'none', boxShadow: '0 2px 8px rgba(0,0,0,0.08)', transition: 'border-color 0.15s' }}
-          onFocus={e => e.target.style.borderColor = '#639922'}
-          onBlur={e => e.target.style.borderColor = '#e5e7eb'}
-        />
-        <button onClick={searchAddress} disabled={addrLoading} style={{
-          padding: '10px 20px', borderRadius: 28, border: 'none',
-          background: '#639922', color: '#fff', fontSize: 14, fontWeight: 700, cursor: 'pointer', flexShrink: 0,
-          boxShadow: '0 2px 8px rgba(99,153,34,0.3)',
-        }}>
-          {addrLoading ? '...' : '🔍 Rechercher'}
-        </button>
-      </div>
 
       {/* Carte pleine largeur avec panel flottant */}
       <div style={{ position: 'relative', height: 560, borderRadius: 14, overflow: 'hidden', border: selected ? '2px solid #639922' : '2px solid #e5e7eb', cursor: selected ? 'crosshair' : 'grab', boxShadow: '0 4px 20px rgba(0,0,0,0.1)' }}>
