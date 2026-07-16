@@ -3,7 +3,7 @@
 -- Migrations Supabase appliquées :
 --   20260716… date_depart_sejour_purge_rgpd   ✅ appliquée
 --   20260716… hardening_indexes_cleanup       ✅ appliquée
---   tighten_grp_update_storage_listing        ⚠️ EN ATTENTE (voir bas de fichier)
+--   tighten_grp_update_storage_listing        ✅ appliquée
 -- ═══════════════════════════════════════════════════════════════
 
 -- ─── hardening_indexes_cleanup (appliquée) ──────────────────────
@@ -52,8 +52,7 @@ CREATE POLICY anim_update ON animations FOR UPDATE TO authenticated
 CREATE POLICY anim_delete ON animations FOR DELETE TO authenticated
   USING (is_gerant(camping_id));
 
--- ─── tighten_grp_update_storage_listing (⚠️ À APPLIQUER) ────────
--- La connexion a sauté avant l'application — rejouer ce bloc :
+-- ─── tighten_grp_update_storage_listing (appliquée) ─────────────
 
 -- grp_update : aucune mise à jour de groupe côté vacancier dans l'app → gérants uniquement
 DROP POLICY IF EXISTS grp_update ON groupes;
