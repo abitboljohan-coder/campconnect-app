@@ -2,13 +2,6 @@ import { useState } from 'react'
 import { supabase } from '../supabase'
 import { isNative, setAppMode } from '../native'
 
-function slugify(nom) {
-  return nom.toLowerCase()
-    .normalize('NFD').replace(/[̀-ͯ]/g, '')
-    .replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '')
-    .slice(0, 40)
-}
-
 export default function AdminLogin({ onLogin }) {
   const [mode, setMode]         = useState('login') // 'login' | 'signup'
   const [email, setEmail]       = useState('')
@@ -24,21 +17,23 @@ export default function AdminLogin({ onLogin }) {
 
     const { data, error: authError } = await supabase.auth.signInWithPassword({ email, password })
     if (authError) {
-      setError('Identifiants incorrects.')
+      setError(authError.message.toLowerCase().includes('confirm')
+        ? 'Confirmez votre email (lien reçu par mail) avant de vous connecter.'
+        : 'Identifiants incorrects.')
       setLoading(false)
       return
     }
 
-    // Vérifier que cet utilisateur est bien un gérant
+    // Accès gérant = avoir un espace camping, OU en avoir un en attente de création
     const { data: gerant } = await supabase
       .from('gerants')
       .select('id')
       .eq('email', data.session.user.email)
-      .single()
+      .maybeSingle()
 
-    if (!gerant) {
+    if (!gerant && !localStorage.getItem('pendingCamping')) {
       await supabase.auth.signOut()
-      setError("Vous n'avez pas accès au dashboard gérant.")
+      setError("Ce compte n'a pas d'espace gérant. Créez-le via « Créer l'espace de mon camping ».")
       setLoading(false)
       return
     }
@@ -53,42 +48,35 @@ export default function AdminLogin({ onLogin }) {
     if (password.length < 8) { setError('Mot de passe : 8 caractères minimum.'); return }
     setLoading(true)
 
-    // 1. Compte auth (réutilise un compte orphelin, ex: après remise à zéro)
+    // Le camping sera créé à la 1re connexion confirmée (via AdminApp)
+    localStorage.setItem('pendingCamping', nomCamping.trim())
+
+    // Compte auth (réutilise un compte orphelin, ex: après remise à zéro)
     const { data, error: signErr } = await supabase.auth.signUp({ email, password })
     let session = data?.session
     if (signErr) {
       if (signErr.message.includes('already')) {
         const { data: si, error: siErr } = await supabase.auth.signInWithPassword({ email, password })
-        if (siErr) { setError('Un compte existe déjà avec cet email (mot de passe différent ?).'); setLoading(false); return }
+        if (siErr) {
+          setError(siErr.message.toLowerCase().includes('confirm')
+            ? 'Confirmez d’abord votre email (lien reçu par mail), puis connectez-vous.'
+            : 'Un compte existe déjà avec cet email (mot de passe différent ?).')
+          setLoading(false); return
+        }
         session = si.session
       } else {
+        localStorage.removeItem('pendingCamping')
         setError(signErr.message); setLoading(false); return
       }
     }
+
+    // Confirmation email active → pas encore de session : on attend la confirmation
     if (!session) {
-      setError('Vérifiez votre boîte mail pour confirmer votre compte, puis connectez-vous.')
+      setError('Compte créé ✅ Confirmez votre email (lien reçu par mail), puis connectez-vous : votre espace camping sera prêt.')
       setLoading(false); setMode('login'); return
     }
 
-    // Ce compte gère-t-il déjà un camping ? (contrainte 1 compte = 1 camping)
-    const { data: dejaGerant } = await supabase.from('gerants').select('id').eq('user_id', session.user.id).maybeSingle()
-    if (dejaGerant) { setError('Ce compte gère déjà un camping.'); setLoading(false); return }
-
-    // 2. Camping (slug unique)
-    let slug = slugify(nomCamping)
-    const { data: existing } = await supabase.from('campings').select('id').eq('slug', slug).maybeSingle()
-    if (existing) slug = `${slug}-${Math.floor(Math.random() * 900 + 100)}`
-
-    const { data: newCamping, error: campErr } = await supabase.from('campings')
-      .insert({ nom: nomCamping.trim(), slug }).select().single()
-    if (campErr) { setError('Erreur création camping : ' + campErr.message); setLoading(false); return }
-
-    // 3. Lien gérant
-    const { error: gerErr } = await supabase.from('gerants')
-      .insert({ user_id: session.user.id, camping_id: newCamping.id, email })
-    if (gerErr) { setError('Erreur : ' + gerErr.message); setLoading(false); return }
-
-    onLogin(session)
+    onLogin(session) // AdminApp crée le camping depuis pendingCamping
   }
 
   return (

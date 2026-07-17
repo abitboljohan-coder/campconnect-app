@@ -12,6 +12,13 @@ import Moderation from './pages/Moderation'
 import Parametres from './pages/Parametres'
 import InfosAdmin from './pages/Infos'
 
+function slugify(nom) {
+  return nom.toLowerCase()
+    .normalize('NFD').replace(/[̀-ͯ]/g, '')
+    .replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '')
+    .slice(0, 40)
+}
+
 export default function AdminApp() {
   const [session, setSession] = useState(null)
   const [gerant, setGerant]   = useState(null)
@@ -22,7 +29,7 @@ export default function AdminApp() {
     supabase.auth.getSession().then(({ data: { session: s } }) => {
       if (s) {
         setSession(s)
-        loadGerant(s.user.email)
+        loadGerant(s)
       } else {
         setLoading(false)
       }
@@ -35,18 +42,48 @@ export default function AdminApp() {
     return () => subscription.unsubscribe()
   }, [])
 
-  async function loadGerant(userEmail) {
+  async function loadGerant(s) {
     const { data: ger } = await supabase
       .from('gerants')
       .select('*, campings(*)')
-      .eq('email', userEmail)
+      .eq('email', s.user.email)
       .single()
 
     if (ger) {
       setGerant(ger)
       setCamping(ger.campings)
+      setLoading(false)
+      return
+    }
+
+    // Pas encore de gérant : créer le camping mémorisé au signup (1re connexion confirmée)
+    const pending = localStorage.getItem('pendingCamping')
+    if (pending) {
+      const res = await createCamping(s, pending)
+      if (res) {
+        setGerant(res.gerant)
+        setCamping(res.gerant.campings)
+        localStorage.removeItem('pendingCamping')
+      }
     }
     setLoading(false)
+  }
+
+  async function createCamping(s, nom) {
+    let slug = slugify(nom)
+    const { data: exists } = await supabase.from('campings').select('id').eq('slug', slug).maybeSingle()
+    if (exists) slug = `${slug}-${Math.floor(Math.random() * 900 + 100)}`
+
+    const { data: camping, error: e1 } = await supabase.from('campings')
+      .insert({ nom: nom.trim(), slug }).select().single()
+    if (e1) return null
+
+    const { data: gerant, error: e2 } = await supabase.from('gerants')
+      .insert({ user_id: s.user.id, camping_id: camping.id, email: s.user.email })
+      .select('*, campings(*)').single()
+    if (e2) return null
+
+    return { gerant }
   }
 
   async function logout() {
@@ -69,7 +106,7 @@ export default function AdminApp() {
       <Routes>
         {!session || !gerant ? (
           <Route path="*" element={
-            <AdminLogin onLogin={(s) => { setSession(s); loadGerant(s.user.email) }} />
+            <AdminLogin onLogin={(s) => { setSession(s); setLoading(true); loadGerant(s) }} />
           } />
         ) : (
           <Route element={<AdminLayout gerant={gerant} camping={camping} onLogout={logout} />}>
