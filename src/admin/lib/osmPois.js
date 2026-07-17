@@ -50,7 +50,16 @@ function stripAccents(s) {
 
 // Map (tags OSM) → { emoji, label, color }. Ordre = priorité (premier match gagne).
 const POI_MAP = [
-  [t => t.leisure === 'swimming_pool',                                { emoji: '🏊', label: 'Piscine',        color: '#38bdf8' }],
+  [t => t.leisure === 'swimming_pool' || t.leisure === 'water_park',  { emoji: '🏊', label: 'Piscine',        color: '#38bdf8' }],
+  [t => t.attraction === 'water_slide',                               { emoji: '🛝', label: 'Toboggan',       color: '#22d3ee' }],
+  [t => t.leisure === 'sauna' || t.amenity === 'spa' || t.leisure === 'hot_tub', { emoji: '🧖', label: 'Spa / Jacuzzi', color: '#c084fc' }],
+  [t => t.amenity === 'reception_desk' || t.office === 'camping',     { emoji: '🏠', label: 'Réception',      color: '#3b82f6' }],
+  [t => t.leisure === 'miniature_golf',                               { emoji: '⛳', label: 'Mini-golf',      color: '#4ade80' }],
+  [t => t.sport === 'padel',                                          { emoji: '🎾', label: 'Padel',          color: '#a3e635' }],
+  [t => t.amenity === 'sanitary_dump_station',                        { emoji: '🚐', label: 'Vidange camping-car', color: '#64748b' }],
+  [t => t.amenity === 'vending_machine',                              { emoji: '🥤', label: 'Distributeur',   color: '#f472b6' }],
+  [t => t.shop === 'laundry',                                         { emoji: '🧺', label: 'Laverie',        color: '#8b5cf6' }],
+  [t => t.shop === 'bakery',                                          { emoji: '🥖', label: 'Boulangerie',    color: '#d97706' }],
   [t => t.sport === 'petanque' || t.sport === 'boules',               { emoji: '🎳', label: 'Pétanque',       color: '#f59e0b' }],
   [t => t.sport === 'tennis',                                         { emoji: '🎾', label: 'Tennis',         color: '#a3e635' }],
   [t => t.sport === 'table_tennis',                                   { emoji: '🏓', label: 'Ping-pong',      color: '#f472b6' }],
@@ -85,19 +94,50 @@ function matchPoi(tags) {
   return null
 }
 
-// Ne garde que les POI "sûrs" pour lesquels on est confiant
-// Un POI est "sûr" si :
-//   - il a un tag amenity/leisure/sport/tourism spécifique bien mappé (POI_MAP l'a trouvé)
-//   - ET il a un nom OU c'est un type non-ambigu (piscine, tennis, resto...)
-// Sans nom, on n'accepte QUE ce qui est visuellement non-ambigu et qui échappe rarement au mauvais tag
-const NAMELESS_OK = new Set(['🏊', '🚻', '🚿', '🚰', '🍖', '🎠'])
-// Types trop souvent mal taggués dans OSM (loisirs à côté d'une piscine, etc.) → nom obligatoire
-const NAME_REQUIRED = new Set(['🎾', '🎳', '🏓', '🏀', '🏐', '⚽', '🏟️', '🍽️', '🍺', '☕', '🍔', '🍦', '💪'])
+// Confiance CONTEXTUELLE :
+// • DANS le contour tracé du camping → tout équipement mappé est fiable, même sans nom
+//   (un court de tennis à l'intérieur du camping n'a presque jamais de "name" dans OSM).
+// • HORS contour (détection par rayon) → on reste strict pour ne pas ramasser
+//   le tennis municipal ou le resto du village d'à côté.
+const NAMELESS_OK = new Set(['🏊', '🚻', '🚿', '🚰', '🍖', '🎠', '🛝', '🚐'])
+const NAME_REQUIRED = new Set(['🎾', '🎳', '🏓', '🏀', '🏐', '⚽', '🏟️', '🍽️', '🍺', '☕', '🍔', '🍦', '💪', '🥖', '🛒'])
 
-function isConfident(poi, tags) {
+function isConfident(poi, tags, insidePerimeter) {
+  if (insidePerimeter) return true
   if (NAME_REQUIRED.has(poi.emoji)) return !!tags?.name
   if (tags?.name) return true
   return NAMELESS_OK.has(poi.emoji)
+}
+
+// Dilate légèrement le polygone autour de son centroïde (~ tolérance de bordure).
+// La réception ou l'épicerie sont souvent cartographiées à l'entrée, à cheval sur la limite.
+function inflatePoly(poly, factor = 1.06) {
+  let cx = 0, cy = 0
+  for (const [a, b] of poly) { cx += a; cy += b }
+  cx /= poly.length; cy /= poly.length
+  return poly.map(([a, b]) => [cx + (a - cx) * factor, cy + (b - cy) * factor])
+}
+
+// Distance approx en mètres entre deux points proches
+function distM(a, b) {
+  const dLat = (a.lat - b.lat) * 111320
+  const dLng = (a.lng - b.lng) * 111320 * Math.cos(a.lat * Math.PI / 180)
+  return Math.hypot(dLat, dLng)
+}
+
+// Fusionne les doublons du même type à moins de `radius` mètres
+// (ex: piscine taggée en point ET en surface, bassins multiples).
+// Préfère l'élément nommé, puis la surface (way) au point.
+function clusterPois(pois, radius = 35) {
+  const out = []
+  for (const p of pois) {
+    const twin = out.find(o => o.emoji === p.emoji && distM(o, p) < radius)
+    if (!twin) { out.push(p); continue }
+    const pNamed = !p._generic, twinNamed = !twin._generic
+    const replace = (pNamed && !twinNamed) || (pNamed === twinNamed && p._isWay && !twin._isWay)
+    if (replace) out[out.indexOf(twin)] = p
+  }
+  return out
 }
 
 // Bounding box d'un polygone [[lat,lng], ...]
@@ -146,15 +186,21 @@ export async function detectPois(perimeter, fallbackCenter) {
       node${filter}["sport"];
       node${filter}["tourism"];
       node${filter}["shop"];
+      node${filter}["attraction"];
+      node${filter}["office"="camping"];
       way${filter}["amenity"];
       way${filter}["leisure"];
       way${filter}["sport"];
+      way${filter}["shop"];
+      way${filter}["attraction"];
     );
     out center tags;`
 
   const j = await overpass(q, 30000)  // POI = requête lourde, 30s max
   const pois = []
-  const seen = new Set()
+  const hasPerim = perimeter?.length >= 3
+  const strictPoly  = hasPerim ? perimeter : null
+  const bufferPoly  = hasPerim ? inflatePoly(perimeter) : null
 
   for (const el of j.elements || []) {
     const tags = el.tags
@@ -165,8 +211,12 @@ export async function detectPois(perimeter, fallbackCenter) {
     const lng = el.lon ?? el.center?.lon
     if (!lat || !lng) continue
 
-    // Si périmètre défini, filtrer aux POI inside
-    if (perimeter?.length >= 3 && !pointInPoly([lat, lng], perimeter)) continue
+    // Filtre géographique : contour + petite marge (réception/épicerie en bordure)
+    let inside = false
+    if (hasPerim) {
+      if (!pointInPoly([lat, lng], bufferPoly)) continue
+      inside = pointInPoly([lat, lng], strictPoly)
+    }
 
     const poi = {
       ref_id:   `osm-${el.type}-${el.id}`,
@@ -176,15 +226,15 @@ export async function detectPois(perimeter, fallbackCenter) {
       color:    info.color,
       lat, lng,
       osm:      true,
+      _generic: !tags.name,
+      _isWay:   el.type !== 'node',
     }
-    if (!isConfident(poi, tags)) continue
-
-    const key = `${info.emoji}-${lat.toFixed(5)}-${lng.toFixed(5)}`
-    if (seen.has(key)) continue
-    seen.add(key)
+    if (!isConfident(poi, tags, inside)) continue
     pois.push(poi)
   }
-  return pois
+
+  // Fusion des doublons (point + surface du même équipement, bassins multiples…)
+  return clusterPois(pois).map(({ _generic, _isWay, ...p }) => p)
 }
 
 // Recherche Nominatim + retourne { lat, lng, display_name } de la meilleure correspondance
