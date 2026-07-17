@@ -142,6 +142,7 @@ export default function PerimeterEditor({ camping, onClose, onSaved }) {
   const [mode, setMode]         = useState('click') // 'click' | 'rect'
   const [search, setSearch]     = useState(camping?.nom || '')
   const [searchResults, setSearchResults] = useState([])
+  const [searchTouched, setSearchTouched] = useState(false)
   const [dropdownRect, setDropdownRect] = useState(null)
   const [importing, setImporting] = useState(false)
   const [notice, setNotice]     = useState('')
@@ -164,20 +165,33 @@ export default function PerimeterEditor({ camping, onClose, onSaved }) {
       LRef.current = L
       if (!mounted || !mapRef.current) return
 
-      let start
-      if (points.length) start = { lat: points[0][0], lng: points[0][1] }
-      else {
+      // Centrage : périmètre existant → point GPS connu du camping → pin existant
+      // → géocodage du nom → sinon vue large France (zoom 5) avec invite à chercher.
+      let start, startZoom = 17
+      const cfg = camping?.carte_config || {}
+      const pin = (cfg.pins || []).find(p => p.lat && p.lng)
+      if (points.length) {
+        start = { lat: points[0][0], lng: points[0][1] }
+      } else if (cfg.center?.lat && cfg.center?.lng) {
+        start = cfg.center
+      } else if (pin) {
+        start = { lat: pin.lat, lng: pin.lng }
+      } else {
         try {
           const res = await nominatimSearch((camping?.nom || 'camping') + ' France')
-          start = res[0] ? { lat: +res[0].lat, lng: +res[0].lon } : { lat: 46.5, lng: 2.5 }
-        } catch { start = { lat: 46.5, lng: 2.5 } }
+          if (res[0]) start = { lat: +res[0].lat, lng: +res[0].lon }
+          else { start = { lat: 46.6, lng: 2.4 }; startZoom = 5 }
+        } catch { start = { lat: 46.6, lng: 2.4 }; startZoom = 5 }
       }
 
       map = L.map(mapRef.current, {
         center: [start.lat, start.lng],
-        zoom: points.length ? 17 : 17,
+        zoom: startZoom,
         maxZoom: 20,
       })
+      if (startZoom === 5) {
+        setNotice('🔎 Cherchez votre camping dans la barre de recherche, ou zoomez sur la carte, avant de tracer.')
+      }
       L.tileLayer(
         'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
         { maxZoom: 20, maxNativeZoom: 19, attribution: '© Esri' }
@@ -318,8 +332,9 @@ export default function PerimeterEditor({ camping, onClose, onSaved }) {
 
   // Menu déroulant en direct : dès 3 caractères, on propose les adresses correspondantes
   // pour que le gérant clique sur la bonne au lieu de deviner à sa place.
+  // (Ne s'ouvre pas tout seul à l'ouverture : attend une vraie saisie.)
   useEffect(() => {
-    if (search.trim().length < 3) { setSearchResults([]); return }
+    if (!searchTouched || search.trim().length < 3) { setSearchResults([]); return }
     let cancelled = false
     const t = setTimeout(async () => {
       try {
@@ -328,7 +343,7 @@ export default function PerimeterEditor({ camping, onClose, onSaved }) {
       } catch { if (!cancelled) setSearchResults([]) }
     }, 400)
     return () => { cancelled = true; clearTimeout(t) }
-  }, [search])
+  }, [search, searchTouched])
 
   // Tentative auto rapide : cherche DIRECTEMENT le camping dans OSM par nom + ville
   // (bien plus fiable qu'un géocodage d'adresse postale). Ne fait rien si rien trouvé —
@@ -427,7 +442,7 @@ export default function PerimeterEditor({ camping, onClose, onSaved }) {
 
         {/* Recherche */}
         <div ref={searchWrapRef} style={{ display: 'flex', gap: 4, position: 'relative' }}>
-          <input value={search} onChange={e => setSearch(e.target.value)}
+          <input value={search} onChange={e => { setSearch(e.target.value); setSearchTouched(true) }}
             onKeyDown={e => e.key === 'Enter' && runSearch()}
             placeholder="Ex : Camping du Lac, 12345 Villeneuve"
             style={{ padding: '7px 10px', border: '1px solid #d1d5db', borderRadius: 8, fontSize: 13, width: 220 }} />
