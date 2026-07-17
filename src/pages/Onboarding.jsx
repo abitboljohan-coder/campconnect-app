@@ -126,6 +126,16 @@ export default function Onboarding({ initialCamping, onDone }) {
     setGpsStatus('idle')
   }
 
+  // Reset complet : oublie le camping mémorisé pour repartir du choix (change de camping)
+  function changerCamping() {
+    localStorage.removeItem('campingSlug')
+    localStorage.removeItem('vacancier')
+    setCamping(null)
+    setQuery('')
+    setGpsStatus('idle')
+    setStep('search')
+  }
+
   function checkCode() {
     if (code.trim() === getHourlyCode(camping.id)) {
       setStep('form')
@@ -319,7 +329,7 @@ export default function Onboarding({ initialCamping, onDone }) {
         )}
 
         <button
-          onClick={() => { setCamping(null); setStep('search') }}
+          onClick={changerCamping}
           style={{ marginTop: 20, background: 'none', border: 'none', color: '#9ca3af', fontSize: 13, cursor: 'pointer', width: '100%' }}
         >
           ← Changer de camping
@@ -423,6 +433,13 @@ export default function Onboarding({ initialCamping, onDone }) {
             {saving ? 'Enregistrement...' : "C'est parti ! 🌿"}
           </button>
         </form>
+
+        <button
+          onClick={changerCamping}
+          style={{ marginTop: 16, background: 'none', border: 'none', color: '#9ca3af', fontSize: 13, cursor: 'pointer', width: '100%' }}
+        >
+          ← Changer de camping
+        </button>
       </Card>
     </Screen>
   )
