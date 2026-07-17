@@ -1,4 +1,5 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useLayoutEffect, useRef, useState } from 'react'
+import { createPortal } from 'react-dom'
 import { supabase } from '../../supabase'
 import { searchCampsiteByName } from '../lib/osmPois'
 
@@ -133,6 +134,7 @@ export default function PerimeterEditor({ camping, onClose, onSaved }) {
   const markersRef = useRef([])
   const rectPreviewRef = useRef(null)
   const LRef = useRef(null)
+  const searchWrapRef = useRef(null)
 
   const [points, setPoints]     = useState(() => camping?.carte_config?.perimeter || [])
   const [saving, setSaving]     = useState(false)
@@ -140,8 +142,17 @@ export default function PerimeterEditor({ camping, onClose, onSaved }) {
   const [mode, setMode]         = useState('click') // 'click' | 'rect'
   const [search, setSearch]     = useState(camping?.nom || '')
   const [searchResults, setSearchResults] = useState([])
+  const [dropdownRect, setDropdownRect] = useState(null)
   const [importing, setImporting] = useState(false)
   const [notice, setNotice]     = useState('')
+
+  // Position du menu déroulant calculée en viewport — rendu via portail pour
+  // échapper à tout contexte d'empilement créé par la carte Leaflet.
+  useLayoutEffect(() => {
+    if (searchResults.length === 0 || !searchWrapRef.current) { setDropdownRect(null); return }
+    const r = searchWrapRef.current.getBoundingClientRect()
+    setDropdownRect({ top: r.bottom + 4, left: r.left, width: Math.max(r.width, 300) })
+  }, [searchResults])
 
   const couleur = camping?.couleur_principale || '#639922'
 
@@ -415,7 +426,7 @@ export default function PerimeterEditor({ camping, onClose, onSaved }) {
         </div>
 
         {/* Recherche */}
-        <div style={{ display: 'flex', gap: 4, position: 'relative' }}>
+        <div ref={searchWrapRef} style={{ display: 'flex', gap: 4, position: 'relative' }}>
           <input value={search} onChange={e => setSearch(e.target.value)}
             onKeyDown={e => e.key === 'Enter' && runSearch()}
             placeholder="Ex : Camping du Lac, 12345 Villeneuve"
@@ -424,17 +435,24 @@ export default function PerimeterEditor({ camping, onClose, onSaved }) {
             style={{ padding: '7px 12px', background: '#f3f4f6', border: '1px solid #d1d5db', borderRadius: 8, cursor: 'pointer', fontSize: 13 }}>
             🔍
           </button>
-          {searchResults.length > 0 && (
-            <div style={{ position: 'absolute', top: '110%', left: 0, background: '#fff', border: '1px solid #e5e7eb', borderRadius: 10, boxShadow: '0 6px 20px rgba(0,0,0,0.15)', minWidth: 300, maxHeight: 220, overflowY: 'auto', zIndex: 40 }}>
-              {searchResults.map(r => (
-                <button key={r.place_id} onClick={() => pickResult(r)}
-                  style={{ display: 'block', width: '100%', textAlign: 'left', padding: '8px 12px', border: 'none', background: '#fff', cursor: 'pointer', fontSize: 12, borderBottom: '1px solid #f3f4f6' }}>
-                  {r.display_name}
-                </button>
-              ))}
-            </div>
-          )}
         </div>
+
+        {/* Menu déroulant en portail : échappe à tout contexte d'empilement de la carte Leaflet */}
+        {searchResults.length > 0 && dropdownRect && createPortal(
+          <div style={{
+            position: 'fixed', top: dropdownRect.top, left: dropdownRect.left, width: dropdownRect.width,
+            background: '#fff', border: '1px solid #e5e7eb', borderRadius: 10,
+            boxShadow: '0 6px 20px rgba(0,0,0,0.25)', maxHeight: 260, overflowY: 'auto', zIndex: 999999,
+          }}>
+            {searchResults.map(r => (
+              <button key={r.place_id} onClick={() => pickResult(r)}
+                style={{ display: 'block', width: '100%', textAlign: 'left', padding: '8px 12px', border: 'none', background: '#fff', cursor: 'pointer', fontSize: 12, borderBottom: '1px solid #f3f4f6' }}>
+                {r.display_name}
+              </button>
+            ))}
+          </div>,
+          document.body
+        )}
 
         {/* Outils */}
         <button onClick={() => setMode(mode === 'rect' ? 'click' : 'rect')}
