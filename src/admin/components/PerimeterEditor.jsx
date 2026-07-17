@@ -18,6 +18,36 @@ async function nominatimSearch(q) {
   return r.json()
 }
 
+// Polygone renvoyé directement par Nominatim/OSM (camping déjà cartographié) → [ [lat,lng], … ]
+function extractPolygon(r) {
+  const g = r?.geojson
+  if (!g) return null
+  if (g.type === 'Polygon')      return g.coordinates[0].map(([lon, lat]) => [lat, lon])
+  if (g.type === 'MultiPolygon') return g.coordinates[0][0].map(([lon, lat]) => [lat, lon])
+  return null
+}
+
+// Variantes de recherche dégradées : une adresse complète échoue souvent telle quelle.
+function geocodeVariants(raw) {
+  const parts = raw.split(',').map(s => s.trim()).filter(Boolean)
+  const name  = parts[0]
+  const cp    = parts.find(p => /^\d{4,5}$/.test(p)) || ''
+  const ville = [...parts].reverse().find(p => p && !/^\d/.test(p) && !/^france$/i.test(p)) || ''
+  const out = [raw]
+  if (name && ville) out.push(`${name}, ${cp} ${ville} France`.replace(/\s+/g, ' '))
+  if (name && ville) out.push(`${name} ${ville}`)
+  if (cp && ville)   out.push(`${cp} ${ville} France`)
+  if (ville)         out.push(`${ville} France`)
+  return [...new Set(out.filter(Boolean))]
+}
+
+async function geocodeBest(raw) {
+  for (const q of geocodeVariants(raw)) {
+    try { const res = await nominatimSearch(q); if (res?.length) return res } catch { /* variante suivante */ }
+  }
+  return []
+}
+
 // Miroirs Overpass (le principal est souvent surchargé)
 const OVERPASS_ENDPOINTS = [
   'https://overpass-api.de/api/interpreter',
@@ -236,37 +266,78 @@ export default function PerimeterEditor({ camping, onClose, onSaved }) {
 
   async function runSearch() {
     if (!search.trim()) return
-    setSearchResults([])
-    try {
-      const res = await nominatimSearch(search)
-      setSearchResults(res)
-      if (res[0] && leafletMap.current) {
-        leafletMap.current.setView([+res[0].lat, +res[0].lon], 17)
-      }
-    } catch (e) { setNotice('Recherche échouée') }
+    setSearchResults([]); setNotice('🔍 Recherche…')
+    const res = await geocodeBest(search)
+    if (!res.length) {
+      setNotice('❌ Introuvable. Essayez « nom du camping + ville » (ex : Camping Le Castellas Sète).')
+      setTimeout(() => setNotice(''), 6000); return
+    }
+    setSearchResults(res)
+    await useResult(res[0])
   }
 
-  function pickResult(r) {
-    leafletMap.current.setView([+r.lat, +r.lon], 18)
+  // Centre sur un résultat et trace le contour automatiquement si possible.
+  async function useResult(r) {
     setSearchResults([])
+    const lat = +r.lat, lng = +r.lon
+    leafletMap.current?.setView([lat, lng], 17)
+
+    // 1) Nominatim renvoie déjà le contour du camping ?
+    const poly = extractPolygon(r)
+    if (poly && poly.length >= 4) {
+      setPoints(poly)
+      leafletMap.current?.fitBounds(poly, { padding: [40, 40] })
+      setNotice(`✅ Contour trouvé (${poly.length} points)`)
+      setTimeout(() => setNotice(''), 4000); return
+    }
+
+    // 2) Sinon, détection OSM autour du point
+    setNotice('📍 Localisé — détection du contour…')
+    try {
+      const p = await overpassCampsiteAround(lat, lng, 2000)
+      if (p) {
+        setPoints(p)
+        leafletMap.current?.fitBounds(p, { padding: [40, 40] })
+        setNotice(`✅ Contour importé (${p.length} points)`)
+      } else {
+        setNotice('📍 Camping localisé. Trace le contour à la main (clic ou ▭ Rectangle).')
+      }
+    } catch { setNotice('📍 Localisé. Trace le contour à la main.') }
+    setTimeout(() => setNotice(''), 6000)
   }
+
+  function pickResult(r) { useResult(r) }
 
   async function importFromOSM() {
     if (!leafletMap.current) return
     setImporting(true); setNotice('')
-    const c = leafletMap.current.getCenter()
     try {
-      const poly = await overpassCampsiteAround(c.lat, c.lng, 1500)
+      // Si une adresse est saisie, on la géolocalise d'abord (contour direct si dispo)
+      if (search.trim()) {
+        const res = await geocodeBest(search)
+        if (res.length) {
+          const r = res[0]
+          leafletMap.current.setView([+r.lat, +r.lon], 17)
+          const poly0 = extractPolygon(r)
+          if (poly0 && poly0.length >= 4) {
+            setPoints(poly0); leafletMap.current.fitBounds(poly0, { padding: [40, 40] })
+            setNotice(`✅ Contour trouvé (${poly0.length} points)`)
+            setImporting(false); setTimeout(() => setNotice(''), 5000); return
+          }
+        }
+      }
+      const c = leafletMap.current.getCenter()
+      const poly = await overpassCampsiteAround(c.lat, c.lng, 2000)
       if (poly) {
         setPoints(poly)
         leafletMap.current.fitBounds(poly, { padding: [40, 40] })
         setNotice(`✅ Contour importé depuis OpenStreetMap (${poly.length} points)`)
       } else {
-        setNotice('❌ Aucun camping trouvé dans OSM autour de ce point. Zoomez sur votre camping et réessayez.')
+        setNotice('❌ Aucun camping trouvé ici. Tapez l’adresse (nom + ville) dans la recherche, ou tracez à la main.')
       }
-    } catch (e) { setNotice('Erreur Overpass : ' + e.message) }
+    } catch (e) { setNotice('Erreur : ' + e.message) }
     setImporting(false)
-    setTimeout(() => setNotice(''), 5000)
+    setTimeout(() => setNotice(''), 6000)
   }
 
   async function save() {
@@ -302,7 +373,7 @@ export default function PerimeterEditor({ camping, onClose, onSaved }) {
         <div style={{ display: 'flex', gap: 4, position: 'relative' }}>
           <input value={search} onChange={e => setSearch(e.target.value)}
             onKeyDown={e => e.key === 'Enter' && runSearch()}
-            placeholder="Chercher un camping / lieu…"
+            placeholder="Nom + ville, ou adresse complète…"
             style={{ padding: '7px 10px', border: '1px solid #d1d5db', borderRadius: 8, fontSize: 13, width: 220 }} />
           <button onClick={runSearch}
             style={{ padding: '7px 12px', background: '#f3f4f6', border: '1px solid #d1d5db', borderRadius: 8, cursor: 'pointer', fontSize: 13 }}>
