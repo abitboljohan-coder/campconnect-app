@@ -405,6 +405,7 @@ export default function PerimeterEditor({ camping, onClose, onSaved }) {
         padding: '10px 16px', background: '#fff',
         display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap',
         borderBottom: '1px solid #e5e7eb',
+        position: 'relative', zIndex: 30,
       }}>
         <div style={{ minWidth: 180 }}>
           <div style={{ fontWeight: 700, fontSize: 15 }}>Tracer le contour</div>
@@ -424,7 +425,7 @@ export default function PerimeterEditor({ camping, onClose, onSaved }) {
             🔍
           </button>
           {searchResults.length > 0 && (
-            <div style={{ position: 'absolute', top: '110%', left: 0, background: '#fff', border: '1px solid #e5e7eb', borderRadius: 10, boxShadow: '0 6px 20px rgba(0,0,0,0.15)', minWidth: 300, maxHeight: 220, overflowY: 'auto', zIndex: 20 }}>
+            <div style={{ position: 'absolute', top: '110%', left: 0, background: '#fff', border: '1px solid #e5e7eb', borderRadius: 10, boxShadow: '0 6px 20px rgba(0,0,0,0.15)', minWidth: 300, maxHeight: 220, overflowY: 'auto', zIndex: 40 }}>
               {searchResults.map(r => (
                 <button key={r.place_id} onClick={() => pickResult(r)}
                   style={{ display: 'block', width: '100%', textAlign: 'left', padding: '8px 12px', border: 'none', background: '#fff', cursor: 'pointer', fontSize: 12, borderBottom: '1px solid #f3f4f6' }}>
