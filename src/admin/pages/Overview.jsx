@@ -11,13 +11,12 @@ function OnboardingChecklist({ camping, stats }) {
   const pins         = camping?.carte_config?.pins || []
   const hasContour   = perimeter.length >= 3
   const hasPois      = pins.length > 0
-  const hasAnim      = stats.vacanciers >= 0 // placeholder — always show for now
 
   const steps = [
     { done: hasLogo || hasColor, label: 'Personnalisez l\'apparence (logo, couleurs)', to: '/admin/apparence', icon: '🎨' },
     { done: hasContour,          label: 'Tracez le contour de votre camping',          to: '/admin/carte',     icon: '🗺️' },
     { done: hasPois,             label: 'Ajoutez vos points d\'intérêt (piscine, sanitaires…)', to: '/admin/carte', icon: '📍' },
-    { done: false,               label: 'Créez votre première animation',              to: '/admin/animations', icon: '🎉' },
+    { done: stats.animations > 0, label: 'Créez votre première animation',             to: '/admin/animations', icon: '🎉' },
   ]
   const doneCount = steps.filter(s => s.done).length
   if (doneCount === steps.length) return null // tout est fait → on masque
@@ -74,7 +73,7 @@ function OnboardingChecklist({ camping, stats }) {
 }
 
 export default function Overview({ camping }) {
-  const [stats, setStats]           = useState({ vacanciers: 0, groupes: 0, inscriptions: 0, taux: 0 })
+  const [stats, setStats]           = useState({ vacanciers: 0, groupes: 0, inscriptions: 0, taux: 0, animations: 0 })
   const [departs, setDeparts]       = useState({ aujourdhui: [], semaine: 0 })
   const [recentGroupes, setRecentGroupes]       = useState([])
   const [recentInscriptions, setRecentInscriptions] = useState([])
@@ -102,6 +101,7 @@ export default function Overview({ camping }) {
       { data: grps },
       { data: departsAuj },
       { count: departsSem },
+      { count: animTotal },
     ] = await Promise.all([
       supabase.from('vacanciers').select('*', { count: 'exact', head: true }).eq('camping_id', camping.id).or(presentFilter()),
       supabase.from('groupes').select('*', { count: 'exact', head: true }).eq('camping_id', camping.id).eq('actif', true),
@@ -109,6 +109,7 @@ export default function Overview({ camping }) {
       supabase.from('groupes').select('*').eq('camping_id', camping.id).order('created_at', { ascending: false }).limit(5),
       supabase.from('vacanciers').select('pseudo, avatar_emoji, emplacement').eq('camping_id', camping.id).eq('date_depart', today).order('pseudo'),
       supabase.from('vacanciers').select('*', { count: 'exact', head: true }).eq('camping_id', camping.id).gte('date_depart', today).lte('date_depart', in7j),
+      supabase.from('animations').select('*', { count: 'exact', head: true }).eq('camping_id', camping.id),
     ])
 
     const animIds = (anims || []).map(a => a.id)
@@ -139,7 +140,7 @@ export default function Overview({ camping }) {
       taux = totalPlaces > 0 ? Math.round((totalInscrits / totalPlaces) * 100) : 0
     }
 
-    setStats({ vacanciers: vacCount || 0, groupes: grpCount || 0, inscriptions: inscCount, taux })
+    setStats({ vacanciers: vacCount || 0, groupes: grpCount || 0, inscriptions: inscCount, taux, animations: animTotal || 0 })
     setDeparts({ aujourdhui: departsAuj || [], semaine: departsSem || 0 })
     setRecentGroupes(grps || [])
     setRecentInscriptions(recentInscs)

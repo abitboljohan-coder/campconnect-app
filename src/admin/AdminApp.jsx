@@ -46,8 +46,8 @@ export default function AdminApp() {
     const { data: ger } = await supabase
       .from('gerants')
       .select('*, campings(*)')
-      .eq('email', s.user.email)
-      .single()
+      .eq('user_id', s.user.id)
+      .maybeSingle()
 
     if (ger) {
       setGerant(ger)
