@@ -305,53 +305,61 @@ export default function PerimeterEditor({ camping, onClose, onSaved }) {
 
   function pickResult(r) { useResult(r) }
 
-  // Stratégie principale : cherche DIRECTEMENT le camping dans OSM par nom + ville
-  // (bien plus fiable qu'un géocodage d'adresse postale). Repli sur Nominatim sinon.
-  async function locateAndTrace(raw) {
+  // Menu déroulant en direct : dès 3 caractères, on propose les adresses correspondantes
+  // pour que le gérant clique sur la bonne au lieu de deviner à sa place.
+  useEffect(() => {
+    if (search.trim().length < 3) { setSearchResults([]); return }
+    let cancelled = false
+    const t = setTimeout(async () => {
+      try {
+        const res = await nominatimSearch(search)
+        if (!cancelled) setSearchResults(res || [])
+      } catch { if (!cancelled) setSearchResults([]) }
+    }, 400)
+    return () => { cancelled = true; clearTimeout(t) }
+  }, [search])
+
+  // Tentative auto rapide : cherche DIRECTEMENT le camping dans OSM par nom + ville
+  // (bien plus fiable qu'un géocodage d'adresse postale). Ne fait rien si rien trouvé —
+  // le menu déroulant reste disponible pour un choix manuel.
+  async function tryAutoOsm(raw) {
     const parts = raw.split(',').map(s => s.trim()).filter(Boolean)
     const name = parts[0] || raw
     const { ville } = extractCity(raw)
-
     try {
       const osmResults = await searchCampsiteByName(name, ville)
-      if (osmResults.length) {
-        const best = osmResults.find(r => r.poly) || osmResults[0]
-        leafletMap.current?.setView([best.center.lat, best.center.lng], 17)
-        if (best.poly) {
-          setPoints(best.poly)
-          leafletMap.current?.fitBounds(best.poly, { padding: [40, 40] })
-          setNotice(`✅ Contour trouvé sur OpenStreetMap (${best.poly.length} points)`)
-          setTimeout(() => setNotice(''), 4000)
-          return true
-        }
-        setNotice('📍 Camping localisé — détection du contour…')
-        const p = await overpassCampsiteAround(best.center.lat, best.center.lng, 1000)
-        if (p) {
-          setPoints(p); leafletMap.current?.fitBounds(p, { padding: [40, 40] })
-          setNotice(`✅ Contour importé (${p.length} points)`)
-        } else {
-          setNotice('📍 Camping localisé. Trace le contour à la main (clic ou ▭ Rectangle).')
-        }
-        setTimeout(() => setNotice(''), 6000)
+      if (!osmResults.length) return false
+      const best = osmResults.find(r => r.poly) || osmResults[0]
+      leafletMap.current?.setView([best.center.lat, best.center.lng], 17)
+      if (best.poly) {
+        setPoints(best.poly)
+        leafletMap.current?.fitBounds(best.poly, { padding: [40, 40] })
+        setNotice(`✅ Contour trouvé sur OpenStreetMap (${best.poly.length} points)`)
+        setTimeout(() => setNotice(''), 4000)
         return true
       }
-    } catch { /* on tente le géocodage d'adresse classique */ }
-
-    const res = await geocodeBest(raw)
-    if (!res.length) return false
-    setSearchResults(res)
-    await useResult(res[0])
-    return true
+      setNotice('📍 Camping localisé — détection du contour…')
+      const p = await overpassCampsiteAround(best.center.lat, best.center.lng, 1000)
+      if (p) {
+        setPoints(p); leafletMap.current?.fitBounds(p, { padding: [40, 40] })
+        setNotice(`✅ Contour importé (${p.length} points)`)
+      } else {
+        setNotice('📍 Camping localisé. Trace le contour à la main (clic ou ▭ Rectangle).')
+      }
+      setTimeout(() => setNotice(''), 6000)
+      return true
+    } catch { return false }
   }
 
   async function runSearch() {
     if (!search.trim()) return
-    setSearchResults([]); setNotice('🔍 Recherche…')
-    const found = await locateAndTrace(search)
-    if (!found) {
-      setNotice('❌ Introuvable. Essayez juste « nom du camping + ville », ou tracez le contour à la main.')
-      setTimeout(() => setNotice(''), 6000)
-    }
+    setNotice('🔍 Recherche…')
+    const found = await tryAutoOsm(search)
+    if (found) return
+    const res = await geocodeBest(search)
+    setSearchResults(res)
+    setNotice(res.length ? '👇 Choisissez la bonne adresse dans la liste' : '❌ Introuvable. Essayez juste « nom + ville », ou tracez le contour à la main.')
+    setTimeout(() => setNotice(''), 6000)
   }
 
   async function importFromOSM() {
@@ -359,7 +367,7 @@ export default function PerimeterEditor({ camping, onClose, onSaved }) {
     setImporting(true); setNotice('')
     try {
       if (search.trim()) {
-        const found = await locateAndTrace(search)
+        const found = await tryAutoOsm(search)
         if (found) { setImporting(false); return }
       }
       const c = leafletMap.current.getCenter()
