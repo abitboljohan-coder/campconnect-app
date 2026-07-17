@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { supabase } from '../../supabase'
 import { CAMPING_LIEUX } from '../utils/analyzeMap'
+import { esc } from '../../utils/esc'
 
 let _L = null
 async function getLeaflet() {
@@ -137,13 +138,13 @@ export default function MapEditor({ camping, setCamping }) {
     pins.filter(p => p.lat && p.lng).forEach(pin => {
       const color = pin.color || PIN_COLORS[pin.ref_type] || '#60a5fa'
       const icon = _L.divIcon({
-        html: `<div style="background:${color};width:36px;height:36px;border-radius:50%;border:3px solid white;box-shadow:0 2px 10px rgba(0,0,0,0.5);display:flex;align-items:center;justify-content:center;font-size:18px">${pin.emoji}</div>`,
+        html: `<div style="background:${esc(color)};width:36px;height:36px;border-radius:50%;border:3px solid white;box-shadow:0 2px 10px rgba(0,0,0,0.5);display:flex;align-items:center;justify-content:center;font-size:18px">${esc(pin.emoji)}</div>`,
         className: '', iconSize: [36, 36], iconAnchor: [18, 18],
       })
       const marker = _L.marker([pin.lat, pin.lng], { icon }).addTo(lf)
       const popupEl = document.createElement('div')
       popupEl.style.textAlign = 'center'
-      popupEl.innerHTML = `<b style="font-size:14px">${pin.emoji} ${pin.label}</b>`
+      popupEl.innerHTML = `<b style="font-size:14px">${esc(pin.emoji)} ${esc(pin.label)}</b>`
       const delBtn = document.createElement('button')
       delBtn.textContent = '🗑 Supprimer'
       delBtn.style.cssText = 'display:block;margin:8px auto 0;padding:6px 14px;border:none;border-radius:8px;background:#fef2f2;color:#dc2626;font-weight:600;font-size:13px;cursor:pointer'
