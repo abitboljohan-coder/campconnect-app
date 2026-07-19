@@ -64,7 +64,6 @@ export default function Map({ camping: campingProp, vacancier }) {
   const leafletMap    = useRef(null)
   const markersRef    = useRef([])
   const userMarker    = useRef(null)
-  const guideLineRef  = useRef(null)
 
   const [camping, setCampingLocal]      = useState(campingProp)
   const [animations, setAnimations]     = useState([])
@@ -347,18 +346,6 @@ export default function Map({ camping: campingProp, vacancier }) {
       leafletMap.current.setView([effectivePos.lat, effectivePos.lng], 19, { animate: true })
     }
   }, [effectivePos, mapReady])
-
-  // Trait de guidage entre l'utilisateur et le POI cible
-  useEffect(() => {
-    if (!leafletMap.current || !L) return
-    if (guideLineRef.current) { guideLineRef.current.remove(); guideLineRef.current = null }
-    if (guideTarget?.lat && guideTarget?.lng && effectivePos) {
-      guideLineRef.current = L.polyline(
-        [[effectivePos.lat, effectivePos.lng], [guideTarget.lat, guideTarget.lng]],
-        { color: couleur, weight: 4, dashArray: '2 10', opacity: 0.9, lineCap: 'round' }
-      ).addTo(leafletMap.current)
-    }
-  }, [guideTarget, effectivePos, mapReady, couleur])
 
   const pinData = activePin ? (() => {
     if (activePin.ref_type === 'animation') return animations.find(a => a.id === activePin.ref_id)
