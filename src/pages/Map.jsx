@@ -33,6 +33,19 @@ function bearingDeg(p1, p2) {
 function bearingArrow(deg) { return ['↑', '↗', '→', '↘', '↓', '↙', '←', '↖'][Math.round(deg / 45) % 8] }
 function fmtDist(m) { return m < 1000 ? `${Math.round(m)}m` : `${(m / 1000).toFixed(1)}km` }
 
+// "Sur site" : la position est-elle assez proche du camping pour être affichée ?
+// Évite le marqueur parasite quand on teste hors du camping (GPS navigateur au loin).
+// → à l'intérieur du contour + 800 m de marge (règle d'accès), ou < 1,5 km du centre.
+function posSurSite(pos, perim, center) {
+  if (!pos || !center) return true // pas d'ancrage camping → on n'exclut rien
+  const d = haversineM(pos, center)
+  if (perim && perim.length >= 3) {
+    const rMax = Math.max(...perim.map(p => haversineM(center, { lat: p[0], lng: p[1] })))
+    return d <= rMax + 800
+  }
+  return d <= 1500
+}
+
 async function geocodeCamping(nom) {
   try {
     const res = await fetch(
@@ -89,6 +102,21 @@ export default function Map({ camping: campingProp, vacancier }) {
     } catch {}
     return null
   })()
+
+  // Centre du camping = centre du contour si défini, sinon coords réglées.
+  const perimeter = camping?.carte_config?.perimeter
+  const campingCenter = (() => {
+    if (perimeter?.length >= 3) {
+      return {
+        lat: perimeter.reduce((s, p) => s + p[0], 0) / perimeter.length,
+        lng: perimeter.reduce((s, p) => s + p[1], 0) / perimeter.length,
+      }
+    }
+    return campingCoords
+  })()
+
+  // La position affichée est-elle sur le site ? (simulation = toujours volontaire)
+  const posSurSiteNow = effectivePos ? (simulating || posSurSite(effectivePos, perimeter, campingCenter)) : false
 
   useEffect(() => {
     async function load() {
@@ -298,7 +326,10 @@ export default function Map({ camping: campingProp, vacancier }) {
   // Marker position utilisateur (GPS réel ou simulé)
   useEffect(() => {
     if (!leafletMap.current || !effectivePos || !L) return
-    if (userMarker.current) userMarker.current.remove()
+    if (userMarker.current) { userMarker.current.remove(); userMarker.current = null }
+
+    // Position hors site (ex : test depuis chez soi) → pas de marqueur parasite au loin
+    if (!posSurSiteNow) return
 
     const avatar = esc(vacancier?.avatar_emoji || '🏕️')
     const icon = L.divIcon({
@@ -510,8 +541,9 @@ export default function Map({ camping: campingProp, vacancier }) {
           if (!leafletMap.current) return
           followingRef.current = true
           setFollowing(true)
-          if (effectivePos) leafletMap.current.setView([effectivePos.lat, effectivePos.lng], 19, { animate: true })
-          else if (campingCoords) leafletMap.current.setView([campingCoords.lat, campingCoords.lng], 16, { animate: true })
+          // Recentre sur soi seulement si on est sur site, sinon sur le camping
+          if (effectivePos && posSurSiteNow) leafletMap.current.setView([effectivePos.lat, effectivePos.lng], 19, { animate: true })
+          else if (campingCenter) leafletMap.current.setView([campingCenter.lat, campingCenter.lng], 16, { animate: true })
         }}
         style={{
           position: 'absolute', bottom: activePin ? 200 : 70, right: 14, zIndex: 1000,
@@ -582,7 +614,7 @@ export default function Map({ camping: campingProp, vacancier }) {
               <span style={{ fontSize: 11, color: '#374151', fontWeight: 500 }}>{l}</span>
             </div>
           ))}
-          {effectivePos && (
+          {effectivePos && posSurSiteNow && (
             <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
               <div style={{ width: 8, height: 8, borderRadius: '50%', background: couleur }} />
               <span style={{ fontSize: 11, color: '#374151', fontWeight: 500 }}>{simulating ? '🎮 Simulé' : 'Vous'}</span>
