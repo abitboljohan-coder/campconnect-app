@@ -54,7 +54,7 @@ export default function Stats({ camping }) {
       supabase.from('vacanciers').select('created_at').eq('camping_id', camping.id).gte('created_at', since),
       supabase.from('groupes').select('created_at').eq('camping_id', camping.id).gte('created_at', since),
       supabase.from('animations').select('id, titre, places_max').eq('camping_id', camping.id).eq('publiee', true),
-      supabase.from('vacanciers').select('tranche_age, avec, interets').eq('camping_id', camping.id),
+      supabase.from('vacanciers').select('tranche_age, avec, interests').eq('camping_id', camping.id),
     ])
 
     // Inscriptions par animation
@@ -80,8 +80,8 @@ export default function Stats({ camping }) {
     // Top intérêts (flatten arrays)
     const interetCounts = {}
     for (const v of (allVacanciers || [])) {
-      if (Array.isArray(v.interets)) {
-        for (const interet of v.interets) {
+      if (Array.isArray(v.interests)) {
+        for (const interet of v.interests) {
           interetCounts[interet] = (interetCounts[interet] || 0) + 1
         }
       }

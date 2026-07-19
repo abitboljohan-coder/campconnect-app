@@ -53,8 +53,13 @@ export default function Groupes({ camping, vacancier }) {
   useEffect(() => { load() }, [camping.id, vacancier.id])
 
   async function rejoindre(groupeId) {
-    await supabase.from('membres_groupes').insert({ groupe_id: groupeId, vacancier_id: vacancier.id })
-    setMesGroupes(prev => [...prev, groupeId])
+    const { error } = await supabase.from('membres_groupes').insert({ groupe_id: groupeId, vacancier_id: vacancier.id })
+    if (error && error.code !== '23505') { // 23505 = déjà membre, on laisse passer
+      console.error('Rejoindre groupe échoué :', error)
+      alert("Impossible de rejoindre le groupe pour le moment.")
+      return
+    }
+    setMesGroupes(prev => prev.includes(groupeId) ? prev : [...prev, groupeId])
     navigate(`/chat/${groupeId}`)
   }
 

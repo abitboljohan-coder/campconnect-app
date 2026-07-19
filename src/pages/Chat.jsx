@@ -13,6 +13,7 @@ export default function Chat({ vacancier }) {
   const [texte, setTexte]           = useState('')
   const [sending, setSending]       = useState(false)
   const [pickerFor, setPickerFor]   = useState(null)
+  const [erreur, setErreur]         = useState('')
   const bottomRef = useRef(null)
   const inputRef  = useRef(null)
 
@@ -63,9 +64,15 @@ export default function Chat({ vacancier }) {
     e.preventDefault()
     if (!texte.trim() || sending) return
     setSending(true)
+    setErreur('')
     const contenu = texte.trim()
     setTexte('')
-    await supabase.from('messages').insert({ groupe_id: groupeId, auteur_id: vacancier.id, contenu })
+    const { error } = await supabase.from('messages').insert({ groupe_id: groupeId, auteur_id: vacancier.id, contenu })
+    if (error) {
+      console.error('Envoi message échoué :', error)
+      setTexte(contenu) // on rend le message pour ne pas le perdre
+      setErreur("Message non envoyé. Vérifiez votre connexion.")
+    }
     setSending(false)
     inputRef.current?.focus()
   }
@@ -245,6 +252,11 @@ export default function Chat({ vacancier }) {
       </div>
 
       {/* Input */}
+      {erreur && (
+        <div style={{ background: '#fef2f2', color: '#dc2626', fontSize: 13, fontWeight: 600, textAlign: 'center', padding: '8px 12px', flexShrink: 0 }}>
+          ⚠️ {erreur}
+        </div>
+      )}
       <form
         onSubmit={envoyer}
         style={{
@@ -261,7 +273,7 @@ export default function Chat({ vacancier }) {
           type="text"
           placeholder="Écrire un message..."
           value={texte}
-          onChange={e => setTexte(e.target.value)}
+          onChange={e => { setTexte(e.target.value); if (erreur) setErreur('') }}
           style={{
             flex: 1, padding: '11px 16px',
             borderRadius: 24, border: '1.5px solid #e5e7eb',

@@ -431,20 +431,37 @@ export default function Map({ camping: campingProp, vacancier }) {
   async function toggleInscription(anim) {
     const inscrit = inscriptions.includes(anim.id)
     if (inscrit) {
-      await supabase.from('inscriptions').delete().eq('animation_id', anim.id).eq('vacancier_id', vacancier.id)
       setInscriptions(p => p.filter(id => id !== anim.id))
       setCounts(p => ({ ...p, [anim.id]: Math.max(0, (p[anim.id] || 1) - 1) }))
+      const { error } = await supabase.from('inscriptions').delete().eq('animation_id', anim.id).eq('vacancier_id', vacancier.id)
+      if (error) {
+        console.error('Désinscription échouée :', error)
+        setInscriptions(p => [...p, anim.id])
+        setCounts(p => ({ ...p, [anim.id]: (p[anim.id] || 0) + 1 }))
+        alert("Impossible de vous désinscrire pour le moment.")
+      }
     } else {
       if (anim.places_max && (counts[anim.id] || 0) >= anim.places_max) return
-      await supabase.from('inscriptions').insert({ animation_id: anim.id, vacancier_id: vacancier.id })
       setInscriptions(p => [...p, anim.id])
       setCounts(p => ({ ...p, [anim.id]: (p[anim.id] || 0) + 1 }))
+      const { error } = await supabase.from('inscriptions').insert({ animation_id: anim.id, vacancier_id: vacancier.id })
+      if (error && error.code !== '23505') {
+        console.error('Inscription échouée :', error)
+        setInscriptions(p => p.filter(id => id !== anim.id))
+        setCounts(p => ({ ...p, [anim.id]: Math.max(0, (p[anim.id] || 1) - 1) }))
+        alert("Impossible de vous inscrire pour le moment.")
+      }
     }
   }
 
   async function rejoindreGroupe(id) {
-    await supabase.from('membres_groupes').insert({ groupe_id: id, vacancier_id: vacancier.id })
-    setMesGroupes(p => [...p, id])
+    const { error } = await supabase.from('membres_groupes').insert({ groupe_id: id, vacancier_id: vacancier.id })
+    if (error && error.code !== '23505') { // 23505 = déjà membre, on laisse passer
+      console.error('Rejoindre groupe échoué :', error)
+      alert("Impossible de rejoindre le groupe pour le moment.")
+      return
+    }
+    setMesGroupes(p => p.includes(id) ? p : [...p, id])
     navigate(`/chat/${id}`)
   }
 
