@@ -2,6 +2,7 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { useEffect, useState } from 'react'
 import { supabase, ensureAnonSession } from './supabase'
 import { isNative } from './native'
+import { registerPush, unregisterPush } from './push'
 
 import Onboarding from './pages/Onboarding'
 import Accueil from './pages/Accueil'
@@ -96,6 +97,11 @@ function App() {
     return () => window.removeEventListener('focus', onFocus)
   }, [])
 
+  // Notifications push : enregistrer l'appareil dès que le vacancier est identifié
+  useEffect(() => {
+    if (camping && vacancier) registerPush({ camping, vacancier })
+  }, [camping, vacancier])
+
   if (loading) return <Splash />
 
   if (finSejour) return (
@@ -131,6 +137,7 @@ function App() {
             <Route path="/infos" element={<Infos camping={camping} />} />
             <Route path="/profil" element={
               <Profil camping={camping} vacancier={vacancier} onLogout={() => {
+                unregisterPush()
                 localStorage.removeItem('vacancier')
                 localStorage.removeItem('campingSlug')
                 setVacancier(null)

@@ -1,0 +1,7 @@
+project_id = "campconnect"
+
+# L'Edge Function est appelée par un Database Webhook (pas un utilisateur connecté)
+# → on désactive la vérification du JWT et on protège par un secret partagé
+#   (header x-webhook-secret == PUSH_WEBHOOK_SECRET).
+[functions.send-push]
+verify_jwt = false
