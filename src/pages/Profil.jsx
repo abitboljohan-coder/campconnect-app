@@ -12,7 +12,7 @@ export default function Profil({ camping, vacancier, onLogout }) {
     emplacement:  vacancier.emplacement || '',
     tranche_age:  vacancier.tranche_age || '',
     avec:         vacancier.avec || '',
-    interets:     Array.isArray(vacancier.interets) ? vacancier.interets : [],
+    interests:     Array.isArray(vacancier.interests) ? vacancier.interests : [],
     date_depart:  vacancier.date_depart || '',
   })
   const [saving, setSaving]     = useState(false)
@@ -34,7 +34,7 @@ export default function Profil({ camping, vacancier, onLogout }) {
   function toggleInteret(val) {
     setForm(f => ({
       ...f,
-      interets: f.interets.includes(val) ? f.interets.filter(i => i !== val) : [...f.interets, val],
+      interests: f.interests.includes(val) ? f.interests.filter(i => i !== val) : [...f.interests, val],
     }))
   }
 
@@ -45,21 +45,25 @@ export default function Profil({ camping, vacancier, onLogout }) {
       emplacement: form.emplacement.trim() || null,
       tranche_age: form.tranche_age || null,
       avec:        form.avec || null,
-      interets:    form.interets.length > 0 ? form.interets : null,
+      interests:    form.interests.length > 0 ? form.interests : null,
       date_depart: form.date_depart || null,
     }).eq('id', vacancier.id)
 
-    if (!error) {
-      const updated = { ...vacancier, ...form }
-      localStorage.setItem('vacancier', JSON.stringify(updated))
-      setEditing(false)
-      setSuccess(true)
-      setTimeout(() => setSuccess(false), 3000)
+    if (error) {
+      console.error('Sauvegarde profil échouée :', error)
+      setSaving(false)
+      alert("Impossible d'enregistrer votre profil pour le moment.")
+      return
     }
+    const updated = { ...vacancier, ...form }
+    localStorage.setItem('vacancier', JSON.stringify(updated))
+    setEditing(false)
+    setSuccess(true)
+    setTimeout(() => setSuccess(false), 3000)
     setSaving(false)
   }
 
-  const interets = Array.isArray(vacancier.interets) ? vacancier.interets : []
+  const interests = Array.isArray(vacancier.interests) ? vacancier.interests : []
 
   return (
     <div style={{ background: '#f5f2eb', minHeight: '100%' }}>
@@ -91,9 +95,9 @@ export default function Profil({ camping, vacancier, onLogout }) {
         </div>
 
         {/* Centres d'intérêt en pills */}
-        {interets.length > 0 && (
+        {interests.length > 0 && (
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, justifyContent: 'center', marginTop: 4 }}>
-            {interets.map(tag => (
+            {interests.map(tag => (
               <span key={tag} style={{
                 background: `${couleur}30`, color: '#C0DD97',
                 fontSize: 12, fontWeight: 500, padding: '3px 10px', borderRadius: 20,
@@ -123,7 +127,7 @@ export default function Profil({ camping, vacancier, onLogout }) {
           {[
             { n: stats.groupes,    label: 'Groupes',     icon: '👥' },
             { n: stats.animations, label: 'Animations',  icon: '📅' },
-            { n: interets.length,  label: 'Intérêts',    icon: '⭐' },
+            { n: interests.length,  label: 'Intérêts',    icon: '⭐' },
           ].map(s => (
             <div key={s.label} style={{
               background: '#fff', borderRadius: 14, padding: '14px 10px', textAlign: 'center',
@@ -175,14 +179,14 @@ export default function Profil({ camping, vacancier, onLogout }) {
               <Field label="Centres d'intérêt">
                 <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
                   {INTERETS.map(i => (
-                    <Pill key={i} label={i} active={form.interets.includes(i)} couleur={couleur} onClick={() => toggleInteret(i)} />
+                    <Pill key={i} label={i} active={form.interests.includes(i)} couleur={couleur} onClick={() => toggleInteret(i)} />
                   ))}
                 </div>
               </Field>
 
               <div style={{ display: 'flex', gap: 10, marginTop: 4 }}>
                 <button
-                  onClick={() => { setEditing(false); setForm({ pseudo: vacancier.pseudo || '', emplacement: vacancier.emplacement || '', tranche_age: vacancier.tranche_age || '', avec: vacancier.avec || '', interets: Array.isArray(vacancier.interets) ? vacancier.interets : [], date_depart: vacancier.date_depart || '' }) }}
+                  onClick={() => { setEditing(false); setForm({ pseudo: vacancier.pseudo || '', emplacement: vacancier.emplacement || '', tranche_age: vacancier.tranche_age || '', avec: vacancier.avec || '', interests: Array.isArray(vacancier.interests) ? vacancier.interests : [], date_depart: vacancier.date_depart || '' }) }}
                   style={{ flex: 1, padding: '12px', borderRadius: 10, background: '#f3f4f6', color: '#374151', fontWeight: 600 }}
                 >
                   Annuler

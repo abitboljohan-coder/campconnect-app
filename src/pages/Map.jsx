@@ -33,6 +33,19 @@ function bearingDeg(p1, p2) {
 function bearingArrow(deg) { return ['↑', '↗', '→', '↘', '↓', '↙', '←', '↖'][Math.round(deg / 45) % 8] }
 function fmtDist(m) { return m < 1000 ? `${Math.round(m)}m` : `${(m / 1000).toFixed(1)}km` }
 
+// "Sur site" : la position est-elle assez proche du camping pour être affichée ?
+// Évite le marqueur parasite quand on teste hors du camping (GPS navigateur au loin).
+// → à l'intérieur du contour + 800 m de marge (règle d'accès), ou < 1,5 km du centre.
+function posSurSite(pos, perim, center) {
+  if (!pos || !center) return true // pas d'ancrage camping → on n'exclut rien
+  const d = haversineM(pos, center)
+  if (perim && perim.length >= 3) {
+    const rMax = Math.max(...perim.map(p => haversineM(center, { lat: p[0], lng: p[1] })))
+    return d <= rMax + 800
+  }
+  return d <= 1500
+}
+
 async function geocodeCamping(nom) {
   try {
     const res = await fetch(
@@ -51,7 +64,6 @@ export default function Map({ camping: campingProp, vacancier }) {
   const leafletMap    = useRef(null)
   const markersRef    = useRef([])
   const userMarker    = useRef(null)
-  const guideLineRef  = useRef(null)
 
   const [camping, setCampingLocal]      = useState(campingProp)
   const [animations, setAnimations]     = useState([])
@@ -61,6 +73,7 @@ export default function Map({ camping: campingProp, vacancier }) {
   const [counts, setCounts]             = useState({})
   const [activePin, setActivePin]       = useState(null)
   const [guideTarget, setGuideTarget]   = useState(null) // POI vers lequel on guide
+  const [showDest, setShowDest]         = useState(false) // menu "Où aller ?"
   const [pins, setPins]                 = useState([])
   const [userPos, setUserPos]           = useState(null)
   const [mapReady, setMapReady]         = useState(false)
@@ -89,6 +102,35 @@ export default function Map({ camping: campingProp, vacancier }) {
     } catch {}
     return null
   })()
+
+  // Centre du camping = centre du contour si défini, sinon coords réglées.
+  const perimeter = camping?.carte_config?.perimeter
+  const campingCenter = (() => {
+    if (perimeter?.length >= 3) {
+      return {
+        lat: perimeter.reduce((s, p) => s + p[0], 0) / perimeter.length,
+        lng: perimeter.reduce((s, p) => s + p[1], 0) / perimeter.length,
+      }
+    }
+    return campingCoords
+  })()
+
+  // La position affichée est-elle sur le site ? (simulation = toujours volontaire)
+  const posSurSiteNow = effectivePos ? (simulating || posSurSite(effectivePos, perimeter, campingCenter)) : false
+
+  // Destinations pour le menu « Où aller ? » (lieux placés, triés par distance si on se localise)
+  const lieuxDest = pins
+    .filter(p => p.ref_type === 'lieu' && p.lat && p.lng)
+    .map(p => ({ ...p, dist: (effectivePos && posSurSiteNow) ? haversineM(effectivePos, p) : null }))
+    .sort((a, b) => (a.dist ?? 1e12) - (b.dist ?? 1e12) || a.label.localeCompare(b.label))
+
+  function guideVers(dest) {
+    setGuideTarget(dest)
+    setShowDest(false)
+    setActivePin(null)
+    setFollowing(true)
+    followingRef.current = true
+  }
 
   useEffect(() => {
     async function load() {
@@ -176,13 +218,13 @@ export default function Map({ camping: campingProp, vacancier }) {
         center: [coords.lat, coords.lng],
         zoom: 18,
         zoomControl: false,
+        attributionControl: false, // pas de bandeau Leaflet/Esri en bas
         maxZoom: 19,
       })
 
       Lf.tileLayer(
         'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
-        { attribution: '© Esri, Maxar, Earthstar Geographics', maxZoom: 19, maxNativeZoom: 19,
-          className: 'cc-toon-tiles' }
+        { maxZoom: 19, maxNativeZoom: 19, className: 'cc-toon-tiles' }
       ).addTo(map)
 
       Lf.control.zoom({ position: 'topright' }).addTo(map)
@@ -193,33 +235,21 @@ export default function Map({ camping: campingProp, vacancier }) {
         iconSize: [44, 44],
         iconAnchor: [22, 44],
       })
-      // Contour du camping (défini par l'admin) + label nom
+      // Contour du camping (défini par l'admin) — un seul repère, pas d'étiquette flottante
       const perim = camping?.carte_config?.perimeter
+      let campingLatLng = [coords.lat, coords.lng]
       if (perim && perim.length >= 3) {
         const poly = Lf.polygon(perim, {
           color: couleur, weight: 3, fillColor: couleur, fillOpacity: 0.15,
           interactive: false,
         }).addTo(map)
         map.fitBounds(poly.getBounds(), { padding: [30, 30] })
-
-        // Label au bord nord du polygone (haut) pour ne pas cacher les POI du centre
-        const bnds = poly.getBounds()
-        const labelPos = [bnds.getNorth(), (bnds.getWest() + bnds.getEast()) / 2]
-        const labelIcon = Lf.divIcon({
-          html: `<div class="cc-camping-label">🌲 ${esc(camping.nom)}</div>`,
-          className: '', iconSize: [0, 0],
-        })
-        Lf.marker(labelPos, { icon: labelIcon, interactive: false, zIndexOffset: 500 }).addTo(map)
-      } else {
-        // Pas de contour : pin classique + label au-dessus
-        Lf.marker([coords.lat, coords.lng], { icon: campingIcon })
-          .addTo(map).bindPopup(`<b>${camping?.nom || 'Camping'}</b>`)
-        const labelIcon = Lf.divIcon({
-          html: `<div class="cc-camping-label" style="transform:translateY(-58px)">🌲 ${esc(camping?.nom || 'Camping')}</div>`,
-          className: '', iconSize: [0, 0],
-        })
-        Lf.marker([coords.lat, coords.lng], { icon: labelIcon, interactive: false, zIndexOffset: 500 }).addTo(map)
+        const c = poly.getBounds().getCenter()
+        campingLatLng = [c.lat, c.lng]
       }
+      // Repère camping unique (nom au clic), sans pastille de texte parasite
+      Lf.marker(campingLatLng, { icon: campingIcon })
+        .addTo(map).bindPopup(`<b>${esc(camping?.nom || 'Camping')}</b>`)
 
       // Drag → désync du suivi GPS
       map.on('dragstart', () => {
@@ -298,7 +328,10 @@ export default function Map({ camping: campingProp, vacancier }) {
   // Marker position utilisateur (GPS réel ou simulé)
   useEffect(() => {
     if (!leafletMap.current || !effectivePos || !L) return
-    if (userMarker.current) userMarker.current.remove()
+    if (userMarker.current) { userMarker.current.remove(); userMarker.current = null }
+
+    // Position hors site (ex : test depuis chez soi) → pas de marqueur parasite au loin
+    if (!posSurSiteNow) return
 
     const avatar = esc(vacancier?.avatar_emoji || '🏕️')
     const icon = L.divIcon({
@@ -313,18 +346,6 @@ export default function Map({ camping: campingProp, vacancier }) {
       leafletMap.current.setView([effectivePos.lat, effectivePos.lng], 19, { animate: true })
     }
   }, [effectivePos, mapReady])
-
-  // Trait de guidage entre l'utilisateur et le POI cible
-  useEffect(() => {
-    if (!leafletMap.current || !L) return
-    if (guideLineRef.current) { guideLineRef.current.remove(); guideLineRef.current = null }
-    if (guideTarget?.lat && guideTarget?.lng && effectivePos) {
-      guideLineRef.current = L.polyline(
-        [[effectivePos.lat, effectivePos.lng], [guideTarget.lat, guideTarget.lng]],
-        { color: couleur, weight: 4, dashArray: '2 10', opacity: 0.9, lineCap: 'round' }
-      ).addTo(leafletMap.current)
-    }
-  }, [guideTarget, effectivePos, mapReady, couleur])
 
   const pinData = activePin ? (() => {
     if (activePin.ref_type === 'animation') return animations.find(a => a.id === activePin.ref_id)
@@ -410,20 +431,37 @@ export default function Map({ camping: campingProp, vacancier }) {
   async function toggleInscription(anim) {
     const inscrit = inscriptions.includes(anim.id)
     if (inscrit) {
-      await supabase.from('inscriptions').delete().eq('animation_id', anim.id).eq('vacancier_id', vacancier.id)
       setInscriptions(p => p.filter(id => id !== anim.id))
       setCounts(p => ({ ...p, [anim.id]: Math.max(0, (p[anim.id] || 1) - 1) }))
+      const { error } = await supabase.from('inscriptions').delete().eq('animation_id', anim.id).eq('vacancier_id', vacancier.id)
+      if (error) {
+        console.error('Désinscription échouée :', error)
+        setInscriptions(p => [...p, anim.id])
+        setCounts(p => ({ ...p, [anim.id]: (p[anim.id] || 0) + 1 }))
+        alert("Impossible de vous désinscrire pour le moment.")
+      }
     } else {
       if (anim.places_max && (counts[anim.id] || 0) >= anim.places_max) return
-      await supabase.from('inscriptions').insert({ animation_id: anim.id, vacancier_id: vacancier.id })
       setInscriptions(p => [...p, anim.id])
       setCounts(p => ({ ...p, [anim.id]: (p[anim.id] || 0) + 1 }))
+      const { error } = await supabase.from('inscriptions').insert({ animation_id: anim.id, vacancier_id: vacancier.id })
+      if (error && error.code !== '23505') {
+        console.error('Inscription échouée :', error)
+        setInscriptions(p => p.filter(id => id !== anim.id))
+        setCounts(p => ({ ...p, [anim.id]: Math.max(0, (p[anim.id] || 1) - 1) }))
+        alert("Impossible de vous inscrire pour le moment.")
+      }
     }
   }
 
   async function rejoindreGroupe(id) {
-    await supabase.from('membres_groupes').insert({ groupe_id: id, vacancier_id: vacancier.id })
-    setMesGroupes(p => [...p, id])
+    const { error } = await supabase.from('membres_groupes').insert({ groupe_id: id, vacancier_id: vacancier.id })
+    if (error && error.code !== '23505') { // 23505 = déjà membre, on laisse passer
+      console.error('Rejoindre groupe échoué :', error)
+      alert("Impossible de rejoindre le groupe pour le moment.")
+      return
+    }
+    setMesGroupes(p => p.includes(id) ? p : [...p, id])
     navigate(`/chat/${id}`)
   }
 
@@ -504,14 +542,71 @@ export default function Map({ camping: campingProp, vacancier }) {
         }}>🎮 Simuler GPS</button>
       )}
 
+      {/* Menu discret « Où aller ? » → guidage vers un lieu (piscine, pétanque…) */}
+      {mapMode === 'satellite' && lieuxDest.length > 0 && !guideTarget && (
+        <div style={{ position: 'absolute', top: 'calc(12px + env(safe-area-inset-top))', left: 12, zIndex: 1500, maxWidth: 'calc(100% - 24px)' }}>
+          <button
+            onClick={() => setShowDest(v => !v)}
+            style={{
+              padding: '8px 14px', borderRadius: 20, fontSize: 13, fontWeight: 700,
+              background: showDest ? couleur : 'rgba(15,23,42,0.85)', backdropFilter: 'blur(8px)',
+              color: '#fff', border: '1px solid rgba(255,255,255,0.15)',
+              cursor: 'pointer', boxShadow: '0 2px 10px rgba(0,0,0,0.25)',
+              display: 'flex', alignItems: 'center', gap: 6,
+            }}
+          >
+            🧭 Où aller ? {showDest ? '▲' : '▼'}
+          </button>
+
+          {showDest && (
+            <div style={{
+              marginTop: 8, width: 230, maxHeight: 260, overflowY: 'auto',
+              background: 'rgba(255,255,255,0.97)', backdropFilter: 'blur(10px)',
+              borderRadius: 14, padding: 6, boxShadow: '0 6px 28px rgba(0,0,0,0.28)',
+              display: 'flex', flexDirection: 'column', gap: 2,
+            }}>
+              {lieuxDest.map(dest => (
+                <button
+                  key={dest.ref_id}
+                  onClick={() => guideVers(dest)}
+                  style={{
+                    display: 'flex', alignItems: 'center', gap: 10, width: '100%',
+                    padding: '9px 10px', borderRadius: 10, border: 'none', background: 'transparent',
+                    cursor: 'pointer', textAlign: 'left',
+                  }}
+                  onMouseDown={e => e.currentTarget.style.background = '#f1f5f9'}
+                  onMouseUp={e => e.currentTarget.style.background = 'transparent'}
+                >
+                  <span style={{
+                    width: 34, height: 34, borderRadius: '50%', flexShrink: 0,
+                    background: `${dest.color || '#60a5fa'}22`,
+                    display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18,
+                  }}>{dest.emoji}</span>
+                  <span style={{ flex: 1, minWidth: 0 }}>
+                    <span style={{ display: 'block', fontSize: 14, fontWeight: 600, color: '#1e293b', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{dest.label}</span>
+                    {dest.dist != null && (
+                      <span style={{ fontSize: 12, color: '#639922', fontWeight: 600 }}>
+                        {bearingArrow(bearingDeg(effectivePos, dest))} {fmtDist(dest.dist)}
+                      </span>
+                    )}
+                  </span>
+                  <span style={{ fontSize: 16, color: '#94a3b8', flexShrink: 0 }}>🧭</span>
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+
       {/* Bouton recentrer / suivre */}
       <button
         onClick={() => {
           if (!leafletMap.current) return
           followingRef.current = true
           setFollowing(true)
-          if (effectivePos) leafletMap.current.setView([effectivePos.lat, effectivePos.lng], 19, { animate: true })
-          else if (campingCoords) leafletMap.current.setView([campingCoords.lat, campingCoords.lng], 16, { animate: true })
+          // Recentre sur soi seulement si on est sur site, sinon sur le camping
+          if (effectivePos && posSurSiteNow) leafletMap.current.setView([effectivePos.lat, effectivePos.lng], 19, { animate: true })
+          else if (campingCenter) leafletMap.current.setView([campingCenter.lat, campingCenter.lng], 16, { animate: true })
         }}
         style={{
           position: 'absolute', bottom: activePin ? 200 : 70, right: 14, zIndex: 1000,
@@ -582,7 +677,7 @@ export default function Map({ camping: campingProp, vacancier }) {
               <span style={{ fontSize: 11, color: '#374151', fontWeight: 500 }}>{l}</span>
             </div>
           ))}
-          {effectivePos && (
+          {effectivePos && posSurSiteNow && (
             <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
               <div style={{ width: 8, height: 8, borderRadius: '50%', background: couleur }} />
               <span style={{ fontSize: 11, color: '#374151', fontWeight: 500 }}>{simulating ? '🎮 Simulé' : 'Vous'}</span>

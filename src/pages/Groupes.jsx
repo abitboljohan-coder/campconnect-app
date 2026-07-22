@@ -22,6 +22,7 @@ export default function Groupes({ camping, vacancier }) {
   const [showModal, setShowModal] = useState(false)
   const [form, setForm] = useState({ titre: '', emoji: '🏐', lieu: '', heure: '', max_membres: '' })
   const [saving, setSaving] = useState(false)
+  const [erreur, setErreur] = useState('')
   const navigate = useNavigate()
   const couleur = camping?.couleur_principale || '#639922'
 
@@ -52,14 +53,20 @@ export default function Groupes({ camping, vacancier }) {
   useEffect(() => { load() }, [camping.id, vacancier.id])
 
   async function rejoindre(groupeId) {
-    await supabase.from('membres_groupes').insert({ groupe_id: groupeId, vacancier_id: vacancier.id })
-    setMesGroupes(prev => [...prev, groupeId])
+    const { error } = await supabase.from('membres_groupes').insert({ groupe_id: groupeId, vacancier_id: vacancier.id })
+    if (error && error.code !== '23505') { // 23505 = déjà membre, on laisse passer
+      console.error('Rejoindre groupe échoué :', error)
+      alert("Impossible de rejoindre le groupe pour le moment.")
+      return
+    }
+    setMesGroupes(prev => prev.includes(groupeId) ? prev : [...prev, groupeId])
     navigate(`/chat/${groupeId}`)
   }
 
   async function creerGroupe() {
     if (!form.titre.trim()) return
     setSaving(true)
+    setErreur('')
 
     // Construire le timestamp heure
     let heure = null
@@ -81,13 +88,18 @@ export default function Groupes({ camping, vacancier }) {
       actif: true,
     }).select().single()
 
-    if (!error && data) {
-      await supabase.from('membres_groupes').insert({ groupe_id: data.id, vacancier_id: vacancier.id })
-      setShowModal(false)
-      setForm({ titre: '', emoji: '🏐', lieu: '', heure: '', max_membres: '' })
-      navigate(`/chat/${data.id}`)
+    if (error || !data) {
+      console.error('Création groupe échouée :', error)
+      setErreur("Impossible de créer le groupe. Réessayez dans un instant.")
+      setSaving(false)
+      return
     }
+
+    await supabase.from('membres_groupes').insert({ groupe_id: data.id, vacancier_id: vacancier.id })
+    setShowModal(false)
+    setForm({ titre: '', emoji: '🏐', lieu: '', heure: '', max_membres: '' })
     setSaving(false)
+    navigate(`/chat/${data.id}`)
   }
 
   const mesGrps    = groupes.filter(g => mesGroupes.includes(g.id))
@@ -130,7 +142,7 @@ export default function Groupes({ camping, vacancier }) {
 
       {/* FAB + */}
       <button
-        onClick={() => setShowModal(true)}
+        onClick={() => { setErreur(''); setShowModal(true) }}
         style={{
           position: 'fixed', bottom: 82, right: 20,
           width: 56, height: 56, borderRadius: '50%',
@@ -246,6 +258,12 @@ export default function Groupes({ camping, vacancier }) {
                   style={inputStyle}
                 />
               </div>
+
+              {erreur && (
+                <div style={{ background: '#fef2f2', border: '1px solid #fecaca', color: '#dc2626', borderRadius: 10, padding: '10px 12px', fontSize: 13, fontWeight: 600 }}>
+                  ⚠️ {erreur}
+                </div>
+              )}
 
               <div style={{ display: 'flex', gap: 10, marginTop: 4 }}>
                 <button

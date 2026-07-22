@@ -22,6 +22,12 @@ dist-ssr
 *.keystore
 android/keystore.properties
 
+# Notifications push — secrets Firebase/FCM, ne jamais commiter
+**/google-services.json
+**/GoogleService-Info.plist
+**/firebase-service-account*.json
+fcm-service-account*.json
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json

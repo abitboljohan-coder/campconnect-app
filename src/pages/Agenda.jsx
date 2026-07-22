@@ -85,13 +85,26 @@ export default function Agenda({ camping, vacancier }) {
     if (!inscrit && complet) return // complet, ne rien faire
 
     if (inscrit) {
-      await supabase.from('inscriptions').delete().eq('animation_id', anim.id).eq('vacancier_id', vacancier.id)
+      // MAJ optimiste puis rollback si échec
       setInscriptions(prev => prev.filter(id => id !== anim.id))
       setCounts(prev => ({ ...prev, [anim.id]: Math.max(0, (prev[anim.id] || 1) - 1) }))
+      const { error } = await supabase.from('inscriptions').delete().eq('animation_id', anim.id).eq('vacancier_id', vacancier.id)
+      if (error) {
+        console.error('Désinscription échouée :', error)
+        setInscriptions(prev => [...prev, anim.id])
+        setCounts(prev => ({ ...prev, [anim.id]: (prev[anim.id] || 0) + 1 }))
+        alert("Impossible de vous désinscrire pour le moment.")
+      }
     } else {
-      await supabase.from('inscriptions').insert({ animation_id: anim.id, vacancier_id: vacancier.id })
       setInscriptions(prev => [...prev, anim.id])
       setCounts(prev => ({ ...prev, [anim.id]: (prev[anim.id] || 0) + 1 }))
+      const { error } = await supabase.from('inscriptions').insert({ animation_id: anim.id, vacancier_id: vacancier.id })
+      if (error && error.code !== '23505') {
+        console.error('Inscription échouée :', error)
+        setInscriptions(prev => prev.filter(id => id !== anim.id))
+        setCounts(prev => ({ ...prev, [anim.id]: Math.max(0, (prev[anim.id] || 1) - 1) }))
+        alert("Impossible de vous inscrire pour le moment.")
+      }
     }
   }
 
