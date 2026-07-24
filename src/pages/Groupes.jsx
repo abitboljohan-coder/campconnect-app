@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { supabase, presentFilter } from '../supabase'
+import { t, useLangue, locale } from '../i18n'
 
 const EMOJIS = ['🏐', '🔥', '🚶', '🎮', '🎤', '🏊', '🚴', '🎯', '♟️', '🧘', '🎸', '🍕']
 
@@ -15,6 +16,7 @@ const TEMPLATES = [
 ]
 
 export default function Groupes({ camping, vacancier }) {
+  useLangue()
   const [groupes, setGroupes]     = useState([])
   const [membresMap, setMembresMap] = useState({})
   const [mesGroupes, setMesGroupes] = useState([])
@@ -56,7 +58,7 @@ export default function Groupes({ camping, vacancier }) {
     const { error } = await supabase.from('membres_groupes').insert({ groupe_id: groupeId, vacancier_id: vacancier.id })
     if (error && error.code !== '23505') { // 23505 = déjà membre, on laisse passer
       console.error('Rejoindre groupe échoué :', error)
-      alert("Impossible de rejoindre le groupe pour le moment.")
+      alert(t('groupes.err_rejoindre'))
       return
     }
     setMesGroupes(prev => prev.includes(groupeId) ? prev : [...prev, groupeId])
@@ -90,7 +92,7 @@ export default function Groupes({ camping, vacancier }) {
 
     if (error || !data) {
       console.error('Création groupe échouée :', error)
-      setErreur("Impossible de créer le groupe. Réessayez dans un instant.")
+      setErreur(t('groupes.err_creation'))
       setSaving(false)
       return
     }
@@ -117,7 +119,7 @@ export default function Groupes({ camping, vacancier }) {
       ) : (
         <>
           {mesGrps.length > 0 && (
-            <Section title="Mes groupes">
+            <Section title={t('groupes.mes_groupes')}>
               {mesGrps.map(g => (
                 <GroupRow key={g.id} groupe={g} couleur={couleur} isMember={true}
                   avatars={membresMap[g.id]} onAction={() => navigate(`/chat/${g.id}`)} />
@@ -125,11 +127,11 @@ export default function Groupes({ camping, vacancier }) {
             </Section>
           )}
 
-          <Section title={mesGrps.length > 0 ? 'Autres groupes' : 'Tous les groupes'}>
+          <Section title={mesGrps.length > 0 ? t('groupes.autres') : t('groupes.tous')}>
             {autresGrps.length === 0 && mesGrps.length === 0 ? (
-              <Empty text="Aucun groupe pour ce camping. Soyez le premier !" />
+              <Empty text={t('groupes.aucun')} />
             ) : autresGrps.length === 0 ? (
-              <Empty text="Vous êtes dans tous les groupes disponibles 🎉" />
+              <Empty text={t('groupes.tous_rejoints')} />
             ) : (
               autresGrps.map(g => (
                 <GroupRow key={g.id} groupe={g} couleur={couleur} isMember={false}
@@ -171,20 +173,20 @@ export default function Groupes({ camping, vacancier }) {
             onClick={e => e.stopPropagation()}
           >
             <div style={{ width: 40, height: 4, background: '#e5e7eb', borderRadius: 2, margin: '0 auto 20px' }} />
-            <h2 style={{ fontSize: 20, marginBottom: 14, color: '#1a1a1a' }}>Créer un groupe</h2>
+            <h2 style={{ fontSize: 20, marginBottom: 14, color: '#1a1a1a' }}>{t('groupes.creer')}</h2>
 
             {/* Templates 1-tap */}
             <div style={{ display: 'flex', gap: 8, overflowX: 'auto', paddingBottom: 10, marginBottom: 8 }}>
-              {TEMPLATES.map(t => (
-                <button key={t.titre} type="button"
-                  onClick={() => setForm(f => ({ ...f, titre: t.titre, emoji: t.emoji, lieu: t.lieu }))}
+              {TEMPLATES.map(tpl => (
+                <button key={tpl.titre} type="button"
+                  onClick={() => setForm(f => ({ ...f, titre: tpl.titre, emoji: tpl.emoji, lieu: tpl.lieu }))}
                   style={{
                     flexShrink: 0, padding: '8px 13px', borderRadius: 20,
-                    border: form.titre === t.titre ? `2px solid ${couleur}` : '1.5px solid #e5e7eb',
-                    background: form.titre === t.titre ? `${couleur}15` : '#fafafa',
+                    border: form.titre === tpl.titre ? `2px solid ${couleur}` : '1.5px solid #e5e7eb',
+                    background: form.titre === tpl.titre ? `${couleur}15` : '#fafafa',
                     fontSize: 13, fontWeight: 600, color: '#374151', cursor: 'pointer',
                   }}>
-                  {t.emoji} {t.titre}
+                  {tpl.emoji} {tpl.titre}
                 </button>
               ))}
             </div>
@@ -192,7 +194,7 @@ export default function Groupes({ camping, vacancier }) {
             <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
               {/* Emoji picker */}
               <div>
-                <label style={labelStyle}>EMOJI</label>
+                <label style={labelStyle}>{t('groupes.emoji')}</label>
                 <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginTop: 6 }}>
                   {EMOJIS.map(e => (
                     <button
@@ -213,12 +215,12 @@ export default function Groupes({ camping, vacancier }) {
               </div>
 
               <div>
-                <label style={labelStyle}>TITRE DU GROUPE *</label>
+                <label style={labelStyle}>{t('groupes.titre')}</label>
                 <input
                   type="text"
                   value={form.titre}
                   onChange={e => setForm(f => ({ ...f, titre: e.target.value }))}
-                  placeholder="ex: Randonnée du matin"
+                  placeholder={t('groupes.titre_place')}
                   style={inputStyle}
                   autoFocus
                 />
@@ -226,17 +228,17 @@ export default function Groupes({ camping, vacancier }) {
 
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
                 <div>
-                  <label style={labelStyle}>LIEU</label>
+                  <label style={labelStyle}>{t('groupes.lieu')}</label>
                   <input
                     type="text"
                     value={form.lieu}
                     onChange={e => setForm(f => ({ ...f, lieu: e.target.value }))}
-                    placeholder="ex: Piscine"
+                    placeholder={t('groupes.lieu_place')}
                     style={inputStyle}
                   />
                 </div>
                 <div>
-                  <label style={labelStyle}>HEURE</label>
+                  <label style={labelStyle}>{t('groupes.heure')}</label>
                   <input
                     type="time"
                     value={form.heure}
@@ -247,7 +249,7 @@ export default function Groupes({ camping, vacancier }) {
               </div>
 
               <div>
-                <label style={labelStyle}>NB MAX MEMBRES</label>
+                <label style={labelStyle}>{t('groupes.max')}</label>
                 <input
                   type="number"
                   min="2"
@@ -270,7 +272,7 @@ export default function Groupes({ camping, vacancier }) {
                   onClick={() => setShowModal(false)}
                   style={{ flex: 1, padding: '13px', borderRadius: 12, background: '#f3f4f6', color: '#374151', fontWeight: 600 }}
                 >
-                  Annuler
+                  {t('commun.annuler')}
                 </button>
                 <button
                   onClick={creerGroupe}
@@ -282,7 +284,7 @@ export default function Groupes({ camping, vacancier }) {
                     transition: 'background 0.15s',
                   }}
                 >
-                  {saving ? 'Création...' : `${form.emoji} Créer le groupe`}
+                  {saving ? t('groupes.creation') : `${form.emoji} ${t('groupes.creer_btn')}`}
                 </button>
               </div>
             </div>
@@ -323,7 +325,7 @@ function AvatarStack({ avatars, couleur }) {
         </span>
       )}
       <span style={{ fontSize: 11, color: '#9ca3af', marginLeft: 6 }}>
-        {avatars.length} membre{avatars.length > 1 ? 's' : ''}
+        {avatars.length > 1 ? t('commun.membres', { n: avatars.length }) : t('commun.membre', { n: avatars.length })}
       </span>
     </div>
   )
@@ -331,9 +333,9 @@ function AvatarStack({ avatars, couleur }) {
 
 function GroupRow({ groupe, couleur, isMember, onAction, avatars }) {
   const heureStr = groupe.heure
-    ? new Date(groupe.heure).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })
+    ? new Date(groupe.heure).toLocaleTimeString(locale(), { hour: '2-digit', minute: '2-digit' })
     : null
-  const meta = [groupe.lieu && `📍 ${groupe.lieu}`, heureStr && `🕐 ${heureStr}`, groupe.max_membres && `${groupe.max_membres} places max`].filter(Boolean).join(' · ')
+  const meta = [groupe.lieu && `📍 ${groupe.lieu}`, heureStr && `🕐 ${heureStr}`, groupe.max_membres && t('commun.places', { n: groupe.max_membres })].filter(Boolean).join(' · ')
 
   return (
     <div style={{
@@ -367,7 +369,7 @@ function GroupRow({ groupe, couleur, isMember, onAction, avatars }) {
           transition: 'all 0.15s',
         }}
       >
-        {isMember ? 'Ouvrir' : 'Rejoindre'}
+        {isMember ? t('groupes.ouvrir') : t('groupes.rejoindre')}
       </button>
     </div>
   )

@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { supabase } from '../supabase'
 import { esc } from '../utils/esc'
+import { t, useLangue, locale } from '../i18n'
 
 let L = null
 
@@ -59,6 +60,7 @@ async function geocodeCamping(nom) {
 }
 
 export default function Map({ camping: campingProp, vacancier }) {
+  useLangue()
   const navigate      = useNavigate()
   const mapRef        = useRef(null)
   const leafletMap    = useRef(null)
@@ -555,7 +557,7 @@ export default function Map({ camping: campingProp, vacancier }) {
               display: 'flex', alignItems: 'center', gap: 6,
             }}
           >
-            🧭 Où aller ? {showDest ? '▲' : '▼'}
+            🧭 {t('carte.ou_aller')} {showDest ? '▲' : '▼'}
           </button>
 
           {showDest && (
@@ -627,7 +629,7 @@ export default function Map({ camping: campingProp, vacancier }) {
           borderRadius: 30, padding: 3, display: 'flex', gap: 2,
           boxShadow: '0 2px 12px rgba(0,0,0,0.3)',
         }}>
-          {[['satellite', '🛰️', 'Satellite'], ['plan', '🗺️', 'Plan']].map(([mode, icon, label]) => (
+          {[['satellite', '🛰️', t('carte.satellite')], ['plan', '🗺️', t('carte.plan')]].map(([mode, icon, label]) => (
             <button key={mode} onClick={() => setMapMode(mode)} style={{
               padding: '7px 16px', borderRadius: 26, fontSize: 13, fontWeight: 600,
               border: 'none', cursor: 'pointer', transition: 'all 0.2s',
@@ -671,7 +673,7 @@ export default function Map({ camping: campingProp, vacancier }) {
           display: 'flex', gap: 12, alignItems: 'center',
           boxShadow: '0 2px 10px rgba(0,0,0,0.12)',
         }}>
-          {[['#f472b6', 'Animations'], ['#fb923c', 'Groupes']].map(([c, l]) => (
+          {[['#f472b6', t('carte.animations')], ['#fb923c', t('carte.groupes')]].map(([c, l]) => (
             <div key={l} style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
               <div style={{ width: 8, height: 8, borderRadius: '50%', background: c }} />
               <span style={{ fontSize: 11, color: '#374151', fontWeight: 500 }}>{l}</span>
@@ -680,7 +682,7 @@ export default function Map({ camping: campingProp, vacancier }) {
           {effectivePos && posSurSiteNow && (
             <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
               <div style={{ width: 8, height: 8, borderRadius: '50%', background: couleur }} />
-              <span style={{ fontSize: 11, color: '#374151', fontWeight: 500 }}>{simulating ? '🎮 Simulé' : 'Vous'}</span>
+              <span style={{ fontSize: 11, color: '#374151', fontWeight: 500 }}>{simulating ? '🎮' : t('carte.vous')}</span>
             </div>
           )}
         </div>
@@ -741,7 +743,7 @@ export default function Map({ camping: campingProp, vacancier }) {
                   display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
                 }}
               >
-                🧭 M'y guider
+                🧭 {t('carte.guider')}
               </button>
             )}
           </div>
@@ -762,11 +764,12 @@ export default function Map({ camping: campingProp, vacancier }) {
 }
 
 function GuideBanner({ target, pos, couleur, onClose }) {
+  useLangue()
   if (!pos) {
     return (
       <div style={guideBannerBox}>
         <div style={{ flex: 1, fontSize: 13, color: '#fff', fontWeight: 600 }}>
-          📍 Activez votre position pour être guidé vers « {target.label} »
+          📍 {t('carte.activez_pos', { lieu: target.label })}
         </div>
         <button onClick={onClose} style={guideCloseBtn}>×</button>
       </div>
@@ -793,7 +796,7 @@ function GuideBanner({ target, pos, couleur, onClose }) {
           {target.emoji} {target.label}
         </div>
         <div style={{ fontSize: 13, color: arrived ? '#bbf7d0' : '#C0DD97', fontWeight: 600, marginTop: 2 }}>
-          {arrived ? 'Vous y êtes ! 🎉' : `${fmtDist(dist)} · tout droit dans le sens de la flèche`}
+          {arrived ? t('carte.arrive') : t('carte.tout_droit', { d: fmtDist(dist) })}
         </div>
       </div>
       <button onClick={onClose} style={guideCloseBtn}>×</button>
@@ -815,6 +818,7 @@ const guideCloseBtn = {
 
 /* ─── Fiches ─── */
 function AnimFiche({ anim, inscrit, nbInscrits, couleur, onToggle, onClose }) {
+  useLangue()
   const debut = anim.debut ? new Date(anim.debut) : null
   const complet = anim.places_max && nbInscrits >= anim.places_max && !inscrit
   return (
@@ -825,7 +829,7 @@ function AnimFiche({ anim, inscrit, nbInscrits, couleur, onToggle, onClose }) {
           <div>
             <div style={{ fontWeight: 700, fontSize: 17 }}>{anim.titre}</div>
             <div style={{ display: 'flex', gap: 10, marginTop: 5, flexWrap: 'wrap' }}>
-              {debut && <span style={{ fontSize: 13, color: '#639922', fontWeight: 600 }}>🕐 {debut.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}</span>}
+              {debut && <span style={{ fontSize: 13, color: '#639922', fontWeight: 600 }}>🕐 {debut.toLocaleTimeString(locale(), { hour: '2-digit', minute: '2-digit' })}</span>}
               {anim.lieu && <span style={{ fontSize: 13, color: '#6b7280' }}>📍 {anim.lieu}</span>}
             </div>
             {anim.places_max && <div style={{ fontSize: 12, color: complet ? '#ef4444' : '#9ca3af', marginTop: 4 }}>{nbInscrits}/{anim.places_max} places</div>}
@@ -840,14 +844,15 @@ function AnimFiche({ anim, inscrit, nbInscrits, couleur, onToggle, onClose }) {
         border: inscrit ? `2px solid ${couleur}` : 'none',
         cursor: complet ? 'default' : 'pointer',
       }}>
-        {complet ? 'Complet' : inscrit ? '✓ Inscrit — Se désinscrire' : "S'inscrire"}
+        {complet ? t('commun.complet') : inscrit ? t('agenda.desinscrire') : t('agenda.inscrire')}
       </button>
     </div>
   )
 }
 
 function GroupeFiche({ groupe, isMember, couleur, onAction, onClose }) {
-  const heureStr = groupe.heure ? new Date(groupe.heure).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' }) : null
+  useLangue()
+  const heureStr = groupe.heure ? new Date(groupe.heure).toLocaleTimeString(locale(), { hour: '2-digit', minute: '2-digit' }) : null
   return (
     <div>
       <div style={{ display: 'flex', justifyContent: 'space-between', gap: 12 }}>
@@ -868,7 +873,7 @@ function GroupeFiche({ groupe, isMember, couleur, onAction, onClose }) {
         background: isMember ? couleur : 'transparent', color: isMember ? '#fff' : couleur, border: `2px solid ${couleur}`,
         cursor: 'pointer',
       }}>
-        {isMember ? '💬 Ouvrir le chat' : 'Rejoindre le groupe'}
+        {isMember ? t('groupes.ouvrir_chat') : t('carte.rejoindre_grp')}
       </button>
     </div>
   )

@@ -1,10 +1,12 @@
 import { useEffect, useState, useRef } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { supabase, presentFilter } from '../supabase'
+import { t, useLangue, locale } from '../i18n'
 
 const REACTIONS = ['❤️', '😂', '👍', '🔥', '🎉']
 
 export default function Chat({ vacancier }) {
+  useLangue()
   const { groupeId } = useParams()
   const navigate = useNavigate()
   const [groupe, setGroupe]         = useState(null)
@@ -71,7 +73,7 @@ export default function Chat({ vacancier }) {
     if (error) {
       console.error('Envoi message échoué :', error)
       setTexte(contenu) // on rend le message pour ne pas le perdre
-      setErreur("Message non envoyé. Vérifiez votre connexion.")
+      setErreur(t('chat.non_envoye'))
     }
     setSending(false)
     inputRef.current?.focus()
@@ -121,7 +123,7 @@ export default function Chat({ vacancier }) {
             {groupe?.titre || '...'}
           </div>
           <div style={{ fontSize: 12, color: '#97C459' }}>
-            {nbMembres} participant{nbMembres > 1 ? 's' : ''}
+            {nbMembres > 1 ? t('chat.participants', { n: nbMembres }) : t('chat.participant', { n: nbMembres })}
             {groupe?.lieu && ` · 📍 ${groupe.lieu}`}
           </div>
         </div>
@@ -131,7 +133,7 @@ export default function Chat({ vacancier }) {
       <div style={{ flex: 1, overflowY: 'auto', padding: '16px 12px', display: 'flex', flexDirection: 'column', gap: 4 }}>
         {messages.length === 0 && (
           <div style={{ textAlign: 'center', color: '#9ca3af', fontSize: 14, marginTop: 60, lineHeight: 2 }}>
-            Aucun message pour l'instant.<br />Soyez le premier à écrire ! 👋
+            {t('chat.aucun_msg')}<br />{t('chat.premier')}
           </div>
         )}
 
@@ -152,7 +154,7 @@ export default function Chat({ vacancier }) {
 
             {msgs.map((msg, idx) => {
               const isMine = msg.auteur_id === vacancier.id
-              const auteur = msg.vacanciers || { pseudo: 'Vacancier parti', avatar_emoji: '👋' }
+              const auteur = msg.vacanciers || { pseudo: t('chat.parti'), avatar_emoji: '👋' }
               const prevMsg = idx > 0 ? msgs[idx - 1] : null
               const showAuthor = !isMine && (!prevMsg || prevMsg.auteur_id !== msg.auteur_id)
 
@@ -241,7 +243,7 @@ export default function Chat({ vacancier }) {
                     marginLeft: isMine ? 0 : 46,
                     marginRight: isMine ? 4 : 0,
                   }}>
-                    {new Date(msg.created_at).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}
+                    {new Date(msg.created_at).toLocaleTimeString(locale(), { hour: '2-digit', minute: '2-digit' })}
                   </div>
                 </div>
               )
@@ -271,7 +273,7 @@ export default function Chat({ vacancier }) {
         <input
           ref={inputRef}
           type="text"
-          placeholder="Écrire un message..."
+          placeholder={t('chat.ecrire')}
           value={texte}
           onChange={e => { setTexte(e.target.value); if (erreur) setErreur('') }}
           style={{
@@ -309,9 +311,9 @@ function groupByDate(messages) {
   for (const msg of messages) {
     const d = new Date(msg.created_at)
     let label
-    if (d.toDateString() === today.toDateString())     label = "Aujourd'hui"
-    else if (d.toDateString() === yesterday.toDateString()) label = 'Hier'
-    else label = d.toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' })
+    if (d.toDateString() === today.toDateString())     label = t('chat.aujourdhui')
+    else if (d.toDateString() === yesterday.toDateString()) label = t('chat.hier')
+    else label = d.toLocaleDateString(locale(), { weekday: 'long', day: 'numeric', month: 'long' })
 
     if (!map[label]) { map[label] = []; order.push(label) }
     map[label].push(msg)

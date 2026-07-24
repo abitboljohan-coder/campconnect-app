@@ -1,14 +1,16 @@
 import { Outlet, NavLink, useLocation, Link } from 'react-router-dom'
+import { t, useLangue } from '../i18n'
 
 const NAV = [
-  { to: '/', label: 'Accueil', icon: '🏕️' },
-  { to: '/groupes', label: 'Groupes', icon: '👥' },
-  { to: '/map', label: 'Carte', icon: '🗺️' },
-  { to: '/agenda', label: 'Agenda', icon: '📅' },
-  { to: '/infos', label: 'Infos', icon: 'ℹ️' },
+  { to: '/', key: 'nav.accueil', icon: '🏕️' },
+  { to: '/groupes', key: 'nav.groupes', icon: '👥' },
+  { to: '/map', key: 'nav.carte', icon: '🗺️' },
+  { to: '/agenda', key: 'nav.agenda', icon: '📅' },
+  { to: '/infos', key: 'nav.infos', icon: 'ℹ️' },
 ]
 
 export default function Layout({ camping }) {
+  useLangue()
   const couleur = camping?.couleur_principale || '#639922'
   const location = useLocation()
   const hideNav = location.pathname.startsWith('/chat/')
@@ -110,7 +112,7 @@ export default function Layout({ camping }) {
                     background: isActive ? `${couleur}1d` : 'transparent',
                     transition: 'background 0.15s',
                   }}>{item.icon}</span>
-                  {item.label}
+                  {t(item.key)}
                 </>
               )}
             </NavLink>
