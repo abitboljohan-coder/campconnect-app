@@ -12,6 +12,8 @@ import Agenda from './pages/Agenda'
 import Profil from './pages/Profil'
 import Map from './pages/Map'
 import Infos from './pages/Infos'
+import Signaler from './pages/Signaler'
+import Annonces from './pages/Annonces'
 import Layout from './components/Layout'
 import { t, useLangue } from './i18n'
 
@@ -137,6 +139,8 @@ function App() {
             <Route path="/map" element={<Map camping={camping} vacancier={vacancier} />} />
             <Route path="/agenda" element={<Agenda camping={camping} vacancier={vacancier} />} />
             <Route path="/infos" element={<Infos camping={camping} />} />
+            <Route path="/signaler" element={<Signaler camping={camping} vacancier={vacancier} />} />
+            <Route path="/annonces" element={<Annonces camping={camping} vacancier={vacancier} />} />
             <Route path="/profil" element={
               <Profil camping={camping} vacancier={vacancier} onLogout={() => {
                 unregisterPush()

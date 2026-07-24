@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { supabase, presentFilter } from '../supabase'
 import { t, useLangue, locale } from '../i18n'
+import Meteo from '../components/Meteo'
 
 const TREE_POS = [
   { x: '6%',  y: '18%', s: 26 }, { x: '14%', y: '62%', s: 20 },
@@ -91,6 +92,45 @@ export default function Accueil({ camping, vacancier }) {
           onMap={() => navigate('/map')}
           onAgenda={() => navigate('/agenda')}
         />
+      </div>
+
+      {/* === METEO === */}
+      <Meteo camping={camping} couleur={couleur} />
+
+      {/* === ACCÈS RAPIDES === */}
+      <div style={{ display: 'flex', gap: 10, margin: '14px 16px 0' }}>
+        <button
+          onClick={() => navigate('/signaler')}
+          style={{
+            flex: 1, display: 'flex', alignItems: 'center', gap: 10,
+            background: '#fff', border: 'none', borderRadius: 16, padding: '13px 14px',
+            boxShadow: '0 1px 4px rgba(0,0,0,0.07)', cursor: 'pointer', textAlign: 'left',
+          }}
+        >
+          <span style={{
+            width: 36, height: 36, borderRadius: 11, flexShrink: 0, fontSize: 18,
+            background: '#fef2f2', display: 'flex', alignItems: 'center', justifyContent: 'center',
+          }}>🛠️</span>
+          <span style={{ fontSize: 13.5, fontWeight: 700, color: '#1a1a1a', lineHeight: 1.3 }}>
+            {t('signaler.court')}
+          </span>
+        </button>
+        <button
+          onClick={() => navigate('/annonces')}
+          style={{
+            flex: 1, display: 'flex', alignItems: 'center', gap: 10,
+            background: '#fff', border: 'none', borderRadius: 16, padding: '13px 14px',
+            boxShadow: '0 1px 4px rgba(0,0,0,0.07)', cursor: 'pointer', textAlign: 'left',
+          }}
+        >
+          <span style={{
+            width: 36, height: 36, borderRadius: 11, flexShrink: 0, fontSize: 18,
+            background: `${couleur}18`, display: 'flex', alignItems: 'center', justifyContent: 'center',
+          }}>📣</span>
+          <span style={{ fontSize: 13.5, fontWeight: 700, color: '#1a1a1a', lineHeight: 1.3 }}>
+            {t('annonces.court')}
+          </span>
+        </button>
       </div>
 
       {/* === STATUTS ÉPHÉMÈRES === */}
