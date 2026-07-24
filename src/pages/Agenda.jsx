@@ -1,12 +1,8 @@
 import { useEffect, useState } from 'react'
 import { supabase } from '../supabase'
+import { t, useLangue, locale } from '../i18n'
 
-const SLOT_LABELS = {
-  matin:     'Ce matin',
-  apresmidi: 'Cet après-midi',
-  soir:      'Ce soir',
-  nuit:      'Cette nuit',
-}
+const slotLabel = (k) => t(`agenda.slot_${k}`)
 
 function getSlot(debutStr) {
   const h = new Date(debutStr).getHours()
@@ -21,14 +17,14 @@ function getDayLabel(debutStr) {
   const today     = new Date()
   const tomorrow  = new Date(today); tomorrow.setDate(today.getDate() + 1)
   if (d.toDateString() === today.toDateString())    return null // pas de préfixe pour aujourd'hui
-  if (d.toDateString() === tomorrow.toDateString()) return 'Demain'
-  return d.toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' })
+  if (d.toDateString() === tomorrow.toDateString()) return t('agenda.demain')
+  return d.toLocaleDateString(locale(), { weekday: 'long', day: 'numeric', month: 'long' })
 }
 
 function getSectionKey(anim) {
   const dayLabel  = getDayLabel(anim.debut)
-  const slotLabel = SLOT_LABELS[getSlot(anim.debut)]
-  return dayLabel ? `${dayLabel} — ${slotLabel}` : slotLabel
+  const slot = slotLabel(getSlot(anim.debut))
+  return dayLabel ? `${dayLabel} — ${slot}` : slot
 }
 
 const TAG_COLORS = {
@@ -47,6 +43,7 @@ function getTag(anim) {
 }
 
 export default function Agenda({ camping, vacancier }) {
+  useLangue()
   const [animations, setAnimations]     = useState([])
   const [inscriptions, setInscriptions] = useState([])
   const [counts, setCounts]             = useState({}) // animId -> nb inscrits
@@ -93,7 +90,7 @@ export default function Agenda({ camping, vacancier }) {
         console.error('Désinscription échouée :', error)
         setInscriptions(prev => [...prev, anim.id])
         setCounts(prev => ({ ...prev, [anim.id]: (prev[anim.id] || 0) + 1 }))
-        alert("Impossible de vous désinscrire pour le moment.")
+        alert(t('agenda.err_desinscr'))
       }
     } else {
       setInscriptions(prev => [...prev, anim.id])
@@ -103,7 +100,7 @@ export default function Agenda({ camping, vacancier }) {
         console.error('Inscription échouée :', error)
         setInscriptions(prev => prev.filter(id => id !== anim.id))
         setCounts(prev => ({ ...prev, [anim.id]: Math.max(0, (prev[anim.id] || 1) - 1) }))
-        alert("Impossible de vous inscrire pour le moment.")
+        alert(t('agenda.err_inscr'))
       }
     }
   }
@@ -121,19 +118,19 @@ export default function Agenda({ camping, vacancier }) {
     sections[key].push(anim)
   }
 
-  const today = new Date().toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' })
+  const today = new Date().toLocaleDateString(locale(), { weekday: 'long', day: 'numeric', month: 'long' })
 
   return (
     <div style={{ padding: '20px 16px', maxWidth: 600, margin: '0 auto' }}>
       {/* En-tête */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: 20 }}>
         <div>
-          <h1 style={{ fontSize: 22, color: '#1a1a1a', fontWeight: 700 }}>Agenda</h1>
+          <h1 style={{ fontSize: 22, color: '#1a1a1a', fontWeight: 700 }}>{t('agenda.titre')}</h1>
           <div style={{ fontSize: 13, color: '#9ca3af', marginTop: 2, textTransform: 'capitalize' }}>{today}</div>
         </div>
         {/* Toggle filtre */}
         <div style={{ display: 'flex', background: '#e8e4da', borderRadius: 20, padding: 3, gap: 2 }}>
-          {[['all', 'Tout'], ['mine', 'Mes inscrip.']].map(([val, label]) => (
+          {[['all', t('agenda.tout')], ['mine', t('agenda.mes_inscr')]].map(([val, label]) => (
             <button
               key={val}
               onClick={() => setFilter(val)}
@@ -157,7 +154,7 @@ export default function Agenda({ camping, vacancier }) {
         </div>
       ) : displayed.length === 0 ? (
         <div style={{ textAlign: 'center', padding: '48px 0', color: '#9ca3af', fontSize: 14 }}>
-          {filter === 'mine' ? "Vous n'êtes inscrit à aucune animation." : "Aucune animation programmée."}
+          {filter === 'mine' ? t('agenda.aucune_mine') : t('agenda.aucune')}
         </div>
       ) : (
         sectionOrder.map(sectionKey => (
@@ -206,7 +203,7 @@ function AnimCard({ anim, couleur, inscrit, nbInscrits, onToggle }) {
           <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}>
             {debut && (
               <span style={{ fontSize: 13, fontWeight: 700, color: couleur }}>
-                {debut.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}
+                {debut.toLocaleTimeString(locale(), { hour: '2-digit', minute: '2-digit' })}
               </span>
             )}
             <span style={{
@@ -227,7 +224,7 @@ function AnimCard({ anim, couleur, inscrit, nbInscrits, onToggle }) {
 
           {anim.places_max && (
             <div style={{ fontSize: 12, color: complet ? '#ef4444' : '#9ca3af', marginTop: 4 }}>
-              {nbInscrits}/{anim.places_max} places
+              {nbInscrits}/{anim.places_max} {t('agenda.places_mot')}
             </div>
           )}
         </div>
@@ -245,7 +242,7 @@ function AnimCard({ anim, couleur, inscrit, nbInscrits, onToggle }) {
             cursor: complet ? 'not-allowed' : 'pointer',
           }}
         >
-          {complet ? 'Complet' : inscrit ? '✓ Inscrit' : "S'inscrire"}
+          {complet ? t('commun.complet') : inscrit ? t('agenda.inscrit') : t('agenda.inscrire')}
         </button>
       </div>
 

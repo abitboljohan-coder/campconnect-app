@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { supabase, ensureAnonSession } from '../supabase'
 import { isNative, setAppMode } from '../native'
+import { t, useLangue } from '../i18n'
 
 const AVATARS = ['🏕️', '🌲', '⛺', '🎯', '🚴', '🏊', '🎣', '🌻', '🦜', '🌈']
 
@@ -28,6 +29,7 @@ function haversine(lat1, lng1, lat2, lng2) {
 const fromQR = !!window.location.pathname.match(/^\/join\/([^/?#]+)/)
 
 export default function Onboarding({ initialCamping, onDone }) {
+  useLangue()
   const initialStep = !initialCamping ? 'search' : (fromQR ? 'form' : 'verify')
   const [step, setStep] = useState(initialStep)
   const [camping, setCamping] = useState(initialCamping)
@@ -140,13 +142,13 @@ export default function Onboarding({ initialCamping, onDone }) {
     if (code.trim() === getHourlyCode(camping.id)) {
       setStep('form')
     } else {
-      setCodeError('Code incorrect. Demandez le code du jour à la réception.')
+      setCodeError(t('onb.code_erreur'))
     }
   }
 
   async function handleSubmit(e) {
     e.preventDefault()
-    if (!form.pseudo.trim()) { setFormError('Le pseudo est obligatoire.'); return }
+    if (!form.pseudo.trim()) { setFormError(t('onb.pseudo_oblig')); return }
     setSaving(true)
     setFormError('')
     await ensureAnonSession()
@@ -184,12 +186,12 @@ export default function Onboarding({ initialCamping, onDone }) {
         <div style={{ fontSize: 52, marginBottom: 10 }}>🌲</div>
         <h1 style={{ color: '#fff', fontSize: 26, fontWeight: 700, margin: 0 }}>CampConnect</h1>
         <p style={{ color: 'rgba(255,255,255,0.5)', marginTop: 8, fontSize: 14 }}>
-          Recherchez votre camping pour commencer
+          {t('onb.rechercher')}
         </p>
       </div>
 
       <Card>
-        <label style={labelStyle}>VOTRE CAMPING</label>
+        <label style={labelStyle}>{t('onb.votre_camping')}</label>
         <div style={{ position: 'relative', marginTop: 8 }}>
           <input
             type="text"
@@ -230,7 +232,7 @@ export default function Onboarding({ initialCamping, onDone }) {
                 </div>
                 <div>
                   <div style={{ fontWeight: 600, fontSize: 14, color: '#1f2937' }}>{c.nom}</div>
-                  <div style={{ fontSize: 12, color: '#9ca3af', marginTop: 1 }}>Appuyer pour rejoindre</div>
+                  <div style={{ fontSize: 12, color: '#9ca3af', marginTop: 1 }}>{t('onb.appuyer')}</div>
                 </div>
               </button>
             ))}
@@ -252,7 +254,7 @@ export default function Onboarding({ initialCamping, onDone }) {
             onClick={() => setAppMode('gerant')}
             style={{ marginTop: 14, width: '100%', background: 'none', border: 'none', fontSize: 12, color: '#9ca3af', textDecoration: 'underline', cursor: 'pointer' }}
           >
-            Je suis gérant de camping
+            {t('onb.gerant')}
           </button>
         )}
       </Card>
@@ -430,7 +432,7 @@ export default function Onboarding({ initialCamping, onDone }) {
               border: 'none', cursor: saving ? 'default' : 'pointer',
             }}
           >
-            {saving ? 'Enregistrement...' : "C'est parti ! 🌿"}
+            {saving ? t('onb.enregistrement') : t('onb.cest_parti')}
           </button>
         </form>
 

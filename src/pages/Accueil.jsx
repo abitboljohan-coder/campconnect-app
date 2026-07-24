@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { supabase, presentFilter } from '../supabase'
+import { t, useLangue, locale } from '../i18n'
 
 const TREE_POS = [
   { x: '6%',  y: '18%', s: 26 }, { x: '14%', y: '62%', s: 20 },
@@ -18,6 +19,7 @@ const ANIM_DOTS = [
 ]
 
 export default function Accueil({ camping, vacancier }) {
+  useLangue()
   const [groupes, setGroupes]           = useState([])
   const [animations, setAnimations]     = useState([])
   const [vacancierCount, setVacancierCount] = useState(0)
@@ -67,7 +69,7 @@ export default function Accueil({ camping, vacancier }) {
     const { error } = await supabase.from('membres_groupes').insert({ groupe_id: groupeId, vacancier_id: vacancier.id })
     if (error && error.code !== '23505') { // 23505 = déjà membre, on laisse passer
       console.error('Rejoindre groupe échoué :', error)
-      alert("Impossible de rejoindre le groupe pour le moment.")
+      alert(t('groupes.err_rejoindre'))
       return
     }
     setMesGroupes(prev => prev.includes(groupeId) ? prev : [...prev, groupeId])
@@ -97,9 +99,9 @@ export default function Accueil({ camping, vacancier }) {
       {/* === GROUPES ACTIFS === */}
       <div style={{ padding: '20px 16px 0' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 }}>
-          <h2 style={{ fontSize: 18, color: '#1a1a1a', fontWeight: 700 }}>Groupes actifs maintenant</h2>
+          <h2 style={{ fontSize: 18, color: '#1a1a1a', fontWeight: 700 }}>{t('accueil.groupes_maintenant')}</h2>
           <button onClick={() => navigate('/groupes')} style={{ fontSize: 13, color: couleur, fontWeight: 600 }}>
-            Voir tout →
+            {t('accueil.voir_tout')} →
           </button>
         </div>
 
@@ -111,7 +113,7 @@ export default function Accueil({ camping, vacancier }) {
           </div>
         ) : groupes.length === 0 ? (
           <div style={{ textAlign: 'center', padding: '32px 0', color: '#9ca3af', fontSize: 14, lineHeight: 1.8 }}>
-            Aucun groupe actif pour l'instant.<br />Soyez le premier à en créer un !
+            {t('accueil.aucun_groupe')}<br />{t('accueil.premier_creer')}
           </div>
         ) : (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
@@ -140,7 +142,7 @@ export default function Accueil({ camping, vacancier }) {
             boxShadow: `0 4px 14px ${couleur}55`,
           }}
         >
-          + Créer un groupe
+          {t('accueil.creer_groupe')}
         </button>
       </div>
     </div>
@@ -192,7 +194,7 @@ function StatutsStrip({ camping, vacancier, couleur }) {
     setSaving(false)
     if (error) {
       console.error('Publication statut échouée :', error)
-      alert("Impossible de publier votre statut pour le moment.")
+      alert(t('accueil.err_statut'))
       return
     }
     setTexte(''); setShowModal(false)
@@ -219,7 +221,7 @@ function StatutsStrip({ camping, vacancier, couleur }) {
             width: 32, height: 32, borderRadius: '50%', background: couleur, color: '#fff',
             display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20, fontWeight: 300,
           }}>+</div>
-          <span style={{ fontSize: 10.5, fontWeight: 700, color: couleur }}>Quoi de neuf ?</span>
+          <span style={{ fontSize: 10.5, fontWeight: 700, color: couleur }}>{t('accueil.quoi_de_neuf')}</span>
         </button>
 
         {statuts.map(s => (
@@ -247,7 +249,7 @@ function StatutsStrip({ camping, vacancier, couleur }) {
           <div style={{ background: '#fff', borderRadius: '22px 22px 0 0', padding: '22px 20px 36px', width: '100%', maxWidth: 600, margin: '0 auto' }}
                onClick={e => e.stopPropagation()}>
             <div style={{ width: 40, height: 4, background: '#e5e7eb', borderRadius: 2, margin: '0 auto 18px' }} />
-            <h3 style={{ fontSize: 18, fontWeight: 800, marginBottom: 14, color: '#1a1a1a' }}>Quoi de neuf ? <span style={{ fontSize: 12, fontWeight: 500, color: '#9ca3af' }}>(visible 24h)</span></h3>
+            <h3 style={{ fontSize: 18, fontWeight: 800, marginBottom: 14, color: '#1a1a1a' }}>{t('accueil.quoi_de_neuf')} <span style={{ fontSize: 12, fontWeight: 500, color: '#9ca3af' }}>{t('accueil.visible24')}</span></h3>
             <div style={{ display: 'flex', gap: 6, marginBottom: 12, flexWrap: 'wrap' }}>
               {STATUT_EMOJIS.map(e => (
                 <button key={e} onClick={() => setEmoji(e)} style={{
@@ -279,8 +281,9 @@ function StatutsStrip({ camping, vacancier, couleur }) {
 
 /* ─── Hero estival ─── */
 function Hero({ camping, vacancier, vacancierCount, groupesCount, animationsCount, couleur, onMap, onAgenda }) {
+  useLangue()
   const h = new Date().getHours()
-  const greeting = h < 6 ? 'Bonne nuit' : h < 12 ? 'Bonjour' : h < 18 ? 'Bel après-midi' : 'Bonne soirée'
+  const greeting = h < 12 ? t('accueil.bonjour') : h < 18 ? t('accueil.bonapresmidi') : t('accueil.bonsoiree')
   const sun = h < 6 ? '🌙' : h < 12 ? '🌅' : h < 18 ? '☀️' : '🌇'
 
   return (
@@ -307,9 +310,9 @@ function Hero({ camping, vacancier, vacancierCount, groupesCount, animationsCoun
       {/* Chips stats */}
       <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 16 }}>
         {[
-          [`${vacancierCount}`, 'vacanciers ici'],
-          [`${groupesCount}`, 'groupes actifs'],
-          [`${animationsCount}`, 'animations à venir'],
+          [`${vacancierCount}`, t('accueil.mot_vacanciers')],
+          [`${groupesCount}`, t('accueil.mot_groupes')],
+          [`${animationsCount}`, t('accueil.mot_animations')],
         ].map(([n, l]) => (
           <div key={l} style={{
             background: 'rgba(255,255,255,0.18)',
@@ -330,7 +333,7 @@ function Hero({ camping, vacancier, vacancierCount, groupesCount, animationsCoun
           padding: '12px', borderRadius: 16, fontSize: 14, fontWeight: 800,
           border: 'none', cursor: 'pointer', boxShadow: '0 3px 10px rgba(0,0,0,0.15)',
         }}>
-          🗺️ Explorer la carte
+          🗺️ {t('accueil.explorer_carte')}
         </button>
         <button onClick={onAgenda} style={{
           flex: 1, background: 'rgba(255,255,255,0.16)', color: '#fff',
@@ -529,7 +532,7 @@ function InteractiveMap({ camping, vacancier, couleur }) {
             <span style={{ fontSize: 10, color: 'rgba(255,255,255,0.55)', fontWeight: 500 }}>{l}</span>
           </div>
         ))}
-        <span style={{ marginLeft: 'auto', fontSize: 10, color: 'rgba(255,255,255,0.35)' }}>Pincez pour zoomer</span>
+        <span style={{ marginLeft: 'auto', fontSize: 10, color: 'rgba(255,255,255,0.35)' }}>{t('carte.pincez')}</span>
       </div>
     </div>
   )
@@ -602,7 +605,7 @@ function FakeMap({ groupes, animations, vacancier, vacancierCount, couleur }) {
 
 function GroupCard({ groupe, couleur, isMember, onAction, avatars }) {
   const heureStr = groupe.heure
-    ? new Date(groupe.heure).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })
+    ? new Date(groupe.heure).toLocaleTimeString(locale(), { hour: '2-digit', minute: '2-digit' })
     : null
   const meta = [
     groupe.lieu && `📍 ${groupe.lieu}`,

@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { t, useLangue } from '../i18n'
 
 const DEFAULT_INFOS = [
   { id: 'piscine',    emoji: '🏊', titre: 'Piscine',          contenu: 'Ouverte 9h – 20h\nSurveillée 10h – 19h' },
@@ -12,6 +13,7 @@ const DEFAULT_INFOS = [
 ]
 
 export default function Infos({ camping }) {
+  useLangue()
   const couleur = camping?.couleur_principale || '#639922'
   const infos = (camping?.infos && camping.infos.length > 0) ? camping.infos : DEFAULT_INFOS
   const [open, setOpen] = useState(null)
@@ -22,13 +24,13 @@ export default function Infos({ camping }) {
       {/* Header */}
       <div style={{ marginBottom: 20 }}>
         <div style={{ fontSize: 11, fontWeight: 700, color: couleur, letterSpacing: 1.5, textTransform: 'uppercase', marginBottom: 4 }}>
-          Livret d'accueil
+          {t('infos.livret')}
         </div>
         <h1 style={{ fontSize: 22, fontWeight: 800, color: '#0d1f0d', margin: 0, lineHeight: 1.2 }}>
-          Infos utiles
+          {t('infos.utiles')}
         </h1>
         <p style={{ fontSize: 13, color: '#6b7280', margin: '6px 0 0' }}>
-          Tout ce qu'il faut savoir sur {camping?.nom || 'le camping'}
+          {t('infos.tout_sur', { camping: camping?.nom || '' })}
         </p>
       </div>
 
@@ -105,7 +107,7 @@ export default function Infos({ camping }) {
       }}>
         <div style={{ fontSize: 28 }}>📞</div>
         <div>
-          <div style={{ fontSize: 13, fontWeight: 700, color: '#97C459' }}>Une question ?</div>
+          <div style={{ fontSize: 13, fontWeight: 700, color: '#97C459' }}>{t('infos.question')}</div>
           <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.7)', marginTop: 2 }}>
             Passez à la réception ou signalez un problème à l'équipe.
           </div>

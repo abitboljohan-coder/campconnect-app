@@ -1,11 +1,13 @@
 import { useEffect, useState } from 'react'
 import { supabase } from '../supabase'
+import { t, useLangue, locale, LANGUES, setLangue } from '../i18n'
 
 const TRANCHES = ['18-25', '26-35', '36-45', '46-60', '60+']
 const AVEC_OPTIONS = ['Solo', 'En couple', 'Entre amis', 'En famille']
 const INTERETS = ['Sport', 'Musique', 'Nature', 'Cuisine', 'Jeux', 'Lecture', 'Randonnée', 'Piscine', 'Soirées', 'Enfants']
 
 export default function Profil({ camping, vacancier, onLogout }) {
+  const langue = useLangue()
   const [editing, setEditing]   = useState(false)
   const [form, setForm]         = useState({
     pseudo:       vacancier.pseudo || '',
@@ -52,7 +54,7 @@ export default function Profil({ camping, vacancier, onLogout }) {
     if (error) {
       console.error('Sauvegarde profil échouée :', error)
       setSaving(false)
-      alert("Impossible d'enregistrer votre profil pour le moment.")
+      alert(t('profil.err_save'))
       return
     }
     const updated = { ...vacancier, ...form }
@@ -143,7 +145,7 @@ export default function Profil({ camping, vacancier, onLogout }) {
         {/* Carte infos */}
         <div style={{ background: '#fff', borderRadius: 16, padding: '20px', marginBottom: 14, boxShadow: '0 1px 4px rgba(0,0,0,0.07)' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 18 }}>
-            <h2 style={{ fontSize: 16, color: '#1a1a1a' }}>Mes informations</h2>
+            <h2 style={{ fontSize: 16, color: '#1a1a1a' }}>{t('profil.mes_infos')}</h2>
             {!editing && (
               <button onClick={() => setEditing(true)} style={{ color: couleur, fontWeight: 600, fontSize: 14 }}>
                 Modifier
@@ -153,7 +155,7 @@ export default function Profil({ camping, vacancier, onLogout }) {
 
           {editing ? (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-              <Field label="Pseudo">
+              <Field label={t('profil.pseudo')}>
                 <input type="text" value={form.pseudo} onChange={e => setForm(f => ({ ...f, pseudo: e.target.value }))} style={inputStyle} />
               </Field>
               <Field label="N° Emplacement">
@@ -162,14 +164,14 @@ export default function Profil({ camping, vacancier, onLogout }) {
               <Field label="Date de départ">
                 <input type="date" value={form.date_depart} min={new Date().toISOString().slice(0, 10)} onChange={e => setForm(f => ({ ...f, date_depart: e.target.value }))} style={inputStyle} />
               </Field>
-              <Field label="Tranche d'âge">
+              <Field label={t('profil.tranche_age')}>
                 <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
                   {TRANCHES.map(t => (
                     <Pill key={t} label={t} active={form.tranche_age === t} couleur={couleur} onClick={() => setForm(f => ({ ...f, tranche_age: t }))} />
                   ))}
                 </div>
               </Field>
-              <Field label="Je voyage">
+              <Field label={t('profil.avec')}>
                 <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
                   {AVEC_OPTIONS.map(a => (
                     <Pill key={a} label={a} active={form.avec === a} couleur={couleur} onClick={() => setForm(f => ({ ...f, avec: a }))} />
@@ -202,13 +204,37 @@ export default function Profil({ camping, vacancier, onLogout }) {
             </div>
           ) : (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-              <InfoRow label="Pseudo" value={vacancier.pseudo} />
-              <InfoRow label="Emplacement" value={vacancier.emplacement || '—'} />
-              <InfoRow label="Départ" value={vacancier.date_depart ? new Date(vacancier.date_depart + 'T12:00').toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' }) : '—'} />
-              {vacancier.tranche_age && <InfoRow label="Tranche d'âge" value={vacancier.tranche_age} />}
-              {vacancier.avec && <InfoRow label="Je voyage" value={vacancier.avec} />}
+              <InfoRow label={t('profil.pseudo')} value={vacancier.pseudo} />
+              <InfoRow label={t('profil.emplacement')} value={vacancier.emplacement || '—'} />
+              <InfoRow label={t('profil.depart')} value={vacancier.date_depart ? new Date(vacancier.date_depart + 'T12:00').toLocaleDateString(locale(), { weekday: 'long', day: 'numeric', month: 'long' }) : '—'} />
+              {vacancier.tranche_age && <InfoRow label={t('profil.tranche_age')} value={vacancier.tranche_age} />}
+              {vacancier.avec && <InfoRow label={t('profil.avec')} value={vacancier.avec} />}
             </div>
           )}
+        </div>
+
+        {/* Langue */}
+        <div style={{ background: '#fff', borderRadius: 16, padding: '16px 18px', marginBottom: 16, boxShadow: '0 1px 4px rgba(0,0,0,0.06)' }}>
+          <div style={{ fontSize: 13, fontWeight: 700, color: '#9ca3af', textTransform: 'uppercase', letterSpacing: 0.6, marginBottom: 12 }}>
+            {t('profil.langue')}
+          </div>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+            {LANGUES.map(l => (
+              <button
+                key={l.code}
+                onClick={() => setLangue(l.code)}
+                style={{
+                  display: 'flex', alignItems: 'center', gap: 7,
+                  padding: '9px 14px', borderRadius: 24, cursor: 'pointer', fontSize: 14, fontWeight: 600,
+                  background: langue === l.code ? `${couleur}18` : '#f9f9f7',
+                  border: langue === l.code ? `2px solid ${couleur}` : '2px solid #e5e7eb',
+                  color: langue === l.code ? couleur : '#374151',
+                }}
+              >
+                <span style={{ fontSize: 17 }}>{l.drapeau}</span>{l.label}
+              </button>
+            ))}
+          </div>
         </div>
 
         {/* Déconnexion */}
@@ -220,7 +246,7 @@ export default function Profil({ camping, vacancier, onLogout }) {
             border: '1.5px solid #fecaca', marginBottom: 24,
           }}
         >
-          Se déconnecter
+          {t('profil.deconnexion')}
         </button>
 
         <p style={{ textAlign: 'center', fontSize: 12, color: '#c8c5bc' }}>

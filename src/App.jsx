@@ -13,6 +13,7 @@ import Profil from './pages/Profil'
 import Map from './pages/Map'
 import Infos from './pages/Infos'
 import Layout from './components/Layout'
+import { t, useLangue } from './i18n'
 
 // Génère un identifiant unique et permanent pour cet appareil
 function getDeviceId() {
@@ -34,6 +35,7 @@ function getCampingSlug() {
 }
 
 function App() {
+  useLangue()
   const [camping, setCamping] = useState(null)
   const [vacancier, setVacancier] = useState(null)
   const [finSejour, setFinSejour] = useState(null) // vacancier dont le séjour est terminé
@@ -153,6 +155,7 @@ function App() {
 }
 
 function FinSejour({ vacancier, camping, onRestart }) {
+  useLangue()
   return (
     <div style={{
       minHeight: '100dvh', background: 'linear-gradient(160deg, #0d1f0d 0%, #1b4332 100%)',
@@ -161,11 +164,10 @@ function FinSejour({ vacancier, camping, onRestart }) {
     }}>
       <div style={{ fontSize: 56, marginBottom: 16 }}>👋</div>
       <h1 style={{ color: '#fff', fontSize: 24, fontWeight: 700, margin: 0 }}>
-        Bon retour, {vacancier.pseudo} !
+        {t('fin.bon_retour', { pseudo: vacancier.pseudo })}
       </h1>
       <p style={{ color: 'rgba(255,255,255,0.6)', marginTop: 12, fontSize: 15, maxWidth: 320, lineHeight: 1.6 }}>
-        Votre séjour {camping ? `au ${camping.nom} ` : ''}est terminé.
-        Vos données seront automatiquement supprimées. À l'année prochaine ! 🌲
+        {t('fin.termine', { camping: camping ? `${camping.nom} ` : '' })}
       </p>
       <button
         onClick={onRestart}
@@ -174,7 +176,7 @@ function FinSejour({ vacancier, camping, onRestart }) {
           background: '#639922', color: '#fff', fontSize: 15, fontWeight: 700, cursor: 'pointer',
         }}
       >
-        Je suis de retour au camping 🏕️
+        {t('fin.de_retour')}
       </button>
     </div>
   )
@@ -183,7 +185,7 @@ function FinSejour({ vacancier, camping, onRestart }) {
 function Splash() {
   return (
     <div style={{ minHeight: '100vh', background: '#0d1f0d', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-      <div style={{ color: '#97C459', fontFamily: 'sans-serif', fontSize: 18 }}>🌲 Chargement...</div>
+      <div style={{ color: '#97C459', fontFamily: 'sans-serif', fontSize: 18 }}>🌲 {t('commun.chargement')}</div>
     </div>
   )
 }
