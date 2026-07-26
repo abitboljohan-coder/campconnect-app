@@ -32,15 +32,20 @@ export default function Annonces({ camping, vacancier }) {
   const [apercu, setApercu]     = useState(null)
   const [saving, setSaving]     = useState(false)
   const [erreur, setErreur]     = useState('')
+  const [indispo, setIndispo]   = useState(false)
 
   async function charger() {
-    const { data } = await supabase
+    const { data, error } = await supabase
       .from('annonces')
       .select('*, vacanciers(pseudo, avatar_emoji)')
       .eq('camping_id', camping.id)
       .eq('resolu', false)
       .gt('expire_at', new Date().toISOString())
       .order('created_at', { ascending: false })
+    // Ne pas afficher « aucune annonce » si le chargement a échoué : ce serait
+    // mensonger (table absente, réseau coupé…).
+    setIndispo(!!error)
+    if (error) console.error('Chargement des annonces échoué :', error)
     setAnnonces(data || [])
     setLoading(false)
   }
@@ -135,6 +140,10 @@ export default function Annonces({ camping, vacancier }) {
         <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
           {[1, 2, 3].map(i => <div key={i} style={{ height: 84, borderRadius: 14, background: '#e8e4da', animation: 'pulse 1.5s ease-in-out infinite' }} />)}
         </div>
+      ) : indispo ? (
+        <div style={{ textAlign: 'center', padding: '44px 20px', color: '#9ca3af', fontSize: 14, background: '#fff', borderRadius: 16, lineHeight: 1.8 }}>
+          {t('annonces.indispo')}
+        </div>
       ) : affichees.length === 0 ? (
         <div style={{ textAlign: 'center', padding: '44px 20px', color: '#9ca3af', fontSize: 14, background: '#fff', borderRadius: 16, lineHeight: 1.8 }}>
           {t('annonces.aucune')}<br />{t('annonces.premier')}
@@ -190,6 +199,7 @@ export default function Annonces({ camping, vacancier }) {
       )}
 
       {/* FAB */}
+      {!indispo && (
       <button
         onClick={() => { setErreur(''); setModal(true) }}
         style={{
@@ -198,6 +208,7 @@ export default function Annonces({ camping, vacancier }) {
           boxShadow: `0 4px 16px ${couleur}66`, cursor: 'pointer', zIndex: 50,
         }}
       >+</button>
+      )}
 
       {/* Modal publication */}
       {modal && (

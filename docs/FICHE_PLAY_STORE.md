@@ -68,16 +68,30 @@ Un camping intéressé ? Rendez-vous sur www.campconnect.fr
 
 **Types de données collectées** (tout : « collecté », chiffré en transit, non partagé avec des tiers, non utilisé pour la pub) :
 
-| Donnée | Catégorie Play | But |
-|--------|----------------|-----|
-| Pseudo + avatar | Informations personnelles → Nom (pseudo) | Fonctionnalité de l'app |
-| Messages du chat | Messages → Autres messages intégrés | Fonctionnalité de l'app |
-| Position approximative | Position → Position approximative | Fonctionnalité de l'app (vérifier la présence au camping, carte) |
-| Identifiant d'appareil | Identifiants → ID de l'appareil | Fonctionnalité de l'app |
+| Donnée | Catégorie Play | But | Facultatif ? |
+|--------|----------------|-----|--------------|
+| Pseudo + avatar | Informations personnelles → Nom | Fonctionnalité de l'app | Non (requis) |
+| Messages du chat | Messages → Autres messages intégrés | Fonctionnalité de l'app | Oui |
+| **Photos** (signalements, annonces) | **Photos et vidéos → Photos** | Fonctionnalité de l'app | **Oui** |
+| Position approximative | Position → Position approximative | Fonctionnalité de l'app (présence au camping, carte) | Oui |
+| Identifiant d'appareil | Identifiants → ID de l'appareil | Fonctionnalité de l'app | Non |
+| Contenus utilisateur (signalements, annonces) | Messages → Autres messages intégrés | Fonctionnalité de l'app | Oui |
 
 - **Données partagées avec des tiers** : Non
 - **Données utilisées pour la publicité** : Non
-- **Collecte facultative** : la position est demandée uniquement à l'usage (carte / contrôle d'accès).
+- **Collecte facultative** : position, photos, messages et annonces ne sont collectés que si l'utilisateur les fournit volontairement.
+
+> ⚠️ **Ne pas oublier les photos.** L'app permet de joindre une photo à un signalement
+> ou à une petite annonce. Omettre la catégorie « Photos et vidéos » est un motif
+> classique de rejet ou de suspension par Google.
+
+### Permissions déclarées dans l'app
+| Permission | Pourquoi |
+|---|---|
+| `INTERNET` | Communication avec le serveur |
+| `ACCESS_COARSE_LOCATION` / `ACCESS_FINE_LOCATION` | Vérifier la présence au camping, afficher la carte |
+| `POST_NOTIFICATIONS` | Notifications de groupe et d'animations (Android 13+) |
+| Appareil photo (via sélecteur système) | Joindre une photo à un signalement / une annonce |
 
 ---
 
@@ -85,9 +99,11 @@ Un camping intéressé ? Rendez-vous sur www.campconnect.fr
 
 - **Catégorie d'app** : Réseau social / communication
 - **Violence, contenu sexuel, grossièretés, drogue, jeux d'argent** : Non à tout
-- **L'app permet-elle aux utilisateurs d'interagir / communiquer entre eux ?** → **Oui** (chat de groupe)
+- **L'app permet-elle aux utilisateurs d'interagir / communiquer entre eux ?** → **Oui** (chat de groupe, petites annonces)
+- **Les utilisateurs peuvent-ils partager des images ou du contenu créé par eux ?** → **Oui** (photos jointes aux signalements et aux annonces)
 - **Partage de la position de l'utilisateur avec d'autres ?** → **Non** (la position sert à la carte/au contrôle d'accès, elle n'est pas diffusée aux autres vacanciers)
-- **Contenu généré par les utilisateurs modérable ?** → **Oui** (le gérant peut supprimer messages/statuts et bannir)
+- **Contenu généré par les utilisateurs modérable ?** → **Oui** (le gérant peut supprimer messages, statuts, annonces et bannir un vacancier)
+- **Le contenu est-il limité à un groupe fermé ?** → **Oui** : seuls les vacanciers présents dans le même camping voient les contenus (accès par QR code, GPS ou code horaire)
 - Résultat attendu : **PEGI 3 / Tout public**
 
 ---
