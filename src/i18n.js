@@ -69,6 +69,8 @@ const STRINGS = {
 
   'accueil.err_statut': { fr: 'Impossible de publier votre statut pour le moment.', en: "Couldn't post your update right now.", es: 'No se pudo publicar tu estado ahora.', nl: 'Kon je update nu niet plaatsen.' },
 
+  'accueil.en_ligne': { fr: 'en ligne', en: 'online', es: 'en línea', nl: 'online' },
+
   // ── Groupes ─────────────────────────────────────────────────────────────
   'groupes.mes_groupes':   { fr: 'Mes groupes', en: 'My groups', es: 'Mis grupos', nl: 'Mijn groepen' },
   'groupes.autres':        { fr: 'Autres groupes', en: 'Other groups', es: 'Otros grupos', nl: 'Andere groepen' },

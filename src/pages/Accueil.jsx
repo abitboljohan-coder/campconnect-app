@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { supabase, presentFilter } from '../supabase'
 import { t, useLangue, locale } from '../i18n'
 import Meteo from '../components/Meteo'
+import { usePresence } from '../usePresence'
 
 const TREE_POS = [
   { x: '6%',  y: '18%', s: 26 }, { x: '14%', y: '62%', s: 20 },
@@ -29,6 +30,7 @@ export default function Accueil({ camping, vacancier }) {
   const [loading, setLoading]           = useState(true)
   const navigate = useNavigate()
   const couleur = camping?.couleur_principale || '#639922'
+  const enLigne = usePresence(camping?.id, vacancier?.id)
 
   useEffect(() => {
     async function load() {
@@ -85,6 +87,7 @@ export default function Accueil({ camping, vacancier }) {
         <Hero
           camping={camping}
           vacancier={vacancier}
+          enLigne={enLigne}
           vacancierCount={vacancierCount}
           groupesCount={groupes.length}
           animationsCount={animations.length}
@@ -320,7 +323,7 @@ function StatutsStrip({ camping, vacancier, couleur }) {
 }
 
 /* ─── Hero estival ─── */
-function Hero({ camping, vacancier, vacancierCount, groupesCount, animationsCount, couleur, onMap, onAgenda }) {
+function Hero({ camping, vacancier, vacancierCount, groupesCount, animationsCount, couleur, onMap, onAgenda, enLigne }) {
   useLangue()
   const h = new Date().getHours()
   const greeting = h < 12 ? t('accueil.bonjour') : h < 18 ? t('accueil.bonapresmidi') : t('accueil.bonsoiree')
@@ -349,6 +352,24 @@ function Hero({ camping, vacancier, vacancierCount, groupesCount, animationsCoun
 
       {/* Chips stats */}
       <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 16 }}>
+        {/* En ligne maintenant (présence temps réel) */}
+        {enLigne > 0 && (
+          <div style={{
+            background: 'rgba(255,255,255,0.18)',
+            backdropFilter: 'blur(6px)',
+            borderRadius: 14, padding: '7px 12px',
+            fontSize: 12.5, fontWeight: 600,
+            border: '1px solid rgba(255,255,255,0.25)',
+            display: 'flex', alignItems: 'center', gap: 6,
+          }}>
+            <span style={{
+              width: 8, height: 8, borderRadius: '50%', background: '#22c55e',
+              boxShadow: '0 0 0 3px rgba(34,197,94,0.35)',
+              animation: 'pulseDot 2s ease-in-out infinite', flexShrink: 0,
+            }} />
+            <span><span style={{ fontWeight: 800, fontSize: 14 }}>{enLigne}</span> {t('accueil.en_ligne')}</span>
+          </div>
+        )}
         {[
           [`${vacancierCount}`, t('accueil.mot_vacanciers')],
           [`${groupesCount}`, t('accueil.mot_groupes')],
