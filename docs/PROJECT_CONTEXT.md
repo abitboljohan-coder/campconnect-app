@@ -27,7 +27,7 @@ https://www.campconnect.fr
 
 Supabase :
 
-https://hsebtpliwimyidudajmi.supabase.co
+https://tswpintevokeasteyjno.supabase.co
 
 ---
 

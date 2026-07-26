@@ -80,7 +80,7 @@ Depuis la racine du projet (Supabase CLI installé, `supabase login` fait) :
 
 ```bash
 # lier le projet (une fois)
-supabase link --project-ref hsebtpliwimyidudajmi
+supabase link --project-ref tswpintevokeasteyjno
 
 # secrets
 supabase secrets set FCM_SERVICE_ACCOUNT="$(cat fcm-service-account.json)"
@@ -91,7 +91,7 @@ supabase functions deploy send-push --no-verify-jwt
 ```
 
 L'URL de la fonction sera :
-`https://hsebtpliwimyidudajmi.supabase.co/functions/v1/send-push`
+`https://tswpintevokeasteyjno.supabase.co/functions/v1/send-push`
 
 ### 3d. Database Webhooks (déclencheurs)
 Supabase Dashboard → **Database → Webhooks** → **Create a new hook**, en créer **deux** :
