@@ -239,6 +239,8 @@ const STRINGS = {
   'annonces.confirm_resolu': { fr: 'Marquer cette annonce comme terminée ?', en: 'Mark this notice as done?', es: '¿Marcar este anuncio como resuelto?', nl: 'Deze advertentie als klaar markeren?' },
   'annonces.err_publier': { fr: 'La publication a échoué. Réessayez.', en: 'Posting failed. Please try again.', es: 'La publicación falló. Inténtalo de nuevo.', nl: 'Plaatsen mislukt. Probeer opnieuw.' },
 
+  'annonces.indispo': { fr: "Les annonces ne sont pas encore disponibles sur ce camping.", en: 'Notices are not available yet at this campsite.', es: 'Los anuncios aún no están disponibles en este camping.', nl: 'Advertenties zijn nog niet beschikbaar op deze camping.' },
+
   // ── Fin de séjour ───────────────────────────────────────────────────────
   'fin.bon_retour':  { fr: 'Bon retour, {pseudo} !', en: 'Welcome back, {pseudo}!', es: '¡Bienvenido de nuevo, {pseudo}!', nl: 'Welkom terug, {pseudo}!' },
   'fin.termine':     { fr: 'Votre séjour {camping}est terminé. Vos données seront automatiquement supprimées. À l\'année prochaine ! 🌲', en: 'Your stay {camping}has ended. Your data will be deleted automatically. See you next year! 🌲', es: 'Tu estancia {camping}ha terminado. Tus datos se eliminarán automáticamente. ¡Hasta el año que viene! 🌲', nl: 'Je verblijf {camping}is voorbij. Je gegevens worden automatisch verwijderd. Tot volgend jaar! 🌲' },
