@@ -2,6 +2,27 @@
 
 Tout se fait sur **ta machine Windows** (PowerShell), dans le dossier du projet.
 
+## 0. Prérequis : Java 21 (à faire une fois)
+
+Capacitor 8 compile en **Java 21**. Si `java -version` affiche 17 ou moins, le build
+échoue avec `error: invalid source release: 21`.
+
+Android Studio embarque déjà un JDK 21 — il suffit de le désigner :
+
+```powershell
+[Environment]::SetEnvironmentVariable("JAVA_HOME", "C:\Program Files\Android\Android Studio\jbr", "User")
+```
+→ puis **fermer et rouvrir PowerShell**. Vérifier :
+```powershell
+& "$env:JAVA_HOME\bin\java.exe" -version   # doit afficher 21.x
+```
+
+Dans Android Studio (pour le bouton ▶️ Run) :
+**Settings → Build, Execution, Deployment → Build Tools → Gradle → Gradle JDK → jbr-21**.
+
+> ⚠️ En PowerShell, les commandes Gradle s'écrivent `.\gradlew` (avec le `.\`),
+> pas `gradlew`.
+
 ## 1. Créer ta clé de signature (une seule fois, à vie)
 
 ⚠️ **Cette clé signe ton app pour toujours.** Si tu la perds, tu ne pourras plus jamais mettre à jour l'app sur le Play Store. Sauvegarde le fichier `.jks` ET le mot de passe à deux endroits (cloud + clé USB).
