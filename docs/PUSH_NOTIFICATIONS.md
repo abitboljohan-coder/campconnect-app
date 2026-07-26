@@ -19,6 +19,28 @@ Il reste la **configuration des consoles** (Firebase, Apple, Supabase), à faire
 
 ---
 
+## ⚠️ Activation automatique (sécurité anti-crash)
+
+Les push sont **désactivées tant que Firebase n'est pas configuré**.
+
+Raison : sur Android, appeler `PushNotifications.register()` sans
+`google-services.json` provoque un crash natif de l'application —
+« Default FirebaseApp is not initialized in this process ».
+C'est une exception fatale côté Java, qu'aucun `try/catch` JavaScript ne peut
+rattraper.
+
+Le build détecte donc la présence des fichiers Firebase
+(`android/app/google-services.json` ou `ios/App/App/GoogleService-Info.plist`)
+et n'active l'enregistrement que s'ils existent — voir `PUSH_READY` dans
+`vite.config.js`.
+
+**Concrètement** : dépose les fichiers Firebase (étape 1 ci-dessous), relance
+`npm run build:mobile`, et les push s'activent toutes seules. Sans eux, l'app
+fonctionne normalement, simplement sans notifications.
+
+
+---
+
 ## 1. Firebase (transport commun Android + iOS)
 
 1. [console.firebase.google.com](https://console.firebase.google.com) → **Créer un projet** « CampConnect » (ou réutiliser un existant).

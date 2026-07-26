@@ -24,6 +24,16 @@ let _ctx = {}
  */
 export async function registerPush({ camping, vacancier } = {}) {
   if (!isNative) return
+
+  // Firebase non configuré → on n'appelle SURTOUT pas register() : côté Android
+  // cela lève « Default FirebaseApp is not initialized » et tue l'application.
+  // __PUSH_READY__ est calculé au build (voir vite.config.js) : il passe à true
+  // dès que google-services.json / GoogleService-Info.plist est déposé.
+  if (typeof __PUSH_READY__ !== 'undefined' && !__PUSH_READY__) {
+    console.info('Notifications push désactivées : Firebase non configuré.')
+    return
+  }
+
   _ctx = { camping, vacancier }
 
   let PushNotifications
