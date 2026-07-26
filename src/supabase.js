@@ -3,7 +3,25 @@ import { createClient } from '@supabase/supabase-js'
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL
 const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY
 
-export const supabase = createClient(supabaseUrl, supabaseKey, {
+// Sans .env au moment du build, createClient lève une exception qui casse toute
+// l'app avec un écran blanc illisible. On affiche un message explicite à la place.
+if (!supabaseUrl || !supabaseKey) {
+  const msg = 'Configuration manquante : le fichier .env (VITE_SUPABASE_URL / VITE_SUPABASE_ANON_KEY) était absent au moment du build.'
+  console.error(msg)
+  if (typeof document !== 'undefined') {
+    document.addEventListener('DOMContentLoaded', () => {
+      document.body.innerHTML = `<div style="font-family:sans-serif;padding:32px;color:#b91c1c;line-height:1.7">
+        <h2 style="margin:0 0 12px">⚠️ Configuration manquante</h2>
+        <p>${msg}</p>
+        <p style="color:#6b7280;font-size:14px">Créez le fichier <code>.env</code> à la racine du projet, puis relancez <code>npm run build:mobile</code>.</p>
+      </div>`
+    })
+  }
+}
+
+// Valeurs de repli : createClient lève si l'URL est vide. Avec ce repli, l'app
+// affiche le message ci-dessus au lieu d'un écran blanc.
+export const supabase = createClient(supabaseUrl || 'https://placeholder.supabase.co', supabaseKey || 'placeholder', {
   auth: { persistSession: true, autoRefreshToken: true },
   realtime: { params: { eventsPerSecond: 10 } },
 })
