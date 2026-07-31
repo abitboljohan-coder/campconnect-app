@@ -1,133 +1,243 @@
 # Fiche Play Store — textes & réponses à recopier
 
 Tout ce qui suit est prêt à copier-coller dans la Play Console.
+Les réponses sont **vérifiées contre le code** (`AndroidManifest.xml`,
+`scripts/sql/*.sql`, `src/pages/Onboarding.jsx`, `src/pages/Annonces.jsx`) —
+la source est indiquée à chaque fois qu'une réponse pourrait prêter à débat.
 
 ---
 
 ## 1. Identité de l'app
 
-- **Nom de l'application** (30 car. max) : `CampConnect`
-- **Catégorie** : Voyages et infos locales (ou « Réseaux sociaux »)
-- **Type** : Application · Gratuite
-- **Adresse e-mail développeur** : abitboljohan@gmail.com
-- **Site web** : https://www.campconnect.fr
+| Champ | Valeur |
+|---|---|
+| Nom (30 car. max) | `CampConnect` |
+| Nom du package | `com.campconnect.app` — **définitif**, doit rester aligné sur `applicationId` |
+| Catégorie | Voyages et infos locales (alternative : Réseaux sociaux) |
+| Type | Application · **Gratuite** (choix irréversible) |
+| E-mail développeur | abitboljohan@gmail.com |
+| Site web | https://www.campconnect.fr |
 
 ---
 
 ## 2. Description courte (80 car. max)
 
 ```
-La vie de votre camping en direct : rencontres, animations, plan et chat.
+Groupes, chat et animations : vivez votre camping avec les autres.
 ```
 
-*(alternative : « Rencontrez d'autres vacanciers, suivez les animations et le plan du camping. »)*
+*(alternative : « La vie de votre camping en direct : rencontres, animations, plan et chat. »)*
 
 ---
 
 ## 3. Description longue (4000 car. max)
 
 ```
-CampConnect, c'est l'appli qui reconnecte les vacanciers de votre camping.
+CampConnect, c'est l'application qui recrée le lien entre vacanciers de votre camping.
 
-Fini de rester chacun sur son emplacement : rejoignez la vie du camping en un geste, sans créer de compte ni donner votre e-mail.
+En camping, trois heures suffisent pour passer d'inconnus à complices. Encore faut-il se croiser. CampConnect vous donne les outils pour que ça arrive : voir qui propose quoi, rejoindre en un clic, discuter, et se retrouver.
 
-🏕️ REJOIGNEZ VOTRE CAMPING EN 10 SECONDES
-Scannez le QR code de la réception ou entrez le nom de votre camping. Choisissez un pseudo, un avatar, et c'est parti. Aucune adresse e-mail requise.
+CES VACANCES, VOUS N'ÊTES PLUS SEULS
 
-👥 CRÉEZ ET REJOIGNEZ DES GROUPES SPONTANÉS
-Envie d'une partie de pétanque, d'une rando, d'un apéro ou d'un barbecue entre voisins ? Créez un groupe en un instant ou rejoignez ceux déjà lancés. Chaque groupe a son propre chat en temps réel.
+• GROUPES SPONTANÉS
+Randonnée demain matin, pétanque à 18h, apéro sur la plage, soirée barbecue… Créez un groupe en quelques secondes, ou rejoignez ceux des autres vacanciers du camping. Tout le monde les voit, tout le monde peut participer.
 
-💬 DISCUTEZ EN DIRECT
-Messagerie instantanée par groupe pour s'organiser, se donner rendez-vous et faire connaissance.
+• CHAT EN TEMPS RÉEL
+Une messagerie instantanée par groupe. Plus besoin d'échanger son numéro maladroitement : on discute directement dans l'app, on s'organise, on se donne rendez-vous.
 
-🗓️ NE RATEZ PLUS AUCUNE ANIMATION
-Retrouvez toutes les animations du camping, voyez le nombre de participants et inscrivez-vous d'un tap. Une nouvelle animation ? Vous êtes prévenu.
+• AGENDA DES ANIMATIONS
+Le programme complet publié par l'équipe du camping : tournois, spectacles, ateliers, soirées. Inscription en un clic, avec le nombre de participants déjà inscrits. Vous ne ratez plus rien.
 
-🗺️ UNE CARTE POUR TOUT TROUVER
-Plan interactif du camping : repérez la piscine, le snack, les sanitaires, la pétanque… et laissez-vous guider jusqu'au bon endroit.
+• CARTE INTERACTIVE DU CAMPING
+Le plan de votre camping en vue satellite, avec tous les points utiles repérés : piscine, bar, sanitaires, terrains de sport, laverie, parking. Vous vous repérez dès le premier jour.
 
-📖 LE LIVRET D'ACCUEIL NUMÉRIQUE
-Horaires, wifi, règlement, laverie, urgences : toutes les infos pratiques de votre camping, toujours dans votre poche.
+• LIVRET D'ACCUEIL NUMÉRIQUE
+Horaires de la piscine, code Wi-Fi, règlement, services, numéros utiles : tout est dans l'app, consultable à toute heure sans déranger la réception.
 
-🔒 RESPECTUEUX DE VOTRE VIE PRIVÉE
-Pas de compte, pas d'e-mail, pas de pub. Vos données restent cloisonnées à votre camping et sont automatiquement supprimées à la fin de votre séjour.
+• PROFIL SIMPLE, SANS PRISE DE TÊTE
+Un pseudo, un avatar, votre numéro d'emplacement. Pas d'email, pas de mot de passe, pas de formulaire interminable. Vous êtes dans l'app en trente secondes.
 
-CampConnect est proposé par les campings à leurs vacanciers. Demandez-le à votre réception !
+RÉSERVÉ AUX VACANCIERS DE VOTRE CAMPING
 
-Un camping intéressé ? Rendez-vous sur www.campconnect.fr
+CampConnect n'est pas un réseau social ouvert. Chaque camping a son espace, accessible uniquement aux personnes présentes sur place, via le QR code affiché à la réception ou un code d'accès communiqué par l'équipe. Vous ne discutez qu'avec vos voisins de vacances, personne d'autre.
+
+POUR LES CAMPINGS
+
+Chaque camping dispose de son propre espace aux couleurs de l'établissement, avec son logo et son plan. L'équipe publie ses animations, suit les inscriptions et met à jour son livret d'accueil depuis une interface dédiée.
+
+Vous gérez un camping et souhaitez proposer CampConnect à vos vacanciers ? Rendez-vous sur www.campconnect.fr
+
+VIE PRIVÉE
+
+Aucune donnée n'est revendue. Pas de publicité. Les échanges restent au sein de votre camping, et vos données sont supprimées à la fin de votre séjour.
+
+Politique de confidentialité : https://www.campconnect.fr/confidentialite.html
 ```
+
+> La phrase « supprimées à la fin de votre séjour » est **exacte** : la fonction
+> `purge_vacanciers_partis()` (`scripts/sql/hardening.sql`) est planifiée via
+> `pg_cron` et supprime les vacanciers dont la `date_depart` est passée.
 
 ---
 
-## 4. Sécurité des données (Data safety) — réponses
+## 4. Éléments visuels
 
-**L'app collecte-t-elle des données ?** → **Oui**
-**Les données sont-elles chiffrées en transit ?** → **Oui**
-**Peut-on demander la suppression des données ?** → **Oui**
-→ **URL de suppression** : `https://www.campconnect.fr/suppression-donnees.html`
+| Élément | Fichier | Format | État |
+|---|---|---|---|
+| Icône | `assets/store/icon-512.png` | 512×512 | ✅ |
+| Image de présentation | `assets/store/feature-graphic-1024x500.png` | 1024×500 | ✅ |
+| Captures téléphone | `assets/store/screenshots/01→05` | 1080×1920 (9:16) | ✅ |
+| Capture de la carte | — | — | ⬜ **à faire sur appareil réel** |
 
-**Types de données collectées** (tout : « collecté », chiffré en transit, non partagé avec des tiers, non utilisé pour la pub) :
+Ordre conseillé : Carte → Groupes → Chat → Agenda → Accueil → Infos.
 
-| Donnée | Catégorie Play | But | Facultatif ? |
-|--------|----------------|-----|--------------|
-| Pseudo + avatar | Informations personnelles → Nom | Fonctionnalité de l'app | Non (requis) |
-| Messages du chat | Messages → Autres messages intégrés | Fonctionnalité de l'app | Oui |
-| **Photos** (signalements, annonces) | **Photos et vidéos → Photos** | Fonctionnalité de l'app | **Oui** |
-| Position approximative | Position → Position approximative | Fonctionnalité de l'app (présence au camping, carte) | Oui |
-| Identifiant d'appareil | Identifiants → ID de l'appareil | Fonctionnalité de l'app | Non |
-| Contenus utilisateur (signalements, annonces) | Messages → Autres messages intégrés | Fonctionnalité de l'app | Oui |
+Les captures **tablette 7"/10" sont facultatives** dès lors que 2 captures
+téléphone sont fournies (le message « au moins deux captures de téléphone **ou**
+de tablette » est un seuil global). Les omettre prive seulement l'app d'une mise
+en avant sur tablettes et Chromebooks.
 
-- **Données partagées avec des tiers** : Non
-- **Données utilisées pour la publicité** : Non
-- **Collecte facultative** : position, photos, messages et annonces ne sont collectés que si l'utilisateur les fournit volontairement.
+> La capture de la carte ne peut pas être produite hors ligne : les tuiles
+> satellite ESRI ne se chargent pas et l'écran sort en fond gris, avec le bouton
+> de debug « Simuler GPS » visible. À prendre depuis un téléphone réel.
 
-> ⚠️ **Ne pas oublier les photos.** L'app permet de joindre une photo à un signalement
-> ou à une petite annonce. Omettre la catégorie « Photos et vidéos » est un motif
-> classique de rejet ou de suspension par Google.
+---
 
-### Permissions déclarées dans l'app
+## 5. Accès à l'application ⚠️ principal motif de rejet
+
+CampConnect est **fermé par défaut**. `src/pages/Onboarding.jsx` exige, pour
+entrer dans un camping :
+
+- une position GPS à **moins de 800 m** du camping (ligne 85), **ou**
+- un **code à 4 chiffres qui change toutes les heures** (`getHourlyCode`), **ou**
+- une arrivée via `/join/<slug>` — le QR physique vaut preuve de présence et la
+  vérification est alors sautée (commentaire ligne 28).
+
+Un testeur Google, à l'étranger et sans code, **ne peut pas ouvrir l'app**.
+C'est un motif de rejet classique (« fonctionnalité inaccessible au testeur »).
+
+**Réponse à donner** : *« Une partie de mon application est protégée »*, puis
+ces instructions :
+
+```
+L'accès nécessite d'être physiquement présent dans un camping partenaire
+(vérification GPS) ou de scanner le QR code affiché à la réception.
+
+Pour la revue, utilisez ce lien : il simule le scan du QR code et donne un
+accès complet sans vérification de position.
+
+https://app.campconnect.fr/join/<SLUG_CAMPING_DEMO>
+
+Aucun identifiant ni mot de passe n'est requis : saisissez un pseudo au
+premier écran et l'application s'ouvre entièrement.
+```
+
+> **Prérequis bloquant** : un camping de démonstration doit exister **en
+> production**, avec des groupes, des animations et un livret renseignés. Sans
+> lui, le lien mène à une app vide et le rejet est acquis.
+
+---
+
+## 6. Sécurité des données (Data safety)
+
+- L'app collecte-t-elle des données ? → **Oui**
+- Chiffrées en transit ? → **Oui** (HTTPS / Supabase)
+- Suppression possible ? → **Oui** → `https://www.campconnect.fr/suppression-donnees.html`
+- Partage avec des tiers ? → **Non**
+- Utilisées pour la publicité ? → **Non**
+
+| Donnée | Catégorie Play | Finalité | Facultatif ? |
+|---|---|---|---|
+| Pseudo + avatar | Infos personnelles → Nom | Fonctionnalité | Non |
+| Adresse e-mail | Infos personnelles → Adresse e-mail | Connexion **des gérants** (Supabase Auth) | Non (gérants) |
+| Emplacement, tranche d'âge, centres d'intérêt | Infos personnelles → Autres | Fonctionnalité | Oui |
+| Messages du chat | Messages → Autres messages intégrés | Fonctionnalité | Oui |
+| Photos (signalements, annonces) | Photos et vidéos → Photos | Fonctionnalité | Oui |
+| Position **approximative** | Position → Position approximative | Contrôle de présence | Oui |
+| Position **précise** | Position → Position précise | Contrôle de présence, calibrage du camping | Oui |
+| Identifiant d'appareil | Identifiants → ID de l'appareil | Notifications, anti-doublon | Non |
+
+**Trois points sur lesquels ne pas se tromper :**
+
+- **Position précise à déclarer.** Le manifeste demande `ACCESS_FINE_LOCATION`,
+  et surtout : si un camping n'a pas encore de centre calibré, les coordonnées
+  exactes du vacancier sont **écrites en base** dans `campings.carte_config.center`
+  (`Onboarding.jsx` lignes 73-82). Il y a donc bien transmission hors appareil.
+  Dans tous les autres cas la position reste locale — la distance est calculée
+  côté client et seul le résultat est conservé.
+
+- **La position n'est PAS partagée avec les autres vacanciers.** Vérifié : la
+  table `positions` existe dans le schéma mais **aucun code ne la lit ni ne
+  l'écrit** ; c'est un reliquat d'une carte « type Snap Map » jamais branchée.
+  La présence temps réel (`usePresence.js`) ne transmet qu'un horodatage.
+  Répondre **Non** au partage de position est donc exact et défendable.
+
+- **Ne pas oublier les photos.** `Signaler.jsx` et `Annonces.jsx` téléversent
+  dans le bucket `camping-assets` via `getPublicUrl` — les images sont donc
+  accessibles publiquement à qui possède l'URL. Omettre la catégorie « Photos
+  et vidéos » est un motif classique de suspension.
+
+### Permissions déclarées
+
 | Permission | Pourquoi |
 |---|---|
 | `INTERNET` | Communication avec le serveur |
-| `ACCESS_COARSE_LOCATION` / `ACCESS_FINE_LOCATION` | Vérifier la présence au camping, afficher la carte |
+| `ACCESS_COARSE_LOCATION` / `ACCESS_FINE_LOCATION` | Vérifier la présence au camping |
 | `POST_NOTIFICATIONS` | Notifications de groupe et d'animations (Android 13+) |
-| Appareil photo (via sélecteur système) | Joindre une photo à un signalement / une annonce |
+| Appareil photo (sélecteur système) | Joindre une photo à un signalement / une annonce |
 
 ---
 
-## 5. Classification du contenu (IARC) — réponses
+## 7. Classification du contenu (IARC)
 
-- **Catégorie d'app** : Réseau social / communication
-- **Violence, contenu sexuel, grossièretés, drogue, jeux d'argent** : Non à tout
-- **L'app permet-elle aux utilisateurs d'interagir / communiquer entre eux ?** → **Oui** (chat de groupe, petites annonces)
-- **Les utilisateurs peuvent-ils partager des images ou du contenu créé par eux ?** → **Oui** (photos jointes aux signalements et aux annonces)
-- **Partage de la position de l'utilisateur avec d'autres ?** → **Non** (la position sert à la carte/au contrôle d'accès, elle n'est pas diffusée aux autres vacanciers)
-- **Contenu généré par les utilisateurs modérable ?** → **Oui** (le gérant peut supprimer messages, statuts, annonces et bannir un vacancier)
-- **Le contenu est-il limité à un groupe fermé ?** → **Oui** : seuls les vacanciers présents dans le même camping voient les contenus (accès par QR code, GPS ou code horaire)
-- Résultat attendu : **PEGI 3 / Tout public**
+| Question | Réponse |
+|---|---|
+| Catégorie | Réseau social / communication |
+| Violence, contenu sexuel, grossièretés, drogue, jeux d'argent | Non à tout |
+| Les utilisateurs communiquent-ils entre eux ? | **Oui** (chat de groupe, annonces) |
+| Peuvent-ils partager images / contenu créé par eux ? | **Oui** (photos jointes) |
+| La position est-elle partagée avec d'autres utilisateurs ? | **Non** (voir §6) |
+| Contenu modérable ? | **Oui** — le gérant supprime messages, statuts, annonces et bannit |
+| Contenu limité à un groupe fermé ? | **Oui** — cloisonné par camping (QR, GPS ou code horaire) |
 
----
-
-## 6. Public cible & contenu
-
-- **Tranche d'âge cible** : 18 ans et plus (app grand public, pas destinée aux enfants)
-- **L'app est-elle destinée aux enfants ?** → **Non**
-- **Contient des publicités ?** → **Non**
-- **Politique de confidentialité** (obligatoire) : `https://www.campconnect.fr/confidentialite.html`
+Résultat attendu : **PEGI 3 / Tout public**.
 
 ---
 
-## 7. Assets (rappel)
+## 8. Public cible & déclarations diverses
 
-- ✅ Icône 512×512 — `assets/store/icon-512.png`
-- ✅ Bannière 1024×500 (feature graphic) — la tienne
-- ✅ Captures téléphone (min. 2) — dossier `screenshots/` du site
-- Politique de confidentialité + suppression de données : **doivent être en ligne** sur campconnect.fr
+| Section | Réponse |
+|---|---|
+| Tranche d'âge cible | 18 ans et plus |
+| Destinée aux enfants ? | Non |
+| Contient des publicités ? | Non |
+| Application d'actualités / COVID / finance | Non |
+| Politique de confidentialité | `https://www.campconnect.fr/confidentialite.html` |
+
+> Vérifié : la politique en ligne couvre bien position, GPS, pseudo, messages et
+> notifications. Toute divergence entre cette page et le formulaire Data Safety
+> est un motif de rejet — les remettre à jour ensemble.
 
 ---
 
-## 8. Diffusion recommandée
+## 9. Avant la production : le test fermé obligatoire
 
-1. **Tests internes** d'abord (diffusion immédiate à tes appareils, sans review complète)
-2. Valider en réel quelques jours
-3. **Production** → review Google (quelques heures à quelques jours)
+Tout compte développeur **personnel** créé après novembre 2023 doit, avant
+d'accéder à la production :
+
+1. lancer un **test fermé** avec **au moins 12 testeurs** ;
+2. les maintenir inscrits **14 jours consécutifs** ;
+3. puis demander l'accès à la production.
+
+Prévoir donc **~3 semaines** entre le premier AAB uploadé et la publication
+réelle. Les testeurs se recrutent par e-mail (Google Groupes ou liste
+d'adresses) : proches, collègues, futurs campings pilotes.
+
+---
+
+## 10. Reste à faire
+
+- [ ] Capture d'écran de la carte, depuis un appareil réel
+- [ ] Camping de démonstration en production + son slug (bloque la revue)
+- [ ] Clé de signature `campconnect-release.jks` — ⚠️ à sauvegarder à vie
+- [ ] Build de l'AAB — voir `docs/PUBLICATION_ANDROID.md`
+- [ ] Recruter 12 testeurs
