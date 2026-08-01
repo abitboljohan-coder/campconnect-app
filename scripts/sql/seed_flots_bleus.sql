@@ -20,9 +20,12 @@
 DO $$
 DECLARE
   v_camping uuid;
-  -- Argelès-sur-Mer, littoral méditerranéen
-  v_lat  numeric := 42.54050;
-  v_lng  numeric := 3.03330;
+  -- Pyla-sur-Mer (Gironde), au pied de la dune du Pilat, face au bassin
+  -- d'Arcachon. Le nom « Les Flots Bleus » est celui du camping de fiction du
+  -- film « Camping » : c'est une référence culturelle immédiate pour un gérant
+  -- français, et un décor que tout le monde se représente.
+  v_lat  numeric := 44.58780;
+  v_lng  numeric := -1.21400;
 
   g_petanque uuid; g_rando uuid; g_apero uuid; g_surf uuid; g_kids uuid; g_marche uuid;
   a_tournoi uuid; a_paella uuid; a_aquagym uuid; a_concert uuid; a_marche uuid; a_cinema uuid;
@@ -38,7 +41,7 @@ BEGIN
   VALUES (
     'les-flots-bleus',
     'Camping Les Flots Bleus',
-    'Les pieds dans l''eau, à 200 m de la plage d''Argelès-sur-Mer.',
+    'Au pied de la dune du Pilat, à 300 m de la plage. Pyla-sur-Mer, bassin d''Arcachon.',
     '#0e7490',   -- bleu lagon
     '#134e4a'    -- vert profond
   )
@@ -61,17 +64,18 @@ BEGIN
   -- 2. Livret d'accueil
   -- ══════════════════════════════════════════════════════════════════════════
   UPDATE campings SET infos = '[
-    {"id":"plage",     "emoji":"🏖️","titre":"Accès plage",       "contenu":"Accès direct par l''allée des Tamaris, 200 m.\nPlage surveillée 10h – 19h en juillet-août.\nDouches et rinçage à l''entrée du camping."},
+    {"id":"plage",     "emoji":"🏖️","titre":"Accès plage",       "contenu":"Accès direct par l''allée des Pins, 300 m.\nPlage surveillée 11h – 19h en juillet-août.\nDouches et rinçage à l''entrée du camping.\nAttention aux baïnes : baignade dans la zone surveillée uniquement."},
+    {"id":"dune",      "emoji":"🏜️","titre":"Dune du Pilat",     "contenu":"Accès à pied par le sentier, 15 minutes.\nEscalier de 160 marches installé d''avril à octobre.\nGratuit ; parking payant si vous y allez en voiture.\nLe coucher de soleil depuis le sommet vaut le détour."},
     {"id":"piscine",   "emoji":"🏊","titre":"Espace aquatique",  "contenu":"Bassin principal chauffé 9h – 20h.\nPataugeoire 9h – 19h.\nToboggans 11h – 13h et 15h – 18h.\nShort de bain interdit."},
     {"id":"reception", "emoji":"🏠","titre":"Réception",         "contenu":"Basse saison : 9h – 12h et 14h – 18h.\nJuillet-août : 8h – 20h en continu.\nUrgence nuit : 06 12 34 56 78."},
-    {"id":"wifi",      "emoji":"📶","titre":"Wi-Fi",             "contenu":"Réseau : FlotsBleus-Invites\nCode : lagon2026\nDébit renforcé près de la réception et du snack."},
+    {"id":"wifi",      "emoji":"📶","titre":"Wi-Fi",             "contenu":"Réseau : FlotsBleus-Invites\nCode : pilat2026\nDébit renforcé près de la réception et du snack."},
     {"id":"snack",     "emoji":"🍺","titre":"Bar & snack Le Ponton","contenu":"Petit-déjeuner 8h – 10h30.\nRestauration continue 12h – 22h.\nBar jusqu''à minuit, 1h les soirs d''animation.\nPizzas à emporter sur commande."},
     {"id":"epicerie",  "emoji":"🥖","titre":"Épicerie & dépôt de pain","contenu":"Ouverte 8h – 12h30 et 16h – 19h30.\nPain et viennoiseries sur réservation la veille avant 19h."},
     {"id":"laverie",   "emoji":"👕","titre":"Laverie",           "contenu":"Bloc sanitaire B, 7h – 22h.\nLave-linge 4 € · sèche-linge 3 €.\nJetons à la réception et au bar."},
     {"id":"tri",       "emoji":"♻️","titre":"Tri & poubelles",   "contenu":"Point tri à l''entrée et près du bloc C.\nVerre : conteneur du parking.\nCollecte tous les matins à 7h30."},
     {"id":"animaux",   "emoji":"🐾","titre":"Animaux",           "contenu":"Acceptés tenus en laisse, 4 €/nuit.\nInterdits à l''espace aquatique et au snack.\nSac de ramassage disponible à la réception."},
     {"id":"services",  "emoji":"🚿","titre":"Services",          "contenu":"Aire de vidange camping-car à l''entrée.\nBornes de recharge électrique sur le parking visiteurs.\nLocation de vélos à la réception, 12 €/jour."},
-    {"id":"urgences",  "emoji":"🚨","titre":"Urgences",          "contenu":"Réception : 04 68 81 00 00\nSAMU 15 · Police 17 · Pompiers 18\nUrgence européenne : 112\nPharmacie la plus proche : 900 m, av. de la Plage."}
+    {"id":"urgences",  "emoji":"🚨","titre":"Urgences",          "contenu":"Réception : 05 56 22 00 00\nSAMU 15 · Police 17 · Pompiers 18\nUrgence européenne : 112\nPharmacie la plus proche : 800 m, av. de l''Océan."}
   ]'::jsonb
   WHERE id = v_camping;
 
@@ -82,7 +86,7 @@ BEGIN
   UPDATE campings SET carte_config = jsonb_build_object(
     -- Accès libre : désactive le contrôle de présence GPS pour CE camping.
     -- Indispensable pour la démonstration commerciale et pour la revue Apple
-    -- et Google : un testeur à l'étranger ne peut pas être à 800 m d'Argelès,
+    -- et Google : un testeur à l'étranger ne peut pas être à 800 m du Pyla,
     -- et se verrait refuser l'entrée — motif de rejet classique.
     -- Ne jamais poser ce drapeau sur un camping client réel.
     'acces_libre', true,
@@ -141,18 +145,18 @@ BEGIN
   -- ══════════════════════════════════════════════════════════════════════════
   INSERT INTO groupes (camping_id, titre, emoji, lieu, heure, actif) VALUES
     (v_camping, 'Apéro pétanque',        '🍹', 'Terrain de pétanque',    'Ce soir 18h30', true),
-    (v_camping, 'Rando calanques',       '🥾', 'Départ parking',         'Demain 8h00',   true),
+    (v_camping, 'Rando dune du Pilat',   '🥾', 'Départ parking',         'Demain 8h00',   true),
     (v_camping, 'Session surf débutants','🏄', 'Plage, poste 3',         'Demain 10h00',  true),
     (v_camping, 'Barbecue collectif',    '🍖', 'Aire de pique-nique',    'Samedi 19h30',  true),
     (v_camping, 'Jeux pour les enfants', '🛝', 'Aire de jeux',           'Tous les jours 17h', true),
-    (v_camping, 'Marché de Collioure',   '🧺', 'Covoiturage parking',    'Mercredi 9h00', true);
+    (v_camping, 'Marché d''Arcachon',     '🧺', 'Covoiturage parking',    'Mercredi 9h00', true);
 
   SELECT id INTO g_apero    FROM groupes WHERE camping_id = v_camping AND titre = 'Apéro pétanque';
-  SELECT id INTO g_rando    FROM groupes WHERE camping_id = v_camping AND titre = 'Rando calanques';
+  SELECT id INTO g_rando    FROM groupes WHERE camping_id = v_camping AND titre = 'Rando dune du Pilat';
   SELECT id INTO g_surf     FROM groupes WHERE camping_id = v_camping AND titre = 'Session surf débutants';
   SELECT id INTO g_petanque FROM groupes WHERE camping_id = v_camping AND titre = 'Barbecue collectif';
   SELECT id INTO g_kids     FROM groupes WHERE camping_id = v_camping AND titre = 'Jeux pour les enfants';
-  SELECT id INTO g_marche   FROM groupes WHERE camping_id = v_camping AND titre = 'Marché de Collioure';
+  SELECT id INTO g_marche   FROM groupes WHERE camping_id = v_camping AND titre = 'Marché d''Arcachon';
 
   INSERT INTO membres_groupes (groupe_id, vacancier_id) VALUES
     (g_apero, v_marc), (g_apero, v_julie), (g_apero, v_karim), (g_apero, v_tom), (g_apero, v_hugo),
@@ -175,9 +179,9 @@ BEGIN
     (g_apero, v_tom,   'Je vous rejoins après la plage, gardez-moi une place 🙌', now() - interval '2 hours 20 minutes'),
     (g_apero, v_marc,  'Parfait, on se retrouve directement au terrain alors. À ce soir !', now() - interval '1 hour 30 minutes'),
 
-    (g_rando, v_sophie, 'Départ 8h du parking, ça laisse le temps de rentrer avant la chaleur ☀️', now() - interval '6 hours'),
+    (g_rando, v_sophie, 'Départ 8h du parking, on monte la dune avant qu''il fasse trop chaud ☀️', now() - interval '6 hours'),
     (g_rando, v_nadia,  'Ça me va. Prévoir combien d''eau selon vous ?', now() - interval '5 hours 20 minutes'),
-    (g_rando, v_sophie, '1,5 L par personne minimum, et de bonnes chaussures, ça grimpe un peu au début', now() - interval '5 hours'),
+    (g_rando, v_sophie, '1,5 L par personne minimum. Et évitez les tongs, le sable brûle et ça glisse', now() - interval '5 hours'),
     (g_rando, v_marc,   'Je peux prendre deux personnes en voiture si besoin', now() - interval '4 hours 10 minutes'),
 
     (g_surf, v_julie, 'J''ai réservé 4 planches à l''école de surf, il en reste 2 si ça tente quelqu''un 🏄', now() - interval '2 hours'),
@@ -187,7 +191,7 @@ BEGIN
     (g_petanque, v_lea,   'Super idée ! Je fais une salade de pâtes pour tout le monde', now() - interval '19 hours'),
     (g_petanque, v_julie, 'Je m''occupe du dessert 🍰', now() - interval '18 hours 30 minutes'),
 
-    (g_marche, v_nadia, 'Le marché de Collioure c''est le mercredi matin, on part à 9h ?', now() - interval '26 hours'),
+    (g_marche, v_nadia, 'Le marché d''Arcachon c''est le mercredi matin, on part à 9h ?', now() - interval '26 hours'),
     (g_marche, v_sophie,'Parfait, j''ai 3 places dans la voiture', now() - interval '25 hours');
 
   -- ══════════════════════════════════════════════════════════════════════════
@@ -203,7 +207,7 @@ BEGIN
       'Bar Le Ponton',           CURRENT_DATE + interval '1 day' + interval '19 hours 30 minutes', CURRENT_DATE + interval '1 day' + interval '23 hours', 80, true),
     (v_camping, 'Concert live',         '🎸', 'Duo guitare-voix, reprises pop et chanson française. Entrée libre, restauration au bar.',
       'Bar Le Ponton',           CURRENT_DATE + interval '2 days' + interval '21 hours', CURRENT_DATE + interval '2 days' + interval '23 hours 30 minutes', 120, true),
-    (v_camping, 'Marché nocturne',      '🧺', 'Producteurs et artisans du Roussillon devant la réception : miel, charcuterie, poterie, savons.',
+    (v_camping, 'Marché nocturne',      '🧺', 'Producteurs et artisans du bassin devant la réception : huîtres, canelés, miel de pin, poterie.',
       'Allée principale',        CURRENT_DATE + interval '3 days' + interval '18 hours', CURRENT_DATE + interval '3 days' + interval '22 hours', NULL, true),
     (v_camping, 'Cinéma en plein air',  '🎬', 'Projection familiale sur écran géant. Transats installés dès 21h, couverture conseillée.',
       'Aire de jeux',            CURRENT_DATE + interval '4 days' + interval '21 hours 30 minutes', CURRENT_DATE + interval '4 days' + interval '23 hours 15 minutes', 60, true),

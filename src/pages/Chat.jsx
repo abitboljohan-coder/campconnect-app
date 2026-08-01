@@ -97,10 +97,13 @@ export default function Chat({ vacancier }) {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', height: '100dvh', background: '#f5f2eb' }}>
 
-      {/* Header */}
+      {/* Header — Layout masque le sien sur les routes /chat/, c'est donc à cet
+          en-tête de réserver la place de la barre d'état. Sans ce paddingTop,
+          l'heure de l'iPhone recouvre la flèche retour et la rend incliquable. */}
       <div style={{
         background: '#0d1f0d',
         padding: '12px 16px',
+        paddingTop: 'calc(12px + env(safe-area-inset-top))',
         display: 'flex', alignItems: 'center', gap: 12,
         flexShrink: 0,
         boxShadow: '0 2px 8px rgba(0,0,0,0.2)',
