@@ -80,6 +80,12 @@ BEGIN
   -- ══════════════════════════════════════════════════════════════════════════
   -- Le centre sert au contrôle de présence (rayon de 800 m dans Onboarding.jsx).
   UPDATE campings SET carte_config = jsonb_build_object(
+    -- Accès libre : désactive le contrôle de présence GPS pour CE camping.
+    -- Indispensable pour la démonstration commerciale et pour la revue Apple
+    -- et Google : un testeur à l'étranger ne peut pas être à 800 m d'Argelès,
+    -- et se verrait refuser l'entrée — motif de rejet classique.
+    -- Ne jamais poser ce drapeau sur un camping client réel.
+    'acces_libre', true,
     'center', jsonb_build_object('lat', v_lat, 'lng', v_lng),
     'lat', v_lat,
     'lng', v_lng,

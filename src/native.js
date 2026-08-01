@@ -22,6 +22,11 @@ export function initNative() {
     if (m) {
       localStorage.setItem('campingSlug', m[1])
       localStorage.setItem('appMode', 'vacancier')
+      // On recharge sur « / », donc Onboarding ne verra plus /join/ dans le
+      // chemin : sans ce drapeau, le scan du QR ne vaudrait pas preuve de
+      // présence dans l'app native et le contrôle GPS se déclencherait quand
+      // même — alors que le vacancier est bel et bien sur place.
+      localStorage.setItem('arriveeParQR', '1')
       window.location.href = '/'
     }
   })

@@ -119,17 +119,26 @@ C'est un motif de rejet classique (« fonctionnalité inaccessible au testeur »
 ces instructions :
 
 ```
-L'accès nécessite d'être physiquement présent dans un camping partenaire
-(vérification GPS) ou de scanner le QR code affiché à la réception.
+Aucun identifiant ni mot de passe n'est requis.
 
-Pour la revue, utilisez ce lien : il simule le scan du QR code et donne un
-accès complet sans vérification de position.
+Les campings réels vérifient que le vacancier est présent sur place
+(position GPS, ou QR code affiché à la réception). Un camping de
+démonstration a été ouvert spécialement pour la revue, sans aucune
+vérification de position : il est accessible depuis n'importe où.
 
-https://app.campconnect.fr/join/les-flots-bleus
-
-Aucun identifiant ni mot de passe n'est requis : saisissez un pseudo au
-premier écran et l'application s'ouvre entièrement.
+1. Lancez l'application.
+2. Sur le premier écran, cherchez « Les Flots Bleus ».
+3. Sélectionnez-le, saisissez un pseudo, et l'application s'ouvre
+   entièrement : groupes, messagerie, agenda, carte et livret d'accueil.
 ```
+
+> **Ne pas indiquer le lien `https://app.campconnect.fr/join/les-flots-bleus`
+> comme unique moyen d'accès.** Il fonctionne dans un navigateur, mais **pas**
+> dans l'app installée : Capacitor sert toujours l'app depuis `/`, si bien que
+> le test de chemin dans `Onboarding.jsx` ne peut pas voir `/join/`. Un testeur
+> qui installe l'app et la lance normalement n'emprunterait jamais ce chemin.
+> D'où la recherche par nom dans les instructions ci-dessus, qui, elle, marche
+> partout.
 
 > **Prérequis** : le camping de démonstration doit exister **en production**.
 > Le script `scripts/sql/seed_flots_bleus.sql` le crée de bout en bout —
