@@ -42,21 +42,26 @@ explicite plutôt que de produire une app affichant « Configuration manquante �
 
 ## 3. Le script de build
 
-`ci_scripts/ci_post_clone.sh` (à la racine du dépôt) est exécuté automatiquement
-par Xcode Cloud après le clone. Il installe Node via Homebrew, écrit le `.env`,
-lance `npm ci`, `vite build` puis `cap sync ios`.
+`ios/App/ci_scripts/ci_post_clone.sh` est exécuté automatiquement par Xcode
+Cloud après le clone. Il installe Node via Homebrew, écrit le `.env`, lance
+`npm ci`, `vite build` puis `cap sync ios`.
 
-**Pourquoi il est indispensable** : `dist/` et `ios/App/App/public/` sont
-gitignorés. Xcode Cloud ne récupère donc aucun bundle web et `xcodebuild`
-produirait une app qui s'ouvre sur un écran blanc — un build « réussi » et
-inutilisable. Le script se termine par une vérification de la présence de
-`ios/App/App/public/index.html` pour transformer cette panne silencieuse en
-échec visible.
+**Emplacement impératif** : Apple exige que le dossier `ci_scripts/` soit placé
+**au même niveau que le fichier `.xcodeproj` utilisé par le workflow** — donc
+`ios/App/ci_scripts/`, puisque le projet est `ios/App/App.xcodeproj`. Un
+`ci_scripts/` à la racine du dépôt (à côté de `package.json`) est silencieusement
+ignoré : Xcode Cloud saute directement à `Resolve Package Dependencies`, qui
+échoue en quelques secondes puisque `node_modules/` n'a jamais été créé — c'est
+exactement l'échec rencontré au premier build (Build 4, `xcodebuild: error:
+Could not resolve package dependencies`, package introuvable dans
+`node_modules/@capacitor/...`).
 
-> Si les logs Xcode Cloud ne montrent aucune trace du script, c'est qu'il n'a
-> pas été trouvé : déplacer le dossier `ci_scripts/` à côté du projet Xcode,
-> dans `ios/App/`. Apple accepte les deux emplacements selon la configuration
-> du workflow.
+**Pourquoi le script est indispensable par ailleurs** : `dist/` et
+`ios/App/App/public/` sont gitignorés. Xcode Cloud ne récupère donc aucun
+bundle web et `xcodebuild` produirait une app qui s'ouvre sur un écran blanc —
+un build « réussi » et inutilisable. Le script se termine par une vérification
+de la présence de `ios/App/App/public/index.html` pour transformer cette panne
+silencieuse en échec visible.
 
 ## 4. Ensuite, depuis Windows
 
