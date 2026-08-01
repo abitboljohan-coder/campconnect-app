@@ -6,7 +6,8 @@
     "allowMixedContent": false
   },
   "ios": {
-    "contentInset": "always"
+    "contentInset": "always",
+    "backgroundColor": "#faf7f0"
   },
   "server": {
     "androidScheme": "https"

@@ -14,9 +14,16 @@
   -moz-osx-font-smoothing: grayscale;
 }
 
+/* Le rebond élastique d'iOS s'applique au document : il découvre le fond noir
+   de la WKWebView et entraîne avec lui les éléments en position fixed. */
+html, body {
+  overscroll-behavior: none;
+  background: #f5f2eb;
+}
+
 body {
   margin: 0;
-  background: #f5f2eb;
+  overflow-x: hidden;
 }
 
 #root {

@@ -17,7 +17,7 @@ export default function Layout({ camping }) {
   const isMap   = location.pathname === '/map'
 
   return (
-    <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', background: '#faf7f0' }}>
+    <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', background: '#faf7f0', overflow: 'hidden' }}>
       {/* Header clair estival */}
       {!hideNav && !isMap && (
         <header style={{
@@ -60,7 +60,15 @@ export default function Layout({ camping }) {
       )}
 
       {/* Contenu */}
-      <main style={{ flex: 1, overflowY: isMap ? 'hidden' : 'auto', paddingBottom: hideNav || isMap ? 0 : 88, position: 'relative' }}>
+      <main style={{
+        flex: 1,
+        minHeight: 0,
+        overflowY: isMap ? 'hidden' : 'auto',
+        overscrollBehavior: 'contain',
+        WebkitOverflowScrolling: 'touch',
+        paddingBottom: hideNav || isMap ? 0 : 88,
+        position: 'relative',
+      }}>
         <Outlet />
       </main>
 
