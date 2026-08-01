@@ -262,6 +262,40 @@ FROM campings c
 WHERE c.slug = 'les-flots-bleus';
 
 -- ============================================================================
+-- ACCÈS GÉRANT — à faire une fois, en deux temps
+-- ----------------------------------------------------------------------------
+-- Le compte de connexion ne peut pas être créé en SQL : il vit dans
+-- auth.users, où Supabase gère lui-même le hachage du mot de passe et une
+-- dizaine de champs internes. Un INSERT à la main produit le plus souvent un
+-- compte qui existe mais refuse la connexion.
+--
+-- 1. Supabase → Authentication → Users → « Add user » → « Create new user »
+--    Email : celui que vous voulez (ex. demo@campconnect.fr)
+--    Password : au choix
+--    ⚠️ Cocher « Auto Confirm User », sinon la connexion est refusée tant que
+--       le lien reçu par mail n'a pas été ouvert.
+--
+-- 2. Revenir ici, remplacer l'email ci-dessous, et exécuter :
+--
+--    DELETE FROM gerants g USING campings c
+--     WHERE g.camping_id = c.id AND c.slug = 'les-flots-bleus';
+--
+--    INSERT INTO gerants (user_id, camping_id, email)
+--    SELECT u.id, c.id, u.email
+--      FROM auth.users u, campings c
+--     WHERE u.email = 'demo@campconnect.fr'
+--       AND c.slug  = 'les-flots-bleus';
+--
+--    SELECT g.email, c.nom FROM gerants g
+--      JOIN campings c ON c.id = g.camping_id
+--     WHERE c.slug = 'les-flots-bleus';   -- doit renvoyer une ligne
+--
+-- Ne PAS passer par l'inscription depuis l'app : ce parcours crée un nouveau
+-- camping à partir de « pendingCamping » au lieu de rattacher le compte à un
+-- camping existant — vous obtiendriez un doublon vide.
+-- ============================================================================
+
+-- ============================================================================
 -- OPTIONNEL — ne garder que ce camping de démonstration
 -- ----------------------------------------------------------------------------
 -- ⚠️ SUPPRESSION DÉFINITIVE, sans retour possible. Les ON DELETE CASCADE
