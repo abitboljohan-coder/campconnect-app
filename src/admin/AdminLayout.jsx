@@ -26,7 +26,7 @@ export default function AdminLayout({ gerant, camping, onLogout }) {
   const sidebarW = 220
 
   return (
-    <div style={{ minHeight: '100vh', background: '#f5f2eb', display: 'flex' }}>
+    <div style={{ minHeight: '100dvh', background: '#f5f2eb', display: 'flex' }}>
 
       {/* Sidebar desktop */}
       {!isMobile && (

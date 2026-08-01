@@ -707,7 +707,7 @@ function GroupCard({ groupe, couleur, isMember, onAction, avatars }) {
         style={{
           background: isMember ? couleur : 'transparent',
           color: isMember ? '#fff' : couleur,
-          padding: '7px 14px', borderRadius: 20,
+          padding: '11px 16px', borderRadius: 20,
           fontSize: 13, fontWeight: 600, flexShrink: 0,
           border: `1.5px solid ${isMember ? 'transparent' : couleur}`,
           transition: 'all 0.15s',

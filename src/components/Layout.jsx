@@ -52,7 +52,7 @@ export default function Layout({ camping }) {
           </div>
           <Link to="/profil" style={{
             marginLeft: 'auto', textDecoration: 'none',
-            width: 36, height: 36, borderRadius: '50%',
+            width: 40, height: 40, borderRadius: '50%',
             background: `${couleur}18`, border: `2px solid ${couleur}40`,
             display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18,
           }}>👤</Link>

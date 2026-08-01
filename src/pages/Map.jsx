@@ -533,8 +533,11 @@ export default function Map({ camping: campingProp, vacancier }) {
         </div>
       )}
 
-      {/* Bouton lancer simulation */}
-      {!simulating && (
+      {/* Bouton lancer simulation — outil de développement uniquement.
+          import.meta.env.DEV est false dans tout build de production, donc
+          `simulating` ne peut jamais passer à true : le panneau de simulation,
+          les flèches clavier et le clic-pour-marcher restent inaccessibles. */}
+      {!simulating && import.meta.env.DEV && (
         <button onClick={startSim} style={{
           position: 'absolute', bottom: 80, left: 12, zIndex: 1000,
           padding: '8px 14px', borderRadius: 20, fontSize: 12, fontWeight: 700,

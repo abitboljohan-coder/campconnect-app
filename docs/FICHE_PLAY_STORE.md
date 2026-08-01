@@ -125,15 +125,18 @@ L'accès nécessite d'être physiquement présent dans un camping partenaire
 Pour la revue, utilisez ce lien : il simule le scan du QR code et donne un
 accès complet sans vérification de position.
 
-https://app.campconnect.fr/join/<SLUG_CAMPING_DEMO>
+https://app.campconnect.fr/join/les-flots-bleus
 
 Aucun identifiant ni mot de passe n'est requis : saisissez un pseudo au
 premier écran et l'application s'ouvre entièrement.
 ```
 
-> **Prérequis bloquant** : un camping de démonstration doit exister **en
-> production**, avec des groupes, des animations et un livret renseignés. Sans
-> lui, le lien mène à une app vide et le rejet est acquis.
+> **Prérequis** : le camping de démonstration doit exister **en production**.
+> Le script `scripts/sql/seed_flots_bleus.sql` le crée de bout en bout —
+> 6 groupes, 8 animations, 11 fiches de livret, 11 points sur la carte et des
+> conversations déjà entamées. Il est idempotent et date les animations
+> relativement à aujourd'hui : **le relancer avant chaque soumission** évite un
+> agenda vide, qui suffirait à faire rejeter l'app.
 
 ---
 
@@ -237,7 +240,7 @@ d'adresses) : proches, collègues, futurs campings pilotes.
 ## 10. Reste à faire
 
 - [ ] Capture d'écran de la carte, depuis un appareil réel
-- [ ] Camping de démonstration en production + son slug (bloque la revue)
+- [ ] Exécuter `scripts/sql/seed_flots_bleus.sql` en production (bloque la revue)
 - [ ] Clé de signature `campconnect-release.jks` — ⚠️ à sauvegarder à vie
 - [ ] Build de l'AAB — voir `docs/PUBLICATION_ANDROID.md`
 - [ ] Recruter 12 testeurs

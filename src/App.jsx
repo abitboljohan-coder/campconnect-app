@@ -188,7 +188,7 @@ function FinSejour({ vacancier, camping, onRestart }) {
 
 function Splash() {
   return (
-    <div style={{ minHeight: '100vh', background: '#0d1f0d', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+    <div style={{ minHeight: '100dvh', background: '#0d1f0d', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
       <div style={{ color: '#97C459', fontFamily: 'sans-serif', fontSize: 18 }}>🌲 {t('commun.chargement')}</div>
     </div>
   )

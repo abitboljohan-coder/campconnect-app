@@ -279,7 +279,7 @@ export default function Chat({ vacancier }) {
           style={{
             flex: 1, padding: '11px 16px',
             borderRadius: 24, border: '1.5px solid #e5e7eb',
-            fontSize: 15, outline: 'none', background: '#f9f7f3',
+            fontSize: 16, outline: 'none', background: '#f9f7f3',
             transition: 'border-color 0.15s',
           }}
         />

@@ -295,5 +295,5 @@ function Pill({ label, active, couleur, onClick }) {
 
 const inputStyle = {
   padding: '11px 13px', borderRadius: 10,
-  border: '1.5px solid #e5e7eb', fontSize: 15, outline: 'none', width: '100%', background: '#fafaf8',
+  border: '1.5px solid #e5e7eb', fontSize: 16, outline: 'none', width: '100%', background: '#fafaf8',
 }

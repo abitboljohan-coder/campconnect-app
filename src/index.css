@@ -12,24 +12,53 @@
   background: #f5f2eb;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  /* Sans cela, iOS grossit le texte au passage en paysage. */
+  -webkit-text-size-adjust: 100%;
 }
 
-/* Le rebond élastique d'iOS s'applique au document : il découvre le fond noir
-   de la WKWebView et entraîne avec lui les éléments en position fixed. */
+/* Une URL ou un pseudo sans espace ne doit pas élargir la mise en page :
+   sur un écran de 320 px, un seul mot long suffit à créer un défilement
+   horizontal sur toute l'application. */
+body {
+  overflow-wrap: break-word;
+}
+
+/* Comportement natif au toucher : pas de halo bleu au tap, pas de menu
+   contextuel sur appui long, pas de sélection de texte accidentelle sur les
+   éléments interactifs. */
+button, a, [role="button"] {
+  -webkit-tap-highlight-color: transparent;
+  -webkit-touch-callout: none;
+  user-select: none;
+}
+
+/* Rebond élastique iOS — deux verrous complémentaires.
+   1. Le document ne défile jamais : html/body sont figés à la hauteur du
+      viewport, sans débordement. Rien à faire rebondir.
+   2. C'est #root qui défile, en tant qu'élément. Le défilement d'élément
+      n'entraîne ni le fond natif de la WKWebView, ni les positions fixed.
+   Le troisième verrou est natif : ios.scrollEnabled = false dans
+   capacitor.config.json désactive la UIScrollView de la WKWebView, qui
+   rebondit sinon même quand le contenu tient dans l'écran. */
 html, body {
+  height: 100%;
+  overflow: hidden;
   overscroll-behavior: none;
   background: #f5f2eb;
 }
 
 body {
   margin: 0;
-  overflow-x: hidden;
 }
 
 #root {
-  min-height: 100dvh;
+  height: 100dvh;
   display: flex;
   flex-direction: column;
+  overflow-x: hidden;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
 }
 
 h1, h2, h3 {

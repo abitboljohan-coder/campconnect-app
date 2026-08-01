@@ -168,6 +168,6 @@ const labelStyle = {
 }
 const inputStyle = {
   width: '100%', padding: '11px 13px', borderRadius: 10,
-  border: '1.5px solid #e5e7eb', fontSize: 15,
+  border: '1.5px solid #e5e7eb', fontSize: 16,
   outline: 'none', background: '#fafaf8', boxSizing: 'border-box',
 }

@@ -126,7 +126,7 @@ export default function Infos({ camping, setCamping }) {
 
 const inputStyle = {
   padding: '10px 12px', borderRadius: 10,
-  border: '1.5px solid #e5e7eb', fontSize: 14, outline: 'none', background: '#fafaf8',
+  border: '1.5px solid #e5e7eb', fontSize: 16, outline: 'none', background: '#fafaf8',
   boxSizing: 'border-box',
 }
 const btnIcon = {
