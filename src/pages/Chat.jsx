@@ -175,7 +175,13 @@ export default function Chat({ vacancier }) {
                       {auteur.avatar_emoji} {auteur.pseudo}
                     </div>
                   )}
-                  <div style={{ display: 'flex', alignItems: 'flex-end', gap: 6, flexDirection: isMine ? 'row-reverse' : 'row' }}>
+                  {/* width 100% indispensable : la bulle porte un maxWidth en
+                      pourcentage, qui a besoin d'une largeur de référence
+                      définie. Sans lui, cette ligne se dimensionne sur son
+                      contenu, le pourcentage devient circulaire, et le
+                      navigateur retombe sur la largeur minimale — la bulle
+                      s'affiche alors une lettre par ligne. */}
+                  <div style={{ display: 'flex', alignItems: 'flex-end', gap: 6, width: '100%', flexDirection: isMine ? 'row-reverse' : 'row' }}>
                     {/* Avatar auteur (them) */}
                     {!isMine && (
                       <div style={{
@@ -198,7 +204,7 @@ export default function Chat({ vacancier }) {
                           borderRadius: isMine ? '18px 18px 3px 18px' : '18px 18px 18px 3px',
                           fontSize: 15, lineHeight: 1.45,
                           boxShadow: isMine ? '0 2px 8px rgba(99,153,34,0.27)' : '0 1px 4px rgba(0,0,0,0.08)',
-                          wordBreak: 'break-word',
+                          overflowWrap: 'break-word',
                           cursor: 'pointer',
                         }}>
                         {msg.contenu}
