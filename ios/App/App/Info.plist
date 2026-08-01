@@ -49,6 +49,8 @@
 	<true/>
 	<key>NSLocationWhenInUseUsageDescription</key>
 	<string>Votre position sert uniquement à vérifier que vous êtes bien dans le camping lors de l'inscription.</string>
+	<key>ITSAppUsesNonExemptEncryption</key>
+	<false/>
 	<key>NSCameraUsageDescription</key>
 	<string>L'appareil photo sert à joindre une photo à un signalement ou à une annonce.</string>
 	<key>NSPhotoLibraryUsageDescription</key>
