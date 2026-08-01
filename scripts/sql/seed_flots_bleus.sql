@@ -20,12 +20,15 @@
 DO $$
 DECLARE
   v_camping uuid;
-  -- Pyla-sur-Mer (Gironde), au pied de la dune du Pilat, face au bassin
-  -- d'Arcachon. Le nom « Les Flots Bleus » est celui du camping de fiction du
-  -- film « Camping » : c'est une référence culturelle immédiate pour un gérant
-  -- français, et un décor que tout le monde se représente.
-  v_lat  numeric := 44.58780;
-  v_lng  numeric := -1.21400;
+  -- Pyla-sur-Mer (Gironde), route de Biscarrosse, dans la pinède au sud-est de
+  -- la dune du Pilat. Le nom « Les Flots Bleus » est celui du camping de
+  -- fiction du film « Camping » : référence immédiate pour un gérant français.
+  --
+  -- Ces coordonnées visent le bâti réel — allées de mobil-homes et piscine
+  -- visibles sur l'imagerie satellite — et non la dune elle-même, qui est
+  -- 500 m plus au nord-ouest et ne donne qu'une étendue de sable vide.
+  v_lat  numeric := 44.58330;
+  v_lng  numeric := -1.21100;
 
   g_petanque uuid; g_rando uuid; g_apero uuid; g_surf uuid; g_kids uuid; g_marche uuid;
   a_tournoi uuid; a_paella uuid; a_aquagym uuid; a_concert uuid; a_marche uuid; a_cinema uuid;
@@ -93,24 +96,30 @@ BEGIN
     'center', jsonb_build_object('lat', v_lat, 'lng', v_lng),
     'lat', v_lat,
     'lng', v_lng,
+    -- Périmètre resserré : environ 220 m x 250 m, la taille d'un vrai camping
+    -- de la pinède. Le carré précédent faisait 325 x 343 m et débordait
+    -- largement sur le sable.
     'perimeter', jsonb_build_array(
-      jsonb_build_array(v_lat + 0.0016, v_lng - 0.0020),
-      jsonb_build_array(v_lat + 0.0016, v_lng + 0.0021),
-      jsonb_build_array(v_lat - 0.0015, v_lng + 0.0021),
-      jsonb_build_array(v_lat - 0.0015, v_lng - 0.0020)
+      jsonb_build_array(v_lat + 0.0010, v_lng - 0.0016),
+      jsonb_build_array(v_lat + 0.0010, v_lng + 0.0016),
+      jsonb_build_array(v_lat - 0.0010, v_lng + 0.0016),
+      jsonb_build_array(v_lat - 0.0010, v_lng - 0.0016)
     ),
+    -- Implantation cohérente : entrée, réception et parking côté route
+    -- (est) ; sanitaires répartis dans les allées ; piscine et bar au centre ;
+    -- accès plage à l'ouest, vers la dune.
     'pins', jsonb_build_array(
-      jsonb_build_object('ref_id','lieu_accueil',  'ref_type','lieu','label','Réception',        'emoji','🏠','color','#60a5fa','lat', v_lat + 0.0012, 'lng', v_lng - 0.0014),
-      jsonb_build_object('ref_id','lieu_piscine',  'ref_type','lieu','label','Espace aquatique', 'emoji','🏊','color','#60a5fa','lat', v_lat + 0.0004, 'lng', v_lng - 0.0004),
-      jsonb_build_object('ref_id','lieu_snack',    'ref_type','lieu','label','Bar Le Ponton',    'emoji','🍺','color','#60a5fa','lat', v_lat + 0.0007, 'lng', v_lng + 0.0003),
-      jsonb_build_object('ref_id','lieu_epicerie', 'ref_type','lieu','label','Épicerie',         'emoji','🥖','color','#60a5fa','lat', v_lat + 0.0009, 'lng', v_lng - 0.0008),
-      jsonb_build_object('ref_id','lieu_petanque', 'ref_type','lieu','label','Terrain de pétanque','emoji','🎯','color','#60a5fa','lat', v_lat - 0.0006, 'lng', v_lng + 0.0011),
-      jsonb_build_object('ref_id','lieu_sanit_a',  'ref_type','lieu','label','Sanitaires A',     'emoji','🚿','color','#60a5fa','lat', v_lat + 0.0002, 'lng', v_lng - 0.0013),
-      jsonb_build_object('ref_id','lieu_sanit_b',  'ref_type','lieu','label','Sanitaires B',     'emoji','🚿','color','#60a5fa','lat', v_lat - 0.0009, 'lng', v_lng - 0.0002),
-      jsonb_build_object('ref_id','lieu_laverie',  'ref_type','lieu','label','Laverie',          'emoji','👕','color','#60a5fa','lat', v_lat - 0.0008, 'lng', v_lng - 0.0005),
-      jsonb_build_object('ref_id','lieu_jeux',     'ref_type','lieu','label','Aire de jeux',     'emoji','🛝','color','#60a5fa','lat', v_lat - 0.0003, 'lng', v_lng + 0.0006),
-      jsonb_build_object('ref_id','lieu_plage',    'ref_type','lieu','label','Accès plage',      'emoji','🏖️','color','#60a5fa','lat', v_lat - 0.0014, 'lng', v_lng + 0.0016),
-      jsonb_build_object('ref_id','lieu_parking',  'ref_type','lieu','label','Parking',          'emoji','🅿️','color','#60a5fa','lat', v_lat + 0.0014, 'lng', v_lng - 0.0018)
+      jsonb_build_object('ref_id','lieu_accueil',  'ref_type','lieu','label','Réception',        'emoji','🏠','color','#60a5fa','lat', v_lat + 0.0004, 'lng', v_lng + 0.0012),
+      jsonb_build_object('ref_id','lieu_parking',  'ref_type','lieu','label','Parking',          'emoji','🅿️','color','#60a5fa','lat', v_lat + 0.0007, 'lng', v_lng + 0.0013),
+      jsonb_build_object('ref_id','lieu_epicerie', 'ref_type','lieu','label','Épicerie',         'emoji','🥖','color','#60a5fa','lat', v_lat + 0.0003, 'lng', v_lng + 0.0008),
+      jsonb_build_object('ref_id','lieu_piscine',  'ref_type','lieu','label','Espace aquatique', 'emoji','🏊','color','#60a5fa','lat', v_lat - 0.0004, 'lng', v_lng - 0.0001),
+      jsonb_build_object('ref_id','lieu_snack',    'ref_type','lieu','label','Bar Le Ponton',    'emoji','🍺','color','#60a5fa','lat', v_lat - 0.0002, 'lng', v_lng + 0.0004),
+      jsonb_build_object('ref_id','lieu_jeux',     'ref_type','lieu','label','Aire de jeux',     'emoji','🛝','color','#60a5fa','lat', v_lat + 0.0000, 'lng', v_lng + 0.0006),
+      jsonb_build_object('ref_id','lieu_sanit_a',  'ref_type','lieu','label','Sanitaires A',     'emoji','🚿','color','#60a5fa','lat', v_lat + 0.0005, 'lng', v_lng - 0.0004),
+      jsonb_build_object('ref_id','lieu_sanit_b',  'ref_type','lieu','label','Sanitaires B',     'emoji','🚿','color','#60a5fa','lat', v_lat - 0.0006, 'lng', v_lng - 0.0008),
+      jsonb_build_object('ref_id','lieu_laverie',  'ref_type','lieu','label','Laverie',          'emoji','👕','color','#60a5fa','lat', v_lat - 0.0007, 'lng', v_lng - 0.0006),
+      jsonb_build_object('ref_id','lieu_petanque', 'ref_type','lieu','label','Terrain de pétanque','emoji','🎯','color','#60a5fa','lat', v_lat - 0.0007, 'lng', v_lng + 0.0009),
+      jsonb_build_object('ref_id','lieu_plage',    'ref_type','lieu','label','Accès plage',      'emoji','🏖️','color','#60a5fa','lat', v_lat + 0.0002, 'lng', v_lng - 0.0014)
     )
   )
   WHERE id = v_camping;
