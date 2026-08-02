@@ -166,7 +166,7 @@ export default function Agenda({ camping, vacancier }) {
             <h2 style={{
               fontSize: 13, fontWeight: 700, color: '#9ca3af',
               textTransform: 'uppercase', letterSpacing: 1.2,
-              marginBottom: 10, textTransform: 'uppercase',
+              marginBottom: 10,
             }}>
               {sectionKey}
             </h2>

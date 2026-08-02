@@ -288,7 +288,12 @@ function AccessCodeCard({ camping }) {
     return () => clearInterval(iv)
   }, [camping.id])
 
-  const joinUrl = `${window.location.origin}/join/${camping.slug}`
+  // Toujours le domaine public : ce lien devient un QR imprimé et affiché à la
+  // réception. Un gérant qui consulte son admin depuis un poste local ou une
+  // URL de test imprimerait sinon un QR en localhost, illisible pour les
+  // vacanciers.
+  const estLocal = /^(localhost|127\.|192\.168\.|10\.)/.test(window.location.hostname)
+  const joinUrl = `${estLocal ? 'https://app.campconnect.fr' : window.location.origin}/join/${camping.slug}`
 
   return (
     <div style={{

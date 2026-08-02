@@ -318,18 +318,21 @@ export default function Map({ camping: campingProp, vacancier }) {
     // devenait un amas de pastilles illisible. On les dispose maintenant en
     // cercle autour du lieu, animations et groupes mêlés pour qu'ils ne se
     // recouvrent pas non plus entre eux.
-    const parLieu = new Map()
+    // Objet simple et non `new Map()` : le composant s'appelle Map et masque
+    // ici le constructeur natif — l'appeler instancierait le composant React
+    // et ferait planter l'écran au chargement.
+    const parLieu = {}
     const rattacher = (item, type) => {
       const ancre = pinForLieu(item.lieu)
       if (!ancre) return
       const cle = ancre.ref_id || `${ancre.lat},${ancre.lng}`
-      if (!parLieu.has(cle)) parLieu.set(cle, { ancre, items: [] })
-      parLieu.get(cle).items.push({ item, type })
+      if (!parLieu[cle]) parLieu[cle] = { ancre, items: [] }
+      parLieu[cle].items.push({ item, type })
     }
     animations.forEach(a => rattacher(a, 'animation'))
     groupes.forEach(g => rattacher(g, 'groupe'))
 
-    for (const { ancre, items } of parLieu.values()) {
+    for (const { ancre, items } of Object.values(parLieu)) {
       items.forEach(({ item, type }, i) => {
         const [lat, lng] = enCouronne(ancre.lat, ancre.lng, i, items.length)
         const couleurPastille = type === 'animation' ? '#f472b6' : '#fb923c'
