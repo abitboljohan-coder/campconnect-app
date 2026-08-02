@@ -134,6 +134,8 @@ const STRINGS = {
   'carte.guider':       { fr: "🧭 M'y guider", en: '🧭 Guide me there', es: '🧭 Guíame allí', nl: '🧭 Breng me erheen' },
   'carte.arrive':       { fr: 'Vous y êtes ! 🎉', en: "You've arrived! 🎉", es: '¡Has llegado! 🎉', nl: 'Je bent er! 🎉' },
   'carte.tout_droit':   { fr: '{d} · tout droit dans le sens de la flèche', en: '{d} · straight on, follow the arrow', es: '{d} · recto, sigue la flecha', nl: '{d} · rechtdoor, volg de pijl' },
+  'carte.hors_site':    { fr: 'Vous n\'êtes pas encore sur le camping', en: 'You are not at the campsite yet', es: 'Todavía no estás en el camping', nl: 'Je bent nog niet op de camping' },
+  'carte.guidage_sur_place': { fr: 'Le guidage démarrera à votre arrivée', en: 'Guidance starts once you arrive', es: 'La guía empezará al llegar', nl: 'De navigatie start bij aankomst' },
   'carte.activez_pos':  { fr: 'Activez votre position pour être guidé vers « {lieu} »', en: 'Turn on location to be guided to "{lieu}"', es: 'Activa tu ubicación para ir hacia «{lieu}»', nl: 'Zet locatie aan om naar "{lieu}" te navigeren' },
   'carte.satellite':    { fr: 'Satellite', en: 'Satellite', es: 'Satélite', nl: 'Satelliet' },
   'carte.plan':         { fr: 'Plan', en: 'Plan', es: 'Plano', nl: 'Plattegrond' },

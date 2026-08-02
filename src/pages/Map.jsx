@@ -33,6 +33,18 @@ function bearingDeg(p1, p2) {
   return (Math.atan2(Math.sin(dL) * Math.cos(lat2), Math.cos(lat1) * Math.sin(lat2) - Math.sin(lat1) * Math.cos(lat2) * Math.cos(dL)) * 180 / Math.PI + 360) % 360
 }
 function bearingArrow(deg) { return ['↑', '↗', '→', '↘', '↓', '↙', '←', '↖'][Math.round(deg / 45) % 8] }
+// Répartit n éléments en cercle autour d'un point. Rayon en mètres plutôt
+// qu'en pixels : l'écartement reste alors cohérent quel que soit le zoom, au
+// lieu de se disloquer dès qu'on agrandit.
+function enCouronne(lat, lng, index, total, rayonM = 15) {
+  if (total <= 1) return [lat, lng]
+  const angle = (2 * Math.PI * index) / total - Math.PI / 2
+  return [
+    lat + (rayonM * Math.sin(angle)) / 110574,
+    lng + (rayonM * Math.cos(angle)) / (111320 * Math.cos(lat * Math.PI / 180)),
+  ]
+}
+
 function fmtDist(m) { return m < 1000 ? `${Math.round(m)}m` : `${(m / 1000).toFixed(1)}km` }
 
 // "Sur site" : la position est-elle assez proche du camping pour être affichée ?
@@ -299,33 +311,39 @@ export default function Map({ camping: campingProp, vacancier }) {
       markersRef.current.push(m)
     })
 
-    // Animations → positionnées au POI correspondant
-    animations.forEach(anim => {
-      const matchPin = pinForLieu(anim.lieu)
-      if (!matchPin) return
-      const icon = Lf.divIcon({
-        html: `<div style="background:#f472b6;width:34px;height:34px;border-radius:50%;border:2.5px solid white;box-shadow:0 2px 8px rgba(0,0,0,0.3);display:flex;align-items:center;justify-content:center;font-size:16px">${esc(anim.emoji || '🎉')}</div>`,
-        className: '', iconSize: [34, 34], iconAnchor: [17, 17],
-      })
-      const m = Lf.marker([matchPin.lat, matchPin.lng], { icon, zIndexOffset: 20 })
-        .addTo(leafletMap.current)
-        .on('click', () => setActivePin({ ref_type: 'animation', ref_id: anim.id }))
-      markersRef.current.push(m)
-    })
+    // Animations et groupes → répartis en couronne autour de leur lieu.
+    //
+    // Ils étaient posés sur les coordonnées exactes du point d'intérêt : quatre
+    // animations à la piscine se superposaient donc au pixel près, et la carte
+    // devenait un amas de pastilles illisible. On les dispose maintenant en
+    // cercle autour du lieu, animations et groupes mêlés pour qu'ils ne se
+    // recouvrent pas non plus entre eux.
+    const parLieu = new Map()
+    const rattacher = (item, type) => {
+      const ancre = pinForLieu(item.lieu)
+      if (!ancre) return
+      const cle = ancre.ref_id || `${ancre.lat},${ancre.lng}`
+      if (!parLieu.has(cle)) parLieu.set(cle, { ancre, items: [] })
+      parLieu.get(cle).items.push({ item, type })
+    }
+    animations.forEach(a => rattacher(a, 'animation'))
+    groupes.forEach(g => rattacher(g, 'groupe'))
 
-    // Groupes → positionnés au POI correspondant
-    groupes.forEach(grp => {
-      const matchPin = pinForLieu(grp.lieu)
-      if (!matchPin) return
-      const icon = Lf.divIcon({
-        html: `<div style="background:#fb923c;width:34px;height:34px;border-radius:50%;border:2.5px solid white;box-shadow:0 2px 8px rgba(0,0,0,0.3);display:flex;align-items:center;justify-content:center;font-size:16px">${esc(grp.emoji || '👥')}</div>`,
-        className: '', iconSize: [34, 34], iconAnchor: [17, 17],
+    for (const { ancre, items } of parLieu.values()) {
+      items.forEach(({ item, type }, i) => {
+        const [lat, lng] = enCouronne(ancre.lat, ancre.lng, i, items.length)
+        const couleurPastille = type === 'animation' ? '#f472b6' : '#fb923c'
+        const emoji = item.emoji || (type === 'animation' ? '🎉' : '👥')
+        const icon = Lf.divIcon({
+          html: `<div style="background:${couleurPastille};width:34px;height:34px;border-radius:50%;border:2.5px solid white;box-shadow:0 2px 8px rgba(0,0,0,0.3);display:flex;align-items:center;justify-content:center;font-size:16px">${esc(emoji)}</div>`,
+          className: '', iconSize: [34, 34], iconAnchor: [17, 17],
+        })
+        const m = Lf.marker([lat, lng], { icon, zIndexOffset: 20 })
+          .addTo(leafletMap.current)
+          .on('click', () => setActivePin({ ref_type: type, ref_id: item.id }))
+        markersRef.current.push(m)
       })
-      const m = Lf.marker([matchPin.lat, matchPin.lng], { icon, zIndexOffset: 20 })
-        .addTo(leafletMap.current)
-        .on('click', () => setActivePin({ ref_type: 'groupe', ref_id: grp.id }))
-      markersRef.current.push(m)
-    })
+    }
   }, [mapReady, animations, groupes, campingCoords, pins])
 
   // Marker position utilisateur (GPS réel ou simulé)
@@ -727,7 +745,7 @@ export default function Map({ camping: campingProp, vacancier }) {
                   <div style={{ width: 52, height: 52, borderRadius: 14, background: `${activePin.color}20`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 28 }}>{activePin.emoji}</div>
                   <div>
                     <div style={{ fontWeight: 700, fontSize: 17 }}>{activePin.label}</div>
-                    {effectivePos && activePin.lat && activePin.lng && (
+                    {effectivePos && posSurSiteNow && activePin.lat && activePin.lng && (
                       <div style={{ fontSize: 13, color: '#639922', fontWeight: 600, marginTop: 3 }}>
                         {bearingArrow(bearingDeg(effectivePos, activePin))} {fmtDist(haversineM(effectivePos, activePin))}
                       </div>
@@ -759,6 +777,7 @@ export default function Map({ camping: campingProp, vacancier }) {
         <GuideBanner
           target={guideTarget}
           pos={effectivePos}
+          surSite={posSurSiteNow}
           couleur={couleur}
           onClose={() => setGuideTarget(null)}
         />
@@ -767,7 +786,7 @@ export default function Map({ camping: campingProp, vacancier }) {
   )
 }
 
-function GuideBanner({ target, pos, couleur, onClose }) {
+function GuideBanner({ target, pos, surSite, couleur, onClose }) {
   useLangue()
   if (!pos) {
     return (
@@ -779,6 +798,26 @@ function GuideBanner({ target, pos, couleur, onClose }) {
       </div>
     )
   }
+  // Guider « tout droit » vers un point situé à des centaines de kilomètres
+  // n'a aucun sens et décrédibilise l'application. Tant que le vacancier n'est
+  // pas sur le site, on dit où il en est plutôt que d'afficher une flèche.
+  if (!surSite) {
+    return (
+      <div style={guideBannerBox}>
+        <div style={{ fontSize: 26, lineHeight: 1, flexShrink: 0 }}>🧭</div>
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <div style={{ fontSize: 15, fontWeight: 700, color: '#fff', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+            {target.emoji} {target.label}
+          </div>
+          <div style={{ fontSize: 13, color: '#C0DD97', fontWeight: 600, marginTop: 2 }}>
+            {t('carte.hors_site')} · {t('carte.guidage_sur_place')}
+          </div>
+        </div>
+        <button onClick={onClose} style={guideCloseBtn}>×</button>
+      </div>
+    )
+  }
+
   const dist = haversineM(pos, target)
   const bearing = bearingDeg(pos, target)
   const arrived = dist < 8
