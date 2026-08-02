@@ -1,6 +1,7 @@
 import { Outlet, NavLink, useLocation, Link } from 'react-router-dom'
 import { t, useLangue } from '../i18n'
 import Icon from './Icon'
+import SwipeBack from './SwipeBack'
 
 const NAV = [
   { to: '/', key: 'nav.accueil', icon: 'accueil' },
@@ -76,7 +77,9 @@ export default function Layout({ camping }) {
         paddingBottom: hideNav || isMap ? 0 : 'calc(96px + var(--cc-safe-bottom))',
         position: 'relative',
       }}>
-        <Outlet />
+        <SwipeBack>
+          <Outlet />
+        </SwipeBack>
       </main>
 
       {/* Bottom nav flottante */}
