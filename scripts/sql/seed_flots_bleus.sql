@@ -86,6 +86,17 @@ BEGIN
   -- 3. Carte : centre, périmètre et points d'intérêt
   -- ══════════════════════════════════════════════════════════════════════════
   -- Le centre sert au contrôle de présence (rayon de 800 m dans Onboarding.jsx).
+  --
+  -- ⚠️ Ce bloc n'est appliqué que si la carte n'a pas déjà été calibrée à la
+  -- main dans l'admin. Un contour tracé sur le satellite compte plus qu'un
+  -- rectangle calculé ici : le réécrire à chaque relance du script ferait
+  -- perdre ce travail. On repère un tracé manuel au nombre de sommets — le
+  -- rectangle par défaut en a 4, un contour dessiné en a bien davantage.
+  IF (SELECT coalesce(jsonb_array_length(carte_config->'perimeter'), 0)
+        FROM campings WHERE id = v_camping) > 4 THEN
+    RAISE NOTICE 'Carte déjà calibrée à la main : contour et points conservés.';
+  ELSE
+
   UPDATE campings SET carte_config = jsonb_build_object(
     -- Accès libre : désactive le contrôle de présence GPS pour CE camping.
     -- Indispensable pour la démonstration commerciale et pour la revue Apple
@@ -123,6 +134,8 @@ BEGIN
     )
   )
   WHERE id = v_camping;
+
+  END IF;
 
   -- ══════════════════════════════════════════════════════════════════════════
   -- 4. Vacanciers fictifs

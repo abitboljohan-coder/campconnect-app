@@ -1,12 +1,13 @@
 import { Outlet, NavLink, useLocation, Link } from 'react-router-dom'
 import { t, useLangue } from '../i18n'
+import Icon from './Icon'
 
 const NAV = [
-  { to: '/', key: 'nav.accueil', icon: '🏕️' },
-  { to: '/groupes', key: 'nav.groupes', icon: '👥' },
-  { to: '/map', key: 'nav.carte', icon: '🗺️' },
-  { to: '/agenda', key: 'nav.agenda', icon: '📅' },
-  { to: '/infos', key: 'nav.infos', icon: 'ℹ️' },
+  { to: '/', key: 'nav.accueil', icon: 'accueil' },
+  { to: '/groupes', key: 'nav.groupes', icon: 'groupes' },
+  { to: '/map', key: 'nav.carte', icon: 'carte' },
+  { to: '/agenda', key: 'nav.agenda', icon: 'agenda' },
+  { to: '/infos', key: 'nav.infos', icon: 'infos' },
 ]
 
 export default function Layout({ camping }) {
@@ -120,12 +121,13 @@ export default function Layout({ camping }) {
               {({ isActive }) => (
                 <>
                   <span style={{
-                    fontSize: 21,
                     width: 40, height: 30, borderRadius: 12,
                     display: 'flex', alignItems: 'center', justifyContent: 'center',
                     background: isActive ? `${couleur}1d` : 'transparent',
                     transition: 'background 0.15s',
-                  }}>{item.icon}</span>
+                  }}>
+                    <Icon nom={item.icon} actif={isActive} />
+                  </span>
                   {t(item.key)}
                 </>
               )}
