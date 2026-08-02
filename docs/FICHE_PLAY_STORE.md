@@ -248,8 +248,25 @@ d'adresses) : proches, collègues, futurs campings pilotes.
 
 ## 10. Reste à faire
 
-- [ ] Capture d'écran de la carte, depuis un appareil réel
-- [ ] Exécuter `scripts/sql/seed_flots_bleus.sql` en production (bloque la revue)
+### Fait
+
+- [x] Camping de démonstration en production — « Les Flots Bleus », accès libre
+- [x] Captures Play Store — `assets/store/screenshots/`, 1080×1920
+- [x] Captures App Store — `assets/store/screenshots-ios/`, 1284×2778 (6,5")
+- [x] Icône et image de présentation
+
+### Bloque l'App Store
+
+- [ ] Compte gérant du camping de démo (pour la démonstration, pas la revue)
+- [ ] Capture de la carte depuis un appareil réel
+- [ ] Un build Xcode Cloud entièrement vert — les exports Ad Hoc et Development
+      échouaient faute d'appareil enregistré sur le compte développeur
+- [ ] Remplir la fiche App Store Connect (textes réutilisables tels quels
+      depuis ce document)
+
+### Bloque le Play Store — compter environ 3 semaines
+
 - [ ] Clé de signature `campconnect-release.jks` — ⚠️ à sauvegarder à vie
 - [ ] Build de l'AAB — voir `docs/PUBLICATION_ANDROID.md`
-- [ ] Recruter 12 testeurs
+- [ ] Recruter 12 testeurs, les maintenir inscrits 14 jours consécutifs
+- [ ] Demander l'accès à la production
