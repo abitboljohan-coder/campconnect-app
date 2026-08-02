@@ -16,6 +16,13 @@ export function setAppMode(mode) {
 export function initNative() {
   if (!isNative) return
 
+  // La WebView native applique déjà les marges de sécurité (ios.contentInset =
+  // always). Les variables CSS, qui valent env(...) sur le web, sont donc
+  // neutralisées ici : sans cela la marge est comptée deux fois — grand vide
+  // sous la barre d'état, et barre de navigation flottant au milieu de l'écran.
+  document.documentElement.style.setProperty('--cc-safe-top', '0px')
+  document.documentElement.style.setProperty('--cc-safe-bottom', '0px')
+
   // Deep links : https://…/join/:slug ou campconnect://join/:slug
   CapApp.addListener('appUrlOpen', ({ url }) => {
     const m = url.match(/\/join\/([^/?#]+)/)

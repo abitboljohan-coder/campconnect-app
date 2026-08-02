@@ -26,7 +26,7 @@ export default function Layout({ camping }) {
           backdropFilter: 'blur(12px)',
           WebkitBackdropFilter: 'blur(12px)',
           padding: '12px 18px',
-          paddingTop: 'calc(12px + env(safe-area-inset-top))',
+          paddingTop: 'calc(12px + var(--cc-safe-top))',
           display: 'flex',
           alignItems: 'center',
           gap: 10,
@@ -73,7 +73,7 @@ export default function Layout({ camping }) {
         overflowY: isMap ? 'hidden' : 'auto',
         overscrollBehavior: 'contain',
         // 64 de barre + 12 de marge basse + 20 de respiration
-        paddingBottom: hideNav || isMap ? 0 : 'calc(96px + env(safe-area-inset-bottom))',
+        paddingBottom: hideNav || isMap ? 0 : 'calc(96px + var(--cc-safe-bottom))',
         position: 'relative',
       }}>
         <Outlet />
@@ -83,7 +83,7 @@ export default function Layout({ camping }) {
       {!hideNav && (
         <nav style={{
           position: 'fixed',
-          bottom: 'calc(12px + env(safe-area-inset-bottom))',
+          bottom: 'calc(12px + var(--cc-safe-bottom))',
           left: 12,
           right: 12,
           maxWidth: 500,

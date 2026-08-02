@@ -32,6 +32,25 @@ button, a, [role="button"] {
   user-select: none;
 }
 
+/* Retour tactile : un élément pressé doit répondre immédiatement, sans
+   attendre le résultat de l'action. C'est ce qui distingue une application
+   d'une page web, bien plus que n'importe quelle animation d'entrée. */
+button:active, a:active, [role="button"]:active {
+  transform: scale(0.97);
+}
+button, a, [role="button"] {
+  transition: transform 0.09s ease-out;
+}
+
+/* Respecte le réglage système « Réduire les animations ». */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
 /* Rebond élastique iOS — deux verrous complémentaires.
    1. Le document ne défile jamais : html/body sont figés à la hauteur du
       viewport, sans débordement. Rien à faire rebondir.
@@ -40,6 +59,17 @@ button, a, [role="button"] {
    Le troisième verrou est natif : ios.scrollEnabled = false dans
    capacitor.config.json désactive la UIScrollView de la WKWebView, qui
    rebondit sinon même quand le contenu tient dans l'écran. */
+/* Marges de sécurité — un seul point de vérité.
+   Sur le web et en PWA, elles viennent de env(). Dans l'app native, la WebView
+   les applique déjà elle-même (ios.contentInset = always) : les réappliquer en
+   CSS les compterait deux fois, ce qui laissait un large vide sous la barre
+   d'état et remontait la barre de navigation au milieu de l'écran.
+   native.js remet donc ces deux variables à zéro sur natif. */
+:root {
+  --cc-safe-top: env(safe-area-inset-top, 0px);
+  --cc-safe-bottom: env(safe-area-inset-bottom, 0px);
+}
+
 html, body {
   height: 100%;
   overflow: hidden;
@@ -95,6 +125,11 @@ input, textarea, select {
 @keyframes fadeIn {
   from { opacity: 0; transform: translateY(8px); }
   to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes ccToastIn {
+  from { opacity: 0; transform: translateY(14px) scale(0.97); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
 }
 
 @keyframes ccFade {

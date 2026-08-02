@@ -473,8 +473,8 @@ function Screen({ bg, children }) {
       display: 'flex', flexDirection: 'column',
       alignItems: 'center', justifyContent: 'center',
       padding: '24px 20px',
-      paddingTop: 'calc(24px + env(safe-area-inset-top))',
-      paddingBottom: 'calc(24px + env(safe-area-inset-bottom))',
+      paddingTop: 'calc(24px + var(--cc-safe-top))',
+      paddingBottom: 'calc(24px + var(--cc-safe-bottom))',
     }}>
       {children}
     </div>

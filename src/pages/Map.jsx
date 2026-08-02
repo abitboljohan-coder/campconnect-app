@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
+import { toast } from '../toast'
 import { useNavigate } from 'react-router-dom'
 import { supabase } from '../supabase'
 import { esc } from '../utils/esc'
@@ -440,7 +441,7 @@ export default function Map({ camping: campingProp, vacancier }) {
         console.error('Désinscription échouée :', error)
         setInscriptions(p => [...p, anim.id])
         setCounts(p => ({ ...p, [anim.id]: (p[anim.id] || 0) + 1 }))
-        alert("Impossible de vous désinscrire pour le moment.")
+        toast("Impossible de vous désinscrire pour le moment.", 'erreur')
       }
     } else {
       if (anim.places_max && (counts[anim.id] || 0) >= anim.places_max) return
@@ -451,7 +452,7 @@ export default function Map({ camping: campingProp, vacancier }) {
         console.error('Inscription échouée :', error)
         setInscriptions(p => p.filter(id => id !== anim.id))
         setCounts(p => ({ ...p, [anim.id]: Math.max(0, (p[anim.id] || 1) - 1) }))
-        alert("Impossible de vous inscrire pour le moment.")
+        toast("Impossible de vous inscrire pour le moment.", 'erreur')
       }
     }
   }
@@ -460,7 +461,7 @@ export default function Map({ camping: campingProp, vacancier }) {
     const { error } = await supabase.from('membres_groupes').insert({ groupe_id: id, vacancier_id: vacancier.id })
     if (error && error.code !== '23505') { // 23505 = déjà membre, on laisse passer
       console.error('Rejoindre groupe échoué :', error)
-      alert("Impossible de rejoindre le groupe pour le moment.")
+      toast("Impossible de rejoindre le groupe pour le moment.", 'erreur')
       return
     }
     setMesGroupes(p => p.includes(id) ? p : [...p, id])
@@ -470,7 +471,7 @@ export default function Map({ camping: campingProp, vacancier }) {
   const planUrl = camping?.plan_url
 
   return (
-    <div style={{ position: 'relative', height: 'calc(100dvh - 88px - env(safe-area-inset-bottom))', overflow: 'hidden', background: '#0d1f0d' }}>
+    <div style={{ position: 'relative', height: 'calc(100dvh - 88px - var(--cc-safe-bottom))', overflow: 'hidden', background: '#0d1f0d' }}>
 
       {/* Panneau simulation GPS */}
       {simulating && simPos && (
@@ -549,7 +550,7 @@ export default function Map({ camping: campingProp, vacancier }) {
 
       {/* Menu discret « Où aller ? » → guidage vers un lieu (piscine, pétanque…) */}
       {mapMode === 'satellite' && lieuxDest.length > 0 && !guideTarget && (
-        <div style={{ position: 'absolute', top: 'calc(12px + env(safe-area-inset-top))', left: 12, zIndex: 1500, maxWidth: 'calc(100% - 24px)' }}>
+        <div style={{ position: 'absolute', top: 'calc(12px + var(--cc-safe-top))', left: 12, zIndex: 1500, maxWidth: 'calc(100% - 24px)' }}>
           <button
             onClick={() => setShowDest(v => !v)}
             style={{
@@ -808,7 +809,7 @@ function GuideBanner({ target, pos, couleur, onClose }) {
 }
 
 const guideBannerBox = {
-  position: 'absolute', top: 'calc(12px + env(safe-area-inset-top))', left: 12, right: 12, zIndex: 2500,
+  position: 'absolute', top: 'calc(12px + var(--cc-safe-top))', left: 12, right: 12, zIndex: 2500,
   background: 'rgba(13,31,13,0.94)', backdropFilter: 'blur(10px)',
   borderRadius: 16, padding: '12px 14px', display: 'flex', alignItems: 'center', gap: 12,
   boxShadow: '0 6px 24px rgba(0,0,0,0.4)', border: '1px solid rgba(255,255,255,0.12)',

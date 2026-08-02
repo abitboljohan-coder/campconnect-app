@@ -103,7 +103,7 @@ export default function Chat({ vacancier }) {
       <div style={{
         background: '#0d1f0d',
         padding: '12px 16px',
-        paddingTop: 'calc(12px + env(safe-area-inset-top))',
+        paddingTop: 'calc(12px + var(--cc-safe-top))',
         display: 'flex', alignItems: 'center', gap: 12,
         flexShrink: 0,
         boxShadow: '0 2px 8px rgba(0,0,0,0.2)',
@@ -275,7 +275,7 @@ export default function Chat({ vacancier }) {
           background: '#fff',
           borderTop: '1px solid #e5e7eb',
           display: 'flex', gap: 8, alignItems: 'center',
-          paddingBottom: 'max(10px, env(safe-area-inset-bottom))',
+          paddingBottom: 'max(10px, var(--cc-safe-bottom))',
           flexShrink: 0,
         }}
       >

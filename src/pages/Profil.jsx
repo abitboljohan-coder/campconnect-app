@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { toast } from '../toast'
 import { supabase } from '../supabase'
 import { t, useLangue, locale, LANGUES, setLangue } from '../i18n'
 
@@ -54,7 +55,7 @@ export default function Profil({ camping, vacancier, onLogout }) {
     if (error) {
       console.error('Sauvegarde profil échouée :', error)
       setSaving(false)
-      alert(t('profil.err_save'))
+      toast(t('profil.err_save'), 'erreur')
       return
     }
     const updated = { ...vacancier, ...form }

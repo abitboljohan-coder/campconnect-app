@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { toast } from '../toast'
 import Sheet from '../components/Sheet'
 import { useNavigate } from 'react-router-dom'
 import { supabase, presentFilter } from '../supabase'
@@ -59,7 +60,7 @@ export default function Groupes({ camping, vacancier }) {
     const { error } = await supabase.from('membres_groupes').insert({ groupe_id: groupeId, vacancier_id: vacancier.id })
     if (error && error.code !== '23505') { // 23505 = déjà membre, on laisse passer
       console.error('Rejoindre groupe échoué :', error)
-      alert(t('groupes.err_rejoindre'))
+      toast(t('groupes.err_rejoindre'), 'erreur')
       return
     }
     setMesGroupes(prev => prev.includes(groupeId) ? prev : [...prev, groupeId])

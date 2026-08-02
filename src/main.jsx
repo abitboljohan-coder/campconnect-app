@@ -4,6 +4,7 @@ import './index.css'
 import App from './App.jsx'
 import AdminApp from './admin/AdminApp.jsx'
 import ErrorBoundary from './components/ErrorBoundary.jsx'
+import { ToastHost } from './components/Toast.jsx'
 import { getAppMode, initNative } from './native.js'
 
 initNative()
@@ -14,6 +15,7 @@ createRoot(document.getElementById('root')).render(
   <StrictMode>
     <ErrorBoundary>
       {isAdmin ? <AdminApp /> : <App />}
+      <ToastHost />
     </ErrorBoundary>
   </StrictMode>,
 )

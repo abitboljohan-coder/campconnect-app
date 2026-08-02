@@ -12,6 +12,7 @@ import Chat from '../pages/Chat'
 import Infos from '../pages/Infos'
 import Overview from '../admin/pages/Overview'
 import { DEMO_CAMPING, DEMO_VACANCIER } from './mockSupabase'
+import { ToastHost } from '../components/Toast'
 
 const c = DEMO_CAMPING, v = DEMO_VACANCIER
 const s = new URLSearchParams(location.search).get('s') || 'accueil'
@@ -39,5 +40,6 @@ function DemoApp() {
 createRoot(document.getElementById('root')).render(
   <StrictMode>
     <MemoryRouter initialEntries={[entry]}><DemoApp /></MemoryRouter>
+    <ToastHost />
   </StrictMode>,
 )
