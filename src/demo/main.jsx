@@ -31,7 +31,7 @@ function DemoApp() {
         <Route path="/infos" element={<Infos camping={c} />} />
         <Route path="/profil" element={<Profil camping={c} vacancier={v} onLogout={() => {}} />} />
       </Route>
-      <Route path="/chat/:groupeId" element={<Chat vacancier={v} />} />
+      <Route path="/chat/:groupeId" element={<Chat camping={c} vacancier={v} />} />
       <Route element={<AdminLayout gerant={{ nom: 'Gérant démo' }} camping={c} onLogout={() => {}} />}>
         <Route path="/admin/overview" element={<Overview camping={c} />} />
       </Route>

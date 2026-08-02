@@ -135,7 +135,7 @@ function App() {
           <Route element={<Layout camping={camping} />}>
             <Route path="/" element={<Accueil camping={camping} vacancier={vacancier} />} />
             <Route path="/groupes" element={<Groupes camping={camping} vacancier={vacancier} />} />
-            <Route path="/chat/:groupeId" element={<Chat vacancier={vacancier} />} />
+            <Route path="/chat/:groupeId" element={<Chat camping={camping} vacancier={vacancier} />} />
             <Route path="/map" element={<Map camping={camping} vacancier={vacancier} />} />
             <Route path="/agenda" element={<Agenda camping={camping} vacancier={vacancier} />} />
             <Route path="/infos" element={<Infos camping={camping} />} />

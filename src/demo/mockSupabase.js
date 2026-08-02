@@ -28,6 +28,7 @@ export const DEMO_CAMPING = {
   nom: 'Camping Les Flots Bleus',
   slug: 'les-flots-bleus',
   couleur_principale: '#0e7490',
+  couleur_secondaire: '#134e4a',
   logo_url: null,
   plan_url: null,
   carte_config: { center: CENTER, perimeter: PERIMETER, pins: PINS },
