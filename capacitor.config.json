@@ -6,7 +6,7 @@
     "allowMixedContent": false
   },
   "ios": {
-    "contentInset": "always",
+    "contentInset": "never",
     "scrollEnabled": false,
     "backgroundColor": "#faf7f0"
   },

@@ -59,15 +59,27 @@ button, a, [role="button"] {
    Le troisième verrou est natif : ios.scrollEnabled = false dans
    capacitor.config.json désactive la UIScrollView de la WKWebView, qui
    rebondit sinon même quand le contenu tient dans l'écran. */
-/* Marges de sécurité — un seul point de vérité.
-   Sur le web et en PWA, elles viennent de env(). Dans l'app native, la WebView
-   les applique déjà elle-même (ios.contentInset = always) : les réappliquer en
-   CSS les compterait deux fois, ce qui laissait un large vide sous la barre
-   d'état et remontait la barre de navigation au milieu de l'écran.
-   native.js remet donc ces deux variables à zéro sur natif. */
+/* Marges de sécurité — un seul point de vérité, et un seul mécanisme.
+   ios.contentInset vaut « never » : la WebView n'ajoute aucune marge, c'est
+   l'application qui les gère intégralement. Une seule source, donc jamais de
+   double comptage.
+   Les valeurs planchers ne sont pas décoratives : selon la configuration de la
+   WebView, env() peut retourner zéro alors que la barre d'état et l'indicateur
+   d'accueil occupent bien la place. Sans plancher, l'en-tête passe sous
+   l'heure et la barre de navigation descend sur l'indicateur d'accueil, où
+   iOS intercepte les touchers avant l'application. */
 :root {
-  --cc-safe-top: env(safe-area-inset-top, 0px);
-  --cc-safe-bottom: env(safe-area-inset-bottom, 0px);
+  --cc-safe-top: max(env(safe-area-inset-top, 0px), 44px);
+  --cc-safe-bottom: max(env(safe-area-inset-bottom, 0px), 24px);
+}
+
+/* Sur un écran large, aucune encoche à compenser : le plancher ne s'applique
+   qu'aux formats téléphone. */
+@media (min-width: 700px) {
+  :root {
+    --cc-safe-top: env(safe-area-inset-top, 0px);
+    --cc-safe-bottom: env(safe-area-inset-bottom, 0px);
+  }
 }
 
 html, body {
