@@ -70,6 +70,11 @@ export default function SwipeBack({ children }) {
       if (t.clientX > BORD) return
       geste.current = { x0: t.clientX, y0: t.clientY, t0: Date.now(), dx: 0, engage: false }
       if (carte.current) carte.current.style.transition = 'none'
+      // Le suivi n'est branché qu'à partir d'un toucher parti du bord. Laisser
+      // en permanence un touchmove non passif sur le document désactive les
+      // optimisations de défilement de WebKit et rend toute l'application
+      // pâteuse au doigt, y compris là où le geste n'a rien à faire.
+      document.addEventListener('touchmove', bouge, { passive: false })
     }
 
     const bouge = (e) => {
@@ -92,6 +97,7 @@ export default function SwipeBack({ children }) {
     }
 
     const fin = () => {
+      document.removeEventListener('touchmove', bouge)
       const g = geste.current
       geste.current = null
       if (!g?.engage) return
@@ -109,10 +115,7 @@ export default function SwipeBack({ children }) {
       }
     }
 
-    // passive: false sur touchmove, sinon preventDefault est ignoré et le
-    // défilement du document concurrence le geste.
     document.addEventListener('touchstart', debut, { passive: true })
-    document.addEventListener('touchmove', bouge, { passive: false })
     document.addEventListener('touchend', fin, { passive: true })
     document.addEventListener('touchcancel', fin, { passive: true })
     return () => {
