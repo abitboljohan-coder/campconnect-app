@@ -60,13 +60,19 @@ export default function Layout({ camping }) {
       )}
 
       {/* Contenu */}
+      {/* Pas de -webkit-overflow-scrolling ici : sur iOS cette propriété crée un
+          contexte d'empilement, ce qui enfermerait le z-index des modales
+          ouvertes depuis les pages — la barre de navigation, pourtant à un
+          z-index inférieur mais rendue en dehors, passerait devant elles.
+          L'inertie de défilement est native depuis iOS 13, la propriété n'a
+          plus d'utilité. */}
       <main style={{
         flex: 1,
         minHeight: 0,
         overflowY: isMap ? 'hidden' : 'auto',
         overscrollBehavior: 'contain',
-        WebkitOverflowScrolling: 'touch',
-        paddingBottom: hideNav || isMap ? 0 : 88,
+        // 64 de barre + 12 de marge basse + 20 de respiration
+        paddingBottom: hideNav || isMap ? 0 : 'calc(96px + env(safe-area-inset-bottom))',
         position: 'relative',
       }}>
         <Outlet />

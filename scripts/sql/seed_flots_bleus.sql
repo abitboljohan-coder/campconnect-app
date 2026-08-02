@@ -152,13 +152,20 @@ BEGIN
   -- ══════════════════════════════════════════════════════════════════════════
   -- 5. Groupes spontanés
   -- ══════════════════════════════════════════════════════════════════════════
+  -- « heure » est stockée en text mais l'app la relit avec new Date(...) pour
+  -- l'afficher (Accueil.jsx). Toute autre valeur donne « Invalid Date » sur les
+  -- cartes de groupe. On écrit donc un horodatage ISO, comme le fait
+  -- Groupes.jsx à la création d'un groupe.
+  -- Volontairement sans suffixe de fuseau : la date est alors interprétée en
+  -- heure locale, donc « 18:30 » reste « 18:30 » y compris pour un testeur
+  -- Apple à l'autre bout du monde.
   INSERT INTO groupes (camping_id, titre, emoji, lieu, heure, actif) VALUES
-    (v_camping, 'Apéro pétanque',        '🍹', 'Terrain de pétanque',    'Ce soir 18h30', true),
-    (v_camping, 'Rando dune du Pilat',   '🥾', 'Départ parking',         'Demain 8h00',   true),
-    (v_camping, 'Session surf débutants','🏄', 'Plage, poste 3',         'Demain 10h00',  true),
-    (v_camping, 'Barbecue collectif',    '🍖', 'Aire de pique-nique',    'Samedi 19h30',  true),
-    (v_camping, 'Jeux pour les enfants', '🛝', 'Aire de jeux',           'Tous les jours 17h', true),
-    (v_camping, 'Marché d''Arcachon',     '🧺', 'Covoiturage parking',    'Mercredi 9h00', true);
+    (v_camping, 'Apéro pétanque',        '🍹', 'Terrain de pétanque', to_char(CURRENT_DATE + interval '18 hours 30 minutes',          'YYYY-MM-DD"T"HH24:MI:SS'), true),
+    (v_camping, 'Rando dune du Pilat',   '🥾', 'Départ parking',      to_char(CURRENT_DATE + interval '1 day 8 hours',                 'YYYY-MM-DD"T"HH24:MI:SS'), true),
+    (v_camping, 'Session surf débutants','🏄', 'Plage, poste 3',      to_char(CURRENT_DATE + interval '1 day 10 hours',                'YYYY-MM-DD"T"HH24:MI:SS'), true),
+    (v_camping, 'Barbecue collectif',    '🍖', 'Aire de pique-nique', to_char(CURRENT_DATE + interval '2 days 19 hours 30 minutes',    'YYYY-MM-DD"T"HH24:MI:SS'), true),
+    (v_camping, 'Jeux pour les enfants', '🛝', 'Aire de jeux',        to_char(CURRENT_DATE + interval '17 hours',                      'YYYY-MM-DD"T"HH24:MI:SS'), true),
+    (v_camping, 'Marché d''Arcachon',    '🧺', 'Covoiturage parking', to_char(CURRENT_DATE + interval '3 days 9 hours',                'YYYY-MM-DD"T"HH24:MI:SS'), true);
 
   SELECT id INTO g_apero    FROM groupes WHERE camping_id = v_camping AND titre = 'Apéro pétanque';
   SELECT id INTO g_rando    FROM groupes WHERE camping_id = v_camping AND titre = 'Rando dune du Pilat';

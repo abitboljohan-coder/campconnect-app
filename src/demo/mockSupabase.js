@@ -117,7 +117,18 @@ class Query {
   }
 }
 
-const noopChannel = { on() { return this }, subscribe() { return this }, unsubscribe() { return this } }
+// Doit exposer toute la surface de RealtimeChannel utilisée par l'app, sinon la
+// démo lève « canal.untrack is not a function » et l'écran se vide en pleine
+// présentation. usePresence.js appelle track / untrack / presenceState.
+const noopChannel = {
+  on() { return this },
+  subscribe(cb) { cb?.('SUBSCRIBED'); return this },
+  unsubscribe() { return this },
+  track: async () => ({ status: 'ok' }),
+  untrack: async () => ({ status: 'ok' }),
+  presenceState: () => ({ 'vac-1': [{}] }),   // un vacancier « en ligne »
+  send: async () => ({ status: 'ok' }),
+}
 
 export const supabase = {
   from: (t) => new Query(t),

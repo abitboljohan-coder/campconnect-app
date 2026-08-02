@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
+import Sheet from '../components/Sheet'
 import { useNavigate } from 'react-router-dom'
 import { supabase, presentFilter } from '../supabase'
 import { t, useLangue, locale } from '../i18n'
@@ -287,11 +288,7 @@ function StatutsStrip({ camping, vacancier, couleur }) {
 
       {/* Modal poster */}
       {showModal && (
-        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.55)', display: 'flex', alignItems: 'flex-end', zIndex: 200 }}
-             onClick={() => setShowModal(false)}>
-          <div style={{ background: '#fff', borderRadius: '22px 22px 0 0', padding: '22px 20px 36px', width: '100%', maxWidth: 600, margin: '0 auto' }}
-               onClick={e => e.stopPropagation()}>
-            <div style={{ width: 40, height: 4, background: '#e5e7eb', borderRadius: 2, margin: '0 auto 18px' }} />
+        <Sheet onClose={() => setShowModal(false)}>
             <h3 style={{ fontSize: 18, fontWeight: 800, marginBottom: 14, color: '#1a1a1a' }}>{t('accueil.quoi_de_neuf')} <span style={{ fontSize: 12, fontWeight: 500, color: '#9ca3af' }}>{t('accueil.visible24')}</span></h3>
             <div style={{ display: 'flex', gap: 6, marginBottom: 12, flexWrap: 'wrap' }}>
               {STATUT_EMOJIS.map(e => (
@@ -306,7 +303,7 @@ function StatutsStrip({ camping, vacancier, couleur }) {
               onKeyDown={e => e.key === 'Enter' && poster()}
               placeholder="ex : BBQ ce soir emplacement 47, tous invités !"
               autoFocus maxLength={90}
-              style={{ width: '100%', padding: '12px 14px', borderRadius: 12, border: '1.5px solid #e5e7eb', fontSize: 15, outline: 'none', background: '#fafafa', marginBottom: 14 }} />
+              style={{ width: '100%', padding: '12px 14px', borderRadius: 12, border: '1.5px solid #e5e7eb', fontSize: 16, outline: 'none', background: '#fafafa', marginBottom: 14 }} />
             <button onClick={poster} disabled={!texte.trim() || saving}
               style={{
                 width: '100%', padding: 13, borderRadius: 12, border: 'none',
@@ -315,8 +312,7 @@ function StatutsStrip({ camping, vacancier, couleur }) {
               }}>
               {saving ? 'Publication…' : `${emoji} Publier`}
             </button>
-          </div>
-        </div>
+        </Sheet>
       )}
     </div>
   )

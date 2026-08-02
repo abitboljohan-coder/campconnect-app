@@ -58,7 +58,6 @@ body {
   overflow-x: hidden;
   overflow-y: auto;
   overscroll-behavior: contain;
-  -webkit-overflow-scrolling: touch;
 }
 
 h1, h2, h3 {
@@ -96,6 +95,11 @@ input, textarea, select {
 @keyframes fadeIn {
   from { opacity: 0; transform: translateY(8px); }
   to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes ccFade {
+  from { opacity: 0; }
+  to   { opacity: 1; }
 }
 
 @keyframes spin {

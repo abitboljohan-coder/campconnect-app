@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import Sheet from '../components/Sheet'
 import { useNavigate } from 'react-router-dom'
 import { supabase, presentFilter } from '../supabase'
 import { t, useLangue, locale } from '../i18n'
@@ -160,19 +161,7 @@ export default function Groupes({ camping, vacancier }) {
 
       {/* Modal création */}
       {showModal && (
-        <div
-          style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.55)', display: 'flex', alignItems: 'flex-end', zIndex: 200 }}
-          onClick={() => setShowModal(false)}
-        >
-          <div
-            style={{
-              background: '#fff', borderRadius: '22px 22px 0 0',
-              padding: '24px 20px 40px', width: '100%', maxWidth: 600, margin: '0 auto',
-              animation: 'fadeIn 0.2s ease',
-            }}
-            onClick={e => e.stopPropagation()}
-          >
-            <div style={{ width: 40, height: 4, background: '#e5e7eb', borderRadius: 2, margin: '0 auto 20px' }} />
+        <Sheet onClose={() => setShowModal(false)}>
             <h2 style={{ fontSize: 20, marginBottom: 14, color: '#1a1a1a' }}>{t('groupes.creer')}</h2>
 
             {/* Templates 1-tap */}
@@ -288,8 +277,7 @@ export default function Groupes({ camping, vacancier }) {
                 </button>
               </div>
             </div>
-          </div>
-        </div>
+        </Sheet>
       )}
     </div>
   )
