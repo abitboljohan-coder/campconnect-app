@@ -217,29 +217,46 @@ données OpenStreetMap. L'attribution obligatoire est affichée en bas de la car
 
 ---
 
-## 6. Confidentialité (« App Privacy »)
+## 6. Confidentialité de l'app (« App Privacy »)
 
-Mêmes réponses que le formulaire Data Safety de Google, dans le vocabulaire
-d'Apple. Détail et justifications : `docs/FICHE_PLAY_STORE.md` §6.
+Réponse à « Collectez-vous des données ? » : **Oui**. Types à cocher, dans le
+vocabulaire exact d'Apple :
 
-| Type de donnée | Collectée | Liée à l'utilisateur | Suivi publicitaire |
+| Catégorie | Type | Ce que c'est ici | Lié à l'identité |
 |---|---|---|---|
-| Nom (pseudo) | Oui | Oui | Non |
-| Adresse e-mail *(gérants)* | Oui | Oui | Non |
-| Position approximative | Oui | Non | Non |
-| Position précise | Oui | Non | Non |
-| Messages | Oui | Oui | Non |
-| Photos | Oui | Oui | Non |
-| Identifiant d'appareil | Oui | Oui | Non |
+| Coordonnées | Adresse e-mail | connexion des gérants (Supabase Auth) | Oui |
+| Position | Position précise | contrôle de présence, calibrage du camping | **Non** |
+| Position | Position approximative | contrôle de présence | **Non** |
+| Contenu utilisateur | E-mails ou messages texte | messages du chat | Oui |
+| Contenu utilisateur | Photos ou vidéos | signalements, annonces | Oui |
+| Contenu utilisateur | Autre contenu utilisateur | statuts, annonces, noms de groupes | Oui |
+| Identifiants | Identifiant utilisateur | le pseudo | Oui |
+| Identifiants | Identifiant d'appareil | jeton push, anti-doublon | Oui |
+| Autres données | — | tranche d'âge, centres d'intérêt, emplacement | Oui |
 
-**Suivi publicitaire : Non partout.** L'app n'utilise aucun SDK publicitaire, ne
-demande donc pas l'autorisation de suivi (ATT) et ne doit surtout pas la
-déclarer.
+Pour chaque type : finalité **Fonctionnalité de l'app** uniquement, et
+**« Utilisé pour vous suivre » → Non**, sans exception.
 
-**Position précise à déclarer**, même si elle reste locale dans la plupart des
-cas : quand un camping n'a pas encore de centre calibré, les coordonnées exactes
-sont écrites en base dans `campings.carte_config.center` (`Onboarding.jsx`,
-lignes 73-82). Il y a donc bien transmission hors appareil.
+**Quatre points à ne pas se tromper :**
+
+- **Ne pas cocher « Nom ».** L'app ne collecte aucun nom réel, seulement un
+  pseudo choisi librement (`Onboarding.jsx`). Le type correspondant est
+  « Identifiant utilisateur ».
+
+- **La position n'est pas liée à l'identité.** La distance au camping est
+  calculée côté client et seul le résultat est conservé. Le seul cas où des
+  coordonnées sont écrites en base est le calibrage d'un camping non encore
+  localisé (`Onboarding.jsx` lignes 73-82) — elles sont alors rattachées au
+  camping, pas au vacancier.
+
+- **Aucune donnée de diagnostic ni d'analyse.** Vérifié : le projet n'embarque
+  ni SDK d'analytics, ni SDK de rapport de plantage, ni régie publicitaire.
+  Ne rien déclarer dans « Diagnostics » ni « Données d'utilisation ».
+
+- **L'identifiant d'appareil n'est pas l'identifiant publicitaire d'Apple.**
+  C'est un UUID généré localement et conservé dans le stockage du navigateur
+  (`App.jsx`, `getDeviceId`). Il reste déclarable comme identifiant d'appareil,
+  mais il n'implique aucune demande d'autorisation de suivi (ATT).
 
 ---
 
