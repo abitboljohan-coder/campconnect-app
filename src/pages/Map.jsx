@@ -1,9 +1,10 @@
-import { useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { toast } from '../toast'
 import { useNavigate } from 'react-router-dom'
 import { supabase } from '../supabase'
 import { esc } from '../utils/esc'
 import { t, useLangue, locale } from '../i18n'
+import { desencombrer } from '../lib/poiCategories'
 
 let L = null
 
@@ -147,21 +148,25 @@ export default function Map({ camping: campingProp, vacancier }) {
     followingRef.current = true
   }
 
+  // Les points sont désencombrés à l'affichage, et pas seulement au moment de
+  // la détection : sans cela, un camping configuré avant le correctif garderait
+  // sa carte criblée de parkings et de bacs à tri jusqu'à ce qu'un gérant pense
+  // à relancer la détection.
+  const chargerPins = useCallback((dbPins) => {
+    if (dbPins?.length) { setPins(desencombrer(dbPins)); return }
+    try {
+      const local = JSON.parse(localStorage.getItem(`carte_config_${campingProp.id}`) || 'null')
+      if (local?.pins?.length) setPins(desencombrer(local.pins))
+    } catch { /* configuration locale illisible : on reste sans point */ }
+  }, [campingProp.id])
+
   useEffect(() => {
     async function load() {
       const { data: freshCamping } = await supabase
         .from('campings').select('*').eq('id', campingProp.id).single()
       if (freshCamping) {
         setCampingLocal(freshCamping)
-        const dbPins = freshCamping?.carte_config?.pins
-        if (dbPins?.length) {
-          setPins(dbPins)
-        } else {
-          try {
-            const local = JSON.parse(localStorage.getItem(`carte_config_${campingProp.id}`) || 'null')
-            if (local?.pins?.length) setPins(local.pins)
-          } catch {}
-        }
+        chargerPins(freshCamping?.carte_config?.pins)
       }
 
       const [{ data: anims }, { data: grps }, { data: inscs }, { data: membres }] = await Promise.all([
@@ -194,14 +199,7 @@ export default function Map({ camping: campingProp, vacancier }) {
         (payload) => {
           if (!payload.new) return
           setCampingLocal(payload.new)
-          const dbPins = payload.new?.carte_config?.pins
-          if (dbPins?.length) setPins(dbPins)
-          else {
-            try {
-              const local = JSON.parse(localStorage.getItem(`carte_config_${campingProp.id}`) || 'null')
-              if (local?.pins?.length) setPins(local.pins)
-            } catch {}
-          }
+          chargerPins(payload.new?.carte_config?.pins)
         }
       )
       .subscribe()
@@ -218,7 +216,7 @@ export default function Map({ camping: campingProp, vacancier }) {
       supabase.removeChannel(channel)
       if (watchId !== null) navigator.geolocation.clearWatch(watchId)
     }
-  }, [campingProp.id, vacancier.id])
+  }, [campingProp.id, vacancier.id, chargerPins])
 
   useEffect(() => {
     if (!mapRef.current || leafletMap.current) return
