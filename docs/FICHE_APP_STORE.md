@@ -16,7 +16,7 @@ référence au code, comme dans `docs/FICHE_PLAY_STORE.md`.
 | Catégorie principale | Voyages |
 | Catégorie secondaire | Réseaux sociaux |
 | Droits d'auteur | `2026 Johan Abitbol` |
-| Âge minimum | 17+ *(voir §5)* |
+| Âge minimum | calculé par le questionnaire — voir §5 |
 
 ---
 
@@ -159,18 +159,61 @@ l'équipe du camping sous 24 heures.
 
 ---
 
-## 5. Âge minimum — répondre 17+, pas 4+
+## 5. Classification d'âge — le questionnaire en 7 étapes
 
-Le questionnaire d'Apple comporte, depuis les règles sur le contenu généré par
-les utilisateurs, une question sur les **fonctionnalités sociales sans
-restriction**. CampConnect propose une messagerie libre entre inconnus ; la
-réponse honnête classe l'app en **17+**.
+La note ne se choisit pas : Apple la calcule à partir d'un questionnaire.
+Répondre pour obtenir une note basse est une déclaration inexacte, motif de
+retrait après publication.
 
-Se déclarer 4+ avec une messagerie ouverte est un motif de rejet fréquent, et
-un motif de retrait après publication.
+### Étape 1 — Fonctionnalités
 
-Le cloisonnement par camping est une circonstance atténuante à mentionner dans
-les notes de revue, pas une raison de baisser la classification.
+| Question | Réponse |
+|---|---|
+| Contrôle parental | Non |
+| Validation de l'âge | Non |
+| Accès au Web sans restrictions | **Non** |
+| Contenu généré par les utilisateurs | **Oui** |
+| Réseaux sociaux | **Oui** |
+
+> « Accès au Web sans restrictions » est bien **Non** : l'application ne contient
+> qu'un seul lien externe, vers sa propre politique de confidentialité
+> (`Onboarding.jsx` ligne 432). Aucun navigateur intégré, aucune transformation
+> automatique des URL en liens, aucun `dangerouslySetInnerHTML`.
+
+### Étapes suivantes — les contenus
+
+**Aucun / Non partout**, avec une exception :
+
+| Sujet | Réponse |
+|---|---|
+| Alcool, tabac, drogues | **Peu fréquent ou modéré** |
+| Violence, contenu sexuel, nudité, grossièretés, horreur | Aucun |
+| Jeux d'argent, paris, concours | Non |
+| Destinée aux enfants | Non |
+
+> L'exception sur l'alcool n'est pas de la prudence excessive : la carte affiche
+> des points « Bar », et le camping de démonstration contient un groupe « Apéro
+> pétanque ». C'est incident, mais présent.
+
+### Résultat attendu
+
+**16+ ou 18+.** C'est la conséquence d'une messagerie libre entre inconnus sans
+vérification d'âge. Le cloisonnement par camping se mentionne dans les notes de
+revue ; ce n'est pas une raison de retoucher les réponses.
+
+---
+
+## 5 bis. Droits relatifs au contenu
+
+Répondre **Oui** : l'app affiche du contenu de tiers — tuiles satellite Esri et
+données OpenStreetMap. L'attribution obligatoire est affichée en bas de la carte
+(`Map.jsx`, `attributionControl: true`) et stylée discrètement dans `index.css`.
+
+> ⚠️ À traiter avant une exploitation commerciale à grande échelle : les tuiles
+> Esri World Imagery sont consommées via le service public, sans compte ArcGIS.
+> L'attribution satisfait la condition d'affichage, mais pas nécessairement les
+> conditions d'usage commercial au volume. À vérifier auprès d'Esri, ou basculer
+> sur un fournisseur dont la licence commerciale est explicite.
 
 ---
 
