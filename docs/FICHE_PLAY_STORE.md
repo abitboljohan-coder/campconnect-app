@@ -87,7 +87,7 @@ Politique de confidentialité : https://www.campconnect.fr/confidentialite.html
 | Icône | `assets/store/icon-512.png` | 512×512 | ✅ |
 | Image de présentation | `assets/store/feature-graphic-1024x500.png` | 1024×500 | ✅ |
 | Captures téléphone | `assets/store/screenshots/01→05` | 1080×1920 (9:16) | ✅ |
-| Capture de la carte | — | — | ⬜ **à faire sur appareil réel** |
+| Capture de la carte | `assets/store/screenshots/06-carte.png` | 1080×2097 | ✅ appareil réel |
 
 Ordre conseillé : Carte → Groupes → Chat → Agenda → Accueil → Infos.
 
@@ -97,8 +97,11 @@ de tablette » est un seuil global). Les omettre prive seulement l'app d'une mis
 en avant sur tablettes et Chromebooks.
 
 > La capture de la carte ne peut pas être produite hors ligne : les tuiles
-> satellite ESRI ne se chargent pas et l'écran sort en fond gris, avec le bouton
-> de debug « Simuler GPS » visible. À prendre depuis un téléphone réel.
+> satellite ESRI ne se chargent pas et l'écran sort en fond gris. Celle-ci a
+> donc été prise sur un iPhone (`assets/Carte.jpg`). Elle est en 1080×2097 et
+> non en 1080×1920 comme les cinq autres : la ramener au format aurait rogné un
+> tiers de la carte. Google l'accepte, sa plus grande dimension restant
+> inférieure au double de la plus petite.
 
 ---
 
@@ -258,11 +261,10 @@ d'adresses) : proches, collègues, futurs campings pilotes.
 ### Bloque l'App Store
 
 - [ ] Compte gérant du camping de démo (pour la démonstration, pas la revue)
-- [ ] Capture de la carte depuis un appareil réel
 - [ ] Un build Xcode Cloud entièrement vert — les exports Ad Hoc et Development
       échouaient faute d'appareil enregistré sur le compte développeur
-- [ ] Remplir la fiche App Store Connect (textes réutilisables tels quels
-      depuis ce document)
+- [ ] Remplir la fiche App Store Connect — textes prêts dans
+      `docs/FICHE_APP_STORE.md`
 
 ### Bloque le Play Store — compter environ 3 semaines
 
