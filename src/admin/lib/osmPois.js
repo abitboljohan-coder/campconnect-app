@@ -128,10 +128,34 @@ function distM(a, b) {
 // Fusionne les doublons du même type à moins de `radius` mètres
 // (ex: piscine taggée en point ET en surface, bassins multiples).
 // Préfère l'élément nommé, puis la surface (way) au point.
+// Plafonds par catégorie, appliqués aux seuls équipements anonymes.
+//
+// OpenStreetMap recense chaque place de parking, chaque bac à tri et chaque
+// borne de recharge comme un objet distinct. Sur un grand camping cela donne
+// des dizaines de pastilles identiques qui s'empilent et masquent ce qu'un
+// vacancier cherche vraiment — la piscine, la réception, les sanitaires.
+// Un équipement nommé dans OSM échappe au plafond : s'il porte un nom, il a
+// été saisi par quelqu'un qui le jugeait notable.
+const PLAFONDS = { '🅿️': 2, '♻️': 2, '🔌': 2, '🚻': 5 }
+const PLAFOND_DEFAUT = 4
+
+function limiterParCategorie(pois) {
+  const compte = {}
+  return pois.filter(p => {
+    if (!p._generic) return true            // équipement nommé : toujours gardé
+    const max = PLAFONDS[p.emoji] ?? PLAFOND_DEFAUT
+    compte[p.emoji] = (compte[p.emoji] || 0) + 1
+    return compte[p.emoji] <= max
+  })
+}
+
 function clusterPois(pois, radius = 35) {
   const out = []
   for (const p of pois) {
-    const twin = out.find(o => o.emoji === p.emoji && distM(o, p) < radius)
+    // Les équipements anonymes fusionnent sur un rayon bien plus large : deux
+    // bornes de tri à 60 m l'une de l'autre n'apportent rien de plus qu'une.
+    const rayon = p._generic ? 110 : radius
+    const twin = out.find(o => o.emoji === p.emoji && distM(o, p) < rayon)
     if (!twin) { out.push(p); continue }
     const pNamed = !p._generic, twinNamed = !twin._generic
     const replace = (pNamed && !twinNamed) || (pNamed === twinNamed && p._isWay && !twin._isWay)
@@ -234,7 +258,8 @@ export async function detectPois(perimeter, fallbackCenter) {
   }
 
   // Fusion des doublons (point + surface du même équipement, bassins multiples…)
-  return clusterPois(pois).map(({ _generic, _isWay, ...p }) => p)
+  // puis plafonnement, pour que la carte reste lisible sur un grand camping.
+  return limiterParCategorie(clusterPois(pois)).map(({ _generic, _isWay, ...p }) => p)
 }
 
 // Recherche Nominatim + retourne { lat, lng, display_name } de la meilleure correspondance
