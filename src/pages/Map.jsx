@@ -233,13 +233,20 @@ export default function Map({ camping: campingProp, vacancier }) {
         center: [coords.lat, coords.lng],
         zoom: 18,
         zoomControl: false,
-        attributionControl: false, // pas de bandeau Leaflet/Esri en bas
+        // L'attribution est une obligation contractuelle du fournisseur de
+        // tuiles, pas une option esthétique : Esri exige que la source reste
+        // visible partout où son imagerie est affichée. Elle est rendue
+        // discrète en CSS plutôt que supprimée.
+        attributionControl: true,
         maxZoom: 19,
       })
 
       Lf.tileLayer(
         'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
-        { maxZoom: 19, maxNativeZoom: 19, className: 'cc-toon-tiles' }
+        {
+          maxZoom: 19, maxNativeZoom: 19, className: 'cc-toon-tiles',
+          attribution: 'Esri, Maxar, Earthstar Geographics',
+        }
       ).addTo(map)
 
       Lf.control.zoom({ position: 'topright' }).addTo(map)
