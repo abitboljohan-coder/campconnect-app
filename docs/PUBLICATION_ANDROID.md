@@ -93,24 +93,59 @@ Le fichier à uploader est :
 
 ## 4. Créer la fiche Play Store
 
-1. [play.google.com/console](https://play.google.com/console) → compte développeur (25 $ une fois).
-2. **Créer une application** → nom « CampConnect », français, gratuite.
-3. Renseigner la fiche :
-   - **Description courte/longue** (reprendre le site).
-   - **Captures d'écran** : celles du dossier `screenshots/` du site (min. 2, format téléphone).
-   - **Icône 512×512** : exporter depuis `assets/icon-only.png` (déjà au bon design).
-   - **Bannière 1024×500** (feature graphic) — obligatoire.
-4. **Questionnaires obligatoires** :
-   - Classification du contenu (app sociale, tout public avec chat modéré).
-   - Sécurité des données : déclarer pseudo/messages/position approximative, chiffrement en transit ✔, **URL de suppression : `https://www.campconnect.fr/suppression-donnees.html`**.
-   - Politique de confidentialité : `https://www.campconnect.fr/confidentialite.html`.
-5. **Production → Créer une release** → uploader l'AAB → soumettre en review (quelques heures à quelques jours).
+1. [play.google.com/console](https://play.google.com/console) → compte
+   développeur (25 $ une fois).
+2. **Créer une application** → « CampConnect », français, **gratuite**
+   (irréversible).
+3. Éléments visuels, tous déjà produits :
 
-## 5. Mises à jour suivantes
+| Élément | Fichier |
+|---|---|
+| Icône 512×512 | `assets/store/icon-512.png` |
+| Bannière 1024×500 | `assets/store/feature-graphic-1024x500.png` |
+| Captures téléphone | `assets/store/screenshots/01→06` |
 
-À chaque mise à jour : incrémenter `versionCode` (+1) et `versionName` dans `android/app/build.gradle`, puis refaire l'étape 3 et uploader le nouvel AAB.
+4. Textes, questionnaires de classification, sécurité des données, instructions
+   d'accès pour le testeur : tout est prêt dans `docs/FICHE_PLAY_STORE.md`.
+
+## 5. Le test fermé, obligatoire avant la production
+
+Un compte développeur **personnel** créé après novembre 2023 ne peut pas
+publier directement en production. Il faut d'abord :
+
+1. **Tests fermés** → créer une release → uploader l'AAB ;
+2. réunir **au moins 12 testeurs** et les maintenir inscrits **14 jours
+   consécutifs** ;
+3. seulement ensuite, demander l'accès à la production.
+
+C'est le seul délai qu'aucune diligence ne raccourcit : **commencer par là**,
+avant même de peaufiner la fiche. Les testeurs se recrutent par adresses Gmail
+ou via un groupe Google — proches, collègues, futurs campings pilotes.
+
+> Les « Tests internes » sont plus rapides à mettre en place mais **ne comptent
+> pas** pour ces 14 jours. Utiles pour vérifier que l'AAB s'installe, pas pour
+> avancer vers la production.
+
+## 6. Notifications push — ce qui ne marchera pas en 1.0
+
+`android/app/build.gradle` n'applique le plugin Google Services que si
+`google-services.json` est présent (lignes 70-75). Le fichier étant gitignoré et
+absent, le build réussit mais **les notifications push ne fonctionnent pas**.
+
+Ce n'est pas un blocage pour publier : ni la description ni les captures ne les
+annoncent. Pour les activer plus tard, il suffit de créer le projet Firebase,
+déposer `google-services.json` dans `android/app/`, et refaire un build — sans
+rien changer au code.
+
+## 7. Mises à jour suivantes
+
+À chaque envoi : incrémenter `versionCode` (+1) et `versionName` dans
+`android/app/build.gradle`, puis refaire l'étape 3. Play Console refuse un AAB
+dont le `versionCode` a déjà été utilisé.
 
 ## Rappels
 
-- L'app charge Supabase via `.env` au build : vérifier que `.env` est présent **avant** `npm run build`.
-- Tester l'AAB en interne d'abord : Play Console → « Tests internes » (diffusion immédiate à tes propres appareils, sans review complète).
+- L'app charge Supabase via `.env` au build : vérifier que `.env` est présent
+  **avant** `npm run build`, sinon l'app s'ouvre sur « Configuration manquante ».
+- Ne jamais commiter `campconnect-release.jks` ni `android/keystore.properties` :
+  les deux sont couverts par `.gitignore`, vérifié.
