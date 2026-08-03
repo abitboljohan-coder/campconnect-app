@@ -26,7 +26,7 @@ export default function AdminLayout({ gerant, camping, onLogout }) {
   const sidebarW = 220
 
   return (
-    <div style={{ minHeight: '100vh', background: '#f5f2eb', display: 'flex' }}>
+    <div style={{ minHeight: '100dvh', background: '#f5f2eb', display: 'flex' }}>
 
       {/* Sidebar desktop */}
       {!isMobile && (
@@ -89,7 +89,7 @@ export default function AdminLayout({ gerant, camping, onLogout }) {
         {isMobile && (
           <div style={{
             background: '#0d1f0d', padding: '14px 16px',
-            paddingTop: 'calc(14px + env(safe-area-inset-top))',
+            paddingTop: 'calc(14px + var(--cc-safe-top))',
             display: 'flex', alignItems: 'center', justifyContent: 'space-between',
             position: 'sticky', top: 0, zIndex: 50,
           }}>
@@ -141,7 +141,7 @@ export default function AdminLayout({ gerant, camping, onLogout }) {
           position: 'fixed', bottom: 0, left: 0, right: 0,
           background: '#0d1f0d', borderTop: '1px solid rgba(255,255,255,0.08)',
           display: 'flex', zIndex: 100,
-          paddingBottom: 'env(safe-area-inset-bottom)',
+          paddingBottom: 'var(--cc-safe-bottom)',
           height: 56,
         }}>
           {NAV_ITEMS.map(item => (

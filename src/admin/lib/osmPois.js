@@ -1,5 +1,7 @@
 // Détection automatique des points d'intérêt d'un camping depuis OpenStreetMap
 
+import { matchPoi, desencombrer } from '../../lib/poiCategories'
+
 const OVERPASS_ENDPOINTS = [
   'https://overpass-api.de/api/interpreter',
   'https://overpass.kumi.systems/api/interpreter',
@@ -48,52 +50,6 @@ function stripAccents(s) {
   return (s || '').normalize('NFD').replace(/[̀-ͯ]/g, '')
 }
 
-// Map (tags OSM) → { emoji, label, color }. Ordre = priorité (premier match gagne).
-const POI_MAP = [
-  [t => t.leisure === 'swimming_pool' || t.leisure === 'water_park',  { emoji: '🏊', label: 'Piscine',        color: '#38bdf8' }],
-  [t => t.attraction === 'water_slide',                               { emoji: '🛝', label: 'Toboggan',       color: '#22d3ee' }],
-  [t => t.leisure === 'sauna' || t.amenity === 'spa' || t.leisure === 'hot_tub', { emoji: '🧖', label: 'Spa / Jacuzzi', color: '#c084fc' }],
-  [t => t.amenity === 'reception_desk' || t.office === 'camping',     { emoji: '🏠', label: 'Réception',      color: '#3b82f6' }],
-  [t => t.leisure === 'miniature_golf',                               { emoji: '⛳', label: 'Mini-golf',      color: '#4ade80' }],
-  [t => t.sport === 'padel',                                          { emoji: '🎾', label: 'Padel',          color: '#a3e635' }],
-  [t => t.amenity === 'sanitary_dump_station',                        { emoji: '🚐', label: 'Vidange camping-car', color: '#64748b' }],
-  [t => t.amenity === 'vending_machine',                              { emoji: '🥤', label: 'Distributeur',   color: '#f472b6' }],
-  [t => t.shop === 'laundry',                                         { emoji: '🧺', label: 'Laverie',        color: '#8b5cf6' }],
-  [t => t.shop === 'bakery',                                          { emoji: '🥖', label: 'Boulangerie',    color: '#d97706' }],
-  [t => t.sport === 'petanque' || t.sport === 'boules',               { emoji: '🎳', label: 'Pétanque',       color: '#f59e0b' }],
-  [t => t.sport === 'tennis',                                         { emoji: '🎾', label: 'Tennis',         color: '#a3e635' }],
-  [t => t.sport === 'table_tennis',                                   { emoji: '🏓', label: 'Ping-pong',      color: '#f472b6' }],
-  [t => t.sport === 'basketball',                                     { emoji: '🏀', label: 'Basket',         color: '#fb923c' }],
-  [t => t.sport === 'volleyball' || t.sport === 'beachvolleyball',    { emoji: '🏐', label: 'Volley',         color: '#fbbf24' }],
-  [t => t.sport === 'soccer' || t.sport === 'football',               { emoji: '⚽', label: 'Foot',           color: '#22c55e' }],
-  [t => t.sport === 'multi',                                          { emoji: '🏟️', label: 'Terrain multi',   color: '#84cc16' }],
-  [t => t.leisure === 'pitch',                                        { emoji: '🏟️', label: 'Terrain',        color: '#84cc16' }],
-  [t => t.leisure === 'playground',                                   { emoji: '🎠', label: 'Aire de jeux',   color: '#f472b6' }],
-  [t => t.leisure === 'fitness_station' || t.leisure === 'fitness_centre', { emoji: '💪', label: 'Fitness',   color: '#fb7185' }],
-  [t => t.amenity === 'restaurant',                                   { emoji: '🍽️', label: 'Restaurant',     color: '#ef4444' }],
-  [t => t.amenity === 'bar' || t.amenity === 'pub',                   { emoji: '🍺', label: 'Bar',            color: '#eab308' }],
-  [t => t.amenity === 'cafe',                                         { emoji: '☕', label: 'Café',           color: '#a16207' }],
-  [t => t.amenity === 'fast_food',                                    { emoji: '🍔', label: 'Snack',          color: '#f97316' }],
-  [t => t.amenity === 'ice_cream',                                    { emoji: '🍦', label: 'Glacier',        color: '#f9a8d4' }],
-  [t => t.amenity === 'bbq',                                          { emoji: '🍖', label: 'BBQ',            color: '#dc2626' }],
-  [t => t.shop === 'convenience' || t.shop === 'supermarket',         { emoji: '🛒', label: 'Supérette',      color: '#0ea5e9' }],
-  [t => t.tourism === 'information',                                  { emoji: 'ℹ️',  label: 'Accueil',        color: '#3b82f6' }],
-  [t => t.amenity === 'toilets',                                      { emoji: '🚻', label: 'Sanitaires',     color: '#64748b' }],
-  [t => t.amenity === 'shower',                                       { emoji: '🚿', label: 'Douches',        color: '#0891b2' }],
-  [t => t.amenity === 'drinking_water',                               { emoji: '🚰', label: 'Point d\'eau',   color: '#06b6d4' }],
-  [t => t.amenity === 'washing_machine' || t.amenity === 'laundry',   { emoji: '🧺', label: 'Laverie',        color: '#8b5cf6' }],
-  [t => t.amenity === 'waste_disposal' || t.amenity === 'recycling',  { emoji: '♻️', label: 'Tri sélectif',   color: '#16a34a' }],
-  [t => t.amenity === 'parking',                                      { emoji: '🅿️', label: 'Parking',        color: '#475569' }],
-  [t => t.amenity === 'charging_station',                             { emoji: '🔌', label: 'Recharge',       color: '#22d3ee' }],
-  [t => t.amenity === 'first_aid' || t.emergency === 'defibrillator', { emoji: '⛑️', label: 'Premiers secours', color: '#dc2626' }],
-]
-
-function matchPoi(tags) {
-  if (!tags) return null
-  for (const [pred, info] of POI_MAP) if (pred(tags)) return info
-  return null
-}
-
 // Confiance CONTEXTUELLE :
 // • DANS le contour tracé du camping → tout équipement mappé est fiable, même sans nom
 //   (un court de tennis à l'intérieur du camping n'a presque jamais de "name" dans OSM).
@@ -116,28 +72,6 @@ function inflatePoly(poly, factor = 1.06) {
   for (const [a, b] of poly) { cx += a; cy += b }
   cx /= poly.length; cy /= poly.length
   return poly.map(([a, b]) => [cx + (a - cx) * factor, cy + (b - cy) * factor])
-}
-
-// Distance approx en mètres entre deux points proches
-function distM(a, b) {
-  const dLat = (a.lat - b.lat) * 111320
-  const dLng = (a.lng - b.lng) * 111320 * Math.cos(a.lat * Math.PI / 180)
-  return Math.hypot(dLat, dLng)
-}
-
-// Fusionne les doublons du même type à moins de `radius` mètres
-// (ex: piscine taggée en point ET en surface, bassins multiples).
-// Préfère l'élément nommé, puis la surface (way) au point.
-function clusterPois(pois, radius = 35) {
-  const out = []
-  for (const p of pois) {
-    const twin = out.find(o => o.emoji === p.emoji && distM(o, p) < radius)
-    if (!twin) { out.push(p); continue }
-    const pNamed = !p._generic, twinNamed = !twin._generic
-    const replace = (pNamed && !twinNamed) || (pNamed === twinNamed && p._isWay && !twin._isWay)
-    if (replace) out[out.indexOf(twin)] = p
-  }
-  return out
 }
 
 // Bounding box d'un polygone [[lat,lng], ...]
@@ -234,7 +168,15 @@ export async function detectPois(perimeter, fallbackCenter) {
   }
 
   // Fusion des doublons (point + surface du même équipement, bassins multiples…)
-  return clusterPois(pois).map(({ _generic, _isWay, ...p }) => p)
+  // puis plafonnement, pour que la carte reste lisible sur un grand camping.
+  // Les drapeaux internes ne sont pas persistés : la base ne stocke que ce qui
+  // décrit le point, pas la façon dont il a été trié.
+  return desencombrer(pois).map(p => {
+    const propre = { ...p }
+    delete propre._generic
+    delete propre._isWay
+    return propre
+  })
 }
 
 // Recherche Nominatim + retourne { lat, lng, display_name } de la meilleure correspondance

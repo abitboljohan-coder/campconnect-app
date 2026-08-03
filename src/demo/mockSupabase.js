@@ -20,11 +20,15 @@ const PINS = [
   { ref_id: 'l6', ref_type: 'lieu', label: 'Épicerie',     emoji: '🛒', color: '#0ea5e9', lat: 44.2012, lng: 6.2999, osm: true },
 ]
 
+// Même identité que le camping vitrine créé en production par
+// scripts/sql/seed_flots_bleus.sql : les captures des stores, la démo
+// commerciale et le lien de revue montrent ainsi le même camping.
 export const DEMO_CAMPING = {
   id: 'camp-demo',
-  nom: 'Camping des Cigales',
-  slug: 'camping-des-cigales',
-  couleur_principale: '#639922',
+  nom: 'Camping Les Flots Bleus',
+  slug: 'les-flots-bleus',
+  couleur_principale: '#0e7490',
+  couleur_secondaire: '#134e4a',
   logo_url: null,
   plan_url: null,
   carte_config: { center: CENTER, perimeter: PERIMETER, pins: PINS },
@@ -114,7 +118,18 @@ class Query {
   }
 }
 
-const noopChannel = { on() { return this }, subscribe() { return this }, unsubscribe() { return this } }
+// Doit exposer toute la surface de RealtimeChannel utilisée par l'app, sinon la
+// démo lève « canal.untrack is not a function » et l'écran se vide en pleine
+// présentation. usePresence.js appelle track / untrack / presenceState.
+const noopChannel = {
+  on() { return this },
+  subscribe(cb) { cb?.('SUBSCRIBED'); return this },
+  unsubscribe() { return this },
+  track: async () => ({ status: 'ok' }),
+  untrack: async () => ({ status: 'ok' }),
+  presenceState: () => ({ 'vac-1': [{}] }),   // un vacancier « en ligne »
+  send: async () => ({ status: 'ok' }),
+}
 
 export const supabase = {
   from: (t) => new Query(t),

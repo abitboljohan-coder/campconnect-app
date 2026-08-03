@@ -135,7 +135,7 @@ function App() {
           <Route element={<Layout camping={camping} />}>
             <Route path="/" element={<Accueil camping={camping} vacancier={vacancier} />} />
             <Route path="/groupes" element={<Groupes camping={camping} vacancier={vacancier} />} />
-            <Route path="/chat/:groupeId" element={<Chat vacancier={vacancier} />} />
+            <Route path="/chat/:groupeId" element={<Chat camping={camping} vacancier={vacancier} />} />
             <Route path="/map" element={<Map camping={camping} vacancier={vacancier} />} />
             <Route path="/agenda" element={<Agenda camping={camping} vacancier={vacancier} />} />
             <Route path="/infos" element={<Infos camping={camping} />} />
@@ -188,7 +188,7 @@ function FinSejour({ vacancier, camping, onRestart }) {
 
 function Splash() {
   return (
-    <div style={{ minHeight: '100vh', background: '#0d1f0d', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+    <div style={{ minHeight: '100dvh', background: '#0d1f0d', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
       <div style={{ color: '#97C459', fontFamily: 'sans-serif', fontSize: 18 }}>🌲 {t('commun.chargement')}</div>
     </div>
   )

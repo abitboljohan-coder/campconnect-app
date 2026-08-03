@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { toast } from '../toast'
 import { supabase } from '../supabase'
 import { t, useLangue, locale, LANGUES, setLangue } from '../i18n'
 
@@ -54,7 +55,7 @@ export default function Profil({ camping, vacancier, onLogout }) {
     if (error) {
       console.error('Sauvegarde profil échouée :', error)
       setSaving(false)
-      alert(t('profil.err_save'))
+      toast(t('profil.err_save'), 'erreur')
       return
     }
     const updated = { ...vacancier, ...form }
@@ -295,5 +296,5 @@ function Pill({ label, active, couleur, onClick }) {
 
 const inputStyle = {
   padding: '11px 13px', borderRadius: 10,
-  border: '1.5px solid #e5e7eb', fontSize: 15, outline: 'none', width: '100%', background: '#fafaf8',
+  border: '1.5px solid #e5e7eb', fontSize: 16, outline: 'none', width: '100%', background: '#fafaf8',
 }

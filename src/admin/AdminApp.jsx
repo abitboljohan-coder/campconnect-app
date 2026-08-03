@@ -95,7 +95,7 @@ export default function AdminApp() {
 
   if (loading) return (
     <div style={{
-      minHeight: '100vh', background: '#0d1f0d',
+      minHeight: '100dvh', background: '#0d1f0d',
       display: 'flex', alignItems: 'center', justifyContent: 'center',
     }}>
       <div style={{ color: '#97C459', fontSize: 18 }}>🌲 Chargement...</div>

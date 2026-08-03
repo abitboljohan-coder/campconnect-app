@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import Sheet from '../components/Sheet'
 import { supabase } from '../supabase'
 import { t, useLangue, locale } from '../i18n'
 
@@ -212,18 +213,7 @@ export default function Annonces({ camping, vacancier }) {
 
       {/* Modal publication */}
       {modal && (
-        <div
-          style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.55)', display: 'flex', alignItems: 'flex-end', zIndex: 200 }}
-          onClick={() => setModal(false)}
-        >
-          <div
-            onClick={e => e.stopPropagation()}
-            style={{
-              background: '#fff', borderRadius: '22px 22px 0 0', padding: '22px 20px 36px',
-              width: '100%', maxWidth: 600, margin: '0 auto', maxHeight: '88vh', overflowY: 'auto',
-            }}
-          >
-            <div style={{ width: 40, height: 4, background: '#e5e7eb', borderRadius: 2, margin: '0 auto 18px' }} />
+        <Sheet onClose={() => setModal(false)}>
             <h2 style={{ fontSize: 19, marginBottom: 16, color: '#1a1a1a' }}>{t('annonces.nouvelle')}</h2>
 
             {/* Type */}
@@ -307,12 +297,11 @@ export default function Annonces({ camping, vacancier }) {
                 }}
               >{saving ? t('annonces.publication') : t('annonces.publier')}</button>
             </div>
-          </div>
-        </div>
+        </Sheet>
       )}
     </div>
   )
 }
 
 const labelStyle = { fontSize: 11, fontWeight: 700, color: '#9ca3af', textTransform: 'uppercase', letterSpacing: 0.8, display: 'block', marginBottom: 6 }
-const inputStyle = { padding: '12px 14px', borderRadius: 12, border: '1.5px solid #e5e7eb', fontSize: 15, outline: 'none', width: '100%', background: '#fafafa', boxSizing: 'border-box' }
+const inputStyle = { padding: '12px 14px', borderRadius: 12, border: '1.5px solid #e5e7eb', fontSize: 16, outline: 'none', width: '100%', background: '#fafafa', boxSizing: 'border-box' }

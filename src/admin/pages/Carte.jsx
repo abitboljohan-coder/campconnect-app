@@ -172,12 +172,29 @@ export default function Carte({ camping, setCamping }) {
     if (detecting) return
     setDetecting(true); setError(''); setSuccess('')
     try {
-      const fallback = perimeter.length >= 3
-        ? { lat: perimeter[0][0], lng: perimeter[0][1] }
-        : null
-      const pois = await detectPois(perimeter.length >= 3 ? perimeter : null, fallback)
+      // Le repli n'était calculé que lorsqu'un contour existait, alors qu'il ne
+      // sert précisément que dans le cas contraire : sans contour tracé, la
+      // détection recevait deux valeurs nulles et échouait avant même
+      // d'interroger OpenStreetMap. On repart donc du centre connu du camping.
+      const cfg = camping?.carte_config || {}
+      const centre = perimeter.length >= 3
+        ? {
+            lat: perimeter.reduce((s, p) => s + p[0], 0) / perimeter.length,
+            lng: perimeter.reduce((s, p) => s + p[1], 0) / perimeter.length,
+          }
+        : (cfg.center?.lat ? cfg.center
+          : (cfg.lat && cfg.lng ? { lat: cfg.lat, lng: cfg.lng } : null))
+
+      if (!centre) {
+        setError("Le camping n'est pas encore localisé. Passez d'abord par l'étape 1 pour tracer le contour.")
+        setDetecting(false); return
+      }
+
+      const pois = await detectPois(perimeter.length >= 3 ? perimeter : null, centre)
       if (!pois.length) {
-        setError('Aucun POI détecté dans OSM. Ajoutez-les manuellement.')
+        setError(perimeter.length >= 3
+          ? "Aucun équipement trouvé dans OpenStreetMap à l'intérieur du contour. Ajoutez-les à la main ci-dessous."
+          : "Aucun équipement trouvé autour de ce point. Tracez d'abord le contour du camping (étape 1) : la recherche sera bien plus précise.")
         setDetecting(false); return
       }
       // Remplace tous les POI OSM par la détection fraîche ; garde uniquement les manuels
@@ -189,7 +206,13 @@ export default function Carte({ camping, setCamping }) {
       setCamping(c => ({ ...c, carte_config: newCfg }))
       setSuccess(`✅ ${pois.length} POI détectés depuis OpenStreetMap`)
       setTimeout(() => setSuccess(''), 5000)
-    } catch (e) { setError('Erreur : ' + e.message) }
+    } catch (e) {
+      // OpenStreetMap est un service public gratuit : il est régulièrement
+      // saturé ou en limitation de débit. Dire « réessayez » évite au gérant de
+      // croire que son camping est absent de la base.
+      console.error('Détection OSM échouée :', e)
+      setError("OpenStreetMap n'a pas répondu (service public souvent saturé). Réessayez dans une minute, ou ajoutez les équipements à la main ci-dessous.")
+    }
     setDetecting(false)
   }
 

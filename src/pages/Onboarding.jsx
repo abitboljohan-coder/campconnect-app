@@ -26,11 +26,24 @@ function haversine(lat1, lng1, lat2, lng2) {
 }
 
 // Si on est arrivé via /join/slug → le QR code physique = preuve de présence → pas besoin de vérifier
+// Attention : ne vaut que sur le web. Dans l'app native, le chemin est toujours
+// « / » — le deep link passe par native.js, qui range le slug en localStorage et
+// recharge sur la racine. D'où le drapeau ci-dessous, posé au même moment.
 const fromQR = !!window.location.pathname.match(/^\/join\/([^/?#]+)/)
+             || localStorage.getItem('arriveeParQR') === '1'
+
+// Camping en accès libre : contrôle de présence désactivé pour ce camping-là.
+// Réservé au camping de démonstration, qui doit rester ouvrable depuis
+// n'importe où — par un prospect à qui l'on fait la démonstration, et surtout
+// par les testeurs d'Apple et de Google, à des milliers de kilomètres du site.
+// Les campings réels n'ont pas ce drapeau et gardent leur vérification GPS.
+const estAccesLibre = c => c?.carte_config?.acces_libre === true
 
 export default function Onboarding({ initialCamping, onDone }) {
   useLangue()
-  const initialStep = !initialCamping ? 'search' : (fromQR ? 'form' : 'verify')
+  const initialStep = !initialCamping
+    ? 'search'
+    : (fromQR || estAccesLibre(initialCamping) ? 'form' : 'verify')
   const [step, setStep] = useState(initialStep)
   const [camping, setCamping] = useState(initialCamping)
   const couleur = camping?.couleur_principale || '#639922'
@@ -57,6 +70,9 @@ export default function Onboarding({ initialCamping, onDone }) {
   useEffect(() => {
     if (step === 'verify' && camping) {
       if (isDev) { setStep('form'); return } // bypass en dev local
+      // Camping de démonstration : ouvrable depuis n'importe où. Couvre le cas
+      // où l'on arrive par la recherche plutôt que par un lien /join.
+      if (estAccesLibre(camping)) { setStep('form'); return }
       checkGPS()
     }
   }, [step, camping?.id])
@@ -457,6 +473,8 @@ function Screen({ bg, children }) {
       display: 'flex', flexDirection: 'column',
       alignItems: 'center', justifyContent: 'center',
       padding: '24px 20px',
+      paddingTop: 'calc(24px + var(--cc-safe-top))',
+      paddingBottom: 'calc(24px + var(--cc-safe-bottom))',
     }}>
       {children}
     </div>

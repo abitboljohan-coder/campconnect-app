@@ -1,8 +1,10 @@
-import { useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
+import { toast } from '../toast'
 import { useNavigate } from 'react-router-dom'
 import { supabase } from '../supabase'
 import { esc } from '../utils/esc'
 import { t, useLangue, locale } from '../i18n'
+import { desencombrer } from '../lib/poiCategories'
 
 let L = null
 
@@ -32,6 +34,18 @@ function bearingDeg(p1, p2) {
   return (Math.atan2(Math.sin(dL) * Math.cos(lat2), Math.cos(lat1) * Math.sin(lat2) - Math.sin(lat1) * Math.cos(lat2) * Math.cos(dL)) * 180 / Math.PI + 360) % 360
 }
 function bearingArrow(deg) { return ['↑', '↗', '→', '↘', '↓', '↙', '←', '↖'][Math.round(deg / 45) % 8] }
+// Répartit n éléments en cercle autour d'un point. Rayon en mètres plutôt
+// qu'en pixels : l'écartement reste alors cohérent quel que soit le zoom, au
+// lieu de se disloquer dès qu'on agrandit.
+function enCouronne(lat, lng, index, total, rayonM = 15) {
+  if (total <= 1) return [lat, lng]
+  const angle = (2 * Math.PI * index) / total - Math.PI / 2
+  return [
+    lat + (rayonM * Math.sin(angle)) / 110574,
+    lng + (rayonM * Math.cos(angle)) / (111320 * Math.cos(lat * Math.PI / 180)),
+  ]
+}
+
 function fmtDist(m) { return m < 1000 ? `${Math.round(m)}m` : `${(m / 1000).toFixed(1)}km` }
 
 // "Sur site" : la position est-elle assez proche du camping pour être affichée ?
@@ -134,21 +148,25 @@ export default function Map({ camping: campingProp, vacancier }) {
     followingRef.current = true
   }
 
+  // Les points sont désencombrés à l'affichage, et pas seulement au moment de
+  // la détection : sans cela, un camping configuré avant le correctif garderait
+  // sa carte criblée de parkings et de bacs à tri jusqu'à ce qu'un gérant pense
+  // à relancer la détection.
+  const chargerPins = useCallback((dbPins) => {
+    if (dbPins?.length) { setPins(desencombrer(dbPins)); return }
+    try {
+      const local = JSON.parse(localStorage.getItem(`carte_config_${campingProp.id}`) || 'null')
+      if (local?.pins?.length) setPins(desencombrer(local.pins))
+    } catch { /* configuration locale illisible : on reste sans point */ }
+  }, [campingProp.id])
+
   useEffect(() => {
     async function load() {
       const { data: freshCamping } = await supabase
         .from('campings').select('*').eq('id', campingProp.id).single()
       if (freshCamping) {
         setCampingLocal(freshCamping)
-        const dbPins = freshCamping?.carte_config?.pins
-        if (dbPins?.length) {
-          setPins(dbPins)
-        } else {
-          try {
-            const local = JSON.parse(localStorage.getItem(`carte_config_${campingProp.id}`) || 'null')
-            if (local?.pins?.length) setPins(local.pins)
-          } catch {}
-        }
+        chargerPins(freshCamping?.carte_config?.pins)
       }
 
       const [{ data: anims }, { data: grps }, { data: inscs }, { data: membres }] = await Promise.all([
@@ -181,14 +199,7 @@ export default function Map({ camping: campingProp, vacancier }) {
         (payload) => {
           if (!payload.new) return
           setCampingLocal(payload.new)
-          const dbPins = payload.new?.carte_config?.pins
-          if (dbPins?.length) setPins(dbPins)
-          else {
-            try {
-              const local = JSON.parse(localStorage.getItem(`carte_config_${campingProp.id}`) || 'null')
-              if (local?.pins?.length) setPins(local.pins)
-            } catch {}
-          }
+          chargerPins(payload.new?.carte_config?.pins)
         }
       )
       .subscribe()
@@ -205,7 +216,7 @@ export default function Map({ camping: campingProp, vacancier }) {
       supabase.removeChannel(channel)
       if (watchId !== null) navigator.geolocation.clearWatch(watchId)
     }
-  }, [campingProp.id, vacancier.id])
+  }, [campingProp.id, vacancier.id, chargerPins])
 
   useEffect(() => {
     if (!mapRef.current || leafletMap.current) return
@@ -220,13 +231,20 @@ export default function Map({ camping: campingProp, vacancier }) {
         center: [coords.lat, coords.lng],
         zoom: 18,
         zoomControl: false,
-        attributionControl: false, // pas de bandeau Leaflet/Esri en bas
+        // L'attribution est une obligation contractuelle du fournisseur de
+        // tuiles, pas une option esthétique : Esri exige que la source reste
+        // visible partout où son imagerie est affichée. Elle est rendue
+        // discrète en CSS plutôt que supprimée.
+        attributionControl: true,
         maxZoom: 19,
       })
 
       Lf.tileLayer(
         'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
-        { maxZoom: 19, maxNativeZoom: 19, className: 'cc-toon-tiles' }
+        {
+          maxZoom: 19, maxNativeZoom: 19, className: 'cc-toon-tiles',
+          attribution: 'Esri, Maxar, Earthstar Geographics',
+        }
       ).addTo(map)
 
       Lf.control.zoom({ position: 'topright' }).addTo(map)
@@ -298,33 +316,42 @@ export default function Map({ camping: campingProp, vacancier }) {
       markersRef.current.push(m)
     })
 
-    // Animations → positionnées au POI correspondant
-    animations.forEach(anim => {
-      const matchPin = pinForLieu(anim.lieu)
-      if (!matchPin) return
-      const icon = Lf.divIcon({
-        html: `<div style="background:#f472b6;width:34px;height:34px;border-radius:50%;border:2.5px solid white;box-shadow:0 2px 8px rgba(0,0,0,0.3);display:flex;align-items:center;justify-content:center;font-size:16px">${esc(anim.emoji || '🎉')}</div>`,
-        className: '', iconSize: [34, 34], iconAnchor: [17, 17],
-      })
-      const m = Lf.marker([matchPin.lat, matchPin.lng], { icon, zIndexOffset: 20 })
-        .addTo(leafletMap.current)
-        .on('click', () => setActivePin({ ref_type: 'animation', ref_id: anim.id }))
-      markersRef.current.push(m)
-    })
+    // Animations et groupes → répartis en couronne autour de leur lieu.
+    //
+    // Ils étaient posés sur les coordonnées exactes du point d'intérêt : quatre
+    // animations à la piscine se superposaient donc au pixel près, et la carte
+    // devenait un amas de pastilles illisible. On les dispose maintenant en
+    // cercle autour du lieu, animations et groupes mêlés pour qu'ils ne se
+    // recouvrent pas non plus entre eux.
+    // Objet simple et non `new Map()` : le composant s'appelle Map et masque
+    // ici le constructeur natif — l'appeler instancierait le composant React
+    // et ferait planter l'écran au chargement.
+    const parLieu = {}
+    const rattacher = (item, type) => {
+      const ancre = pinForLieu(item.lieu)
+      if (!ancre) return
+      const cle = ancre.ref_id || `${ancre.lat},${ancre.lng}`
+      if (!parLieu[cle]) parLieu[cle] = { ancre, items: [] }
+      parLieu[cle].items.push({ item, type })
+    }
+    animations.forEach(a => rattacher(a, 'animation'))
+    groupes.forEach(g => rattacher(g, 'groupe'))
 
-    // Groupes → positionnés au POI correspondant
-    groupes.forEach(grp => {
-      const matchPin = pinForLieu(grp.lieu)
-      if (!matchPin) return
-      const icon = Lf.divIcon({
-        html: `<div style="background:#fb923c;width:34px;height:34px;border-radius:50%;border:2.5px solid white;box-shadow:0 2px 8px rgba(0,0,0,0.3);display:flex;align-items:center;justify-content:center;font-size:16px">${esc(grp.emoji || '👥')}</div>`,
-        className: '', iconSize: [34, 34], iconAnchor: [17, 17],
+    for (const { ancre, items } of Object.values(parLieu)) {
+      items.forEach(({ item, type }, i) => {
+        const [lat, lng] = enCouronne(ancre.lat, ancre.lng, i, items.length)
+        const couleurPastille = type === 'animation' ? '#f472b6' : '#fb923c'
+        const emoji = item.emoji || (type === 'animation' ? '🎉' : '👥')
+        const icon = Lf.divIcon({
+          html: `<div style="background:${couleurPastille};width:34px;height:34px;border-radius:50%;border:2.5px solid white;box-shadow:0 2px 8px rgba(0,0,0,0.3);display:flex;align-items:center;justify-content:center;font-size:16px">${esc(emoji)}</div>`,
+          className: '', iconSize: [34, 34], iconAnchor: [17, 17],
+        })
+        const m = Lf.marker([lat, lng], { icon, zIndexOffset: 20 })
+          .addTo(leafletMap.current)
+          .on('click', () => setActivePin({ ref_type: type, ref_id: item.id }))
+        markersRef.current.push(m)
       })
-      const m = Lf.marker([matchPin.lat, matchPin.lng], { icon, zIndexOffset: 20 })
-        .addTo(leafletMap.current)
-        .on('click', () => setActivePin({ ref_type: 'groupe', ref_id: grp.id }))
-      markersRef.current.push(m)
-    })
+    }
   }, [mapReady, animations, groupes, campingCoords, pins])
 
   // Marker position utilisateur (GPS réel ou simulé)
@@ -440,7 +467,7 @@ export default function Map({ camping: campingProp, vacancier }) {
         console.error('Désinscription échouée :', error)
         setInscriptions(p => [...p, anim.id])
         setCounts(p => ({ ...p, [anim.id]: (p[anim.id] || 0) + 1 }))
-        alert("Impossible de vous désinscrire pour le moment.")
+        toast("Impossible de vous désinscrire pour le moment.", 'erreur')
       }
     } else {
       if (anim.places_max && (counts[anim.id] || 0) >= anim.places_max) return
@@ -451,7 +478,7 @@ export default function Map({ camping: campingProp, vacancier }) {
         console.error('Inscription échouée :', error)
         setInscriptions(p => p.filter(id => id !== anim.id))
         setCounts(p => ({ ...p, [anim.id]: Math.max(0, (p[anim.id] || 1) - 1) }))
-        alert("Impossible de vous inscrire pour le moment.")
+        toast("Impossible de vous inscrire pour le moment.", 'erreur')
       }
     }
   }
@@ -460,7 +487,7 @@ export default function Map({ camping: campingProp, vacancier }) {
     const { error } = await supabase.from('membres_groupes').insert({ groupe_id: id, vacancier_id: vacancier.id })
     if (error && error.code !== '23505') { // 23505 = déjà membre, on laisse passer
       console.error('Rejoindre groupe échoué :', error)
-      alert("Impossible de rejoindre le groupe pour le moment.")
+      toast("Impossible de rejoindre le groupe pour le moment.", 'erreur')
       return
     }
     setMesGroupes(p => p.includes(id) ? p : [...p, id])
@@ -470,7 +497,7 @@ export default function Map({ camping: campingProp, vacancier }) {
   const planUrl = camping?.plan_url
 
   return (
-    <div style={{ position: 'relative', height: 'calc(100dvh - 88px - env(safe-area-inset-bottom))', overflow: 'hidden', background: '#0d1f0d' }}>
+    <div style={{ position: 'relative', height: 'calc(100dvh - 88px - var(--cc-safe-bottom))', overflow: 'hidden', background: '#0d1f0d' }}>
 
       {/* Panneau simulation GPS */}
       {simulating && simPos && (
@@ -533,8 +560,11 @@ export default function Map({ camping: campingProp, vacancier }) {
         </div>
       )}
 
-      {/* Bouton lancer simulation */}
-      {!simulating && (
+      {/* Bouton lancer simulation — outil de développement uniquement.
+          import.meta.env.DEV est false dans tout build de production, donc
+          `simulating` ne peut jamais passer à true : le panneau de simulation,
+          les flèches clavier et le clic-pour-marcher restent inaccessibles. */}
+      {!simulating && import.meta.env.DEV && (
         <button onClick={startSim} style={{
           position: 'absolute', bottom: 80, left: 12, zIndex: 1000,
           padding: '8px 14px', borderRadius: 20, fontSize: 12, fontWeight: 700,
@@ -546,7 +576,7 @@ export default function Map({ camping: campingProp, vacancier }) {
 
       {/* Menu discret « Où aller ? » → guidage vers un lieu (piscine, pétanque…) */}
       {mapMode === 'satellite' && lieuxDest.length > 0 && !guideTarget && (
-        <div style={{ position: 'absolute', top: 'calc(12px + env(safe-area-inset-top))', left: 12, zIndex: 1500, maxWidth: 'calc(100% - 24px)' }}>
+        <div style={{ position: 'absolute', top: 'calc(12px + var(--cc-safe-top))', left: 12, zIndex: 1500, maxWidth: 'calc(100% - 24px)' }}>
           <button
             onClick={() => setShowDest(v => !v)}
             style={{
@@ -723,7 +753,7 @@ export default function Map({ camping: campingProp, vacancier }) {
                   <div style={{ width: 52, height: 52, borderRadius: 14, background: `${activePin.color}20`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 28 }}>{activePin.emoji}</div>
                   <div>
                     <div style={{ fontWeight: 700, fontSize: 17 }}>{activePin.label}</div>
-                    {effectivePos && activePin.lat && activePin.lng && (
+                    {effectivePos && posSurSiteNow && activePin.lat && activePin.lng && (
                       <div style={{ fontSize: 13, color: '#639922', fontWeight: 600, marginTop: 3 }}>
                         {bearingArrow(bearingDeg(effectivePos, activePin))} {fmtDist(haversineM(effectivePos, activePin))}
                       </div>
@@ -755,6 +785,7 @@ export default function Map({ camping: campingProp, vacancier }) {
         <GuideBanner
           target={guideTarget}
           pos={effectivePos}
+          surSite={posSurSiteNow}
           couleur={couleur}
           onClose={() => setGuideTarget(null)}
         />
@@ -763,7 +794,7 @@ export default function Map({ camping: campingProp, vacancier }) {
   )
 }
 
-function GuideBanner({ target, pos, couleur, onClose }) {
+function GuideBanner({ target, pos, surSite, couleur, onClose }) {
   useLangue()
   if (!pos) {
     return (
@@ -775,6 +806,26 @@ function GuideBanner({ target, pos, couleur, onClose }) {
       </div>
     )
   }
+  // Guider « tout droit » vers un point situé à des centaines de kilomètres
+  // n'a aucun sens et décrédibilise l'application. Tant que le vacancier n'est
+  // pas sur le site, on dit où il en est plutôt que d'afficher une flèche.
+  if (!surSite) {
+    return (
+      <div style={guideBannerBox}>
+        <div style={{ fontSize: 26, lineHeight: 1, flexShrink: 0 }}>🧭</div>
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <div style={{ fontSize: 15, fontWeight: 700, color: '#fff', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+            {target.emoji} {target.label}
+          </div>
+          <div style={{ fontSize: 13, color: '#C0DD97', fontWeight: 600, marginTop: 2 }}>
+            {t('carte.hors_site')} · {t('carte.guidage_sur_place')}
+          </div>
+        </div>
+        <button onClick={onClose} style={guideCloseBtn}>×</button>
+      </div>
+    )
+  }
+
   const dist = haversineM(pos, target)
   const bearing = bearingDeg(pos, target)
   const arrived = dist < 8
@@ -805,7 +856,7 @@ function GuideBanner({ target, pos, couleur, onClose }) {
 }
 
 const guideBannerBox = {
-  position: 'absolute', top: 'calc(12px + env(safe-area-inset-top))', left: 12, right: 12, zIndex: 2500,
+  position: 'absolute', top: 'calc(12px + var(--cc-safe-top))', left: 12, right: 12, zIndex: 2500,
   background: 'rgba(13,31,13,0.94)', backdropFilter: 'blur(10px)',
   borderRadius: 16, padding: '12px 14px', display: 'flex', alignItems: 'center', gap: 12,
   boxShadow: '0 6px 24px rgba(0,0,0,0.4)', border: '1px solid rgba(255,255,255,0.12)',

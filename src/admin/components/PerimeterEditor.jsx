@@ -301,7 +301,7 @@ export default function PerimeterEditor({ camping, onClose, onSaved }) {
   }, [points, ready, couleur])
 
   // Centre sur un résultat Nominatim et trace le contour automatiquement si possible.
-  async function useResult(r) {
+  async function appliquerResultat(r) {
     setSearchResults([])
     const lat = +r.lat, lng = +r.lon
     leafletMap.current?.setView([lat, lng], 17)
@@ -328,7 +328,7 @@ export default function PerimeterEditor({ camping, onClose, onSaved }) {
     setTimeout(() => setNotice(''), 6000)
   }
 
-  function pickResult(r) { useResult(r) }
+  function pickResult(r) { appliquerResultat(r) }
 
   // Menu déroulant en direct : dès 3 caractères, on propose les adresses correspondantes
   // pour que le gérant clique sur la bonne au lieu de deviner à sa place.

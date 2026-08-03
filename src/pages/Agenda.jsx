@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { toast } from '../toast'
 import { supabase } from '../supabase'
 import { t, useLangue, locale } from '../i18n'
 
@@ -90,17 +91,20 @@ export default function Agenda({ camping, vacancier }) {
         console.error('Désinscription échouée :', error)
         setInscriptions(prev => [...prev, anim.id])
         setCounts(prev => ({ ...prev, [anim.id]: (prev[anim.id] || 0) + 1 }))
-        alert(t('agenda.err_desinscr'))
+        toast(t('agenda.err_desinscr'), 'erreur')
       }
     } else {
       setInscriptions(prev => [...prev, anim.id])
       setCounts(prev => ({ ...prev, [anim.id]: (prev[anim.id] || 0) + 1 }))
       const { error } = await supabase.from('inscriptions').insert({ animation_id: anim.id, vacancier_id: vacancier.id })
+      // Une action réussie doit se voir. Sans confirmation, l'utilisateur
+      // reclique par doute — le réflexe que toute app sociale évite.
+      if (!error || error.code === '23505') toast(`${anim.emoji || '🎉'} Inscrit à « ${anim.titre} »`, 'succes')
       if (error && error.code !== '23505') {
         console.error('Inscription échouée :', error)
         setInscriptions(prev => prev.filter(id => id !== anim.id))
         setCounts(prev => ({ ...prev, [anim.id]: Math.max(0, (prev[anim.id] || 1) - 1) }))
-        alert(t('agenda.err_inscr'))
+        toast(t('agenda.err_inscr'), 'erreur')
       }
     }
   }
@@ -162,7 +166,7 @@ export default function Agenda({ camping, vacancier }) {
             <h2 style={{
               fontSize: 13, fontWeight: 700, color: '#9ca3af',
               textTransform: 'uppercase', letterSpacing: 1.2,
-              marginBottom: 10, textTransform: 'uppercase',
+              marginBottom: 10,
             }}>
               {sectionKey}
             </h2>

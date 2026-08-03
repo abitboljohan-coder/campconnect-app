@@ -5,8 +5,13 @@ import { t, useLangue, locale } from '../i18n'
 
 const REACTIONS = ['❤️', '😂', '👍', '🔥', '🎉']
 
-export default function Chat({ vacancier }) {
+export default function Chat({ camping, vacancier }) {
   useLangue()
+  // La fiche Store promet « un espace aux couleurs de l'établissement » : le
+  // chat doit suivre la charte du camping comme le reste de l'app, et non
+  // rester sur le vert par défaut.
+  const couleur = camping?.couleur_principale || '#639922'
+  const fonce   = camping?.couleur_secondaire || '#0d1f0d'
   const { groupeId } = useParams()
   const navigate = useNavigate()
   const [groupe, setGroupe]         = useState(null)
@@ -97,23 +102,26 @@ export default function Chat({ vacancier }) {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', height: '100dvh', background: '#f5f2eb' }}>
 
-      {/* Header */}
+      {/* Header — Layout masque le sien sur les routes /chat/, c'est donc à cet
+          en-tête de réserver la place de la barre d'état. Sans ce paddingTop,
+          l'heure de l'iPhone recouvre la flèche retour et la rend incliquable. */}
       <div style={{
-        background: '#0d1f0d',
+        background: fonce,
         padding: '12px 16px',
+        paddingTop: 'calc(12px + var(--cc-safe-top))',
         display: 'flex', alignItems: 'center', gap: 12,
         flexShrink: 0,
         boxShadow: '0 2px 8px rgba(0,0,0,0.2)',
       }}>
         <button
           onClick={() => navigate('/groupes')}
-          style={{ color: '#C0DD97', fontSize: 24, lineHeight: 1, padding: '0 4px', flexShrink: 0 }}
+          style={{ color: '#fff', fontSize: 24, lineHeight: 1, padding: '0 4px', flexShrink: 0 }}
         >
           ‹
         </button>
         <div style={{
           width: 38, height: 38, borderRadius: 10,
-          background: '#1a3a1a',
+          background: 'rgba(255,255,255,0.16)',
           display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20, flexShrink: 0,
         }}>
           {groupe?.emoji || '👥'}
@@ -122,7 +130,7 @@ export default function Chat({ vacancier }) {
           <div style={{ fontWeight: 700, fontSize: 16, color: '#fff', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
             {groupe?.titre || '...'}
           </div>
-          <div style={{ fontSize: 12, color: '#97C459' }}>
+          <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.72)' }}>
             {nbMembres > 1 ? t('chat.participants', { n: nbMembres }) : t('chat.participant', { n: nbMembres })}
             {groupe?.lieu && ` · 📍 ${groupe.lieu}`}
           </div>
@@ -168,11 +176,17 @@ export default function Chat({ vacancier }) {
                   }}
                 >
                   {showAuthor && auteur && (
-                    <div style={{ fontSize: 11, color: '#639922', marginBottom: 3, marginLeft: 46, fontWeight: 600 }}>
+                    <div style={{ fontSize: 11, color: couleur, marginBottom: 3, marginLeft: 46, fontWeight: 600 }}>
                       {auteur.avatar_emoji} {auteur.pseudo}
                     </div>
                   )}
-                  <div style={{ display: 'flex', alignItems: 'flex-end', gap: 6, flexDirection: isMine ? 'row-reverse' : 'row' }}>
+                  {/* width 100% indispensable : la bulle porte un maxWidth en
+                      pourcentage, qui a besoin d'une largeur de référence
+                      définie. Sans lui, cette ligne se dimensionne sur son
+                      contenu, le pourcentage devient circulaire, et le
+                      navigateur retombe sur la largeur minimale — la bulle
+                      s'affiche alors une lettre par ligne. */}
+                  <div style={{ display: 'flex', alignItems: 'flex-end', gap: 6, width: '100%', flexDirection: isMine ? 'row-reverse' : 'row' }}>
                     {/* Avatar auteur (them) */}
                     {!isMine && (
                       <div style={{
@@ -189,13 +203,13 @@ export default function Chat({ vacancier }) {
                       <div
                         onClick={() => setPickerFor(pickerFor === msg.id ? null : msg.id)}
                         style={{
-                          background: isMine ? '#639922' : 'rgba(255,255,255,0.92)',
+                          background: isMine ? couleur : 'rgba(255,255,255,0.92)',
                           color: isMine ? '#fff' : '#1a1a1a',
                           padding: '10px 14px',
                           borderRadius: isMine ? '18px 18px 3px 18px' : '18px 18px 18px 3px',
                           fontSize: 15, lineHeight: 1.45,
-                          boxShadow: isMine ? '0 2px 8px rgba(99,153,34,0.27)' : '0 1px 4px rgba(0,0,0,0.08)',
-                          wordBreak: 'break-word',
+                          boxShadow: isMine ? `0 2px 8px ${couleur}45` : '0 1px 4px rgba(0,0,0,0.08)',
+                          overflowWrap: 'break-word',
                           cursor: 'pointer',
                         }}>
                         {msg.contenu}
@@ -227,8 +241,8 @@ export default function Chat({ vacancier }) {
                             <button key={e} onClick={() => toggleReaction(msg, e)}
                               style={{
                                 fontSize: 12, padding: '2px 7px', borderRadius: 12,
-                                background: ids.includes(vacancier.id) ? '#63992222' : '#fff',
-                                border: '1px solid ' + (ids.includes(vacancier.id) ? '#639922' : '#e5e7eb'),
+                                background: ids.includes(vacancier.id) ? `${couleur}22` : '#fff',
+                                border: '1px solid ' + (ids.includes(vacancier.id) ? couleur : '#e5e7eb'),
                                 cursor: 'pointer', fontWeight: 600, color: '#374151',
                               }}>
                               {e} {ids.length > 1 ? ids.length : ''}
@@ -266,7 +280,7 @@ export default function Chat({ vacancier }) {
           background: '#fff',
           borderTop: '1px solid #e5e7eb',
           display: 'flex', gap: 8, alignItems: 'center',
-          paddingBottom: 'max(10px, env(safe-area-inset-bottom))',
+          paddingBottom: 'max(10px, var(--cc-safe-bottom))',
           flexShrink: 0,
         }}
       >
@@ -279,7 +293,7 @@ export default function Chat({ vacancier }) {
           style={{
             flex: 1, padding: '11px 16px',
             borderRadius: 24, border: '1.5px solid #e5e7eb',
-            fontSize: 15, outline: 'none', background: '#f9f7f3',
+            fontSize: 16, outline: 'none', background: '#f9f7f3',
             transition: 'border-color 0.15s',
           }}
         />
@@ -288,7 +302,7 @@ export default function Chat({ vacancier }) {
           disabled={!texte.trim() || sending}
           style={{
             width: 44, height: 44, borderRadius: '50%',
-            background: !texte.trim() || sending ? '#e5e7eb' : '#639922',
+            background: !texte.trim() || sending ? '#e5e7eb' : couleur,
             color: '#fff', fontSize: 20,
             display: 'flex', alignItems: 'center', justifyContent: 'center',
             flexShrink: 0, transition: 'background 0.15s',

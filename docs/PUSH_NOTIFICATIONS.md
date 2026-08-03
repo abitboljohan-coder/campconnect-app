@@ -61,7 +61,9 @@ fonctionne normalement, simplement sans notifications.
 
 1. [developer.apple.com](https://developer.apple.com) → Certificates, Identifiers & Profiles → **Keys** → créer une **APNs Auth Key** (`.p8`). Noter le **Key ID** et ton **Team ID**.
 2. Firebase → Paramètres → Cloud Messaging → section **Apple app configuration** → **APNs Authentication Key** → uploader le `.p8` + Key ID + Team ID.
-3. Dans **Xcode** (`ios/App/App.xcworkspace`) → cible **App** → onglet **Signing & Capabilities** :
+3. Dans **Xcode** (`ios/App/App.xcodeproj` — Capacitor 8 utilise Swift Package
+   Manager, il n'y a plus de `.xcworkspace` ni de CocoaPods) → cible **App** →
+   onglet **Signing & Capabilities** :
    - **+ Capability → Push Notifications**
    - **+ Capability → Background Modes** → cocher **Remote notifications**
 

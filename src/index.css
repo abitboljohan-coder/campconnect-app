@@ -12,17 +12,94 @@
   background: #f5f2eb;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  /* Sans cela, iOS grossit le texte au passage en paysage. */
+  -webkit-text-size-adjust: 100%;
+}
+
+/* Une URL ou un pseudo sans espace ne doit pas élargir la mise en page :
+   sur un écran de 320 px, un seul mot long suffit à créer un défilement
+   horizontal sur toute l'application. */
+body {
+  overflow-wrap: break-word;
+}
+
+/* Comportement natif au toucher : pas de halo bleu au tap, pas de menu
+   contextuel sur appui long, pas de sélection de texte accidentelle sur les
+   éléments interactifs. */
+button, a, [role="button"] {
+  -webkit-tap-highlight-color: transparent;
+  -webkit-touch-callout: none;
+  user-select: none;
+}
+
+/* Retour tactile : un élément pressé doit répondre immédiatement, sans
+   attendre le résultat de l'action. C'est ce qui distingue une application
+   d'une page web, bien plus que n'importe quelle animation d'entrée. */
+button:active, a:active, [role="button"]:active {
+  transform: scale(0.97);
+}
+button, a, [role="button"] {
+  transition: transform 0.09s ease-out;
+}
+
+/* Respecte le réglage système « Réduire les animations ». */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* Rebond élastique iOS — deux verrous complémentaires.
+   1. Le document ne défile jamais : html/body sont figés à la hauteur du
+      viewport, sans débordement. Rien à faire rebondir.
+   2. C'est #root qui défile, en tant qu'élément. Le défilement d'élément
+      n'entraîne ni le fond natif de la WKWebView, ni les positions fixed.
+   Le troisième verrou est natif : ios.scrollEnabled = false dans
+   capacitor.config.json désactive la UIScrollView de la WKWebView, qui
+   rebondit sinon même quand le contenu tient dans l'écran. */
+/* Marges de sécurité — un seul point de vérité, et un seul mécanisme.
+   ios.contentInset vaut « never » : la WebView n'ajoute aucune marge, c'est
+   l'application qui les gère intégralement. Une seule source, donc jamais de
+   double comptage.
+   Les valeurs planchers ne sont pas décoratives : selon la configuration de la
+   WebView, env() peut retourner zéro alors que la barre d'état et l'indicateur
+   d'accueil occupent bien la place. Sans plancher, l'en-tête passe sous
+   l'heure et la barre de navigation descend sur l'indicateur d'accueil, où
+   iOS intercepte les touchers avant l'application. */
+:root {
+  --cc-safe-top: max(env(safe-area-inset-top, 0px), 44px);
+  --cc-safe-bottom: max(env(safe-area-inset-bottom, 0px), 24px);
+}
+
+/* Sur un écran large, aucune encoche à compenser : le plancher ne s'applique
+   qu'aux formats téléphone. */
+@media (min-width: 700px) {
+  :root {
+    --cc-safe-top: env(safe-area-inset-top, 0px);
+    --cc-safe-bottom: env(safe-area-inset-bottom, 0px);
+  }
+}
+
+html, body {
+  height: 100%;
+  overflow: hidden;
+  overscroll-behavior: none;
+  background: #f5f2eb;
 }
 
 body {
   margin: 0;
-  background: #f5f2eb;
 }
 
 #root {
-  min-height: 100dvh;
+  height: 100dvh;
   display: flex;
   flex-direction: column;
+  overflow-x: hidden;
+  overflow-y: auto;
+  overscroll-behavior: contain;
 }
 
 h1, h2, h3 {
@@ -62,6 +139,16 @@ input, textarea, select {
   to { opacity: 1; transform: translateY(0); }
 }
 
+@keyframes ccToastIn {
+  from { opacity: 0; transform: translateY(14px) scale(0.97); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+@keyframes ccFade {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
 @keyframes spin {
   to { transform: rotate(360deg); }
 }
@@ -70,6 +157,17 @@ input, textarea, select {
   from { transform: translateY(100%); }
   to { transform: translateY(0); }
 }
+
+/* Attribution des tuiles satellite : obligatoire, donc conservée, mais réduite
+   au strict nécessaire pour ne pas encombrer la carte. */
+.leaflet-control-attribution {
+  background: rgba(255, 255, 255, 0.62) !important;
+  font-size: 9px !important;
+  padding: 1px 5px !important;
+  border-radius: 6px 0 0 0;
+  color: #4b5563 !important;
+}
+.leaflet-control-attribution a { color: #4b5563 !important; }
 
 /* --- Filtre "cartoon" appliqué aux tuiles satellite de la Map vacancier --- */
 .cc-toon-tiles {

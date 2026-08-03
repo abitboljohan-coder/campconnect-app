@@ -5,7 +5,7 @@
     <key>CAPACITOR_DEBUG</key>
 	<string>$(CAPACITOR_DEBUG)</string>
 	<key>CFBundleDevelopmentRegion</key>
-	<string>en</string>
+	<string>fr</string>
 	<key>CFBundleDisplayName</key>
         <string>CampConnect</string>
 	<key>CFBundleExecutable</key>
@@ -49,6 +49,12 @@
 	<true/>
 	<key>NSLocationWhenInUseUsageDescription</key>
 	<string>Votre position sert uniquement à vérifier que vous êtes bien dans le camping lors de l'inscription.</string>
+	<key>ITSAppUsesNonExemptEncryption</key>
+	<false/>
+	<key>NSCameraUsageDescription</key>
+	<string>L'appareil photo sert à joindre une photo à un signalement ou à une annonce.</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>Vos photos servent à illustrer un signalement ou une annonce que vous publiez.</string>
 	<key>CFBundleURLTypes</key>
 	<array>
 		<dict>

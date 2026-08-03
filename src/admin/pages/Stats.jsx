@@ -146,7 +146,7 @@ export default function Stats({ camping }) {
         )}
 
         {/* Répartition âge + avec */}
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: 20 }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(280px, 100%), 1fr))', gap: 20 }}>
           <ChartCard title="Répartition par tranche d'âge">
             {data.trancheAge.length > 0 ? (
               <ResponsiveContainer width="100%" height={200}>

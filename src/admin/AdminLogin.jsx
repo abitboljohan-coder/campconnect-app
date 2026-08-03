@@ -81,7 +81,7 @@ export default function AdminLogin({ onLogin }) {
 
   return (
     <div style={{
-      minHeight: '100vh', background: '#0d1f0d',
+      minHeight: '100dvh', background: '#0d1f0d',
       display: 'flex', alignItems: 'center', justifyContent: 'center',
       padding: '0 20px',
     }}>
@@ -187,6 +187,6 @@ const inputStyle = {
   width: '100%', padding: '12px 14px', borderRadius: 10,
   border: '1.5px solid rgba(255,255,255,0.12)',
   background: 'rgba(255,255,255,0.07)', color: '#fff',
-  fontSize: 15, outline: 'none',
+  fontSize: 16, outline: 'none',
   boxSizing: 'border-box',
 }

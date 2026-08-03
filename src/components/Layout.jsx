@@ -1,12 +1,14 @@
 import { Outlet, NavLink, useLocation, Link } from 'react-router-dom'
 import { t, useLangue } from '../i18n'
+import Icon from './Icon'
+import SwipeBack from './SwipeBack'
 
 const NAV = [
-  { to: '/', key: 'nav.accueil', icon: '🏕️' },
-  { to: '/groupes', key: 'nav.groupes', icon: '👥' },
-  { to: '/map', key: 'nav.carte', icon: '🗺️' },
-  { to: '/agenda', key: 'nav.agenda', icon: '📅' },
-  { to: '/infos', key: 'nav.infos', icon: 'ℹ️' },
+  { to: '/', key: 'nav.accueil', icon: 'accueil' },
+  { to: '/groupes', key: 'nav.groupes', icon: 'groupes' },
+  { to: '/map', key: 'nav.carte', icon: 'carte' },
+  { to: '/agenda', key: 'nav.agenda', icon: 'agenda' },
+  { to: '/infos', key: 'nav.infos', icon: 'infos' },
 ]
 
 export default function Layout({ camping }) {
@@ -17,7 +19,7 @@ export default function Layout({ camping }) {
   const isMap   = location.pathname === '/map'
 
   return (
-    <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', background: '#faf7f0' }}>
+    <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', background: '#faf7f0', overflow: 'hidden' }}>
       {/* Header clair estival */}
       {!hideNav && !isMap && (
         <header style={{
@@ -25,7 +27,7 @@ export default function Layout({ camping }) {
           backdropFilter: 'blur(12px)',
           WebkitBackdropFilter: 'blur(12px)',
           padding: '12px 18px',
-          paddingTop: 'calc(12px + env(safe-area-inset-top))',
+          paddingTop: 'calc(12px + var(--cc-safe-top))',
           display: 'flex',
           alignItems: 'center',
           gap: 10,
@@ -52,7 +54,7 @@ export default function Layout({ camping }) {
           </div>
           <Link to="/profil" style={{
             marginLeft: 'auto', textDecoration: 'none',
-            width: 36, height: 36, borderRadius: '50%',
+            width: 40, height: 40, borderRadius: '50%',
             background: `${couleur}18`, border: `2px solid ${couleur}40`,
             display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18,
           }}>👤</Link>
@@ -60,15 +62,31 @@ export default function Layout({ camping }) {
       )}
 
       {/* Contenu */}
-      <main style={{ flex: 1, overflowY: isMap ? 'hidden' : 'auto', paddingBottom: hideNav || isMap ? 0 : 88, position: 'relative' }}>
-        <Outlet />
+      {/* Pas de -webkit-overflow-scrolling ici : sur iOS cette propriété crée un
+          contexte d'empilement, ce qui enfermerait le z-index des modales
+          ouvertes depuis les pages — la barre de navigation, pourtant à un
+          z-index inférieur mais rendue en dehors, passerait devant elles.
+          L'inertie de défilement est native depuis iOS 13, la propriété n'a
+          plus d'utilité. */}
+      <main style={{
+        flex: 1,
+        minHeight: 0,
+        overflowY: isMap ? 'hidden' : 'auto',
+        overscrollBehavior: 'contain',
+        // 64 de barre + 12 de marge basse + 20 de respiration
+        paddingBottom: hideNav || isMap ? 0 : 'calc(96px + var(--cc-safe-bottom))',
+        position: 'relative',
+      }}>
+        <SwipeBack>
+          <Outlet />
+        </SwipeBack>
       </main>
 
       {/* Bottom nav flottante */}
       {!hideNav && (
         <nav style={{
           position: 'fixed',
-          bottom: 'calc(12px + env(safe-area-inset-bottom))',
+          bottom: 'calc(12px + var(--cc-safe-bottom))',
           left: 12,
           right: 12,
           maxWidth: 500,
@@ -106,12 +124,13 @@ export default function Layout({ camping }) {
               {({ isActive }) => (
                 <>
                   <span style={{
-                    fontSize: 21,
                     width: 40, height: 30, borderRadius: 12,
                     display: 'flex', alignItems: 'center', justifyContent: 'center',
                     background: isActive ? `${couleur}1d` : 'transparent',
                     transition: 'background 0.15s',
-                  }}>{item.icon}</span>
+                  }}>
+                    <Icon nom={item.icon} actif={isActive} />
+                  </span>
                   {t(item.key)}
                 </>
               )}
