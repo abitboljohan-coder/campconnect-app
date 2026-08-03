@@ -70,7 +70,7 @@ export function distM(a, b) {
   return Math.hypot(dLat, dLng)
 }
 
-// Plafonds par catégorie, appliqués aux seuls équipements anonymes.
+// Plafonds par catégorie, pour les équipements anonymes.
 //
 // OpenStreetMap recense chaque place de parking, chaque bac à tri et chaque
 // borne de recharge comme un objet distinct. Sur un grand camping cela donne
@@ -79,10 +79,26 @@ export function distM(a, b) {
 export const PLAFONDS = { '🅿️': 2, '♻️': 2, '🔌': 2, '🚻': 5 }
 export const PLAFOND_DEFAUT = 4
 
+// Plafond par catégorie pour les équipements NOMMÉS.
+//
+// Porter un nom ne suffit pas à mériter une pastille. Un camping en bord de
+// station est entouré de bars, de glaciers et d'épiceries qui portent tous un
+// nom : sans limite, la carte du camping devient la carte du village. Trois
+// restaurants suffisent à dire « on mange ici » ; le quatrième n'ajoute que du
+// bruit.
+export const PLAFOND_NOMME = 3
+
+// Nombre total de pastilles au-delà duquel la carte cesse d'être lisible sur un
+// écran de téléphone. Les catégories les plus utiles au vacancier sont servies
+// en premier : l'ordre de POI_MAP fait foi, piscine et réception en tête.
+export const PLAFOND_TOTAL = 26
+
+const PRIORITE = new Map(POI_MAP.map(([, info], i) => [info.emoji, i]))
+
 /**
  * Fusionne les doublons puis plafonne, pour que la carte reste lisible.
- * Les points nommés et les points ajoutés à la main (`osm` absent) traversent
- * la fonction intacts : ce sont des choix humains, jamais du bruit.
+ * Les points ajoutés à la main par le gérant (`osm` absent) traversent la
+ * fonction intacts : ce sont des choix humains, jamais du bruit.
  */
 export function desencombrer(pins) {
   const garde = []
@@ -107,13 +123,48 @@ export function desencombrer(pins) {
     if (remplace) fusionnes[fusionnes.indexOf(jumeau)] = p
   }
 
-  const compte = {}
-  const retenus = fusionnes.filter(p => {
-    if (!estGenerique(p)) return true
-    const max = PLAFONDS[p.emoji] ?? PLAFOND_DEFAUT
-    compte[p.emoji] = (compte[p.emoji] || 0) + 1
-    return compte[p.emoji] <= max
+  // Plafond par catégorie. Les nommés ont droit à davantage de place que les
+  // anonymes, mais pas à une place illimitée.
+  // Les deux compteurs sont distincts : partagés, une quinzaine de parkings
+  // anonymes épuiseraient le quota avant que « Parking visiteurs Nord » ne
+  // soit examiné, et l'équipement réellement identifié serait le seul écarté.
+  const compteAnonyme = {}, compteNomme = {}
+  const parCategorie = fusionnes.filter(p => {
+    if (estGenerique(p)) {
+      compteAnonyme[p.emoji] = (compteAnonyme[p.emoji] || 0) + 1
+      return compteAnonyme[p.emoji] <= (PLAFONDS[p.emoji] ?? PLAFOND_DEFAUT)
+    }
+    compteNomme[p.emoji] = (compteNomme[p.emoji] || 0) + 1
+    return compteNomme[p.emoji] <= PLAFOND_NOMME
   })
+
+  // Plafond global, en deux temps. D'abord une place réservée à chaque
+  // catégorie présente : trancher uniquement par priorité ferait disparaître
+  // les parkings et le tri sélectif d'un coup, alors qu'un vacancier a besoin
+  // de savoir qu'il y en a — juste pas de les voir seize fois. Ensuite les
+  // places restantes vont aux exemplaires supplémentaires, nommés d'abord,
+  // puis par ordre d'utilité (l'ordre de POI_MAP).
+  const budget = Math.max(0, PLAFOND_TOTAL - garde.length)
+  const indexes = parCategorie.map((p, i) => ({ p, i }))
+  const rang = ({ p, i }) => [estGenerique(p) ? 1 : 0, PRIORITE.get(p.emoji) ?? 999, i]
+  const parRang = (a, b) => {
+    const ra = rang(a), rb = rang(b)
+    return ra[0] - rb[0] || ra[1] - rb[1] || ra[2] - rb[2]
+  }
+
+  const vus = new Set()
+  const premiers = [], supplements = []
+  for (const e of indexes) {
+    if (vus.has(e.p.emoji)) supplements.push(e)
+    else { vus.add(e.p.emoji); premiers.push(e) }
+  }
+
+  const retenus = [
+    ...premiers.sort(parRang).slice(0, budget),
+    ...supplements.sort(parRang).slice(0, Math.max(0, budget - premiers.length)),
+  ]
+    .sort((a, b) => a.i - b.i)
+    .map(({ p }) => p)
 
   return [...garde, ...retenus]
 }
