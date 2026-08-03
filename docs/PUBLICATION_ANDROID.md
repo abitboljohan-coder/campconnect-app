@@ -49,6 +49,25 @@ keyAlias=campconnect
 keyPassword=TON_MOT_DE_PASSE
 ```
 
+`storePassword` et `keyPassword` reçoivent la même valeur : celle saisie à la
+création du keystore. Elles ne diffèrent que si un mot de passe distinct a été
+donné à la clé, ce que la touche Entrée à la dernière question de `keytool`
+évite justement.
+
+> ⚠️ **Ne pas créer ce fichier avec `Set-Content -Encoding UTF8`** sous Windows
+> PowerShell : cette option écrit un marqueur d'ordre des octets, que Java
+> rattache au nom de la première propriété. `storeFile` devient alors
+> introuvable et le build échoue sur `Cannot convert 'null' to File`, un
+> message qui ne désigne pas la cause. `android/app/build.gradle` retire
+> désormais ce marqueur, mais autant écrire le fichier proprement :
+>
+> ```powershell
+> $mdp = "TON_MOT_DE_PASSE"
+> [IO.File]::WriteAllText("$PWD\android\keystore.properties",
+>   "storeFile=../../campconnect-release.jks`nstorePassword=$mdp`nkeyAlias=campconnect`nkeyPassword=$mdp",
+>   (New-Object Text.UTF8Encoding $false))
+> ```
+
 Le `android/app/build.gradle` du projet lit ce fichier automatiquement (config `release` ci-dessous, déjà en place) :
 
 ```gradle
@@ -81,7 +100,11 @@ android {
 
 ## 3. Builder l'AAB signé
 
+**Depuis la racine du projet**, pas depuis `android/` — `cap sync` et le
+fichier `.env` s'y attendent :
+
 ```powershell
+cd C:\Users\abitb\campconnect-app
 npm run build
 npx cap sync android
 cd android

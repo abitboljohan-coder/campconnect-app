@@ -4,7 +4,18 @@ apply plugin: 'com.android.application'
 def keystoreProperties = new Properties()
 def keystorePropertiesFile = rootProject.file("keystore.properties")
 if (keystorePropertiesFile.exists()) {
-    keystoreProperties.load(new FileInputStream(keystorePropertiesFile))
+    // Le marqueur d'ordre des octets est retiré avant lecture : sous Windows,
+    // Set-Content -Encoding UTF8 en écrit un, et Properties.load l'attache au
+    // nom de la première clé, qui devient invisible pour Gradle. L'échec est
+    // alors « Cannot convert 'null' to File », sans rapport apparent.
+    keystoreProperties.load(new StringReader(
+        keystorePropertiesFile.getText("UTF-8").replaceFirst("^\\uFEFF", "")))
+}
+if (keystorePropertiesFile.exists() && !keystoreProperties['storeFile']) {
+    throw new GradleException(
+        "android/keystore.properties existe mais ne contient pas storeFile. " +
+        "Attendu : storeFile, storePassword, keyAlias, keyPassword — " +
+        "voir docs/PUBLICATION_ANDROID.md §2.")
 }
 
 android {
