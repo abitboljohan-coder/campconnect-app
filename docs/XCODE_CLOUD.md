@@ -4,9 +4,10 @@ Objectif : pouvoir publier les mises à jour iOS depuis Windows (ou n'importe o�
 sans machine Apple. Xcode Cloud clone le dépôt, construit, signe et envoie vers
 TestFlight puis l'App Store.
 
-**Une seule étape exige un Mac : la création du workflow, qui se fait depuis
-Xcode.** Tout le reste se pilote ensuite depuis App Store Connect, dans un
-navigateur. À faire tant que le Mac est disponible.
+**Une seule étape exige un Mac : la création initiale du workflow, qui se fait
+depuis Xcode.** Tout le reste — modification du workflow, variables
+d'environnement, destination de distribution, relance de build, soumission à la
+revue — se pilote depuis App Store Connect, dans un navigateur.
 
 ---
 
@@ -20,9 +21,14 @@ navigateur. À faire tant que le Mac est disponible.
 4. Conditions de départ : *Branch Changes* sur la branche de ton choix.
    Éviter de déclencher sur toutes les branches — le quota de 25 h/mois inclus
    dans l'adhésion développeur se consomme vite.
-5. Action : **Archive** avec la destination *TestFlight (Internal Testing Only)*
-   pour commencer. On passera à *TestFlight and App Store* une fois le premier
-   build validé.
+5. Action : **Archive**, une seule. Destination *TestFlight (Internal Testing
+   Only)* pour valider la chaîne sans engager la distribution — voir §5 pour
+   basculer ensuite, ce qui se fait depuis le navigateur.
+
+N'ajouter **ni action Ad Hoc ni action Development** : leur export exige au
+moins un iPhone enregistré sur le compte développeur et échoue sinon en
+`exit 70`, faisant passer tout le build en rouge alors que l'archive est
+correcte.
 
 ## 2. Déclarer les variables d'environnement
 
@@ -76,7 +82,21 @@ silencieuse en échec visible.
 Depuis un iPhone, l'app **App Store Connect** permet de suivre les builds, les
 retours TestFlight et l'état de la revue — mais pas de construire.
 
-## 5. Ce qui reste à faire côté Android
+## 5. Passer de « TestFlight seulement » à l'App Store — sans Mac
+
+Un build archivé en *TestFlight (Internal Testing Only)* ne peut pas être
+rattaché à une version App Store : il n'apparaît pas comme sélectionnable dans
+« Ajouter un build ». Le réglage se change dans le navigateur :
+
+**App Store Connect → l'app → onglet Xcode Cloud → Gérer les workflows → le
+workflow → Modifier → action « Archive - iOS » → Deployment Preparation →
+*TestFlight and App Store*.**
+
+Le changement ne vaut que pour les builds **suivants** : les builds déjà envoyés
+en interne ne se promeuvent pas. Il faut donc relancer un build — « Start Build »
+sur la même page — et c'est celui-là qui sera sélectionnable.
+
+## 6. Ce qui reste à faire côté Android
 
 Rien de commun : Android se construit très bien sous Windows avec Android
 Studio. Voir `docs/PUBLICATION_ANDROID.md`.
