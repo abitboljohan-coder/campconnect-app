@@ -7,13 +7,88 @@
     <link rel="icon" type="image/png" sizes="512x512" href="/icon-512.png" />
     <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-    <meta name="theme-color" content="#2d7d32" />
+    <meta name="theme-color" content="#faf7f0" />
     <meta name="mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="default" />
     <title>CampConnect</title>
+    <style>
+      /* Écran de démarrage — il est dans le HTML, et non dans React, pour être
+         peint dès la première image. Entre la disparition du splash natif et le
+         montage de React il s'écoule quelques dizaines de millisecondes :
+         sans ce calque, elles laissaient voir un fond blanc, puis un splash
+         vert foncé, puis le crème de l'application. Trois couleurs pour un seul
+         démarrage. Il reprend exactement le visuel du splash natif — même fond,
+         même marque, même taille — de sorte que le relais est invisible. */
+      #cc-boot {
+        position: fixed;
+        inset: 0;
+        z-index: 9999;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        background: #faf7f0;
+        transition: opacity .28s ease-out;
+      }
+      #cc-boot.cc-parti { opacity: 0; pointer-events: none; }
+      #cc-boot img {
+        /* Calibré pour que la marque occupe la même largeur qu'au splash
+           natif, mesurée à l'écran : 28,8 % de la largeur. La valeur est plus
+           grande que ce pourcentage car l'image garde une marge transparente. */
+        width: 30.7vw;
+        max-width: 140px;
+        /* L'opacité est portée par l'élément, l'animation ne fait que la
+           jouer : le logo reste visible même si l'animation ne s'exécute pas. */
+        opacity: 1;
+        animation: cc-boot-marque .45s cubic-bezier(.22,.9,.3,1);
+      }
+      /* La barre est hors du flux : dans le flux, elle décalait la marque vers
+         le haut de quelques pour cent, alors que le splash natif la centre
+         exactement. L'écart se serait vu comme un sursaut au moment du relais.
+         Elle n'apparaît qu'au bout d'une demi-seconde : sur un démarrage
+         rapide, l'utilisateur ne voit jamais d'indicateur de chargement, ce qui
+         est la meilleure façon de paraître instantané. */
+      #cc-boot i {
+        position: absolute;
+        top: 60%;
+        display: block;
+        width: 104px;
+        height: 3px;
+        border-radius: 3px;
+        background: rgba(59, 74, 44, .12);
+        overflow: hidden;
+        opacity: 0;
+        animation: cc-boot-fondu .3s ease-out .5s forwards;
+      }
+      #cc-boot i::after {
+        content: '';
+        display: block;
+        width: 40%;
+        height: 100%;
+        border-radius: 3px;
+        background: #728152;
+        animation: cc-boot-barre 1.1s ease-in-out infinite;
+      }
+      @keyframes cc-boot-marque {
+        from { opacity: 0; transform: scale(.94); }
+        to   { opacity: 1; transform: scale(1); }
+      }
+      @keyframes cc-boot-fondu { to { opacity: 1; } }
+      @keyframes cc-boot-barre {
+        0%   { transform: translateX(-110%); }
+        100% { transform: translateX(360%); }
+      }
+      @media (prefers-reduced-motion: reduce) {
+        #cc-boot img, #cc-boot i, #cc-boot i::after { animation: none; opacity: 1; }
+      }
+    </style>
   </head>
   <body>
+    <div id="cc-boot">
+      <img src="data:image/png;base64,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" alt="CampConnect">
+      <i></i>
+    </div>
     <div id="root"></div>
     <script type="module" src="/src/main.jsx"></script>
   </body>

@@ -45,23 +45,55 @@ function App() {
 
   const sejourTermine = v => v?.date_depart && v.date_depart < new Date().toISOString().slice(0, 10)
 
+  // Retrait du calque de démarrage, une fois seulement, quand l'application a
+  // quelque chose à afficher. La classe déclenche la transition d'opacité ; le
+  // nœud est ensuite supprimé pour qu'il n'intercepte plus rien.
+  useEffect(() => {
+    if (loading) return
+    const boot = document.getElementById('cc-boot')
+    if (!boot) return
+    boot.classList.add('cc-parti')
+    const t = setTimeout(() => boot.remove(), 320)
+    return () => clearTimeout(t)
+  }, [loading])
+
   useEffect(() => {
     getDeviceId() // garantit un device_id en localStorage (info gérant)
     const slug = getCampingSlug()
 
     async function init() {
+      try {
+        // Le chargement est borné dans le temps. Une exception ne suffit pas à
+        // s'en protéger : sur un réseau très dégradé — ce qui est la norme dans
+        // un camping — les appels réseau n'échouent pas, ils attendent. Sans
+        // cette borne, l'écran de démarrage restait affiché indéfiniment.
+        // Si la session finit par arriver après coup, elle s'applique quand
+        // même : l'application se répare d'elle-même.
+        await Promise.race([
+          chargerSession(),
+          new Promise((_, rejeter) =>
+            setTimeout(() => rejeter(new Error('délai de démarrage dépassé')), 7000)),
+        ])
+      } catch (e) {
+        console.error('Initialisation échouée :', e)
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    async function chargerSession() {
       // Identité anonyme vérifiable → cloisonnement RLS par camping
       await ensureAnonSession()
       const { data: { user } } = await supabase.auth.getUser()
       const uid = user?.id
 
-      if (!slug) { setLoading(false); return }
+      if (!slug) return
 
       // 1. Charger le camping
       const { data: campingData } = await supabase
         .from('campings').select('*').eq('slug', slug).single()
 
-      if (!campingData) { setLoading(false); return }
+      if (!campingData) return
 
       setCamping(campingData)
       localStorage.setItem('campingSlug', campingData.slug)
@@ -86,7 +118,6 @@ function App() {
         }
       }
 
-      setLoading(false)
     }
 
     init()
@@ -106,7 +137,10 @@ function App() {
     if (camping && vacancier) registerPush({ camping, vacancier })
   }, [camping, vacancier])
 
-  if (loading) return <Splash />
+  // Rien n'est rendu pendant le chargement : le calque de démarrage d'index.html
+  // est encore à l'écran et sera retiré en fondu ci-dessus. Rendre ici un second
+  // écran d'attente ferait clignoter l'application à son propre démarrage.
+  if (loading) return null
 
   if (finSejour) return (
     <FinSejour
@@ -182,14 +216,6 @@ function FinSejour({ vacancier, camping, onRestart }) {
       >
         {t('fin.de_retour')}
       </button>
-    </div>
-  )
-}
-
-function Splash() {
-  return (
-    <div style={{ minHeight: '100dvh', background: '#0d1f0d', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-      <div style={{ color: '#97C459', fontFamily: 'sans-serif', fontSize: 18 }}>🌲 {t('commun.chargement')}</div>
     </div>
   )
 }
