@@ -152,6 +152,52 @@ vérification de position : il est accessible depuis n'importe où.
 
 ---
 
+## 5 bis. Classification du contenu — les réponses qui piègent
+
+Catégorie : **Social**, pas « Communication ». La définition de Communication
+vise les personnes « déjà connues de l'utilisateur » ; CampConnect sert
+précisément à rencontrer des vacanciers qu'on ne connaît pas.
+
+| Question | Réponse |
+|---|---|
+| Partage de la position précise avec d'autres utilisateurs | **Non** |
+| Achat d'articles numériques | Non |
+| Possibilité de bloquer des utilisateurs ou du contenu | **Oui** |
+| Possibilité de signaler des utilisateurs ou du contenu | **Oui** |
+| Modération des conversations | Oui |
+| Interactions limitées aux amis invités | Non |
+
+> Les deux réponses en gras n'ont été vraies qu'à partir du moment où le menu
+> de modération a été ajouté (appui long sur un message ou un statut). Avant
+> cela, le bouton « Signaler » de l'application remontait un problème matériel
+> du camping — propreté, panne, bruit — et ne permettait pas de signaler un
+> contenu ni son auteur. Répondre Oui suppose donc **une version buildée après
+> cet ajout, et `scripts/sql/moderation_contenu.sql` exécuté en production**.
+
+---
+
+## 5 ter. Informations de connexion (« accès à l'application »)
+
+Réponse : **Oui, une partie de l'app est limitée** — l'accès à un camping passe
+par un QR code, un code horaire ou la position GPS, tous listés par Google
+parmi les cas qui imposent cette réponse.
+
+Instructions à coller (500 caractères maximum) :
+
+```
+Aucun identifiant requis.
+
+Les campings réels vérifient la présence sur place (GPS ou QR code). Un camping de démonstration est ouvert pour la revue, sans aucune vérification : accessible depuis n'importe où.
+
+1. Lancez l'application.
+2. Cherchez « Les Flots Bleus » sur le premier écran.
+3. Sélectionnez-le et saisissez un pseudo.
+
+Tout devient accessible : groupes, messagerie, agenda, carte, livret d'accueil. Pour signaler : appui long sur un message, ou bouton « Signaler ».
+```
+
+---
+
 ## 6. Sécurité des données (Data safety)
 
 - L'app collecte-t-elle des données ? → **Oui**

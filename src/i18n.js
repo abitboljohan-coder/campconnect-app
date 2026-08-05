@@ -28,6 +28,28 @@ const STRINGS = {
   'nav.profil':   { fr: 'Profil',   en: 'Profile', es: 'Perfil',   nl: 'Profiel' },
 
   // ── Commun ──────────────────────────────────────────────────────────────
+  // ── Modération du contenu publié par les vacanciers ──────────────────────
+  'moderation.ce_vacancier':    { fr: 'ce vacancier', en: 'this camper', es: 'este campista', nl: 'deze kampeerder' },
+  'moderation.sous_titre':      { fr: 'Que voulez-vous faire ?', en: 'What would you like to do?', es: '¿Qué quieres hacer?', nl: 'Wat wil je doen?' },
+  'moderation.signaler':        { fr: 'Signaler ce contenu', en: 'Report this content', es: 'Denunciar este contenido', nl: 'Deze inhoud melden' },
+  'moderation.signaler_detail': { fr: 'L’équipe du camping l’examinera sous 24 h.', en: 'The campsite team will review it within 24 h.', es: 'El equipo del camping lo revisará en 24 h.', nl: 'Het campingteam bekijkt dit binnen 24 uur.' },
+  'moderation.bloquer':         { fr: 'Bloquer {pseudo}', en: 'Block {pseudo}', es: 'Bloquear a {pseudo}', nl: '{pseudo} blokkeren' },
+  'moderation.bloquer_detail':  { fr: 'Vous ne verrez plus ses messages ni ses publications.', en: 'You will no longer see their messages or posts.', es: 'Ya no verás sus mensajes ni publicaciones.', nl: 'Je ziet hun berichten en posts niet meer.' },
+  'moderation.bloque':          { fr: '{pseudo} est bloqué', en: '{pseudo} is blocked', es: '{pseudo} está bloqueado', nl: '{pseudo} is geblokkeerd' },
+  'moderation.debloque':        { fr: '{pseudo} est débloqué', en: '{pseudo} is unblocked', es: '{pseudo} está desbloqueado', nl: '{pseudo} is gedeblokkeerd' },
+  'moderation.signale':         { fr: 'Signalement envoyé. Merci.', en: 'Report sent. Thank you.', es: 'Denuncia enviada. Gracias.', nl: 'Melding verzonden. Bedankt.' },
+  'moderation.err_signal':      { fr: 'Envoi impossible. Réessayez.', en: 'Could not send. Try again.', es: 'No se pudo enviar. Inténtalo de nuevo.', nl: 'Verzenden mislukt. Probeer opnieuw.' },
+  'moderation.motif_titre':     { fr: 'Pourquoi le signalez-vous ?', en: 'Why are you reporting this?', es: '¿Por qué lo denuncias?', nl: 'Waarom meld je dit?' },
+  'moderation.motif_sous_titre':{ fr: 'Votre signalement reste anonyme pour l’auteur.', en: 'Your report stays anonymous to the author.', es: 'Tu denuncia es anónima para el autor.', nl: 'Je melding blijft anoniem voor de auteur.' },
+  'moderation.motif_harcelement': { fr: 'Harcèlement ou insultes', en: 'Harassment or insults', es: 'Acoso o insultos', nl: 'Intimidatie of beledigingen' },
+  'moderation.motif_haine':     { fr: 'Propos haineux ou discriminatoires', en: 'Hateful or discriminatory speech', es: 'Discurso de odio o discriminación', nl: 'Haatdragende of discriminerende taal' },
+  'moderation.motif_sexuel':    { fr: 'Contenu sexuel ou choquant', en: 'Sexual or shocking content', es: 'Contenido sexual o chocante', nl: 'Seksuele of schokkende inhoud' },
+  'moderation.motif_arnaque':   { fr: 'Arnaque ou spam', en: 'Scam or spam', es: 'Estafa o spam', nl: 'Oplichting of spam' },
+  'moderation.motif_autre':     { fr: 'Autre raison', en: 'Other reason', es: 'Otro motivo', nl: 'Andere reden' },
+  'moderation.bloques_titre':   { fr: 'Vacanciers bloqués', en: 'Blocked campers', es: 'Campistas bloqueados', nl: 'Geblokkeerde kampeerders' },
+  'moderation.aucun_bloque':    { fr: 'Vous n’avez bloqué personne.', en: 'You haven’t blocked anyone.', es: 'No has bloqueado a nadie.', nl: 'Je hebt niemand geblokkeerd.' },
+  'moderation.debloquer':       { fr: 'Débloquer', en: 'Unblock', es: 'Desbloquear', nl: 'Deblokkeren' },
+
   'commun.annuler':     { fr: 'Annuler',     en: 'Cancel',     es: 'Cancelar',  nl: 'Annuleren' },
   'commun.enregistrer': { fr: 'Enregistrer', en: 'Save',       es: 'Guardar',   nl: 'Opslaan' },
   'commun.modifier':    { fr: 'Modifier',    en: 'Edit',       es: 'Editar',    nl: 'Wijzigen' },

@@ -7,6 +7,7 @@ const CAT_LABELS = {
   securite: { emoji: '⚠️', label: 'Sécurité' },
   bruit:    { emoji: '🔊', label: 'Bruit' },
   autre:    { emoji: '💬', label: 'Autre' },
+  contenu:  { emoji: '🚩', label: 'Contenu signalé' },
 }
 const cat = (id) => CAT_LABELS[id] || CAT_LABELS.autre
 
@@ -25,7 +26,7 @@ export default function Signalements({ camping }) {
   async function charger() {
     const { data } = await supabase
       .from('signalements')
-      .select('*, vacanciers(pseudo, avatar_emoji, emplacement)')
+      .select('*, vacanciers(pseudo, avatar_emoji, emplacement), auteur:auteur_signale_id(pseudo, avatar_emoji, banni)')
       .eq('camping_id', camping.id)
       .order('created_at', { ascending: false })
     setItems(data || [])
@@ -132,6 +133,25 @@ export default function Signalements({ camping }) {
                   <div style={{ fontSize: 14.5, color: '#1a1a1a', lineHeight: 1.6, marginBottom: 8 }}>
                     {item.description}
                   </div>
+
+                  {/* Contenu signalé : le texte est recopié à l'envoi, car son
+                      auteur peut l'avoir supprimé depuis. Sans cette copie, le
+                      gérant n'aurait qu'un motif sans rien à examiner. */}
+                  {item.cible_texte && (
+                    <div style={{
+                      background: '#fef2f2', border: '1px solid #fecaca',
+                      borderRadius: 10, padding: '10px 12px', marginBottom: 8,
+                    }}>
+                      <div style={{ fontSize: 11.5, fontWeight: 700, color: '#b91c1c', marginBottom: 4 }}>
+                        {item.cible_type === 'statut' ? 'Statut' : 'Message'} de{' '}
+                        {item.auteur?.avatar_emoji} {item.auteur?.pseudo || 'un vacancier parti'}
+                        {item.auteur?.banni && ' · déjà banni'}
+                      </div>
+                      <div style={{ fontSize: 14, color: '#1a1a1a', lineHeight: 1.5, whiteSpace: 'pre-wrap' }}>
+                        {item.cible_texte}
+                      </div>
+                    </div>
+                  )}
 
                   <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
                     <span style={{ fontSize: 12.5, color: '#9ca3af' }}>

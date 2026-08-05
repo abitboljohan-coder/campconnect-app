@@ -2,6 +2,8 @@ import { useEffect, useState, useRef } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { supabase, presentFilter } from '../supabase'
 import { t, useLangue, locale } from '../i18n'
+import MenuModeration from '../components/MenuModeration'
+import { chargerBlocages, estBloque } from '../lib/moderation'
 
 const REACTIONS = ['❤️', '😂', '👍', '🔥', '🎉']
 
@@ -20,9 +22,31 @@ export default function Chat({ camping, vacancier }) {
   const [texte, setTexte]           = useState('')
   const [sending, setSending]       = useState(false)
   const [pickerFor, setPickerFor]   = useState(null)
+  const [moderation, setModeration] = useState(null)   // contenu visé par le menu
+  const [, setBloquesVersion]       = useState(0)      // force un rendu après blocage
+  const appuiLong                   = useRef(null)
+
   const [erreur, setErreur]         = useState('')
   const bottomRef = useRef(null)
   const inputRef  = useRef(null)
+
+  // Le menu de modération s'ouvre sur appui long, comme dans toutes les
+  // messageries. Un bouton visible sur chaque bulle alourdirait l'écran pour
+  // un geste que l'on fait deux fois par an.
+  function annulerAppuiLong() {
+    if (appuiLong.current && appuiLong.current !== 'declenche') {
+      clearTimeout(appuiLong.current)
+      appuiLong.current = null
+    }
+  }
+
+  function ouvrirModeration(msg, auteur) {
+    setPickerFor(null)
+    setModeration({
+      type: 'message', id: msg.id, texte: msg.contenu,
+      auteurId: msg.auteur_id, pseudo: auteur?.pseudo,
+    })
+  }
 
   useEffect(() => {
     async function init() {
@@ -34,9 +58,10 @@ export default function Chat({ camping, vacancier }) {
       setGroupe(grp)
       setNbMembres(count || 0)
       setMessages(msgs || [])
+      chargerBlocages(vacancier.id).then(() => setBloquesVersion(v => v + 1))
     }
     init()
-  }, [groupeId])
+  }, [groupeId, vacancier.id])
 
   // Realtime
   useEffect(() => {
@@ -160,10 +185,14 @@ export default function Chat({ camping, vacancier }) {
               </span>
             </div>
 
-            {msgs.map((msg, idx) => {
+            {/* Les messages des personnes bloquées disparaissent avant tout
+                calcul de regroupement : sinon un message masqué continuerait
+                de couper les suites d'un même auteur, et l'en-tête se
+                répéterait sans raison visible. */}
+            {msgs.filter(m => !estBloque(vacancier.id, m.auteur_id)).map((msg, idx, visibles) => {
               const isMine = msg.auteur_id === vacancier.id
               const auteur = msg.vacanciers || { pseudo: t('chat.parti'), avatar_emoji: '👋' }
-              const prevMsg = idx > 0 ? msgs[idx - 1] : null
+              const prevMsg = idx > 0 ? visibles[idx - 1] : null
               const showAuthor = !isMine && (!prevMsg || prevMsg.auteur_id !== msg.auteur_id)
 
               return (
@@ -201,7 +230,26 @@ export default function Chat({ camping, vacancier }) {
                     )}
                     <div style={{ position: 'relative', maxWidth: '72%' }}>
                       <div
-                        onClick={() => setPickerFor(pickerFor === msg.id ? null : msg.id)}
+                        onClick={() => {
+                          // Un appui long vient d'ouvrir le menu : le clic de
+                          // relâchement ne doit pas ouvrir les réactions en plus.
+                          if (appuiLong.current === 'declenche') { appuiLong.current = null; return }
+                          setPickerFor(pickerFor === msg.id ? null : msg.id)
+                        }}
+                        onTouchStart={() => {
+                          if (isMine) return
+                          appuiLong.current = setTimeout(() => {
+                            appuiLong.current = 'declenche'
+                            ouvrirModeration(msg, auteur)
+                          }, 500)
+                        }}
+                        onTouchEnd={annulerAppuiLong}
+                        onTouchMove={annulerAppuiLong}
+                        onContextMenu={(e) => {
+                          if (isMine) return
+                          e.preventDefault()
+                          ouvrirModeration(msg, auteur)
+                        }}
                         style={{
                           background: isMine ? couleur : 'rgba(255,255,255,0.92)',
                           color: isMine ? '#fff' : '#1a1a1a',
@@ -312,6 +360,16 @@ export default function Chat({ camping, vacancier }) {
           ↑
         </button>
       </form>
+
+      {moderation && (
+        <MenuModeration
+          cible={moderation}
+          camping={camping}
+          vacancier={vacancier}
+          onClose={() => setModeration(null)}
+          onBloque={() => setBloquesVersion(v => v + 1)}
+        />
+      )}
     </div>
   )
 }

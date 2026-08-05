@@ -6,6 +6,8 @@ import { supabase, presentFilter } from '../supabase'
 import { t, useLangue, locale } from '../i18n'
 import Meteo from '../components/Meteo'
 import { usePresence } from '../usePresence'
+import MenuModeration from '../components/MenuModeration'
+import { chargerBlocages, estBloque } from '../lib/moderation'
 
 const TREE_POS = [
   { x: '6%',  y: '18%', s: 26 }, { x: '14%', y: '62%', s: 20 },
@@ -199,6 +201,22 @@ const STATUT_EMOJIS = ['🔥', '🍻', '🎳', '🏊', '🎉', '🍖', '🎾', '
 
 function StatutsStrip({ camping, vacancier, couleur }) {
   const [statuts, setStatuts] = useState([])
+  const [moderation, setModeration] = useState(null)
+  const [, setBloquesVersion] = useState(0)
+  const appuiLong = useRef(null)
+
+  function annulerAppuiLong() {
+    if (appuiLong.current && appuiLong.current !== 'declenche') {
+      clearTimeout(appuiLong.current); appuiLong.current = null
+    }
+  }
+
+  function ouvrirModeration(st) {
+    setModeration({
+      type: 'statut', id: st.id, texte: `${st.emoji || ''} ${st.texte}`.trim(),
+      auteurId: st.vacancier_id, pseudo: st.vacanciers?.pseudo,
+    })
+  }
   const [showModal, setShowModal] = useState(false)
   const [texte, setTexte] = useState('')
   const [emoji, setEmoji] = useState('🔥')
@@ -215,6 +233,7 @@ function StatutsStrip({ camping, vacancier, couleur }) {
         .order('created_at', { ascending: false })
         .limit(20)
       setStatuts(data || [])
+      chargerBlocages(vacancier.id).then(() => setBloquesVersion(v => v + 1))
     }
     load()
     const channel = supabase
@@ -227,7 +246,7 @@ function StatutsStrip({ camping, vacancier, couleur }) {
         })
       .subscribe()
     return () => supabase.removeChannel(channel)
-  }, [camping.id])
+  }, [camping.id, vacancier.id])
 
   async function poster() {
     if (!texte.trim() || saving) return
@@ -269,8 +288,21 @@ function StatutsStrip({ camping, vacancier, couleur }) {
           <span style={{ fontSize: 10.5, fontWeight: 700, color: couleur }}>{t('accueil.quoi_de_neuf')}</span>
         </button>
 
-        {statuts.map(s => (
-          <div key={s.id} style={{
+        {statuts.filter(s => !estBloque(vacancier.id, s.vacancier_id)).map(s => (
+          <div key={s.id}
+            onTouchStart={() => {
+              if (s.vacancier_id === vacancier.id) return
+              appuiLong.current = setTimeout(() => {
+                appuiLong.current = 'declenche'; ouvrirModeration(s)
+              }, 500)
+            }}
+            onTouchEnd={annulerAppuiLong}
+            onTouchMove={annulerAppuiLong}
+            onContextMenu={(e) => {
+              if (s.vacancier_id === vacancier.id) return
+              e.preventDefault(); ouvrirModeration(s)
+            }}
+            style={{
             flexShrink: 0, maxWidth: 200, borderRadius: 16,
             background: '#fff', padding: '10px 14px',
             boxShadow: '0 1px 5px rgba(0,0,0,0.08)',
@@ -286,6 +318,16 @@ function StatutsStrip({ camping, vacancier, couleur }) {
           </div>
         ))}
       </div>
+
+      {moderation && (
+        <MenuModeration
+          cible={moderation}
+          camping={camping}
+          vacancier={vacancier}
+          onClose={() => setModeration(null)}
+          onBloque={() => setBloquesVersion(v => v + 1)}
+        />
+      )}
 
       {/* Modal poster */}
       {showModal && (

@@ -143,9 +143,10 @@ vérification de position : il est accessible depuis n'importe où.
 3. Sélectionnez-le, saisissez un pseudo, et l'application s'ouvre
    entièrement : groupes, messagerie, agenda, carte et livret d'accueil.
 
-Signalement et modération : appui long sur un message, ou bouton
-« Signaler » sur une annonce. Les contenus signalés sont traités par
-l'équipe du camping sous 24 heures.
+Signalement et blocage : appui long sur un message du chat ou sur un
+statut de l'accueil. Le menu propose « Signaler ce contenu » et
+« Bloquer », avec effet immédiat. Les signalements arrivent au gérant,
+qui supprime le contenu ou bannit l'auteur.
 ```
 
 > Le lien `https://app.campconnect.fr/join/les-flots-bleus` fonctionne dans un
@@ -156,6 +157,11 @@ l'équipe du camping sous 24 heures.
 > **Prérequis** : relancer `scripts/sql/seed_flots_bleus.sql` en production avant
 > la soumission. Il date les animations relativement à aujourd'hui ; un agenda
 > vide suffirait à faire rejeter l'app.
+
+> **Prérequis** : `scripts/sql/moderation_contenu.sql` doit avoir été exécuté en
+> production, sinon le signalement et le blocage échouent silencieusement — et
+> ces notes décriraient une fonctionnalité introuvable, ce qui vaut un rejet
+> plus sûrement que son absence.
 
 ---
 
