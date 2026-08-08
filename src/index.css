@@ -71,6 +71,12 @@ button, a, [role="button"] {
 :root {
   --cc-safe-top: max(env(safe-area-inset-top, 0px), 44px);
   --cc-safe-bottom: max(env(safe-area-inset-bottom, 0px), 24px);
+  /* Largeur de la colonne de contenu. Sur téléphone elle ne borne rien ; sur
+     tablette elle évite qu'une interface conçue pour 390 px ne s'étire sur
+     820 ou 1180 px, ce qui donne des lignes de texte interminables et un écran
+     à moitié vide — le motif que l'App Store range sous « non optimisée pour
+     toutes les tailles d'écran ». */
+  --cc-colonne: 560px;
 }
 
 /* Sur un écran large, aucune encoche à compenser : le plancher ne s'applique

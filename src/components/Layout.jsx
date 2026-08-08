@@ -36,6 +36,13 @@ export default function Layout({ camping }) {
           zIndex: 100,
           borderBottom: '1px solid rgba(0,0,0,0.05)',
         }}>
+        {/* Le bandeau garde toute la largeur — sa bordure doit traverser
+            l'écran — mais son contenu suit la colonne, sinon le nom du camping
+            se retrouve seul à l'extrême gauche d'une tablette. */}
+        <div style={{
+          display: 'flex', alignItems: 'center', gap: 10,
+          width: '100%', maxWidth: 'var(--cc-colonne)', margin: '0 auto',
+        }}>
           {camping?.logo_url
             ? <img src={camping.logo_url} alt="" style={{ height: 34, width: 34, borderRadius: 10, objectFit: 'cover' }} />
             : <div style={{
@@ -58,6 +65,7 @@ export default function Layout({ camping }) {
             background: `${couleur}18`, border: `2px solid ${couleur}40`,
             display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18,
           }}>👤</Link>
+        </div>
         </header>
       )}
 
@@ -77,9 +85,16 @@ export default function Layout({ camping }) {
         paddingBottom: hideNav || isMap ? 0 : 'calc(96px + var(--cc-safe-bottom))',
         position: 'relative',
       }}>
-        <SwipeBack>
-          <Outlet />
-        </SwipeBack>
+        {/* Sur une tablette, une interface pensée pour le téléphone s'étire :
+            les cartes traversent 800 px, les lignes de texte deviennent
+            illisibles et l'écran paraît vide. Le contenu est donc borné et
+            centré — une colonne assumée plutôt qu'un agrandissement. La carte
+            fait exception : elle doit occuper tout l'espace disponible. */}
+        <div style={isMap ? undefined : { width: '100%', maxWidth: 'var(--cc-colonne)', margin: '0 auto' }}>
+          <SwipeBack>
+            <Outlet />
+          </SwipeBack>
+        </div>
       </main>
 
       {/* Bottom nav flottante */}
@@ -89,7 +104,7 @@ export default function Layout({ camping }) {
           bottom: 'calc(12px + var(--cc-safe-bottom))',
           left: 12,
           right: 12,
-          maxWidth: 500,
+          maxWidth: 'var(--cc-colonne)',
           margin: '0 auto',
           background: 'rgba(255,255,255,0.94)',
           backdropFilter: 'blur(14px)',
