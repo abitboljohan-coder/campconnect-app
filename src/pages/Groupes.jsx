@@ -287,7 +287,7 @@ export default function Groupes({ camping, vacancier }) {
 function Section({ title, children }) {
   return (
     <div style={{ marginBottom: 24 }}>
-      <h3 style={{ fontSize: 12, fontWeight: 700, color: '#9ca3af', textTransform: 'uppercase', letterSpacing: 1.2, marginBottom: 10 }}>
+      <h3 style={{ fontSize: 12, fontWeight: 700, color: '#6b7280', textTransform: 'uppercase', letterSpacing: 1.2, marginBottom: 10 }}>
         {title}
       </h3>
       {children}
@@ -313,7 +313,7 @@ function AvatarStack({ avatars, couleur }) {
           +{avatars.length - 4}
         </span>
       )}
-      <span style={{ fontSize: 11, color: '#9ca3af', marginLeft: 6 }}>
+      <span style={{ fontSize: 11, color: '#6b7280', marginLeft: 6 }}>
         {avatars.length > 1 ? t('commun.membres', { n: avatars.length }) : t('commun.membre', { n: avatars.length })}
       </span>
     </div>
@@ -365,8 +365,8 @@ function GroupRow({ groupe, couleur, isMember, onAction, avatars }) {
 }
 
 function Empty({ text }) {
-  return <div style={{ textAlign: 'center', padding: '28px', color: '#9ca3af', fontSize: 14, background: '#fff', borderRadius: 14 }}>{text}</div>
+  return <div style={{ textAlign: 'center', padding: '28px', color: '#6b7280', fontSize: 14, background: '#fff', borderRadius: 14 }}>{text}</div>
 }
 
-const labelStyle = { fontSize: 11, fontWeight: 700, color: '#9ca3af', textTransform: 'uppercase', letterSpacing: 0.8, display: 'block', marginBottom: 6 }
+const labelStyle = { fontSize: 11, fontWeight: 700, color: '#6b7280', textTransform: 'uppercase', letterSpacing: 0.8, display: 'block', marginBottom: 6 }
 const inputStyle = { padding: '11px 13px', borderRadius: 10, border: '1.5px solid #e5e7eb', fontSize: 16, outline: 'none', width: '100%', background: '#fafafa' }

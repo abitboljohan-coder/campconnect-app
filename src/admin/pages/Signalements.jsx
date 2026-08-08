@@ -103,7 +103,7 @@ export default function Signalements({ camping }) {
           {[1, 2, 3].map(i => <div key={i} style={{ height: 92, borderRadius: 14, background: '#eee', animation: 'pulse 1.5s ease-in-out infinite' }} />)}
         </div>
       ) : affiches.length === 0 ? (
-        <div style={{ background: '#fff', borderRadius: 16, padding: '48px 24px', textAlign: 'center', color: '#9ca3af', fontSize: 14.5 }}>
+        <div style={{ background: '#fff', borderRadius: 16, padding: '48px 24px', textAlign: 'center', color: '#6b7280', fontSize: 14.5 }}>
           {filtre === 'nouveau' ? '🎉 Aucun nouveau signalement.' : 'Rien dans cette catégorie.'}
         </div>
       ) : (
@@ -126,7 +126,7 @@ export default function Signalements({ camping }) {
                       {c.emoji} {c.label}
                     </span>
                     {item.lieu && <span style={{ fontSize: 12.5, color: '#6b7280' }}>📍 {item.lieu}</span>}
-                    <span style={{ fontSize: 12, color: '#9ca3af', marginLeft: 'auto' }}>
+                    <span style={{ fontSize: 12, color: '#6b7280', marginLeft: 'auto' }}>
                       {new Date(item.created_at).toLocaleString('fr-FR', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}
                     </span>
                   </div>
@@ -156,7 +156,7 @@ export default function Signalements({ camping }) {
                   )}
 
                   <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
-                    <span style={{ fontSize: 12.5, color: '#9ca3af' }}>
+                    <span style={{ fontSize: 12.5, color: '#6b7280' }}>
                       {item.vacanciers?.avatar_emoji || '🙂'} {item.vacanciers?.pseudo || '—'}
                       {item.vacanciers?.emplacement && ` · empl. ${item.vacanciers.emplacement}`}
                     </span>

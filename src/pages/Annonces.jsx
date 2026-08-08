@@ -142,11 +142,11 @@ export default function Annonces({ camping, vacancier }) {
           {[1, 2, 3].map(i => <div key={i} style={{ height: 84, borderRadius: 14, background: '#e8e4da', animation: 'pulse 1.5s ease-in-out infinite' }} />)}
         </div>
       ) : indispo ? (
-        <div style={{ textAlign: 'center', padding: '44px 20px', color: '#9ca3af', fontSize: 14, background: '#fff', borderRadius: 16, lineHeight: 1.8 }}>
+        <div style={{ textAlign: 'center', padding: '44px 20px', color: '#6b7280', fontSize: 14, background: '#fff', borderRadius: 16, lineHeight: 1.8 }}>
           {t('annonces.indispo')}
         </div>
       ) : affichees.length === 0 ? (
-        <div style={{ textAlign: 'center', padding: '44px 20px', color: '#9ca3af', fontSize: 14, background: '#fff', borderRadius: 16, lineHeight: 1.8 }}>
+        <div style={{ textAlign: 'center', padding: '44px 20px', color: '#6b7280', fontSize: 14, background: '#fff', borderRadius: 16, lineHeight: 1.8 }}>
           {t('annonces.aucune')}<br />{t('annonces.premier')}
         </div>
       ) : (
@@ -167,7 +167,7 @@ export default function Annonces({ camping, vacancier }) {
                     }}>
                       {info.emoji} {t(`annonces.type_${a.type}`)}
                     </span>
-                    <span style={{ fontSize: 11, color: '#9ca3af', marginLeft: 'auto' }}>
+                    <span style={{ fontSize: 11, color: '#6b7280', marginLeft: 'auto' }}>
                       {new Date(a.created_at).toLocaleDateString(locale(), { day: 'numeric', month: 'short' })}
                     </span>
                   </div>
@@ -177,7 +177,7 @@ export default function Annonces({ camping, vacancier }) {
                   )}
                   <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 8 }}>
                     <span style={{ fontSize: 15 }}>{a.vacanciers?.avatar_emoji || '🙂'}</span>
-                    <span style={{ fontSize: 12.5, color: '#9ca3af', fontWeight: 500 }}>
+                    <span style={{ fontSize: 12.5, color: '#6b7280', fontWeight: 500 }}>
                       {a.vacanciers?.pseudo || '—'}
                     </span>
                     {mien && (
@@ -303,5 +303,5 @@ export default function Annonces({ camping, vacancier }) {
   )
 }
 
-const labelStyle = { fontSize: 11, fontWeight: 700, color: '#9ca3af', textTransform: 'uppercase', letterSpacing: 0.8, display: 'block', marginBottom: 6 }
+const labelStyle = { fontSize: 11, fontWeight: 700, color: '#6b7280', textTransform: 'uppercase', letterSpacing: 0.8, display: 'block', marginBottom: 6 }
 const inputStyle = { padding: '12px 14px', borderRadius: 12, border: '1.5px solid #e5e7eb', fontSize: 16, outline: 'none', width: '100%', background: '#fafafa', boxSizing: 'border-box' }

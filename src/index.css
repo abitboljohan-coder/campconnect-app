@@ -190,3 +190,52 @@ input, textarea, select {
   0%, 100% { box-shadow: 0 0 0 3px rgba(34,197,94,0.35); opacity: 1; }
   50%      { box-shadow: 0 0 0 6px rgba(34,197,94,0.10); opacity: .85; }
 }
+
+/* ── Navigation au clavier ────────────────────────────────────────────────
+   L'application n'avait aucune règle de focus : au clavier, rien n'indiquait
+   où l'on se trouvait, et le contour par défaut du navigateur était supprimé
+   par les remises à zéro. Un anneau visible est la base de l'utilisabilité au
+   clavier — et l'interface d'administration, elle, se pilote au clavier.
+
+   :focus-visible plutôt que :focus : l'anneau n'apparaît qu'à la navigation
+   clavier, jamais après un clic à la souris ou un toucher, où il ferait
+   simplement sale. */
+:where(button, a, input, textarea, select, [tabindex]):focus-visible {
+  outline: 2px solid #2f6f2f;
+  outline-offset: 2px;
+  border-radius: 6px;
+}
+
+/* Sur fond sombre, un anneau vert foncé serait invisible. */
+:where(header, nav, .cc-sombre) :where(button, a):focus-visible {
+  outline-color: #C0DD97;
+}
+
+/* Lien d'évitement : permet d'atteindre le contenu sans traverser toute la
+   barre de navigation à chaque page. Invisible tant qu'il n'a pas le focus. */
+.cc-evitement {
+  position: absolute;
+  left: -9999px;
+  top: 0;
+  z-index: 2000;
+  background: #fff;
+  color: #1a1a1a;
+  padding: 10px 16px;
+  border-radius: 0 0 10px 0;
+  font-weight: 600;
+}
+.cc-evitement:focus {
+  left: 0;
+}
+
+/* Réservé aux lecteurs d'écran : présent dans l'arbre d'accessibilité,
+   invisible à l'écran. */
+.cc-sr {
+  position: absolute;
+  width: 1px; height: 1px;
+  padding: 0; margin: -1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  border: 0;
+}

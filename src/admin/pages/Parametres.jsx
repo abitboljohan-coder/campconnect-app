@@ -147,8 +147,8 @@ export default function Parametres({ gerant, camping, session }) {
             </div>
             <div>
               <label style={labelStyle}>SLUG (identifiant URL)</label>
-              <input type="text" value={camping?.slug || ''} disabled style={{ ...inputStyle, background: '#f3f4f6', color: '#9ca3af' }} />
-              <div style={{ fontSize: 12, color: '#9ca3af', marginTop: 4 }}>Le slug ne peut pas être modifié.</div>
+              <input type="text" value={camping?.slug || ''} disabled style={{ ...inputStyle, background: '#f3f4f6', color: '#6b7280' }} />
+              <div style={{ fontSize: 12, color: '#6b7280', marginTop: 4 }}>Le slug ne peut pas être modifié.</div>
             </div>
             <button type="submit" disabled={savingCamping} style={btnStyle(savingCamping)}>
               {savingCamping ? 'Enregistrement...' : 'Enregistrer'}
@@ -249,7 +249,7 @@ function Alert({ type, children }) {
   )
 }
 
-const labelStyle = { fontSize: 11, fontWeight: 700, color: '#9ca3af', textTransform: 'uppercase', letterSpacing: 0.8, display: 'block', marginBottom: 6 }
+const labelStyle = { fontSize: 11, fontWeight: 700, color: '#6b7280', textTransform: 'uppercase', letterSpacing: 0.8, display: 'block', marginBottom: 6 }
 const inputStyle = { width: '100%', padding: '11px 13px', borderRadius: 10, border: '1.5px solid #e5e7eb', fontSize: 16, outline: 'none', background: '#fafaf8', boxSizing: 'border-box' }
 const btnStyle = (disabled) => ({
   padding: '12px', borderRadius: 10,

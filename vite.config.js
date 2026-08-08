@@ -33,6 +33,10 @@ function mockSupabasePlugin() {
 
 export default defineConfig(({ mode }) => ({
   plugins: [react(), ...(mode === 'demo' ? [mockSupabasePlugin()] : [])],
+  // Les tests portent sur la logique métier — modération, lisibilité de la
+  // carte — qui touche au stockage du navigateur. jsdom fournit localStorage
+  // sans qu'il faille le simuler à la main dans chaque fichier.
+  test: { environment: 'jsdom' },
   define: {
     __PUSH_READY__: JSON.stringify(PUSH_READY),
   },

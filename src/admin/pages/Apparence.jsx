@@ -106,7 +106,7 @@ export default function Apparence({ camping, setCamping }) {
                 <div style={{ background: '#f5f2eb', padding: '10px 12px', display: 'flex', flexDirection: 'column', gap: 6 }}>
                   <div style={{ background: '#fff', borderRadius: 8, padding: '8px 10px', borderLeft: `3px solid ${couleur1}` }}>
                     <div style={{ fontSize: 11, fontWeight: 600, color: '#374151' }}>🏊 Cours de natation</div>
-                    <div style={{ fontSize: 10, color: '#9ca3af', marginTop: 2 }}>14:00 · Piscine</div>
+                    <div style={{ fontSize: 10, color: '#6b7280', marginTop: 2 }}>14:00 · Piscine</div>
                   </div>
                   <div style={{ background: couleur1, borderRadius: 8, padding: '8px 10px', textAlign: 'center' }}>
                     <span style={{ fontSize: 11, color: '#fff', fontWeight: 600 }}>+ Créer un groupe</span>
@@ -189,5 +189,5 @@ function Alert({ type, children }) {
   )
 }
 
-const labelStyle = { fontSize: 11, fontWeight: 700, color: '#9ca3af', textTransform: 'uppercase', letterSpacing: 0.8, display: 'block', marginBottom: 6 }
+const labelStyle = { fontSize: 11, fontWeight: 700, color: '#6b7280', textTransform: 'uppercase', letterSpacing: 0.8, display: 'block', marginBottom: 6 }
 const inputStyle = { width: '100%', padding: '11px 13px', borderRadius: 10, border: '1.5px solid #e5e7eb', fontSize: 15, outline: 'none', background: '#fafaf8', boxSizing: 'border-box' }

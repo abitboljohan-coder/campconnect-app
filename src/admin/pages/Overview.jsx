@@ -64,7 +64,7 @@ function OnboardingChecklist({ camping, stats }) {
                            textDecoration: s.done ? 'line-through' : 'none' }}>
               {s.label}
             </span>
-            {!s.done && <span style={{ fontSize: 12, color: '#639922', fontWeight: 700 }}>Commencer →</span>}
+            {!s.done && <span style={{ fontSize: 12, color: '#54821d', fontWeight: 700 }}>Commencer →</span>}
           </Link>
         ))}
       </div>
@@ -188,7 +188,7 @@ export default function Overview({ camping }) {
                   </div>
                   <div style={{ flex: 1 }}>
                     <div style={{ fontWeight: 600, fontSize: 14, color: '#1a1a1a' }}>{v.pseudo}</div>
-                    {v.emplacement && <div style={{ fontSize: 12, color: '#9ca3af', marginTop: 2 }}>📍 Emplacement {v.emplacement}</div>}
+                    {v.emplacement && <div style={{ fontSize: 12, color: '#6b7280', marginTop: 2 }}>📍 Emplacement {v.emplacement}</div>}
                   </div>
                 </div>
               ))}
@@ -200,9 +200,9 @@ export default function Overview({ camping }) {
         <div style={{ background: '#fff', borderRadius: 14, padding: '20px', border: '1px solid rgba(0,0,0,0.07)' }}>
           <h2 style={{ fontSize: 16, fontWeight: 700, color: '#1a1a1a', marginBottom: 16 }}>Derniers groupes créés</h2>
           {loading ? (
-            <div style={{ color: '#9ca3af', fontSize: 14 }}>Chargement...</div>
+            <div style={{ color: '#6b7280', fontSize: 14 }}>Chargement...</div>
           ) : recentGroupes.length === 0 ? (
-            <div style={{ color: '#9ca3af', fontSize: 14 }}>Aucun groupe pour le moment.</div>
+            <div style={{ color: '#6b7280', fontSize: 14 }}>Aucun groupe pour le moment.</div>
           ) : (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
               {recentGroupes.map(g => (
@@ -218,7 +218,7 @@ export default function Overview({ camping }) {
                   </div>
                   <div style={{ flex: 1, overflow: 'hidden' }}>
                     <div style={{ fontWeight: 600, fontSize: 14, color: '#1a1a1a', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{g.titre}</div>
-                    <div style={{ fontSize: 12, color: '#9ca3af', marginTop: 2 }}>
+                    <div style={{ fontSize: 12, color: '#6b7280', marginTop: 2 }}>
                       {new Date(g.created_at).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}
                       {g.lieu && ` · 📍 ${g.lieu}`}
                     </div>
@@ -233,9 +233,9 @@ export default function Overview({ camping }) {
         <div style={{ background: '#fff', borderRadius: 14, padding: '20px', border: '1px solid rgba(0,0,0,0.07)' }}>
           <h2 style={{ fontSize: 16, fontWeight: 700, color: '#1a1a1a', marginBottom: 16 }}>Dernières inscriptions</h2>
           {loading ? (
-            <div style={{ color: '#9ca3af', fontSize: 14 }}>Chargement...</div>
+            <div style={{ color: '#6b7280', fontSize: 14 }}>Chargement...</div>
           ) : recentInscriptions.length === 0 ? (
-            <div style={{ color: '#9ca3af', fontSize: 14 }}>Aucune inscription pour le moment.</div>
+            <div style={{ color: '#6b7280', fontSize: 14 }}>Aucune inscription pour le moment.</div>
           ) : (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
               {recentInscriptions.map((ins, idx) => (
@@ -247,17 +247,17 @@ export default function Overview({ camping }) {
                     width: 38, height: 38, borderRadius: '50%',
                     background: '#63992218',
                     display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    fontSize: 18, flexShrink: 0, color: '#639922', fontWeight: 700,
+                    fontSize: 18, flexShrink: 0, color: '#54821d', fontWeight: 700,
                   }}>
                     {ins.vacanciers?.pseudo?.[0]?.toUpperCase() || '?'}
                   </div>
                   <div style={{ flex: 1, overflow: 'hidden' }}>
                     <div style={{ fontWeight: 600, fontSize: 14, color: '#1a1a1a' }}>{ins.vacanciers?.pseudo || '—'}</div>
-                    <div style={{ fontSize: 12, color: '#9ca3af', marginTop: 2, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                    <div style={{ fontSize: 12, color: '#6b7280', marginTop: 2, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                       → {ins.animations?.titre || '—'}
                     </div>
                   </div>
-                  <div style={{ fontSize: 11, color: '#9ca3af', flexShrink: 0 }}>
+                  <div style={{ fontSize: 11, color: '#6b7280', flexShrink: 0 }}>
                     {new Date(ins.created_at).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}
                   </div>
                 </div>
@@ -328,17 +328,17 @@ function AccessCodeCard({ camping }) {
         background: '#fff', border: '1px solid rgba(0,0,0,0.07)',
         borderRadius: 16, padding: '20px 22px',
       }}>
-        <div style={{ fontSize: 11, fontWeight: 700, color: '#9ca3af', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 8 }}>
+        <div style={{ fontSize: 11, fontWeight: 700, color: '#6b7280', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 8 }}>
           Lien QR code direct
         </div>
         <div style={{
-          fontFamily: 'monospace', fontSize: 12, color: '#639922',
+          fontFamily: 'monospace', fontSize: 12, color: '#54821d',
           background: '#f0fdf4', borderRadius: 8, padding: '10px 12px',
           wordBreak: 'break-all', marginBottom: 12,
         }}>
           {joinUrl}
         </div>
-        <div style={{ fontSize: 12, color: '#9ca3af', lineHeight: 1.6 }}>
+        <div style={{ fontSize: 12, color: '#6b7280', lineHeight: 1.6 }}>
           Générez un QR code avec ce lien et affichez-le à la réception. Les vacanciers qui scannent ce lien accèdent directement sans code.
         </div>
         <button
@@ -346,7 +346,7 @@ function AccessCodeCard({ camping }) {
           style={{
             marginTop: 10, background: '#f5f2eb', border: 'none',
             borderRadius: 8, padding: '7px 14px', fontSize: 12,
-            fontWeight: 600, color: '#639922', cursor: 'pointer',
+            fontWeight: 600, color: '#54821d', cursor: 'pointer',
           }}
         >
           📋 Copier le lien

@@ -447,7 +447,7 @@ export default function PerimeterEditor({ camping, onClose, onSaved }) {
             placeholder="Ex : Camping du Lac, 12345 Villeneuve"
             style={{ padding: '7px 10px', border: '1px solid #d1d5db', borderRadius: 8, fontSize: 13, width: 220 }} />
           <button onClick={runSearch}
-            style={{ padding: '7px 12px', background: '#f3f4f6', border: '1px solid #d1d5db', borderRadius: 8, cursor: 'pointer', fontSize: 13 }}>
+            style={{ padding: '7px 12px', background: '#f3f4f6', border: '1px solid #d1d5db', borderRadius: 8, cursor: 'pointer', fontSize: 13 }} aria-label="Rechercher">
             🔍
           </button>
         </div>

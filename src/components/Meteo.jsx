@@ -114,7 +114,7 @@ export default function Meteo({ camping, couleur }) {
             const jour = new Date(iso + 'T12:00').toLocaleDateString(locale(), { weekday: 'short' })
             return (
               <div key={iso} style={{ textAlign: 'center', minWidth: 42 }}>
-                <div style={{ fontSize: 10, color: '#9ca3af', textTransform: 'capitalize', fontWeight: 600 }}>
+                <div style={{ fontSize: 10, color: '#6b7280', textTransform: 'capitalize', fontWeight: 600 }}>
                   {jour}
                 </div>
                 <div style={{ fontSize: 17, margin: '1px 0' }}>{em}</div>

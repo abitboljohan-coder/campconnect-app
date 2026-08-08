@@ -116,7 +116,7 @@ export default function GpsLocator({ camping, onSave }) {
       <div ref={mapRef} style={{ width: '100%', height: 260, borderRadius: 10, overflow: 'hidden', border: '1px solid #e5e7eb', marginBottom: 10 }} />
 
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <div style={{ fontSize: 12, color: '#9ca3af' }}>
+        <div style={{ fontSize: 12, color: '#6b7280' }}>
           {pos ? `📍 ${pos.lat.toFixed(5)}, ${pos.lng.toFixed(5)}` : 'Cliquez sur la carte pour positionner le camping'}
         </div>
         <button onClick={save} disabled={!pos} style={{

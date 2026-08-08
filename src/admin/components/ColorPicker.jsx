@@ -14,7 +14,7 @@ export default function ColorPicker({ label, value, onChange }) {
         />
         <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
           <span style={{ fontSize: 15, fontWeight: 600, color: '#1a1a1a', fontFamily: 'monospace' }}>{value}</span>
-          <span style={{ fontSize: 12, color: '#9ca3af' }}>Cliquer pour changer</span>
+          <span style={{ fontSize: 12, color: '#6b7280' }}>Cliquer pour changer</span>
         </div>
         <div style={{
           width: 80, height: 32, borderRadius: 8,
@@ -28,6 +28,6 @@ export default function ColorPicker({ label, value, onChange }) {
 }
 
 const labelStyle = {
-  fontSize: 12, fontWeight: 700, color: '#9ca3af',
+  fontSize: 12, fontWeight: 700, color: '#6b7280',
   textTransform: 'uppercase', letterSpacing: 0.8, display: 'block',
 }

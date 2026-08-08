@@ -521,7 +521,7 @@ export default function Map({ camping: campingProp, vacancier }) {
           <div style={{ display: 'flex', flexDirection: 'column', gap: 4, marginBottom: 10 }}>
             {[['Lat', 'lat'], ['Lng', 'lng']].map(([label, key]) => (
               <div key={key} style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                <span style={{ fontSize: 10, color: '#94a3b8', width: 22 }}>{label}</span>
+                <span style={{ fontSize: 10, color: '#6b7280', width: 22 }}>{label}</span>
                 <input
                   type="number" step="0.00001"
                   value={simPos[key].toFixed(6)}
@@ -570,7 +570,7 @@ export default function Map({ camping: campingProp, vacancier }) {
           position: 'absolute', bottom: 80, left: 12, zIndex: 1000,
           padding: '8px 14px', borderRadius: 20, fontSize: 12, fontWeight: 700,
           background: 'rgba(15,23,42,0.85)', backdropFilter: 'blur(8px)',
-          color: '#94a3b8', border: '1px solid rgba(255,255,255,0.12)',
+          color: '#6b7280', border: '1px solid rgba(255,255,255,0.12)',
           cursor: 'pointer', boxShadow: '0 2px 10px rgba(0,0,0,0.2)',
         }}>🎮 Simuler GPS</button>
       )}
@@ -618,12 +618,12 @@ export default function Map({ camping: campingProp, vacancier }) {
                   <span style={{ flex: 1, minWidth: 0 }}>
                     <span style={{ display: 'block', fontSize: 14, fontWeight: 600, color: '#1e293b', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{dest.label}</span>
                     {dest.dist != null && (
-                      <span style={{ fontSize: 12, color: '#639922', fontWeight: 600 }}>
+                      <span style={{ fontSize: 12, color: '#54821d', fontWeight: 600 }}>
                         {bearingArrow(bearingDeg(effectivePos, dest))} {fmtDist(dest.dist)}
                       </span>
                     )}
                   </span>
-                  <span style={{ fontSize: 16, color: '#94a3b8', flexShrink: 0 }}>🧭</span>
+                  <span style={{ fontSize: 16, color: '#6b7280', flexShrink: 0 }}>🧭</span>
                 </button>
               ))}
             </div>
@@ -755,13 +755,13 @@ export default function Map({ camping: campingProp, vacancier }) {
                   <div>
                     <div style={{ fontWeight: 700, fontSize: 17 }}>{activePin.label}</div>
                     {effectivePos && posSurSiteNow && activePin.lat && activePin.lng && (
-                      <div style={{ fontSize: 13, color: '#639922', fontWeight: 600, marginTop: 3 }}>
+                      <div style={{ fontSize: 13, color: '#54821d', fontWeight: 600, marginTop: 3 }}>
                         {bearingArrow(bearingDeg(effectivePos, activePin))} {fmtDist(haversineM(effectivePos, activePin))}
                       </div>
                     )}
                   </div>
                 </div>
-                <button onClick={() => setActivePin(null)} style={{ color: '#9ca3af', fontSize: 22, background: 'none', border: 'none', cursor: 'pointer' }}>×</button>
+                <button onClick={() => setActivePin(null)} style={{ color: '#6b7280', fontSize: 22, background: 'none', border: 'none', cursor: 'pointer' }}>×</button>
               </div>
             )}
 
@@ -803,7 +803,7 @@ function GuideBanner({ target, pos, surSite, couleur, onClose }) {
         <div style={{ flex: 1, fontSize: 13, color: '#fff', fontWeight: 600 }}>
           📍 {t('carte.activez_pos', { lieu: target.label })}
         </div>
-        <button onClick={onClose} style={guideCloseBtn}>×</button>
+        <button onClick={onClose} style={guideCloseBtn} aria-label="Fermer">×</button>
       </div>
     )
   }
@@ -822,7 +822,7 @@ function GuideBanner({ target, pos, surSite, couleur, onClose }) {
             {t('carte.hors_site')} · {t('carte.guidage_sur_place')}
           </div>
         </div>
-        <button onClick={onClose} style={guideCloseBtn}>×</button>
+        <button onClick={onClose} style={guideCloseBtn} aria-label="Fermer">×</button>
       </div>
     )
   }
@@ -851,7 +851,7 @@ function GuideBanner({ target, pos, surSite, couleur, onClose }) {
           {arrived ? t('carte.arrive') : t('carte.tout_droit', { d: fmtDist(dist) })}
         </div>
       </div>
-      <button onClick={onClose} style={guideCloseBtn}>×</button>
+      <button onClick={onClose} style={guideCloseBtn} aria-label="Fermer">×</button>
     </div>
   )
 }
@@ -881,13 +881,13 @@ function AnimFiche({ anim, inscrit, nbInscrits, couleur, onToggle, onClose }) {
           <div>
             <div style={{ fontWeight: 700, fontSize: 17 }}>{anim.titre}</div>
             <div style={{ display: 'flex', gap: 10, marginTop: 5, flexWrap: 'wrap' }}>
-              {debut && <span style={{ fontSize: 13, color: '#639922', fontWeight: 600 }}>🕐 {debut.toLocaleTimeString(locale(), { hour: '2-digit', minute: '2-digit' })}</span>}
+              {debut && <span style={{ fontSize: 13, color: '#54821d', fontWeight: 600 }}>🕐 {debut.toLocaleTimeString(locale(), { hour: '2-digit', minute: '2-digit' })}</span>}
               {anim.lieu && <span style={{ fontSize: 13, color: '#6b7280' }}>📍 {anim.lieu}</span>}
             </div>
             {anim.places_max && <div style={{ fontSize: 12, color: complet ? '#ef4444' : '#9ca3af', marginTop: 4 }}>{nbInscrits}/{anim.places_max} places</div>}
           </div>
         </div>
-        <button onClick={onClose} style={{ color: '#9ca3af', fontSize: 22, background: 'none', border: 'none', cursor: 'pointer' }}>×</button>
+        <button onClick={onClose} style={{ color: '#6b7280', fontSize: 22, background: 'none', border: 'none', cursor: 'pointer' }} aria-label="Fermer">×</button>
       </div>
       <button onClick={onToggle} disabled={complet} style={{
         marginTop: 14, width: '100%', padding: '13px', borderRadius: 14, fontWeight: 700, fontSize: 15,
@@ -918,7 +918,7 @@ function GroupeFiche({ groupe, isMember, couleur, onAction, onClose }) {
             </div>
           </div>
         </div>
-        <button onClick={onClose} style={{ color: '#9ca3af', fontSize: 22, background: 'none', border: 'none', cursor: 'pointer' }}>×</button>
+        <button onClick={onClose} style={{ color: '#6b7280', fontSize: 22, background: 'none', border: 'none', cursor: 'pointer' }} aria-label="Fermer">×</button>
       </div>
       <button onClick={onAction} style={{
         marginTop: 14, width: '100%', padding: '13px', borderRadius: 14, fontWeight: 700, fontSize: 15,

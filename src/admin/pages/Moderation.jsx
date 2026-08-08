@@ -71,7 +71,7 @@ export default function Moderation({ camping }) {
         ))}
       </div>
 
-      {loading ? <div style={{ color: '#9ca3af' }}>Chargement…</div> : (
+      {loading ? <div style={{ color: '#6b7280' }}>Chargement…</div> : (
         <div style={{ background: '#fff', borderRadius: 14, border: '1px solid rgba(0,0,0,0.07)', overflow: 'hidden' }}>
 
           {tab === 'messages' && (messages.length === 0
@@ -146,7 +146,7 @@ function Row({ children }) {
   )
 }
 function EmptyRow({ text }) {
-  return <div style={{ padding: 28, textAlign: 'center', color: '#9ca3af', fontSize: 14 }}>{text}</div>
+  return <div style={{ padding: 28, textAlign: 'center', color: '#6b7280', fontSize: 14 }}>{text}</div>
 }
 function Badge({ children }) {
   return <span style={{ marginLeft: 6, fontSize: 10, fontWeight: 800, background: '#fee2e2', color: '#dc2626', padding: '2px 7px', borderRadius: 8, textTransform: 'uppercase' }}>{children}</span>

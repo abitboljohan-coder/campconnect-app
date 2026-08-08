@@ -231,12 +231,12 @@ export default function MapEditor({ camping, setCamping }) {
 
         {/* Indicateur sauvegarde */}
         {saving && (
-          <div style={{ position: 'absolute', top: 10, right: 10, zIndex: 1000, background: 'rgba(255,255,255,0.95)', borderRadius: 20, padding: '4px 12px', fontSize: 12, color: '#639922', fontWeight: 700, boxShadow: '0 2px 8px rgba(0,0,0,0.1)' }}>
+          <div style={{ position: 'absolute', top: 10, right: 10, zIndex: 1000, background: 'rgba(255,255,255,0.95)', borderRadius: 20, padding: '4px 12px', fontSize: 12, color: '#54821d', fontWeight: 700, boxShadow: '0 2px 8px rgba(0,0,0,0.1)' }}>
             💾 Sauvegarde...
           </div>
         )}
         {!saving && pins.length > 0 && (
-          <div style={{ position: 'absolute', top: 10, right: 10, zIndex: 1000, background: 'rgba(255,255,255,0.95)', borderRadius: 20, padding: '4px 12px', fontSize: 12, color: '#9ca3af', boxShadow: '0 2px 8px rgba(0,0,0,0.1)' }}>
+          <div style={{ position: 'absolute', top: 10, right: 10, zIndex: 1000, background: 'rgba(255,255,255,0.95)', borderRadius: 20, padding: '4px 12px', fontSize: 12, color: '#6b7280', boxShadow: '0 2px 8px rgba(0,0,0,0.1)' }}>
             ✓ {pins.length} pin{pins.length > 1 ? 's' : ''}
           </div>
         )}
@@ -290,7 +290,7 @@ function LieuPicker({ onAdd, existingLabels }) {
                 <span style={{ fontSize: 18, flexShrink: 0 }}>{lieu.emoji}</span>
                 <span style={{ fontSize: 12, fontWeight: 500, color: '#374151', flex: 1 }}>{lieu.label}</span>
                 <div style={{ width: 8, height: 8, borderRadius: '50%', background: lieu.color, flexShrink: 0 }} />
-                {already && <span style={{ fontSize: 10, color: '#9ca3af' }}>✓</span>}
+                {already && <span style={{ fontSize: 10, color: '#6b7280' }}>✓</span>}
               </button>
             )
           })}
@@ -301,7 +301,7 @@ function LieuPicker({ onAdd, existingLabels }) {
 }
 
 function SectionLabel({ children, style }) {
-  return <div style={{ fontSize: 11, fontWeight: 700, color: '#9ca3af', textTransform: 'uppercase', letterSpacing: 0.8, marginBottom: 2, ...style }}>{children}</div>
+  return <div style={{ fontSize: 11, fontWeight: 700, color: '#6b7280', textTransform: 'uppercase', letterSpacing: 0.8, marginBottom: 2, ...style }}>{children}</div>
 }
 
 function ListItem({ emoji, label, pinned, selected, color, onClick, onRemove }) {

@@ -217,5 +217,5 @@ function ChartCard({ title, children }) {
 }
 
 function Empty() {
-  return <div style={{ textAlign: 'center', padding: '32px 0', color: '#9ca3af', fontSize: 14 }}>Pas encore de données.</div>
+  return <div style={{ textAlign: 'center', padding: '32px 0', color: '#6b7280', fontSize: 14 }}>Pas encore de données.</div>
 }

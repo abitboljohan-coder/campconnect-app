@@ -138,7 +138,7 @@ export default function Profil({ camping, vacancier, onLogout }) {
             }}>
               <div style={{ fontSize: 22 }}>{s.icon}</div>
               <div style={{ fontSize: 22, fontWeight: 700, color: '#1a1a1a', lineHeight: 1.2 }}>{s.n}</div>
-              <div style={{ fontSize: 11, color: '#9ca3af', marginTop: 2 }}>{s.label}</div>
+              <div style={{ fontSize: 11, color: '#6b7280', marginTop: 2 }}>{s.label}</div>
             </div>
           ))}
         </div>
@@ -216,7 +216,7 @@ export default function Profil({ camping, vacancier, onLogout }) {
 
         {/* Langue */}
         <div style={{ background: '#fff', borderRadius: 16, padding: '16px 18px', marginBottom: 16, boxShadow: '0 1px 4px rgba(0,0,0,0.06)' }}>
-          <div style={{ fontSize: 13, fontWeight: 700, color: '#9ca3af', textTransform: 'uppercase', letterSpacing: 0.6, marginBottom: 12 }}>
+          <div style={{ fontSize: 13, fontWeight: 700, color: '#6b7280', textTransform: 'uppercase', letterSpacing: 0.6, marginBottom: 12 }}>
             {t('profil.langue')}
           </div>
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
@@ -261,7 +261,7 @@ export default function Profil({ camping, vacancier, onLogout }) {
 function InfoRow({ label, value }) {
   return (
     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingBottom: 12, borderBottom: '1px solid #f5f2eb' }}>
-      <span style={{ fontSize: 14, color: '#9ca3af' }}>{label}</span>
+      <span style={{ fontSize: 14, color: '#6b7280' }}>{label}</span>
       <span style={{ fontSize: 15, fontWeight: 500, color: '#1a1a1a' }}>{value}</span>
     </div>
   )
@@ -270,7 +270,7 @@ function InfoRow({ label, value }) {
 function Field({ label, children }) {
   return (
     <div>
-      <label style={{ fontSize: 11, fontWeight: 700, color: '#9ca3af', textTransform: 'uppercase', letterSpacing: 0.8, display: 'block', marginBottom: 8 }}>{label}</label>
+      <label style={{ fontSize: 11, fontWeight: 700, color: '#6b7280', textTransform: 'uppercase', letterSpacing: 0.8, display: 'block', marginBottom: 8 }}>{label}</label>
       {children}
     </div>
   )

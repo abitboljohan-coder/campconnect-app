@@ -114,7 +114,7 @@ export default function AdminLayout({ gerant, camping, onLogout }) {
               Connecté en tant que <strong style={{ color: '#1a1a1a' }}>{gerant?.nom || 'Gérant'}</strong>
             </div>
             <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
-              <div style={{ fontSize: 14, fontWeight: 600, color: '#639922' }}>{camping?.nom}</div>
+              <div style={{ fontSize: 14, fontWeight: 600, color: '#54821d' }}>{camping?.nom}</div>
               <button
                 onClick={onLogout}
                 style={{

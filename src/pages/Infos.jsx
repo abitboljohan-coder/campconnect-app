@@ -69,7 +69,7 @@ export default function Infos({ camping }) {
               </div>
               <span style={{
                 fontSize: 18,
-                color: '#9ca3af',
+                color: '#6b7280',
                 transform: open === info.id ? 'rotate(180deg)' : 'none',
                 transition: 'transform 0.2s',
                 display: 'inline-block',

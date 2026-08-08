@@ -130,7 +130,7 @@ export default function Agenda({ camping, vacancier }) {
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: 20 }}>
         <div>
           <h1 style={{ fontSize: 22, color: '#1a1a1a', fontWeight: 700 }}>{t('agenda.titre')}</h1>
-          <div style={{ fontSize: 13, color: '#9ca3af', marginTop: 2, textTransform: 'capitalize' }}>{today}</div>
+          <div style={{ fontSize: 13, color: '#6b7280', marginTop: 2, textTransform: 'capitalize' }}>{today}</div>
         </div>
         {/* Toggle filtre */}
         <div style={{ display: 'flex', background: '#e8e4da', borderRadius: 20, padding: 3, gap: 2 }}>
@@ -157,14 +157,14 @@ export default function Agenda({ camping, vacancier }) {
           {[1,2,3,4].map(i => <div key={i} style={{ height: 88, borderRadius: 14, background: '#e8e4da', animation: 'pulse 1.5s ease-in-out infinite' }} />)}
         </div>
       ) : displayed.length === 0 ? (
-        <div style={{ textAlign: 'center', padding: '48px 0', color: '#9ca3af', fontSize: 14 }}>
+        <div style={{ textAlign: 'center', padding: '48px 0', color: '#6b7280', fontSize: 14 }}>
           {filter === 'mine' ? t('agenda.aucune_mine') : t('agenda.aucune')}
         </div>
       ) : (
         sectionOrder.map(sectionKey => (
           <div key={sectionKey} style={{ marginBottom: 28 }}>
             <h2 style={{
-              fontSize: 13, fontWeight: 700, color: '#9ca3af',
+              fontSize: 13, fontWeight: 700, color: '#6b7280',
               textTransform: 'uppercase', letterSpacing: 1.2,
               marginBottom: 10,
             }}>

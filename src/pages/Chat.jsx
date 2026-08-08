@@ -165,7 +165,7 @@ export default function Chat({ camping, vacancier }) {
       {/* Messages */}
       <div style={{ flex: 1, overflowY: 'auto', padding: '16px 12px', display: 'flex', flexDirection: 'column', gap: 4 }}>
         {messages.length === 0 && (
-          <div style={{ textAlign: 'center', color: '#9ca3af', fontSize: 14, marginTop: 60, lineHeight: 2 }}>
+          <div style={{ textAlign: 'center', color: '#6b7280', fontSize: 14, marginTop: 60, lineHeight: 2 }}>
             {t('chat.aucun_msg')}<br />{t('chat.premier')}
           </div>
         )}
@@ -178,7 +178,7 @@ export default function Chat({ camping, vacancier }) {
               position: 'relative',
             }}>
               <span style={{
-                background: '#e8e4da', color: '#9ca3af',
+                background: '#e8e4da', color: '#6b7280',
                 fontSize: 11, fontWeight: 600, padding: '3px 10px', borderRadius: 20,
               }}>
                 {dateLabel}
@@ -301,7 +301,7 @@ export default function Chat({ camping, vacancier }) {
                     </div>
                   </div>
                   <div style={{
-                    fontSize: 10, color: '#9ca3af', marginTop: 3,
+                    fontSize: 10, color: '#6b7280', marginTop: 3,
                     marginLeft: isMine ? 0 : 46,
                     marginRight: isMine ? 4 : 0,
                   }}>
@@ -356,7 +356,7 @@ export default function Chat({ camping, vacancier }) {
             flexShrink: 0, transition: 'background 0.15s',
             boxShadow: texte.trim() ? '0 2px 8px rgba(99,153,34,0.4)' : 'none',
           }}
-        >
+         aria-label="Envoyer">
           ↑
         </button>
       </form>

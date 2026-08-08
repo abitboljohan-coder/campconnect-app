@@ -163,7 +163,7 @@ export default function AnimationForm({ initial, onSave, onCancel, saving }) {
 }
 
 const labelStyle = {
-  fontSize: 11, fontWeight: 700, color: '#9ca3af',
+  fontSize: 11, fontWeight: 700, color: '#6b7280',
   textTransform: 'uppercase', letterSpacing: 0.8, display: 'block', marginBottom: 6,
 }
 const inputStyle = {

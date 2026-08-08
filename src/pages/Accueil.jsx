@@ -159,7 +159,7 @@ export default function Accueil({ camping, vacancier }) {
             ))}
           </div>
         ) : groupes.length === 0 ? (
-          <div style={{ textAlign: 'center', padding: '32px 0', color: '#9ca3af', fontSize: 14, lineHeight: 1.8 }}>
+          <div style={{ textAlign: 'center', padding: '32px 0', color: '#6b7280', fontSize: 14, lineHeight: 1.8 }}>
             {t('accueil.aucun_groupe')}<br />{t('accueil.premier_creer')}
           </div>
         ) : (
@@ -310,7 +310,7 @@ function StatutsStrip({ camping, vacancier, couleur }) {
             <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 4 }}>
               <span style={{ fontSize: 16 }}>{s.vacanciers?.avatar_emoji || '🙂'}</span>
               <span style={{ fontSize: 12, fontWeight: 700, color: '#1a1a1a' }}>{s.vacanciers?.pseudo}</span>
-              <span style={{ fontSize: 10, color: '#9ca3af', marginLeft: 'auto', whiteSpace: 'nowrap' }}>{timeAgo(s.created_at)}</span>
+              <span style={{ fontSize: 10, color: '#6b7280', marginLeft: 'auto', whiteSpace: 'nowrap' }}>{timeAgo(s.created_at)}</span>
             </div>
             <div style={{ fontSize: 13, color: '#374151', lineHeight: 1.4 }}>
               {s.emoji} {s.texte}
@@ -332,7 +332,7 @@ function StatutsStrip({ camping, vacancier, couleur }) {
       {/* Modal poster */}
       {showModal && (
         <Sheet onClose={() => setShowModal(false)}>
-            <h3 style={{ fontSize: 18, fontWeight: 800, marginBottom: 14, color: '#1a1a1a' }}>{t('accueil.quoi_de_neuf')} <span style={{ fontSize: 12, fontWeight: 500, color: '#9ca3af' }}>{t('accueil.visible24')}</span></h3>
+            <h3 style={{ fontSize: 18, fontWeight: 800, marginBottom: 14, color: '#1a1a1a' }}>{t('accueil.quoi_de_neuf')} <span style={{ fontSize: 12, fontWeight: 500, color: '#6b7280' }}>{t('accueil.visible24')}</span></h3>
             <div style={{ display: 'flex', gap: 6, marginBottom: 12, flexWrap: 'wrap' }}>
               {STATUT_EMOJIS.map(e => (
                 <button key={e} onClick={() => setEmoji(e)} style={{
@@ -735,7 +735,7 @@ function GroupCard({ groupe, couleur, isMember, onAction, avatars }) {
                 fontSize: 11, marginLeft: i === 0 ? 0 : -6, boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
               }}>{a}</div>
             ))}
-            <span style={{ fontSize: 11, color: '#9ca3af', marginLeft: 6 }}>
+            <span style={{ fontSize: 11, color: '#6b7280', marginLeft: 6 }}>
               {avatars.length} membre{avatars.length > 1 ? 's' : ''}
             </span>
           </div>

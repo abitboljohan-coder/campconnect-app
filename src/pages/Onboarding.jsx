@@ -212,7 +212,7 @@ export default function Onboarding({ initialCamping, onDone }) {
         <h1 style={{ color: '#2f4a26', fontSize: 27, fontWeight: 800, margin: 0, letterSpacing: '-0.5px' }}>
           CampConnect
         </h1>
-        <p style={{ color: '#7c8a72', marginTop: 7, fontSize: 14.5, lineHeight: 1.45 }}>
+        <p style={{ color: '#6d7964', marginTop: 7, fontSize: 14.5, lineHeight: 1.45 }}>
           {t('onb.rechercher')}
         </p>
       </div>
@@ -232,7 +232,7 @@ export default function Onboarding({ initialCamping, onDone }) {
         </div>
 
         {searching && (
-          <div style={{ color: '#9ca3af', fontSize: 13, marginTop: 12, textAlign: 'center' }}>Recherche...</div>
+          <div style={{ color: '#6b7280', fontSize: 13, marginTop: 12, textAlign: 'center' }}>Recherche...</div>
         )}
 
         {results.length > 0 && (
@@ -259,7 +259,7 @@ export default function Onboarding({ initialCamping, onDone }) {
                 </div>
                 <div>
                   <div style={{ fontWeight: 600, fontSize: 14, color: '#1f2937' }}>{c.nom}</div>
-                  <div style={{ fontSize: 12, color: '#9ca3af', marginTop: 1 }}>{t('onb.appuyer')}</div>
+                  <div style={{ fontSize: 12, color: '#6b7280', marginTop: 1 }}>{t('onb.appuyer')}</div>
                 </div>
               </button>
             ))}
@@ -267,7 +267,7 @@ export default function Onboarding({ initialCamping, onDone }) {
         )}
 
         {query.length >= 2 && !searching && results.length === 0 && (
-          <div style={{ color: '#9ca3af', fontSize: 13, marginTop: 12, textAlign: 'center' }}>
+          <div style={{ color: '#6b7280', fontSize: 13, marginTop: 12, textAlign: 'center' }}>
             Aucun camping trouvé. Vérifiez l'orthographe.
           </div>
         )}
@@ -279,7 +279,7 @@ export default function Onboarding({ initialCamping, onDone }) {
         {isNative && (
           <button
             onClick={() => setAppMode('gerant')}
-            style={{ marginTop: 14, width: '100%', background: 'none', border: 'none', fontSize: 12, color: '#9ca3af', textDecoration: 'underline', cursor: 'pointer' }}
+            style={{ marginTop: 14, width: '100%', background: 'none', border: 'none', fontSize: 12, color: '#6b7280', textDecoration: 'underline', cursor: 'pointer' }}
           >
             {t('onb.gerant')}
           </button>
@@ -297,7 +297,7 @@ export default function Onboarding({ initialCamping, onDone }) {
           : <img src="/logo-mark.png" alt="" width={72} height={77} style={{ display: 'block', margin: '0 auto 12px' }} />
         }
         <h1 style={{ color: '#2f4a26', fontSize: 23, fontWeight: 800, margin: 0, letterSpacing: '-0.3px' }}>{camping.nom}</h1>
-        <p style={{ color: '#7c8a72', marginTop: 6, fontSize: 14 }}>Vérification de votre présence</p>
+        <p style={{ color: '#6d7964', marginTop: 6, fontSize: 14 }}>Vérification de votre présence</p>
       </div>
 
       <Card>
@@ -310,7 +310,7 @@ export default function Onboarding({ initialCamping, onDone }) {
             {gpsStatus === 'ok' && <span style={{ color: '#16a34a', fontSize: 13, fontWeight: 600 }}>✓ Confirmé</span>}
             {gpsStatus === 'fail' && <span style={{ color: '#dc2626', fontSize: 13 }}>Non disponible</span>}
           </div>
-          <p style={{ fontSize: 12, color: '#9ca3af', margin: 0 }}>
+          <p style={{ fontSize: 12, color: '#6b7280', margin: 0 }}>
             {gpsStatus === 'checking' && 'Localisation en cours...'}
             {gpsStatus === 'ok' && 'Vous êtes bien dans le camping !'}
             {gpsStatus === 'fail' && 'GPS non disponible ou trop loin — utilisez le code ci-dessous.'}
@@ -325,7 +325,7 @@ export default function Onboarding({ initialCamping, onDone }) {
               <span style={{ fontSize: 18 }}>🔑</span>
               <span style={{ fontWeight: 600, fontSize: 14, color: '#1f2937' }}>Code d'accès du jour</span>
             </div>
-            <p style={{ fontSize: 12, color: '#9ca3af', marginBottom: 12 }}>
+            <p style={{ fontSize: 12, color: '#6b7280', marginBottom: 12 }}>
               Affiché à la réception et sur le tableau d'affichage. Change toutes les heures.
             </p>
             <div style={{ display: 'flex', gap: 8 }}>
@@ -359,7 +359,7 @@ export default function Onboarding({ initialCamping, onDone }) {
 
         <button
           onClick={changerCamping}
-          style={{ marginTop: 20, background: 'none', border: 'none', color: '#9ca3af', fontSize: 13, cursor: 'pointer', width: '100%' }}
+          style={{ marginTop: 20, background: 'none', border: 'none', color: '#6b7280', fontSize: 13, cursor: 'pointer', width: '100%' }}
         >
           ← Changer de camping
         </button>
@@ -376,7 +376,7 @@ export default function Onboarding({ initialCamping, onDone }) {
           : <img src="/logo-mark.png" alt="" width={66} height={70} style={{ display: 'block', margin: '0 auto 12px' }} />
         }
         <h1 style={{ color: '#2f4a26', fontSize: 23, fontWeight: 800, margin: 0, letterSpacing: '-0.3px' }}>{camping.nom}</h1>
-        <p style={{ color: '#7c8a72', marginTop: 6, fontSize: 14 }}>Créez votre profil vacancier</p>
+        <p style={{ color: '#6d7964', marginTop: 6, fontSize: 14 }}>Créez votre profil vacancier</p>
       </div>
 
       <Card>
@@ -428,7 +428,7 @@ export default function Onboarding({ initialCamping, onDone }) {
               onChange={e => setForm(f => ({ ...f, date_depart: e.target.value }))}
               style={inputStyle}
             />
-            <span style={{ fontSize: 11, color: '#9ca3af' }}>
+            <span style={{ fontSize: 11, color: '#6b7280' }}>
               Jusqu'à quand restez-vous ? Modifiable dans votre profil si vous prolongez.
             </span>
           </label>
@@ -485,7 +485,7 @@ export default function Onboarding({ initialCamping, onDone }) {
 
         <button
           onClick={changerCamping}
-          style={{ marginTop: 16, background: 'none', border: 'none', color: '#9ca3af', fontSize: 13, cursor: 'pointer', width: '100%' }}
+          style={{ marginTop: 16, background: 'none', border: 'none', color: '#6b7280', fontSize: 13, cursor: 'pointer', width: '100%' }}
         >
           ← Changer de camping
         </button>
@@ -557,7 +557,7 @@ function Spinner() {
   )
 }
 
-const labelStyle = { fontSize: 11, fontWeight: 700, color: '#9ca3af', textTransform: 'uppercase', letterSpacing: 0.8 }
+const labelStyle = { fontSize: 11, fontWeight: 700, color: '#6b7280', textTransform: 'uppercase', letterSpacing: 0.8 }
 const inputStyle = {
   padding: '12px 14px', borderRadius: 10,
   border: '1.5px solid #e5e7eb', fontSize: 16,

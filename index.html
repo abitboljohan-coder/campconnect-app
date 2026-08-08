@@ -11,7 +11,16 @@
     <meta name="mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="default" />
-    <title>CampConnect</title>
+    <meta name="description" content="La vie de votre camping en direct : groupes spontanés, messagerie, agenda des animations, carte interactive et livret d'accueil. Réservé aux vacanciers de votre camping." />
+    <link rel="manifest" href="/manifest.webmanifest" />
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="CampConnect" />
+    <meta property="og:title" content="CampConnect — la vie de votre camping" />
+    <meta property="og:description" content="Groupes spontanés, messagerie, agenda des animations et carte du camping. Réservé aux vacanciers présents sur place." />
+    <meta property="og:image" content="https://www.campconnect.fr/screenshots/app-accueil.png" />
+    <meta property="og:locale" content="fr_FR" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <title>CampConnect — la vie de votre camping</title>
     <style>
       /* Écran de démarrage — il est dans le HTML, et non dans React, pour être
          peint dès la première image. Entre la disparition du splash natif et le
@@ -91,5 +100,18 @@
     </div>
     <div id="root"></div>
     <script type="module" src="/src/main.jsx"></script>
+    <script>
+      // Enregistré après « load » : le faire plus tôt met l'installation du
+      // service worker en concurrence avec le premier rendu, sur des appareils
+      // et des réseaux qui n'ont rien à perdre de plus.
+      if ('serviceWorker' in navigator) {
+        addEventListener('load', () => {
+          navigator.serviceWorker.register('/sw.js').catch(() => {
+            // Mode privé, quota plein, contexte non sécurisé : l'application
+            // fonctionne sans, elle perd seulement le hors-ligne.
+          })
+        })
+      }
+    </script>
   </body>
 </html>

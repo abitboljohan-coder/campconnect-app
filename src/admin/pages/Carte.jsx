@@ -293,7 +293,7 @@ export default function Carte({ camping, setCamping }) {
                 <div style={{ fontWeight: 700, fontSize: 15, color: '#374151', marginBottom: 6 }}>
                   Aucun plan téléchargé
                 </div>
-                <div style={{ fontSize: 13, color: '#9ca3af', marginBottom: 20 }}>
+                <div style={{ fontSize: 13, color: '#6b7280', marginBottom: 20 }}>
                   Uploadez le plan de votre camping (JPG / PNG, max 10 MB)
                 </div>
                 <span style={{
@@ -317,7 +317,7 @@ export default function Carte({ camping, setCamping }) {
                 <button onClick={supprimerPlan}
                   style={{ position: 'absolute', top: 8, right: 8, width: 28, height: 28,
                            borderRadius: '50%', background: 'rgba(0,0,0,0.6)', color: '#fff',
-                           border: 'none', fontSize: 16, cursor: 'pointer' }}>×</button>
+                           border: 'none', fontSize: 16, cursor: 'pointer' }} aria-label="Fermer">×</button>
               </div>
 
               <div style={{
@@ -386,7 +386,7 @@ const btnPrimary = {
   borderRadius: 8, border: 'none', fontSize: 13, fontWeight: 600, cursor: 'pointer',
 }
 const btnDisabled = {
-  ...btnPrimary, background: '#e5e7eb', color: '#9ca3af', cursor: 'not-allowed',
+  ...btnPrimary, background: '#e5e7eb', color: '#6b7280', cursor: 'not-allowed',
 }
 
 function Badge({ ok, children }) {
@@ -438,7 +438,7 @@ function Step({ n, title, subtitle, done, disabled, disabledReason, optional, ch
       </div>
       <div style={{ padding: '18px 22px' }}>
         {disabled ? (
-          <div style={{ fontSize: 13, color: '#9ca3af', fontStyle: 'italic' }}>
+          <div style={{ fontSize: 13, color: '#6b7280', fontStyle: 'italic' }}>
             🔒 {disabledReason || 'Terminez l\'étape précédente.'}
           </div>
         ) : children}

@@ -172,7 +172,7 @@ export default function Animations({ camping }) {
                     {debut && <span>📅 {debut.toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })} à {debut.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}</span>}
                     {anim.lieu && <span>📍 {anim.lieu}</span>}
                     <span
-                      style={{ color: '#639922', fontWeight: 500, cursor: 'pointer' }}
+                      style={{ color: '#54821d', fontWeight: 500, cursor: 'pointer' }}
                       onClick={() => voirInscrits(anim)}
                     >
                       👥 {nb}{anim.places_max ? `/${anim.places_max}` : ''} inscrits
@@ -237,7 +237,7 @@ export default function Animations({ camping }) {
             {inscritsModal.vacanciers.length} inscrit{inscritsModal.vacanciers.length !== 1 ? 's' : ''}
           </p>
           {inscritsModal.vacanciers.length === 0 ? (
-            <div style={{ color: '#9ca3af', fontSize: 14, textAlign: 'center', padding: '24px 0' }}>Aucun inscrit.</div>
+            <div style={{ color: '#6b7280', fontSize: 14, textAlign: 'center', padding: '24px 0' }}>Aucun inscrit.</div>
           ) : (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
               {inscritsModal.vacanciers.map((v, i) => (
@@ -250,7 +250,7 @@ export default function Animations({ camping }) {
                   </div>
                   <div>
                     <div style={{ fontWeight: 600, fontSize: 14, color: '#1a1a1a' }}>{v?.pseudo}</div>
-                    <div style={{ fontSize: 12, color: '#9ca3af' }}>
+                    <div style={{ fontSize: 12, color: '#6b7280' }}>
                       {[v?.emplacement && `Empl. ${v.emplacement}`, v?.tranche_age, v?.avec].filter(Boolean).join(' · ')}
                     </div>
                   </div>
