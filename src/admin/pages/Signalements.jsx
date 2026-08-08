@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { supabase } from '../../supabase'
-import { couleur as jetons } from '../../design'
+import { Bloc, EnTete } from '../components/Bloc'
+import { Texte, Pile, Squelette, Vide, couleur as jetons, espace, graisse, rayon } from '../../design'
 
 const CAT_LABELS = {
   proprete: { emoji: '🧹', label: 'Propreté' },
@@ -68,18 +69,17 @@ export default function Signalements({ camping }) {
   const affiches = items.filter(i => i.statut === filtre)
 
   return (
-    <div>
-      <h1 style={{ fontSize: 24, fontWeight: 800, color: jetons.texte, marginBottom: 4 }}>Signalements</h1>
-      <p style={{ fontSize: 14, color: jetons.texteDoux, marginBottom: 22 }}>
-        Les problèmes remontés par vos vacanciers, en temps réel.
-      </p>
+    <Pile espace="lg">
+      <EnTete titre="Signalements" sous="Les problèmes remontés par vos vacanciers, en temps réel." />
 
       {/* Onglets par statut */}
-      <div style={{ display: 'flex', gap: 8, marginBottom: 20, flexWrap: 'wrap' }}>
+      <div role="group" aria-label="Statut des signalements"
+           style={{ display: 'flex', gap: espace.sm, flexWrap: 'wrap' }}>
         {STATUTS.map(s => (
           <button
             key={s.id}
             onClick={() => setFiltre(s.id)}
+            aria-pressed={filtre === s.id}
             style={{
               display: 'flex', alignItems: 'center', gap: 7,
               padding: '9px 16px', borderRadius: 10, cursor: 'pointer',
@@ -100,25 +100,26 @@ export default function Signalements({ camping }) {
       </div>
 
       {loading ? (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-          {[1, 2, 3].map(i => <div key={i} style={{ height: 92, borderRadius: 14, background: '#eee', animation: 'pulse 1.5s ease-in-out infinite' }} />)}
-        </div>
+        <Squelette lignes={3} hauteur={92} libelle="Chargement…" />
       ) : affiches.length === 0 ? (
-        <div style={{ background: '#fff', borderRadius: 16, padding: '48px 24px', textAlign: 'center', color: jetons.texteDoux, fontSize: 14.5 }}>
-          {filtre === 'nouveau' ? '🎉 Aucun nouveau signalement.' : 'Rien dans cette catégorie.'}
-        </div>
+        <Bloc>
+          <Vide
+            emoji={filtre === 'nouveau' ? '🎉' : '📭'}
+            texte={filtre === 'nouveau' ? 'Aucun nouveau signalement.' : 'Rien dans cette catégorie.'}
+          />
+        </Bloc>
       ) : (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+        <Pile espace="md">
           {affiches.map(item => {
             const c = cat(item.categorie)
             return (
-              <div key={item.id} style={{ background: '#fff', borderRadius: 16, padding: 16, boxShadow: '0 1px 4px rgba(0,0,0,0.06)', display: 'flex', gap: 14 }}>
+              <Bloc key={item.id} padding={espace.lg} style={{ display: 'flex', gap: 14 }}>
                 {item.photo_url && (
                   <img
                     src={item.photo_url}
                     alt=""
                     onClick={() => setPhoto(item.photo_url)}
-                    style={{ width: 84, height: 84, borderRadius: 12, objectFit: 'cover', flexShrink: 0, cursor: 'zoom-in' }}
+                    style={{ width: 84, height: 84, borderRadius: rayon.md, objectFit: 'cover', flexShrink: 0, cursor: 'zoom-in' }}
                   />
                 )}
                 <div style={{ flex: 1, minWidth: 0 }}>
@@ -144,12 +145,12 @@ export default function Signalements({ camping }) {
                       background: jetons.dangerFond, border: '1px solid #fecaca',
                       borderRadius: 10, padding: '10px 12px', marginBottom: 8,
                     }}>
-                      <div style={{ fontSize: 11.5, fontWeight: 700, color: '#b91c1c', marginBottom: 4 }}>
+                      <Texte variante="doux" style={{ fontWeight: graisse.titre, color: jetons.danger, marginBottom: 4 }}>
                         {item.categorie === 'blocage' ? 'Auteur bloqué : ' : ''}
                         {item.cible_type === 'statut' ? 'Statut' : 'Message'} de{' '}
                         {item.auteur?.avatar_emoji} {item.auteur?.pseudo || 'un vacancier parti'}
                         {item.auteur?.banni && ' · déjà banni'}
-                      </div>
+                      </Texte>
                       <div style={{ fontSize: 14, color: jetons.texte, lineHeight: 1.5, whiteSpace: 'pre-wrap' }}>
                         {item.cible_texte}
                       </div>
@@ -178,10 +179,10 @@ export default function Signalements({ camping }) {
                     </div>
                   </div>
                 </div>
-              </div>
+              </Bloc>
             )
           })}
-        </div>
+        </Pile>
       )}
 
       {/* Photo plein écran */}
@@ -196,6 +197,6 @@ export default function Signalements({ camping }) {
           <img src={photo} alt="" style={{ maxWidth: '100%', maxHeight: '100%', borderRadius: 12 }} />
         </div>
       )}
-    </div>
+    </Pile>
   )
 }

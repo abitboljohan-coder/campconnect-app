@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react'
 import { supabase } from '../../supabase'
 import AnimationForm from '../components/AnimationForm'
-import { couleur as jetons } from '../../design'
+import { Bloc, EnTete } from '../components/Bloc'
+import { Bouton, Texte, Pile, Badge, Squelette, Vide, couleur as jetons, espace, graisse, rayon, texte as tailles } from '../../design'
 
 export default function Animations({ camping }) {
   const [animations, setAnimations] = useState([])
@@ -86,139 +87,114 @@ export default function Animations({ camping }) {
   }
 
   return (
-    <div>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 28 }}>
-        <div>
-          <h1 style={{ fontSize: 24, fontWeight: 700, color: jetons.texte }}>Animations</h1>
-          <p style={{ color: jetons.texteDoux, fontSize: 14, marginTop: 4 }}>{animations.length} animation{animations.length !== 1 ? 's' : ''} au total</p>
-        </div>
-        <button
-          onClick={() => { setEditAnim(null); setShowForm(true) }}
-          style={{
-            padding: '10px 18px', borderRadius: 10,
-            background: jetons.marque, color: '#fff',
-            fontWeight: 700, fontSize: 14,
-            boxShadow: '0 4px 12px rgba(99,153,34,0.35)',
-          }}
-        >
+    <Pile espace="lg">
+      <Pile direction="ligne" espace="md" justifier="space-between" aligner="flex-start">
+        <EnTete
+          titre="Animations"
+          sous={`${animations.length} animation${animations.length !== 1 ? 's' : ''} au total`}
+        />
+        <Bouton onClick={() => { setEditAnim(null); setShowForm(true) }} style={{ flexShrink: 0 }}>
           + Nouvelle animation
-        </button>
-      </div>
+        </Bouton>
+      </Pile>
 
       {loading ? (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-          {[1, 2, 3].map(i => <div key={i} style={{ height: 90, borderRadius: 14, background: '#e8e4da' }} />)}
-        </div>
+        <Squelette lignes={3} hauteur={90} libelle="Chargement…" />
       ) : animations.length === 0 ? (
-        <div style={{
-          textAlign: 'center', padding: '52px 24px',
-          background: '#fff', borderRadius: 16,
-          border: '2px dashed #d1d5db',
-        }}>
-          <div style={{ fontSize: 52, marginBottom: 14 }}>📅</div>
-          <div style={{ fontWeight: 700, fontSize: 17, color: jetons.texte, marginBottom: 8 }}>
-            Aucune animation pour le moment
-          </div>
-          <div style={{ fontSize: 14, color: jetons.texteDoux, marginBottom: 24, maxWidth: 320, margin: '0 auto 24px', lineHeight: 1.65 }}>
-            Cours de natation, tournoi de pétanque, soirée barbecue… créez votre première animation !
-          </div>
-          <button
-            onClick={() => { setEditAnim(null); setShowForm(true) }}
-            style={{
-              padding: '12px 24px', borderRadius: 10,
-              background: jetons.marque, color: '#fff',
-              fontWeight: 700, fontSize: 14,
-              boxShadow: '0 4px 12px rgba(99,153,34,0.35)',
-            }}
-          >
-            + Créer ma première animation
-          </button>
-        </div>
+        <Bloc style={{ border: `2px dashed ${jetons.bordure}` }}>
+          <Vide
+            emoji="📅"
+            titre="Aucune animation pour le moment"
+            texte="Cours de natation, tournoi de pétanque, soirée barbecue… créez votre première animation !"
+            action={
+              <Bouton onClick={() => { setEditAnim(null); setShowForm(true) }}>
+                + Créer ma première animation
+              </Bouton>
+            }
+          />
+        </Bloc>
       ) : (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+        <Pile espace="sm">
           {animations.map(anim => {
             const nb = counts[anim.id] || 0
             const debut = anim.debut ? new Date(anim.debut) : null
             const complet = anim.places_max && nb >= anim.places_max
             return (
-              <div key={anim.id} style={{
-                background: '#fff', borderRadius: 14, padding: '16px 20px',
-                border: '1px solid rgba(0,0,0,0.07)',
-                borderLeft: `4px solid ${anim.publiee ? jetons.marque : '#d1d5db'}`,
+              <Bloc key={anim.id} padding="16px 20px" style={{
+                borderLeft: `4px solid ${anim.publiee ? jetons.marque : jetons.bordure}`,
                 display: 'flex', alignItems: 'center', gap: 14,
               }}>
-                {/* Emoji */}
-                <div style={{
-                  width: 44, height: 44, borderRadius: 12,
+                <span aria-hidden="true" style={{
+                  width: 44, height: 44, borderRadius: rayon.md,
                   background: jetons.fond, fontSize: 22, flexShrink: 0,
                   display: 'flex', alignItems: 'center', justifyContent: 'center',
                 }}>
                   {anim.emoji || '🎉'}
-                </div>
+                </span>
 
                 {/* Infos */}
                 <div style={{ flex: 1, overflow: 'hidden' }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
-                    <span style={{ fontWeight: 700, fontSize: 15, color: jetons.texte }}>{anim.titre}</span>
-                    <span style={{
-                      fontSize: 11, fontWeight: 600, padding: '2px 8px', borderRadius: 20,
-                      background: anim.publiee ? '#dcfce7' : jetons.surfaceDouce,
-                      color: anim.publiee ? jetons.succes : jetons.texteDoux,
-                    }}>
+                    <Texte variante="sousTitre" as="span" style={{ fontSize: tailles.moyen }}>{anim.titre}</Texte>
+                    <Badge ton={anim.publiee ? 'succes' : 'neutre'}>
                       {anim.publiee ? 'Publié' : 'Brouillon'}
-                    </span>
-                    {complet && <span style={{ fontSize: 11, fontWeight: 600, padding: '2px 8px', borderRadius: 20, background: jetons.dangerFond, color: jetons.danger }}>Complet</span>}
+                    </Badge>
+                    {complet && <Badge ton="danger">Complet</Badge>}
                   </div>
                   <div style={{ fontSize: 12, color: jetons.texteDoux, marginTop: 4, display: 'flex', gap: 12, flexWrap: 'wrap' }}>
                     {debut && <span>📅 {debut.toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })} à {debut.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}</span>}
                     {anim.lieu && <span>📍 {anim.lieu}</span>}
-                    <span
-                      style={{ color: jetons.marqueTexte, fontWeight: 500, cursor: 'pointer' }}
+                    {/* Une ligne cliquable qui n'etait pas un bouton : rien
+                        n'indiquait qu'elle ouvrait la liste, et le clavier ne
+                        pouvait pas l'atteindre. */}
+                    <button
                       onClick={() => voirInscrits(anim)}
+                      style={{
+                        color: jetons.marqueTexte, fontWeight: graisse.normal, cursor: 'pointer',
+                        background: 'none', border: 'none', padding: 0, font: 'inherit',
+                        fontSize: tailles.petit, textDecoration: 'underline',
+                      }}
                     >
                       👥 {nb}{anim.places_max ? `/${anim.places_max}` : ''} inscrits
-                    </span>
+                    </button>
                   </div>
                 </div>
 
                 {/* Actions */}
-                <div style={{ display: 'flex', gap: 8, flexShrink: 0, flexWrap: 'wrap' }}>
-                  <button
+                <Pile direction="ligne" espace="sm" retour style={{ flexShrink: 0 }}>
+                  <Bouton
+                    variante="secondaire" taille="sm"
                     onClick={() => togglePublie(anim)}
                     style={{
-                      padding: '6px 12px', borderRadius: 8, fontSize: 12, fontWeight: 600,
-                      background: anim.publiee ? jetons.alerteFond : '#dcfce7',
+                      borderRadius: rayon.sm, border: 'none',
+                      background: anim.publiee ? jetons.alerteFond : '#f0fdf4',
                       color: anim.publiee ? jetons.alerte : jetons.succes,
-                      border: 'none',
                     }}
                   >
                     {anim.publiee ? 'Dépublier' : 'Publier'}
-                  </button>
-                  <button
-                    onClick={() => { setEditAnim(anim); setShowForm(true) }}
-                    style={{ padding: '6px 12px', borderRadius: 8, fontSize: 12, fontWeight: 600, background: jetons.surfaceDouce, color: jetons.texteMoyen }}
-                  >
+                  </Bouton>
+                  <Bouton variante="secondaire" taille="sm"
+                          onClick={() => { setEditAnim(anim); setShowForm(true) }}
+                          style={{ borderRadius: rayon.sm, border: 'none', background: jetons.surfaceDouce }}>
                     Modifier
-                  </button>
-                  <button
-                    onClick={() => supprimer(anim.id)}
-                    style={{ padding: '6px 12px', borderRadius: 8, fontSize: 12, fontWeight: 600, background: jetons.dangerFond, color: jetons.danger }}
-                  >
+                  </Bouton>
+                  <Bouton variante="danger" taille="sm" onClick={() => supprimer(anim.id)}
+                          style={{ borderRadius: rayon.sm }}>
                     Supprimer
-                  </button>
-                </div>
-              </div>
+                  </Bouton>
+                </Pile>
+              </Bloc>
             )
           })}
-        </div>
+        </Pile>
       )}
 
       {/* Modal formulaire */}
       {showForm && (
         <Modal onClose={() => { setShowForm(false); setEditAnim(null) }}>
-          <h2 style={{ fontSize: 20, fontWeight: 700, color: jetons.texte, marginBottom: 20 }}>
-            {editAnim ? 'Modifier l\'animation' : 'Nouvelle animation'}
-          </h2>
+          <Texte variante="section" as="h2" style={{ marginBottom: espace.xl }}>
+            {editAnim ? 'Modifier l’animation' : 'Nouvelle animation'}
+          </Texte>
           <AnimationForm
             initial={editAnim}
             onSave={sauvegarder}
@@ -231,62 +207,73 @@ export default function Animations({ camping }) {
       {/* Modal inscrits */}
       {inscritsModal && (
         <Modal onClose={() => setInscritsModal(null)}>
-          <h2 style={{ fontSize: 20, fontWeight: 700, color: jetons.texte, marginBottom: 4 }}>
-            {inscritsModal.anim.emoji} {inscritsModal.anim.titre}
-          </h2>
-          <p style={{ color: jetons.texteDoux, fontSize: 14, marginBottom: 20 }}>
-            {inscritsModal.vacanciers.length} inscrit{inscritsModal.vacanciers.length !== 1 ? 's' : ''}
-          </p>
+          <Pile espace="xs" style={{ marginBottom: espace.xl }}>
+            <Texte variante="section" as="h2">
+              {inscritsModal.anim.emoji} {inscritsModal.anim.titre}
+            </Texte>
+            <Texte variante="corps">
+              {inscritsModal.vacanciers.length} inscrit{inscritsModal.vacanciers.length !== 1 ? 's' : ''}
+            </Texte>
+          </Pile>
           {inscritsModal.vacanciers.length === 0 ? (
-            <div style={{ color: jetons.texteDoux, fontSize: 14, textAlign: 'center', padding: '24px 0' }}>Aucun inscrit.</div>
+            <Vide emoji="👥" texte="Aucun inscrit." />
           ) : (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+            <Pile espace="sm">
               {inscritsModal.vacanciers.map((v, i) => (
-                <div key={i} style={{
-                  display: 'flex', alignItems: 'center', gap: 12,
-                  padding: '10px 0', borderBottom: '1px solid #f5f2eb',
-                }}>
-                  <div style={{ width: 36, height: 36, borderRadius: '50%', background: '#63992218', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18, flexShrink: 0 }}>
+                <Pile key={i} direction="ligne" espace="md" aligner="center"
+                      style={{ padding: '10px 0', borderBottom: `1px solid ${jetons.fond}` }}>
+                  <span aria-hidden="true" style={{
+                    width: 36, height: 36, borderRadius: rayon.rond,
+                    background: 'var(--cc-accent-voile)',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    fontSize: 18, flexShrink: 0,
+                  }}>
                     {v?.pseudo?.[0]?.toUpperCase() || '?'}
-                  </div>
+                  </span>
                   <div>
-                    <div style={{ fontWeight: 600, fontSize: 14, color: jetons.texte }}>{v?.pseudo}</div>
-                    <div style={{ fontSize: 12, color: jetons.texteDoux }}>
+                    <Texte variante="corps" style={{ fontWeight: graisse.fort, color: jetons.texte }}>{v?.pseudo}</Texte>
+                    <Texte variante="doux">
                       {[v?.emplacement && `Empl. ${v.emplacement}`, v?.tranche_age, v?.avec].filter(Boolean).join(' · ')}
-                    </div>
+                    </Texte>
                   </div>
-                </div>
+                </Pile>
               ))}
-            </div>
+            </Pile>
           )}
-          <button
-            onClick={() => setInscritsModal(null)}
-            style={{ marginTop: 20, width: '100%', padding: '12px', borderRadius: 10, background: jetons.surfaceDouce, color: jetons.texteMoyen, fontWeight: 600 }}
-          >
+          <Bouton variante="secondaire" taille="lg" pleineLargeur
+                  onClick={() => setInscritsModal(null)} style={{ marginTop: espace.xl }}>
             Fermer
-          </button>
+          </Bouton>
         </Modal>
       )}
-    </div>
+    </Pile>
   )
 }
 
 function Modal({ children, onClose }) {
   return (
     <div
-      style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.55)', display: 'flex', alignItems: 'flex-end', justifyContent: 'center', zIndex: 200 }}
+      role="dialog"
+      aria-modal="true"
+      style={{
+        position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.55)',
+        display: 'flex', alignItems: 'flex-end', justifyContent: 'center', zIndex: 200,
+      }}
       onClick={onClose}
     >
       <div
         style={{
-          background: '#fff', borderRadius: '22px 22px 0 0',
+          background: jetons.surface, borderRadius: `${rayon.xl}px ${rayon.xl}px 0 0`,
           padding: '24px 22px 40px', width: '100%', maxWidth: 560,
           maxHeight: '90vh', overflowY: 'auto',
           animation: 'fadeIn 0.2s ease',
         }}
         onClick={e => e.stopPropagation()}
       >
-        <div style={{ width: 40, height: 4, background: jetons.bordure, borderRadius: 2, margin: '0 auto 20px' }} />
+        <div aria-hidden="true" style={{
+          width: 40, height: 4, background: jetons.bordure,
+          borderRadius: 2, margin: `0 auto ${espace.xl}px`,
+        }} />
         {children}
       </div>
     </div>

@@ -1,7 +1,8 @@
 import { useState } from 'react'
 import { supabase } from '../../supabase'
 import ColorPicker from '../components/ColorPicker'
-import { couleur as jetons } from '../../design'
+import { Bloc, Alerte, EnTete } from '../components/Bloc'
+import { Bouton, Champ, Texte, Pile, couleur as jetons, espace, graisse, rayon } from '../../design'
 
 function compressImage(file, maxWidth = 800, quality = 0.75) {
   return new Promise((resolve, reject) => {
@@ -75,120 +76,98 @@ export default function Apparence({ camping, setCamping }) {
   }
 
   return (
-    <div>
-      <div style={{ marginBottom: 28 }}>
-        <h1 style={{ fontSize: 24, fontWeight: 700, color: jetons.texte }}>Apparence</h1>
-        <p style={{ color: jetons.texteDoux, fontSize: 14, marginTop: 4 }}>Nom, couleurs et logo de votre camping dans l'app.</p>
-      </div>
+    <Pile espace="xl">
+      <EnTete titre="Apparence" sous="Nom, couleurs et logo de votre camping dans l'app." />
 
-      {success && <Alert type="success">{success}</Alert>}
-      {error   && <Alert type="error">{error}</Alert>}
+      {success && <Alerte type="succes">{success}</Alerte>}
+      {error   && <Alerte type="erreur">{error}</Alerte>}
 
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
+      <Bloc titre="Nom du camping">
+        <Champ libelle="Nom" value={nom} onChange={e => setNom(e.target.value)}
+               placeholder="ex : Camping Les Pins" />
+      </Bloc>
 
-        {/* Nom */}
-        <Card title="Nom du camping">
-          <label style={labelStyle}>NOM</label>
-          <input type="text" value={nom} onChange={e => setNom(e.target.value)} style={inputStyle} placeholder="ex: Camping Les Pins" />
-        </Card>
+      <Bloc titre="Couleurs">
+        <ColorPicker label="Couleur principale (boutons, accents)" value={couleur1} onChange={setCouleur1} />
+        <ColorPicker label="Couleur secondaire (fond header)" value={couleur2} onChange={setCouleur2} />
 
-        {/* Couleurs */}
-        <Card title="Couleurs">
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
-            <ColorPicker label="Couleur principale (boutons, accents)" value={couleur1} onChange={setCouleur1} />
-            <ColorPicker label="Couleur secondaire (fond header)" value={couleur2} onChange={setCouleur2} />
-            <div>
-              <label style={labelStyle}>APERÇU DE L'APP</label>
-              <div style={{ marginTop: 8, borderRadius: 14, overflow: 'hidden', border: '1px solid rgba(0,0,0,0.1)', width: 220, boxShadow: '0 4px 16px rgba(0,0,0,0.12)' }}>
-                <div style={{ background: couleur2, padding: '12px 14px', display: 'flex', alignItems: 'center', gap: 8 }}>
-                  <div style={{ width: 28, height: 28, borderRadius: '50%', background: `${couleur1}40`, border: `2px solid ${couleur1}`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 14 }}>🏕️</div>
-                  <div style={{ color: '#fff', fontWeight: 700, fontSize: 13 }}>{nom || camping?.nom}</div>
-                </div>
-                <div style={{ background: jetons.fond, padding: '10px 12px', display: 'flex', flexDirection: 'column', gap: 6 }}>
-                  <div style={{ background: '#fff', borderRadius: 8, padding: '8px 10px', borderLeft: `3px solid ${couleur1}` }}>
-                    <div style={{ fontSize: 11, fontWeight: 600, color: jetons.texteMoyen }}>🏊 Cours de natation</div>
-                    <div style={{ fontSize: 10, color: jetons.texteDoux, marginTop: 2 }}>14:00 · Piscine</div>
-                  </div>
-                  <div style={{ background: couleur1, borderRadius: 8, padding: '8px 10px', textAlign: 'center' }}>
-                    <span style={{ fontSize: 11, color: '#fff', fontWeight: 600 }}>+ Créer un groupe</span>
-                  </div>
-                </div>
-                <div style={{ background: '#fff', borderTop: '1px solid #e5e7eb', display: 'flex', justifyContent: 'space-around', padding: '6px 0' }}>
-                  {['🏠','👥','🗺️','📅','👤'].map((ic, i) => (
-                    <div key={i} style={{ textAlign: 'center', fontSize: 14, opacity: i === 0 ? 1 : 0.4 }}>
-                      <div>{ic}</div>
-                      {i === 0 && <div style={{ width: 12, height: 2, background: couleur1, borderRadius: 1, margin: '2px auto 0' }} />}
-                    </div>
-                  ))}
-                </div>
+        <Pile espace="sm">
+          <Texte variante="libelle" as="span">Aperçu de l’app</Texte>
+          <div style={{
+            borderRadius: rayon.lg, overflow: 'hidden',
+            border: `1px solid ${jetons.bordure}`, width: 220,
+            boxShadow: '0 4px 16px rgba(26, 26, 26, 0.12)',
+          }}>
+            <div style={{ background: couleur2, padding: `${espace.md}px 14px`, display: 'flex', alignItems: 'center', gap: espace.sm }}>
+              <span aria-hidden="true" style={{
+                width: 28, height: 28, borderRadius: rayon.rond,
+                background: `${couleur1}40`, border: `2px solid ${couleur1}`,
+                display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 14,
+              }}>🏕️</span>
+              <span style={{ color: '#fff', fontWeight: graisse.titre, fontSize: 13 }}>{nom || camping?.nom}</span>
+            </div>
+            <div style={{ background: jetons.fond, padding: `10px ${espace.md}px`, display: 'flex', flexDirection: 'column', gap: espace.xs }}>
+              <div style={{ background: jetons.surface, borderRadius: rayon.sm, padding: '8px 10px', borderLeft: `3px solid ${couleur1}` }}>
+                <div style={{ fontSize: 11, fontWeight: graisse.fort, color: jetons.texteMoyen }}>🏊 Cours de natation</div>
+                <div style={{ fontSize: 10, color: jetons.texteDoux, marginTop: 2 }}>14:00 · Piscine</div>
+              </div>
+              <div style={{ background: couleur1, borderRadius: rayon.sm, padding: '8px 10px', textAlign: 'center' }}>
+                <span style={{ fontSize: 11, color: '#fff', fontWeight: graisse.fort }}>+ Créer un groupe</span>
               </div>
             </div>
-          </div>
-        </Card>
-
-        {/* Logo */}
-        <Card title="Logo du camping">
-          <div style={{ display: 'flex', alignItems: 'flex-start', gap: 20, flexWrap: 'wrap' }}>
-            {logoPreview && (
-              <img src={logoPreview} alt="Logo" style={{ width: 80, height: 80, objectFit: 'contain', borderRadius: 12, border: '1px solid #e5e7eb', background: jetons.fond }} />
-            )}
-            <div style={{ flex: 1 }}>
-              <label style={labelStyle}>FICHIER (PNG/JPG/SVG, max 2MB)</label>
-              <input
-                type="file" accept="image/png,image/jpeg,image/svg+xml"
-                onChange={e => handleImageUpload(e.target.files[0], 'logo_url', 2, setUploadingLogo, setLogoPreview)}
-                style={{ display: 'block', marginTop: 8, fontSize: 14, color: jetons.texteMoyen }}
-              />
-              {uploadingLogo && <UploadProgress label="Compression et enregistrement..." />}
+            <div style={{ background: jetons.surface, borderTop: `1px solid ${jetons.bordure}`, display: 'flex', justifyContent: 'space-around', padding: '6px 0' }}>
+              {['🏠','👥','🗺️','📅','👤'].map((ic, i) => (
+                <div key={i} aria-hidden="true" style={{ textAlign: 'center', fontSize: 14, opacity: i === 0 ? 1 : 0.4 }}>
+                  <div>{ic}</div>
+                  {i === 0 && <div style={{ width: 12, height: 2, background: couleur1, borderRadius: 1, margin: '2px auto 0' }} />}
+                </div>
+              ))}
             </div>
           </div>
-        </Card>
+        </Pile>
+      </Bloc>
 
-        {/* Bouton enregistrer */}
-        <button
-          onClick={sauvegarder}
-          disabled={saving}
-          style={{
-            padding: '14px', borderRadius: 12,
-            background: saving ? '#9ca3af' : jetons.marque,
-            color: '#fff', fontWeight: 700, fontSize: 15,
-            boxShadow: '0 4px 14px rgba(99,153,34,0.35)',
-          }}
-        >
-          {saving ? 'Enregistrement...' : 'Enregistrer les modifications'}
-        </button>
+      <Bloc titre="Logo du camping">
+        <Pile direction="ligne" espace="xl" aligner="flex-start" retour>
+          {logoPreview && (
+            <img src={logoPreview} alt="Logo du camping" style={{
+              width: 80, height: 80, objectFit: 'contain',
+              borderRadius: rayon.md, border: `1px solid ${jetons.bordure}`, background: jetons.fond,
+            }} />
+          )}
+          <Pile espace="sm" style={{ flex: 1 }}>
+            <Texte variante="libelle" as="span">Fichier (PNG/JPG/SVG, max 2 Mo)</Texte>
+            <input
+              type="file" accept="image/png,image/jpeg,image/svg+xml"
+              aria-label="Logo du camping"
+              onChange={e => handleImageUpload(e.target.files[0], 'logo_url', 2, setUploadingLogo, setLogoPreview)}
+              style={{ display: 'block', fontSize: 14, color: jetons.texteMoyen }}
+            />
+            {uploadingLogo && <UploadProgress label="Compression et enregistrement…" />}
+          </Pile>
+        </Pile>
+      </Bloc>
 
-      </div>
-    </div>
+      <Bouton taille="lg" charge={saving} onClick={sauvegarder}>
+        {saving ? 'Enregistrement…' : 'Enregistrer les modifications'}
+      </Bouton>
+    </Pile>
   )
 }
 
 function UploadProgress({ label }) {
   return (
-    <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 10, padding: '8px 12px', background: '#f0fdf4', borderRadius: 8, border: '1px solid #bbf7d0' }}>
-      <div style={{ width: 16, height: 16, border: '2px solid #639922', borderTopColor: 'transparent', borderRadius: '50%', animation: 'spin 0.8s linear infinite', flexShrink: 0 }} />
-      <span style={{ fontSize: 13, color: jetons.succes, fontWeight: 500 }}>{label}</span>
+    <div role="status" style={{
+      display: 'flex', alignItems: 'center', gap: espace.sm,
+      padding: `${espace.sm}px ${espace.md}px`, background: '#f0fdf4',
+      borderRadius: rayon.sm, border: '1px solid #bbf7d0',
+    }}>
+      <span aria-hidden="true" style={{
+        width: 16, height: 16, border: `2px solid ${jetons.marque}`,
+        borderTopColor: 'transparent', borderRadius: rayon.rond,
+        animation: 'spin 0.8s linear infinite', flexShrink: 0,
+      }} />
+      <Texte variante="corps" as="span" style={{ color: jetons.succes }}>{label}</Texte>
     </div>
   )
 }
-
-function Card({ title, children }) {
-  return (
-    <div style={{ background: '#fff', borderRadius: 14, padding: '20px 22px', border: '1px solid rgba(0,0,0,0.07)' }}>
-      <h2 style={{ fontSize: 16, fontWeight: 700, color: jetons.texte, marginBottom: 18 }}>{title}</h2>
-      {children}
-    </div>
-  )
-}
-
-function Alert({ type, children }) {
-  const ok = type === 'success'
-  return (
-    <div style={{ background: ok ? '#dcfce7' : jetons.dangerFond, color: ok ? jetons.succes : jetons.danger, padding: '12px 16px', borderRadius: 10, fontSize: 14, fontWeight: 500, marginBottom: 16 }}>
-      {ok ? '✅ ' : '❌ '}{children}
-    </div>
-  )
-}
-
-const labelStyle = { fontSize: 11, fontWeight: 700, color: jetons.texteDoux, textTransform: 'uppercase', letterSpacing: 0.8, display: 'block', marginBottom: 6 }
-const inputStyle = { width: '100%', padding: '11px 13px', borderRadius: 10, border: '1.5px solid #e5e7eb', fontSize: 15, outline: 'none', background: '#fafaf8', boxSizing: 'border-box' }

@@ -4,7 +4,8 @@ import MapEditor from '../components/MapEditor'
 import PlanCalibrator from '../components/PlanCalibrator'
 import PerimeterEditor from '../components/PerimeterEditor'
 import { detectPois, geocodeCamping, findCampsitePolygon, searchCampsiteByName } from '../lib/osmPois'
-import { couleur as jetons } from '../../design'
+import { Bloc, Alerte, EnTete } from '../components/Bloc'
+import { Texte, Pile, couleur as jetons } from '../../design'
 
 async function compressToBlob(file, maxWidth = 2000, quality = 0.82) {
   const bmp = await createImageBitmap(file)
@@ -223,18 +224,14 @@ export default function Carte({ camping, setCamping }) {
   }
 
   return (
-    <div>
-      <div style={{ marginBottom: 28 }}>
-        <h1 style={{ fontSize: 24, fontWeight: 700, color: jetons.texte }}>Carte du camping</h1>
-        <p style={{ color: jetons.texteDoux, fontSize: 14, marginTop: 4 }}>
-          Plan image (calé sur satellite) et points d'intérêt visibles par vos vacanciers.
-        </p>
-      </div>
+    <Pile espace="xl">
+      <EnTete
+        titre="Carte du camping"
+        sous="Plan image (calé sur satellite) et points d'intérêt visibles par vos vacanciers."
+      />
 
-      {success && <Alert type="success">{success}</Alert>}
-      {error   && <Alert type="error">{error}</Alert>}
-
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
+      {success && <Alerte type="succes">{success}</Alerte>}
+      {error   && <Alerte type="erreur">{error}</Alerte>}
 
         {/* ÉTAPE 1 — CONTOUR */}
         <Step n={1} title="Tracer le contour du camping"
@@ -349,9 +346,8 @@ export default function Carte({ camping, setCamping }) {
               </div>
             </div>
           )}
-          {uploading && <UploadProgress label="Compression et upload..." />}
+          {uploading && <UploadProgress label="Compression et upload…" />}
         </Step>
-      </div>
 
       {showCalibrator && (
         <PlanCalibrator
@@ -367,7 +363,7 @@ export default function Carte({ camping, setCamping }) {
           onSaved={(newCfg) => setCamping(c => ({ ...c, carte_config: newCfg }))}
         />
       )}
-    </div>
+    </Pile>
   )
 }
 
@@ -426,7 +422,7 @@ function Step({ n, title, subtitle, done, disabled, disabledReason, optional, ch
         </div>
         <div style={{ flex: 1 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-            <h2 style={{ fontSize: 16, fontWeight: 700, color: jetons.texte, margin: 0 }}>{title}</h2>
+            <Texte variante="sousTitre" as="h2" style={{ fontSize: 16 }}>{title}</Texte>
             {optional && <span style={{ fontSize: 11, padding: '2px 8px', borderRadius: 6,
                                         background: jetons.surfaceDouce, color: jetons.texteDoux, fontWeight: 600 }}>
               OPTIONNEL
@@ -448,21 +444,4 @@ function Step({ n, title, subtitle, done, disabled, disabledReason, optional, ch
   )
 }
 
-function Card({ title, children }) {
-  return (
-    <div style={{ background: '#fff', borderRadius: 14, padding: '20px 22px', border: '1px solid rgba(0,0,0,0.07)' }}>
-      <h2 style={{ fontSize: 16, fontWeight: 700, color: jetons.texte, marginBottom: 16 }}>{title}</h2>
-      {children}
-    </div>
-  )
-}
 
-function Alert({ type, children }) {
-  const ok = type === 'success'
-  return (
-    <div style={{ background: ok ? '#dcfce7' : jetons.dangerFond, color: ok ? jetons.succes : jetons.danger,
-                  padding: '12px 16px', borderRadius: 10, fontSize: 14, fontWeight: 500, marginBottom: 16 }}>
-      {ok ? '✅ ' : '❌ '}{children}
-    </div>
-  )
-}

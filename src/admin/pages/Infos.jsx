@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { supabase } from '../../supabase'
-import { couleur as jetons } from '../../design'
+import { Bloc, Alerte, EnTete } from '../components/Bloc'
+import { Bouton, Pile, couleur as jetons, espace, graisse, rayon } from '../../design'
 
 // Mêmes défauts que la page vacancier (src/pages/Infos.jsx)
 const DEFAULT_INFOS = [
@@ -54,83 +55,90 @@ export default function Infos({ camping, setCamping }) {
   }
 
   return (
-    <div>
-      <div style={{ marginBottom: 24 }}>
-        <h1 style={{ fontSize: 24, fontWeight: 700, color: jetons.texte }}>Infos pratiques</h1>
-        <p style={{ color: jetons.texteDoux, fontSize: 14, marginTop: 4 }}>
-          Le livret d'accueil affiché aux vacanciers dans l'onglet « Infos ». Personnalisez les rubriques, l'ordre et le contenu.
-        </p>
-      </div>
+    <Pile espace="lg" style={{ maxWidth: 640 }}>
+      <EnTete
+        titre="Infos pratiques"
+        sous="Le livret d'accueil affiché aux vacanciers dans l'onglet « Infos ». Personnalisez les rubriques, l'ordre et le contenu."
+      />
 
-      {success && (
-        <div style={{ background: '#dcfce7', color: jetons.succes, padding: '12px 16px', borderRadius: 10, fontSize: 14, fontWeight: 500, marginBottom: 16 }}>
-          ✅ Livret d'accueil mis à jour !
-        </div>
-      )}
+      {success && <Alerte type="succes">Livret d’accueil mis à jour !</Alerte>}
 
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 12, maxWidth: 640 }}>
+      <Pile espace="md">
         {items.map((it, idx) => (
-          <div key={it.id} style={{ background: '#fff', borderRadius: 14, padding: 16, border: '1px solid rgba(0,0,0,0.07)' }}>
-            <div style={{ display: 'flex', gap: 10, alignItems: 'center', marginBottom: 10 }}>
+          <Bloc key={it.id}>
+            <Pile direction="ligne" espace="sm" aligner="center">
               <input
                 value={it.emoji}
                 onChange={e => update(idx, { emoji: e.target.value })}
                 maxLength={4}
-                style={{ ...inputStyle, width: 54, textAlign: 'center', fontSize: 20, padding: '8px 4px' }}
+                aria-label={`Emoji de la rubrique ${idx + 1}`}
+                style={{ ...saisie, width: 54, textAlign: 'center', fontSize: 20, padding: '8px 4px' }}
               />
               <input
                 value={it.titre}
                 onChange={e => update(idx, { titre: e.target.value })}
                 placeholder="Titre de la rubrique"
-                style={{ ...inputStyle, flex: 1, fontWeight: 600 }}
+                aria-label={`Titre de la rubrique ${idx + 1}`}
+                style={{ ...saisie, flex: 1, fontWeight: graisse.fort }}
               />
-              <button onClick={() => move(idx, -1)} disabled={idx === 0} style={btnIcon} title="Monter">↑</button>
-              <button onClick={() => move(idx, 1)} disabled={idx === items.length - 1} style={btnIcon} title="Descendre">↓</button>
-              <button onClick={() => remove(idx)} style={{ ...btnIcon, color: jetons.danger }} title="Supprimer">✕</button>
-            </div>
+              {/* Les trois commandes n'avaient qu'une flèche pour contenu : un
+                  `title` s'affiche à la souris mais reste muet au toucher et
+                  n'est pas garanti aux lecteurs d'écran. */}
+              <IconeBouton libelle="Monter" onClick={() => move(idx, -1)} disabled={idx === 0}>↑</IconeBouton>
+              <IconeBouton libelle="Descendre" onClick={() => move(idx, 1)} disabled={idx === items.length - 1}>↓</IconeBouton>
+              <IconeBouton libelle="Supprimer" onClick={() => remove(idx)} danger>✕</IconeBouton>
+            </Pile>
             <textarea
               value={it.contenu}
               onChange={e => update(idx, { contenu: e.target.value })}
               placeholder="Contenu (une info par ligne)"
+              aria-label={`Contenu de la rubrique ${idx + 1}`}
               rows={3}
-              style={{ ...inputStyle, width: '100%', resize: 'vertical', fontFamily: 'inherit', lineHeight: 1.5 }}
+              style={{ ...saisie, width: '100%', resize: 'vertical', fontFamily: 'inherit', lineHeight: 1.5 }}
             />
-          </div>
+          </Bloc>
         ))}
 
         <button onClick={add} style={{
-          padding: '13px', borderRadius: 12, border: '2px dashed #d1d5db',
-          background: 'none', color: jetons.texteDoux, fontWeight: 600, fontSize: 14, cursor: 'pointer',
+          padding: '13px', borderRadius: rayon.md, border: `2px dashed ${jetons.bordure}`,
+          background: 'none', color: jetons.texteDoux, fontWeight: graisse.fort, fontSize: 14, cursor: 'pointer',
         }}>
           + Ajouter une rubrique
         </button>
 
-        <div style={{ display: 'flex', gap: 10 }}>
-          <button
-            onClick={() => setItems(DEFAULT_INFOS)}
-            style={{ flex: 1, padding: '13px', borderRadius: 12, background: jetons.surfaceDouce, color: jetons.texteMoyen, fontWeight: 600, border: 'none', cursor: 'pointer' }}
-          >
+        <Pile direction="ligne" espace="sm">
+          <Bouton variante="secondaire" taille="lg" style={{ flex: 1 }} onClick={() => setItems(DEFAULT_INFOS)}>
             Rétablir les rubriques par défaut
-          </button>
-          <button
-            onClick={save}
-            disabled={saving}
-            style={{ flex: 2, padding: '13px', borderRadius: 12, background: saving ? '#9ca3af' : jetons.marque, color: '#fff', fontWeight: 700, border: 'none', cursor: 'pointer' }}
-          >
-            {saving ? 'Enregistrement...' : 'Enregistrer le livret'}
-          </button>
-        </div>
-      </div>
-    </div>
+          </Bouton>
+          <Bouton taille="lg" style={{ flex: 2 }} charge={saving} onClick={save}>
+            {saving ? 'Enregistrement…' : 'Enregistrer le livret'}
+          </Bouton>
+        </Pile>
+      </Pile>
+    </Pile>
   )
 }
 
-const inputStyle = {
-  padding: '10px 12px', borderRadius: 10,
-  border: '1.5px solid #e5e7eb', fontSize: 16, outline: 'none', background: '#fafaf8',
-  boxSizing: 'border-box',
+function IconeBouton({ libelle, danger, children, ...reste }) {
+  return (
+    <button
+      aria-label={libelle}
+      title={libelle}
+      style={{
+        width: 34, height: 34, borderRadius: rayon.sm,
+        border: `1px solid ${jetons.bordure}`, background: jetons.surface,
+        cursor: 'pointer', fontSize: 14, flexShrink: 0,
+        color: danger ? jetons.danger : jetons.texteMoyen,
+      }}
+      {...reste}
+    >
+      {children}
+    </button>
+  )
 }
-const btnIcon = {
-  width: 34, height: 34, borderRadius: 8, border: '1px solid #e5e7eb',
-  background: '#fff', cursor: 'pointer', fontSize: 14, color: jetons.texteMoyen, flexShrink: 0,
+
+const saisie = {
+  padding: `10px ${espace.md}px`, borderRadius: rayon.md,
+  border: `1.5px solid ${jetons.bordure}`, fontSize: 16, outline: 'none',
+  background: jetons.fondClair, boxSizing: 'border-box',
 }

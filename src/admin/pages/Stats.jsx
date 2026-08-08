@@ -4,7 +4,8 @@ import {
   LineChart, Line, BarChart, Bar, PieChart, Pie, Cell,
   XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer,
 } from 'recharts'
-import { couleur as jetons } from '../../design'
+import { Bloc, Alerte, EnTete } from '../components/Bloc'
+import { Pile, Vide, couleur as jetons } from '../../design'
 
 const COLORS = [jetons.marque, '#f59e0b', '#8b5cf6', '#ef4444', '#06b6d4', '#f97316', '#ec4899', '#14b8a6']
 
@@ -110,13 +111,8 @@ export default function Stats({ camping }) {
   )
 
   return (
-    <div>
-      <div style={{ marginBottom: 28 }}>
-        <h1 style={{ fontSize: 24, fontWeight: 700, color: jetons.texte }}>Statistiques</h1>
-        <p style={{ color: jetons.texteDoux, fontSize: 14, marginTop: 4 }}>30 derniers jours</p>
-      </div>
-
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
+    <Pile espace="xl">
+      <EnTete titre="Statistiques" sous="30 derniers jours" />
 
         {/* Vacanciers par jour */}
         <ChartCard title="Inscriptions vacanciers par jour">
@@ -202,21 +198,14 @@ export default function Stats({ camping }) {
             </LineChart>
           </ResponsiveContainer>
         </ChartCard>
-
-      </div>
-    </div>
+    </Pile>
   )
 }
 
 function ChartCard({ title, children }) {
-  return (
-    <div style={{ background: '#fff', borderRadius: 14, padding: '20px 22px', border: '1px solid rgba(0,0,0,0.07)' }}>
-      <h2 style={{ fontSize: 15, fontWeight: 700, color: jetons.texte, marginBottom: 20 }}>{title}</h2>
-      {children}
-    </div>
-  )
+  return <Bloc titre={title}>{children}</Bloc>
 }
 
 function Empty() {
-  return <div style={{ textAlign: 'center', padding: '32px 0', color: jetons.texteDoux, fontSize: 14 }}>Pas encore de données.</div>
+  return <Vide emoji="📊" texte="Pas encore de données." />
 }
