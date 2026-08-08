@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
+import { couleur, rayon } from '../design'
 
 /**
  * Feuille modale glissant depuis le bas, rendue directement dans <body>.
@@ -120,8 +121,8 @@ export default function Sheet({ onClose, children }) {
         onTouchEnd={finTirage}
         onTouchCancel={finTirage}
         style={{
-          background: '#fff',
-          borderRadius: '22px 22px 0 0',
+          background: couleur.surface,
+          borderRadius: `${rayon.xl}px ${rayon.xl}px 0 0`,
           padding: '22px 20px 36px',
           paddingBottom: clavier ? 36 : 'calc(36px + var(--cc-safe-bottom))',
           width: '100%', maxWidth: 600, margin: '0 auto',
@@ -130,7 +131,7 @@ export default function Sheet({ onClose, children }) {
           animation: 'slideUp 0.22s cubic-bezier(0.32, 0.72, 0, 1)',
         }}
       >
-        <div style={{ width: 44, height: 5, background: '#d8d4cc', borderRadius: 3, margin: '0 auto 18px' }} />
+        <div aria-hidden="true" style={{ width: 44, height: 5, background: couleur.bordure, borderRadius: 3, margin: '0 auto 18px' }} />
         {children}
       </div>
     </div>,

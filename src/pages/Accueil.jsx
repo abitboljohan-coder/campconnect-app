@@ -3,26 +3,16 @@ import { toast } from '../toast'
 import Sheet from '../components/Sheet'
 import { useNavigate } from 'react-router-dom'
 import { supabase, presentFilter } from '../supabase'
-import { t, useLangue, locale } from '../i18n'
+import { t, useLangue } from '../i18n'
 import Meteo from '../components/Meteo'
 import { usePresence } from '../usePresence'
 import MenuModeration from '../components/MenuModeration'
 import { chargerBlocages, estBloque } from '../lib/moderation'
-
-const TREE_POS = [
-  { x: '6%',  y: '18%', s: 26 }, { x: '14%', y: '62%', s: 20 },
-  { x: '24%', y: '12%', s: 18 }, { x: '48%', y: '8%',  s: 22 },
-  { x: '78%', y: '12%', s: 20 }, { x: '91%', y: '40%', s: 24 },
-  { x: '93%', y: '72%', s: 18 }, { x: '62%', y: '82%', s: 20 },
-  { x: '30%', y: '88%', s: 18 }, { x: '4%',  y: '82%', s: 22 },
-]
-const GRP_DOTS = [
-  { x: '18%', y: '28%' }, { x: '58%', y: '48%' }, { x: '74%', y: '24%' },
-  { x: '38%', y: '68%' }, { x: '84%', y: '60%' },
-]
-const ANIM_DOTS = [
-  { x: '33%', y: '38%' }, { x: '54%', y: '72%' }, { x: '68%', y: '33%' },
-]
+import CarteGroupe from '../components/CarteGroupe'
+import {
+  Bouton, Carte, Champ, Texte, Pile, Squelette, Vide,
+  couleur, espace, graisse, ombre, rayon, texte as tailles,
+} from '../design'
 
 export default function Accueil({ camping, vacancier }) {
   useLangue()
@@ -33,7 +23,6 @@ export default function Accueil({ camping, vacancier }) {
   const [membresMap, setMembresMap]     = useState({})
   const [loading, setLoading]           = useState(true)
   const navigate = useNavigate()
-  const couleur = camping?.couleur_principale || '#639922'
   const enLigne = usePresence(camping?.id, vacancier?.id)
 
   useEffect(() => {
@@ -84,122 +73,107 @@ export default function Accueil({ camping, vacancier }) {
   }
 
   return (
-    <div style={{ background: '#faf7f0', minHeight: '100%', paddingBottom: 20 }}>
+    <div style={{ background: couleur.fondClair, minHeight: '100%', paddingBottom: espace.xl }}>
 
-      {/* === HERO ESTIVAL === */}
-      <div style={{ margin: '16px 16px 0' }}>
+      <div style={{ margin: `${espace.lg}px ${espace.lg}px 0` }}>
         <Hero
-          camping={camping}
           vacancier={vacancier}
           enLigne={enLigne}
           vacancierCount={vacancierCount}
           groupesCount={groupes.length}
           animationsCount={animations.length}
-          couleur={couleur}
           onMap={() => navigate('/map')}
           onAgenda={() => navigate('/agenda')}
         />
       </div>
 
-      {/* === METEO === */}
-      <Meteo camping={camping} couleur={couleur} />
+      <Meteo camping={camping} />
 
-      {/* === ACCÈS RAPIDES === */}
-      <div style={{ display: 'flex', gap: 10, margin: '14px 16px 0' }}>
-        <button
-          onClick={() => navigate('/signaler')}
-          style={{
-            flex: 1, display: 'flex', alignItems: 'center', gap: 10,
-            background: '#fff', border: 'none', borderRadius: 16, padding: '13px 14px',
-            boxShadow: '0 1px 4px rgba(0,0,0,0.07)', cursor: 'pointer', textAlign: 'left',
-          }}
-        >
-          <span style={{
-            width: 36, height: 36, borderRadius: 11, flexShrink: 0, fontSize: 18,
-            background: '#fef2f2', display: 'flex', alignItems: 'center', justifyContent: 'center',
-          }}>🛠️</span>
-          <span style={{ fontSize: 13.5, fontWeight: 700, color: '#1a1a1a', lineHeight: 1.3 }}>
-            {t('signaler.court')}
-          </span>
-        </button>
-        <button
-          onClick={() => navigate('/annonces')}
-          style={{
-            flex: 1, display: 'flex', alignItems: 'center', gap: 10,
-            background: '#fff', border: 'none', borderRadius: 16, padding: '13px 14px',
-            boxShadow: '0 1px 4px rgba(0,0,0,0.07)', cursor: 'pointer', textAlign: 'left',
-          }}
-        >
-          <span style={{
-            width: 36, height: 36, borderRadius: 11, flexShrink: 0, fontSize: 18,
-            background: `${couleur}18`, display: 'flex', alignItems: 'center', justifyContent: 'center',
-          }}>📣</span>
-          <span style={{ fontSize: 13.5, fontWeight: 700, color: '#1a1a1a', lineHeight: 1.3 }}>
-            {t('annonces.court')}
-          </span>
-        </button>
-      </div>
+      {/* Accès rapides */}
+      <Pile direction="ligne" espace="sm" style={{ margin: `14px ${espace.lg}px 0` }}>
+        <AccesRapide emoji="🛠️" fond={couleur.dangerFond}
+                     libelle={t('signaler.court')} onClick={() => navigate('/signaler')} />
+        <AccesRapide emoji="📣" fond="var(--cc-accent-voile)"
+                     libelle={t('annonces.court')} onClick={() => navigate('/annonces')} />
+      </Pile>
 
-      {/* === STATUTS ÉPHÉMÈRES === */}
-      <StatutsStrip camping={camping} vacancier={vacancier} couleur={couleur} />
+      <StatutsStrip camping={camping} vacancier={vacancier} />
 
-      {/* === GROUPES ACTIFS === */}
-      <div style={{ padding: '20px 16px 0' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 }}>
-          <h2 style={{ fontSize: 18, color: '#1a1a1a', fontWeight: 700 }}>{t('accueil.groupes_maintenant')}</h2>
-          <button onClick={() => navigate('/groupes')} style={{ fontSize: 13, color: couleur, fontWeight: 600 }}>
+      {/* Groupes actifs */}
+      <Pile espace="md" style={{ padding: `${espace.xl}px ${espace.lg}px 0` }}>
+        <Pile direction="ligne" espace="sm" justifier="space-between" aligner="center">
+          <Texte variante="sousTitre" as="h2" style={{ fontSize: 18 }}>
+            {t('accueil.groupes_maintenant')}
+          </Texte>
+          {/* Le lien garde sa ligne : sans cela, le rembourrage du bouton vole
+              assez de largeur au titre pour le faire passer sur deux lignes,
+              et la flèche se retrouve seule en dessous. */}
+          <Bouton variante="discret" taille="sm" onClick={() => navigate('/groupes')}
+                  style={{
+                    color: 'var(--cc-accent)', whiteSpace: 'nowrap', flexShrink: 0,
+                    paddingLeft: 0, paddingRight: 0,
+                  }}>
             {t('accueil.voir_tout')} →
-          </button>
-        </div>
+          </Bouton>
+        </Pile>
 
         {loading ? (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-            {[1, 2, 3].map(i => (
-              <div key={i} style={{ height: 74, borderRadius: 14, background: '#e8e4da', animation: 'pulse 1.5s ease-in-out infinite' }} />
-            ))}
-          </div>
+          <Squelette lignes={3} hauteur={74} libelle={t('commun.chargement')} />
         ) : groupes.length === 0 ? (
-          <div style={{ textAlign: 'center', padding: '32px 0', color: '#6b7280', fontSize: 14, lineHeight: 1.8 }}>
-            {t('accueil.aucun_groupe')}<br />{t('accueil.premier_creer')}
-          </div>
+          <Vide emoji="👥" texte={`${t('accueil.aucun_groupe')} ${t('accueil.premier_creer')}`} />
         ) : (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+          <Pile espace="sm">
             {groupes.map(g => (
-              <GroupCard
+              <CarteGroupe
                 key={g.id}
                 groupe={g}
-                couleur={couleur}
                 avatars={membresMap[g.id]}
-                isMember={mesGroupes.includes(g.id)}
+                membre={mesGroupes.includes(g.id)}
                 onAction={mesGroupes.includes(g.id)
                   ? () => navigate(`/chat/${g.id}`)
                   : () => rejoindre(g.id)
                 }
               />
             ))}
-          </div>
+          </Pile>
         )}
 
-        <button
-          onClick={() => navigate('/groupes')}
-          style={{
-            width: '100%', marginTop: 14, padding: '14px',
-            borderRadius: 14, background: couleur, color: '#fff',
-            fontWeight: 700, fontSize: 15,
-            boxShadow: `0 4px 14px ${couleur}55`,
-          }}
-        >
+        <Bouton taille="lg" pleineLargeur onClick={() => navigate('/groupes')}>
           {t('accueil.creer_groupe')}
-        </button>
-      </div>
+        </Bouton>
+      </Pile>
     </div>
+  )
+}
+
+function AccesRapide({ emoji, fond, libelle, onClick }) {
+  return (
+    <Carte
+      as="button"
+      hauteur="posee"
+      padding={`13px ${espace.lg}px`}
+      cliquable
+      onClick={onClick}
+      style={{
+        flex: 1, display: 'flex', alignItems: 'center', gap: espace.sm,
+        textAlign: 'left', font: 'inherit',
+      }}
+    >
+      <span aria-hidden="true" style={{
+        width: 36, height: 36, borderRadius: 11, flexShrink: 0, fontSize: 18,
+        background: fond, display: 'flex', alignItems: 'center', justifyContent: 'center',
+      }}>{emoji}</span>
+      <Texte variante="doux" as="span" style={{ fontWeight: graisse.titre, color: couleur.texte }}>
+        {libelle}
+      </Texte>
+    </Carte>
   )
 }
 
 /* ─── Statuts éphémères 24h ─── */
 const STATUT_EMOJIS = ['🔥', '🍻', '🎳', '🏊', '🎉', '🍖', '🎾', '📣']
 
-function StatutsStrip({ camping, vacancier, couleur }) {
+function StatutsStrip({ camping, vacancier }) {
   const [statuts, setStatuts] = useState([])
   const [moderation, setModeration] = useState(null)
   const [, setBloquesVersion] = useState(0)
@@ -264,28 +238,34 @@ function StatutsStrip({ camping, vacancier, couleur }) {
     setTexte(''); setShowModal(false)
   }
 
+  // Les trois formulations existaient déjà traduites dans i18n ; elles étaient
+  // simplement réécrites en français ici, si bien qu'un vacancier anglophone
+  // lisait « il y a 12 min » au milieu d'une interface en anglais.
   function timeAgo(iso) {
     const min = Math.floor((Date.now() - new Date(iso)) / 60000)
-    if (min < 1) return 'à l\'instant'
-    if (min < 60) return `il y a ${min} min`
-    return `il y a ${Math.floor(min / 60)}h`
+    if (min < 1) return t('commun.maintenant')
+    if (min < 60) return t('commun.ilya_min', { n: min })
+    return t('commun.ilya_h', { n: Math.floor(min / 60) })
   }
 
   return (
     <div style={{ padding: '18px 0 0' }}>
-      <div style={{ display: 'flex', gap: 10, overflowX: 'auto', padding: '0 16px 4px' }}>
-        {/* Bouton poster */}
+      <div style={{ display: 'flex', gap: espace.sm, overflowX: 'auto', padding: `0 ${espace.lg}px 4px` }}>
+        {/* Poster un statut */}
         <button onClick={() => setShowModal(true)} style={{
-          flexShrink: 0, width: 74, borderRadius: 16,
-          border: `2px dashed ${couleur}66`, background: `${couleur}0d`,
+          flexShrink: 0, width: 74, borderRadius: rayon.lg,
+          border: '2px dashed var(--cc-accent-bordure)', background: 'var(--cc-accent-voile)',
           display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
-          gap: 4, padding: '12px 8px', cursor: 'pointer',
+          gap: espace.xs, padding: `${espace.md}px ${espace.sm}px`, cursor: 'pointer',
         }}>
-          <div style={{
-            width: 32, height: 32, borderRadius: '50%', background: couleur, color: '#fff',
-            display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20, fontWeight: 300,
-          }}>+</div>
-          <span style={{ fontSize: 10.5, fontWeight: 700, color: couleur }}>{t('accueil.quoi_de_neuf')}</span>
+          <span aria-hidden="true" style={{
+            width: 32, height: 32, borderRadius: rayon.rond,
+            background: 'var(--cc-accent)', color: couleur.texteSurAccent,
+            display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: tailles.titre, fontWeight: 300,
+          }}>+</span>
+          <Texte variante="micro" as="span" style={{ fontWeight: graisse.titre, color: 'var(--cc-accent)' }}>
+            {t('accueil.quoi_de_neuf')}
+          </Texte>
         </button>
 
         {statuts.filter(s => !estBloque(vacancier.id, s.vacancier_id)).map(s => (
@@ -303,18 +283,22 @@ function StatutsStrip({ camping, vacancier, couleur }) {
               e.preventDefault(); ouvrirModeration(s)
             }}
             style={{
-            flexShrink: 0, maxWidth: 200, borderRadius: 16,
-            background: '#fff', padding: '10px 14px',
-            boxShadow: '0 1px 5px rgba(0,0,0,0.08)',
-          }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 4 }}>
-              <span style={{ fontSize: 16 }}>{s.vacanciers?.avatar_emoji || '🙂'}</span>
-              <span style={{ fontSize: 12, fontWeight: 700, color: '#1a1a1a' }}>{s.vacanciers?.pseudo}</span>
-              <span style={{ fontSize: 10, color: '#6b7280', marginLeft: 'auto', whiteSpace: 'nowrap' }}>{timeAgo(s.created_at)}</span>
-            </div>
-            <div style={{ fontSize: 13, color: '#374151', lineHeight: 1.4 }}>
+              flexShrink: 0, maxWidth: 200, borderRadius: rayon.lg,
+              background: couleur.surface, padding: `10px ${espace.lg}px`,
+              boxShadow: ombre.posee,
+            }}>
+            <Pile direction="ligne" espace="xs" aligner="center" style={{ marginBottom: espace.xs }}>
+              <span aria-hidden="true" style={{ fontSize: 16 }}>{s.vacanciers?.avatar_emoji || '🙂'}</span>
+              <Texte variante="doux" as="span" style={{ fontWeight: graisse.titre, color: couleur.texte }}>
+                {s.vacanciers?.pseudo}
+              </Texte>
+              <Texte variante="micro" as="span" style={{ marginLeft: 'auto', whiteSpace: 'nowrap' }}>
+                {timeAgo(s.created_at)}
+              </Texte>
+            </Pile>
+            <Texte variante="doux" style={{ color: couleur.texteMoyen, lineHeight: 1.4 }}>
               {s.emoji} {s.texte}
-            </div>
+            </Texte>
           </div>
         ))}
       </div>
@@ -329,431 +313,129 @@ function StatutsStrip({ camping, vacancier, couleur }) {
         />
       )}
 
-      {/* Modal poster */}
+      {/* Poster un statut */}
       {showModal && (
         <Sheet onClose={() => setShowModal(false)}>
-            <h3 style={{ fontSize: 18, fontWeight: 800, marginBottom: 14, color: '#1a1a1a' }}>{t('accueil.quoi_de_neuf')} <span style={{ fontSize: 12, fontWeight: 500, color: '#6b7280' }}>{t('accueil.visible24')}</span></h3>
-            <div style={{ display: 'flex', gap: 6, marginBottom: 12, flexWrap: 'wrap' }}>
+          <Pile espace="lg">
+            <Pile espace="xs">
+              <Texte variante="sousTitre" as="h2" style={{ fontSize: 18 }}>{t('accueil.quoi_de_neuf')}</Texte>
+              <Texte variante="doux">{t('accueil.visible24')}</Texte>
+            </Pile>
+
+            <Pile direction="ligne" espace="xs" retour role="group" aria-label={t('groupes.emoji')}>
               {STATUT_EMOJIS.map(e => (
-                <button key={e} onClick={() => setEmoji(e)} style={{
-                  width: 40, height: 40, fontSize: 20, borderRadius: 10, cursor: 'pointer',
-                  border: emoji === e ? `2px solid ${couleur}` : '2px solid #e5e7eb',
-                  background: emoji === e ? `${couleur}15` : '#fafafa',
-                }}>{e}</button>
+                <button key={e} onClick={() => setEmoji(e)}
+                  aria-label={e} aria-pressed={emoji === e}
+                  style={{
+                    width: 40, height: 40, fontSize: tailles.titre, borderRadius: rayon.md, cursor: 'pointer',
+                    border: `2px solid ${emoji === e ? 'var(--cc-accent)' : couleur.bordure}`,
+                    background: emoji === e ? 'var(--cc-accent-voile)' : couleur.surface,
+                  }}>{e}</button>
               ))}
-            </div>
-            <input value={texte} onChange={e => setTexte(e.target.value)}
+            </Pile>
+
+            <Champ
+              libelle={t('accueil.quoi_de_neuf')}
+              value={texte}
+              onChange={e => setTexte(e.target.value)}
               onKeyDown={e => e.key === 'Enter' && poster()}
-              placeholder="ex : BBQ ce soir emplacement 47, tous invités !"
-              autoFocus maxLength={90}
-              style={{ width: '100%', padding: '12px 14px', borderRadius: 12, border: '1.5px solid #e5e7eb', fontSize: 16, outline: 'none', background: '#fafafa', marginBottom: 14 }} />
-            <button onClick={poster} disabled={!texte.trim() || saving}
-              style={{
-                width: '100%', padding: 13, borderRadius: 12, border: 'none',
-                background: !texte.trim() || saving ? '#9ca3af' : couleur,
-                color: '#fff', fontWeight: 800, fontSize: 15, cursor: 'pointer',
-              }}>
-              {saving ? 'Publication…' : `${emoji} Publier`}
-            </button>
+              placeholder={t('accueil.statut_ph')}
+              autoFocus
+              maxLength={90}
+            />
+
+            <Bouton taille="lg" pleineLargeur charge={saving} disabled={!texte.trim()} onClick={poster}>
+              {saving ? t('accueil.publication') : `${emoji} ${t('accueil.publier')}`}
+            </Bouton>
+          </Pile>
         </Sheet>
       )}
     </div>
   )
 }
 
-/* ─── Hero estival ─── */
-function Hero({ camping, vacancier, vacancierCount, groupesCount, animationsCount, couleur, onMap, onAgenda, enLigne }) {
+/* ─── Bandeau d'accueil ─── */
+function Hero({ vacancier, vacancierCount, groupesCount, animationsCount, onMap, onAgenda, enLigne }) {
   useLangue()
   const h = new Date().getHours()
-  const greeting = h < 12 ? t('accueil.bonjour') : h < 18 ? t('accueil.bonapresmidi') : t('accueil.bonsoiree')
-  const sun = h < 6 ? '🌙' : h < 12 ? '🌅' : h < 18 ? '☀️' : '🌇'
+  const salut = h < 12 ? t('accueil.bonjour') : h < 18 ? t('accueil.bonapresmidi') : t('accueil.bonsoiree')
+  const astre = h < 6 ? '🌙' : h < 12 ? '🌅' : h < 18 ? '☀️' : '🌇'
 
   return (
     <div style={{
-      borderRadius: 24,
-      background: `linear-gradient(135deg, ${couleur} 0%, ${couleur}cc 60%, #f0b429 140%)`,
+      borderRadius: rayon.xl,
+      // Le dégradé part de l'accent du camping et glisse vers un jaune d'été.
+      // color-mix évite d'avoir à recomposer l'accent en JavaScript pour en
+      // dériver une variante translucide.
+      background: 'linear-gradient(135deg, var(--cc-accent) 0%, color-mix(in srgb, var(--cc-accent) 80%, transparent) 60%, #f0b429 140%)',
       padding: '22px 20px 18px',
       color: '#fff',
       position: 'relative',
       overflow: 'hidden',
-      boxShadow: `0 10px 30px ${couleur}45`,
+      boxShadow: ombre.flottante,
     }}>
-      {/* Déco */}
-      <div style={{ position: 'absolute', top: -22, right: -14, fontSize: 110, opacity: 0.14, transform: 'rotate(12deg)', pointerEvents: 'none' }}>⛺</div>
-      <div style={{ position: 'absolute', bottom: -18, left: -10, fontSize: 80, opacity: 0.12, pointerEvents: 'none' }}>🌲</div>
+      <span aria-hidden="true" style={{ position: 'absolute', top: -22, right: -14, fontSize: 110, opacity: 0.14, transform: 'rotate(12deg)', pointerEvents: 'none' }}>⛺</span>
+      <span aria-hidden="true" style={{ position: 'absolute', bottom: -18, left: -10, fontSize: 80, opacity: 0.12, pointerEvents: 'none' }}>🌲</span>
 
-      <div style={{ fontSize: 14, fontWeight: 600, opacity: 0.92 }}>
-        {greeting} {sun}
-      </div>
-      <div style={{ fontSize: 24, fontWeight: 800, letterSpacing: '-0.5px', margin: '2px 0 14px' }}>
-        {vacancier?.avatar_emoji} {vacancier?.pseudo || 'Campeur'}
-      </div>
+      <Texte variante="corps" style={{ color: '#fff', fontWeight: graisse.fort, opacity: 0.92 }}>
+        {salut} {astre}
+      </Texte>
+      <Texte variante="titre" as="h1" style={{ color: '#fff', margin: '2px 0 14px' }}>
+        {vacancier?.avatar_emoji} {vacancier?.pseudo || t('accueil.campeur')}
+      </Texte>
 
-      {/* Chips stats */}
-      <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 16 }}>
-        {/* En ligne maintenant (présence temps réel) */}
+      <Pile direction="ligne" espace="sm" retour style={{ marginBottom: espace.lg }}>
         {enLigne > 0 && (
-          <div style={{
-            background: 'rgba(255,255,255,0.18)',
-            backdropFilter: 'blur(6px)',
-            borderRadius: 14, padding: '7px 12px',
-            fontSize: 12.5, fontWeight: 600,
-            border: '1px solid rgba(255,255,255,0.25)',
-            display: 'flex', alignItems: 'center', gap: 6,
-          }}>
-            <span style={{
-              width: 8, height: 8, borderRadius: '50%', background: '#22c55e',
+          <Jeton>
+            <span aria-hidden="true" style={{
+              width: 8, height: 8, borderRadius: rayon.rond, background: '#22c55e',
               boxShadow: '0 0 0 3px rgba(34,197,94,0.35)',
               animation: 'pulseDot 2s ease-in-out infinite', flexShrink: 0,
             }} />
-            <span><span style={{ fontWeight: 800, fontSize: 14 }}>{enLigne}</span> {t('accueil.en_ligne')}</span>
-          </div>
+            <span><strong style={{ fontWeight: graisse.affiche, fontSize: tailles.base }}>{enLigne}</strong> {t('accueil.en_ligne')}</span>
+          </Jeton>
         )}
         {[
-          [`${vacancierCount}`, t('accueil.mot_vacanciers')],
-          [`${groupesCount}`, t('accueil.mot_groupes')],
-          [`${animationsCount}`, t('accueil.mot_animations')],
+          [vacancierCount, t('accueil.mot_vacanciers')],
+          [groupesCount, t('accueil.mot_groupes')],
+          [animationsCount, t('accueil.mot_animations')],
         ].map(([n, l]) => (
-          <div key={l} style={{
-            background: 'rgba(255,255,255,0.18)',
-            backdropFilter: 'blur(6px)',
-            borderRadius: 14, padding: '7px 12px',
-            fontSize: 12.5, fontWeight: 600,
-            border: '1px solid rgba(255,255,255,0.25)',
-          }}>
-            <span style={{ fontWeight: 800, fontSize: 14 }}>{n}</span> {l}
-          </div>
+          <Jeton key={l}>
+            <span><strong style={{ fontWeight: graisse.affiche, fontSize: tailles.base }}>{n}</strong> {l}</span>
+          </Jeton>
         ))}
-      </div>
+      </Pile>
 
-      {/* Actions */}
-      <div style={{ display: 'flex', gap: 10 }}>
-        <button onClick={onMap} style={{
-          flex: 1, background: '#fff', color: couleur,
-          padding: '12px', borderRadius: 16, fontSize: 14, fontWeight: 800,
-          border: 'none', cursor: 'pointer', boxShadow: '0 3px 10px rgba(0,0,0,0.15)',
+      <Pile direction="ligne" espace="sm">
+        <Bouton onClick={onMap} style={{
+          flex: 1, background: '#fff', color: 'var(--cc-accent)',
+          borderRadius: rayon.lg, fontWeight: graisse.affiche, boxShadow: ombre.levee,
         }}>
           🗺️ {t('accueil.explorer_carte')}
-        </button>
-        <button onClick={onAgenda} style={{
+        </Bouton>
+        <Bouton onClick={onAgenda} style={{
           flex: 1, background: 'rgba(255,255,255,0.16)', color: '#fff',
-          padding: '12px', borderRadius: 16, fontSize: 14, fontWeight: 700,
-          border: '1.5px solid rgba(255,255,255,0.4)', cursor: 'pointer',
+          borderRadius: rayon.lg, border: '1.5px solid rgba(255,255,255,0.4)',
         }}>
-          📅 Programme
-        </button>
-      </div>
+          📅 {t('nav.agenda')}
+        </Bouton>
+      </Pile>
     </div>
   )
 }
 
-/* ─── Carte interactive avec plan réel ─── */
-function InteractiveMap({ camping, vacancier, couleur }) {
-  const containerRef = useRef(null)
-  const [transform, setTransform] = useState({ x: 0, y: 0, scale: 1 })
-  const drag = useRef(null)
-  const lastPinch = useRef(null)
-  const [activePin, setActivePin] = useState(null)
-
-  const pins = camping?.carte_config?.pins || []
-
-  // Clamp translation so map stays mostly visible
-  function clamp(t, scale) {
-    const el = containerRef.current
-    if (!el) return t
-    const maxX = 0
-    const minX = el.clientWidth  * (1 - scale)
-    const maxY = 0
-    const minY = el.clientHeight * (1 - scale)
-    return {
-      x: Math.min(maxX, Math.max(minX, t.x)),
-      y: Math.min(maxY, Math.max(minY, t.y)),
-    }
-  }
-
-  // Mouse
-  function onMouseDown(e) {
-    drag.current = { sx: e.clientX, sy: e.clientY, ox: transform.x, oy: transform.y }
-  }
-  function onMouseMove(e) {
-    if (!drag.current) return
-    const dx = e.clientX - drag.current.sx
-    const dy = e.clientY - drag.current.sy
-    const clamped = clamp({ x: drag.current.ox + dx, y: drag.current.oy + dy }, transform.scale)
-    setTransform(t => ({ ...t, ...clamped }))
-  }
-  function onMouseUp() { drag.current = null }
-
-  // Touch
-  function onTouchStart(e) {
-    if (e.touches.length === 1) {
-      drag.current = { sx: e.touches[0].clientX, sy: e.touches[0].clientY, ox: transform.x, oy: transform.y }
-      lastPinch.current = null
-    } else if (e.touches.length === 2) {
-      drag.current = null
-      lastPinch.current = getTouchDist(e.touches)
-    }
-  }
-  function onTouchMove(e) {
-    e.preventDefault()
-    if (e.touches.length === 1 && drag.current) {
-      const dx = e.touches[0].clientX - drag.current.sx
-      const dy = e.touches[0].clientY - drag.current.sy
-      const clamped = clamp({ x: drag.current.ox + dx, y: drag.current.oy + dy }, transform.scale)
-      setTransform(t => ({ ...t, ...clamped }))
-    } else if (e.touches.length === 2 && lastPinch.current) {
-      const dist = getTouchDist(e.touches)
-      const factor = dist / lastPinch.current
-      lastPinch.current = dist
-      setTransform(t => {
-        const newScale = Math.min(4, Math.max(1, t.scale * factor))
-        return { ...t, scale: newScale }
-      })
-    }
-  }
-  function onTouchEnd() { drag.current = null; lastPinch.current = null }
-
-  // Wheel zoom
-  function onWheel(e) {
-    e.preventDefault()
-    const factor = e.deltaY > 0 ? 0.88 : 1.12
-    setTransform(t => {
-      const newScale = Math.min(4, Math.max(1, t.scale * factor))
-      return { ...t, scale: newScale }
-    })
-  }
-
-  function resetZoom() { setTransform({ x: 0, y: 0, scale: 1 }); setActivePin(null) }
-
+/** Pastille de statistique du bandeau : verre dépoli sur le dégradé. */
+function Jeton({ children }) {
   return (
-    <div style={{ borderRadius: 18, overflow: 'hidden', position: 'relative', background: '#0d1f0d' }}>
-      {/* Carte */}
-      <div
-        ref={containerRef}
-        style={{ height: 220, overflow: 'hidden', position: 'relative', cursor: drag.current ? 'grabbing' : 'grab', touchAction: 'none' }}
-        onMouseDown={onMouseDown}
-        onMouseMove={onMouseMove}
-        onMouseUp={onMouseUp}
-        onMouseLeave={onMouseUp}
-        onTouchStart={onTouchStart}
-        onTouchMove={onTouchMove}
-        onTouchEnd={onTouchEnd}
-        onWheel={onWheel}
-      >
-        <div style={{
-          transform: `translate(${transform.x}px, ${transform.y}px) scale(${transform.scale})`,
-          transformOrigin: '0 0',
-          width: '100%', height: '100%',
-          transition: drag.current || lastPinch.current ? 'none' : 'transform 0.1s',
-          position: 'relative',
-        }}>
-          <img
-            src={camping.plan_url}
-            alt="Plan du camping"
-            style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block', pointerEvents: 'none', userSelect: 'none' }}
-            draggable={false}
-          />
-
-          {/* Pins */}
-          {pins.map(pin => (
-            <div
-              key={pin.ref_id}
-              style={{
-                position: 'absolute',
-                left: `${pin.x}%`, top: `${pin.y}%`,
-                transform: 'translate(-50%, -50%)',
-                zIndex: 5, cursor: 'pointer',
-              }}
-              onClick={e => { e.stopPropagation(); setActivePin(activePin?.ref_id === pin.ref_id ? null : pin) }}
-            >
-              <div style={{
-                width: 28, height: 28, borderRadius: '50%',
-                background: pin.color || '#639922',
-                border: '2px solid #fff',
-                boxShadow: '0 2px 8px rgba(0,0,0,0.4)',
-                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                fontSize: 14,
-              }}>
-                {pin.emoji}
-              </div>
-              {activePin?.ref_id === pin.ref_id && (
-                <div style={{
-                  position: 'absolute', bottom: '110%', left: '50%', transform: 'translateX(-50%)',
-                  background: 'rgba(0,0,0,0.82)', color: '#fff',
-                  fontSize: 11, fontWeight: 600, padding: '3px 8px', borderRadius: 6,
-                  whiteSpace: 'nowrap', pointerEvents: 'none', zIndex: 20,
-                }}>
-                  {pin.label}
-                </div>
-              )}
-            </div>
-          ))}
-
-          {/* Dot "Vous" */}
-          <div style={{ position: 'absolute', left: '45%', top: '52%', transform: 'translate(-50%,-50%)', zIndex: 6 }}>
-            <div style={{
-              width: 32, height: 32, background: couleur, borderRadius: '50%',
-              display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 16,
-              boxShadow: `0 0 0 4px ${couleur}40, 0 2px 10px rgba(0,0,0,0.4)`,
-            }}>
-              {vacancier?.avatar_emoji || '🏕️'}
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Contrôles */}
-      <div style={{
-        position: 'absolute', top: 10, right: 10, display: 'flex', flexDirection: 'column', gap: 6, zIndex: 20,
-      }}>
-        <MapBtn onClick={() => setTransform(t => { const s = Math.min(4, t.scale * 1.3); return { ...t, scale: s } })}>＋</MapBtn>
-        <MapBtn onClick={() => setTransform(t => { const s = Math.max(1, t.scale * 0.77); const clamped = clamp(t, s); return { ...t, scale: s, ...clamped } })}>－</MapBtn>
-        {transform.scale > 1 && <MapBtn onClick={resetZoom} style={{ fontSize: 12 }}>↺</MapBtn>}
-      </div>
-
-      {/* Badge vacanciers */}
-      <div style={{
-        position: 'absolute', top: 10, left: 12, zIndex: 10,
-        background: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(4px)',
-        borderRadius: 20, padding: '4px 10px',
-        color: '#C0DD97', fontSize: 11, fontWeight: 600,
-      }}>
-        {camping?.nom}
-      </div>
-
-      {/* Légende */}
-      <div style={{
-        background: '#0d1f0d', padding: '8px 14px',
-        display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap',
-      }}>
-        {[['#f472b6', 'Animations'], ['#fb923c', 'Groupes'], ['#60a5fa', 'Lieux'], [couleur, 'Vous']].map(([c, l]) => (
-          <div key={l} style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-            <div style={{ width: 7, height: 7, borderRadius: '50%', background: c }} />
-            <span style={{ fontSize: 10, color: 'rgba(255,255,255,0.55)', fontWeight: 500 }}>{l}</span>
-          </div>
-        ))}
-        <span style={{ marginLeft: 'auto', fontSize: 10, color: 'rgba(255,255,255,0.35)' }}>{t('carte.pincez')}</span>
-      </div>
-    </div>
-  )
-}
-
-function MapBtn({ onClick, children, style }) {
-  return (
-    <button
-      onClick={onClick}
-      style={{
-        width: 30, height: 30, borderRadius: 8,
-        background: 'rgba(0,0,0,0.6)', color: '#fff',
-        fontSize: 16, fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center',
-        backdropFilter: 'blur(4px)', border: '1px solid rgba(255,255,255,0.15)',
-        ...style,
-      }}
-    >{children}</button>
-  )
-}
-
-function getTouchDist(touches) {
-  const dx = touches[0].clientX - touches[1].clientX
-  const dy = touches[0].clientY - touches[1].clientY
-  return Math.sqrt(dx * dx + dy * dy)
-}
-
-/* ─── Fausse carte (fallback sans plan uploadé) ─── */
-function FakeMap({ groupes, animations, vacancier, vacancierCount, couleur }) {
-  return (
-    <div style={{
-      borderRadius: 18, background: '#0d1f0d', position: 'relative', height: 190, overflow: 'hidden',
+    <span style={{
+      background: 'rgba(255,255,255,0.18)',
+      backdropFilter: 'blur(6px)',
+      borderRadius: 14, padding: `7px ${espace.md}px`,
+      fontSize: tailles.petit, fontWeight: graisse.fort,
+      border: '1px solid rgba(255,255,255,0.25)',
+      display: 'flex', alignItems: 'center', gap: 6,
     }}>
-      <div style={{
-        position: 'absolute', top: 12, right: 12, zIndex: 10,
-        background: 'rgba(192,221,151,0.15)', border: '1px solid rgba(192,221,151,0.3)',
-        borderRadius: 20, padding: '4px 10px', color: '#C0DD97', fontSize: 12, fontWeight: 600,
-      }}>
-        {vacancierCount} vacanciers
-      </div>
-      {TREE_POS.map((t, i) => (
-        <div key={i} style={{ position: 'absolute', left: t.x, top: t.y, fontSize: t.s, opacity: 0.55, transform: 'translate(-50%, -50%)', pointerEvents: 'none', userSelect: 'none' }}>🌲</div>
-      ))}
-      {groupes.slice(0, 5).map((g, i) => (
-        <div key={g.id} style={{ position: 'absolute', left: GRP_DOTS[i]?.x, top: GRP_DOTS[i]?.y, transform: 'translate(-50%,-50%)', width: 30, height: 30, background: 'rgba(251,146,60,0.92)', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 14, boxShadow: '0 2px 8px rgba(0,0,0,0.4)', zIndex: 5 }}>
-          {g.emoji || '👥'}
-        </div>
-      ))}
-      {animations.slice(0, 3).map((a, i) => (
-        <div key={a.id} style={{ position: 'absolute', left: ANIM_DOTS[i]?.x, top: ANIM_DOTS[i]?.y, transform: 'translate(-50%,-50%)', width: 24, height: 24, background: 'rgba(244,114,182,0.92)', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, boxShadow: '0 2px 6px rgba(0,0,0,0.3)', zIndex: 5 }}>
-          {a.emoji || '🎉'}
-        </div>
-      ))}
-      <div style={{ position: 'absolute', left: '45%', top: '52%', transform: 'translate(-50%,-50%)', zIndex: 6 }}>
-        <div style={{ width: 36, height: 36, background: couleur, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18, boxShadow: `0 0 0 4px ${couleur}35, 0 2px 10px rgba(0,0,0,0.4)` }}>
-          {vacancier?.avatar_emoji || '🏕️'}
-        </div>
-        <div style={{ background: couleur, color: '#fff', fontSize: 10, fontWeight: 700, padding: '2px 6px', borderRadius: 10, marginTop: 3, textAlign: 'center' }}>Vous</div>
-      </div>
-      <div style={{ position: 'absolute', bottom: 10, left: 12, display: 'flex', gap: 12, zIndex: 10 }}>
-        {[['#fb923c','Groupes'],['#f472b6','Animations'],[couleur,'Vous']].map(([c, l]) => (
-          <div key={l} style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-            <div style={{ width: 8, height: 8, borderRadius: '50%', background: c }} />
-            <span style={{ fontSize: 10, color: 'rgba(255,255,255,0.65)', fontWeight: 500 }}>{l}</span>
-          </div>
-        ))}
-      </div>
-    </div>
-  )
-}
-
-function GroupCard({ groupe, couleur, isMember, onAction, avatars }) {
-  const heureStr = groupe.heure
-    ? new Date(groupe.heure).toLocaleTimeString(locale(), { hour: '2-digit', minute: '2-digit' })
-    : null
-  const meta = [
-    groupe.lieu && `📍 ${groupe.lieu}`,
-    heureStr && `🕐 ${heureStr}`,
-    groupe.max_membres && `${groupe.max_membres} max`,
-  ].filter(Boolean).join(' · ')
-
-  return (
-    <div style={{
-      background: '#fff', borderRadius: 14, padding: '14px 16px',
-      display: 'flex', alignItems: 'center', gap: 12,
-      boxShadow: '0 1px 4px rgba(0,0,0,0.07)',
-      animation: 'fadeIn 0.25s ease',
-    }}>
-      <div style={{ width: 48, height: 48, borderRadius: 12, background: isMember ? `${couleur}20` : '#f5f2eb', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 24, flexShrink: 0 }}>
-        {groupe.emoji || '👥'}
-      </div>
-      <div style={{ flex: 1, overflow: 'hidden' }}>
-        <div style={{ fontWeight: 600, fontSize: 15, color: '#1a1a1a', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{groupe.titre}</div>
-        {meta && <div style={{ fontSize: 12, color: '#6b7280', marginTop: 2 }}>{meta}</div>}
-        {avatars?.length > 0 && (
-          <div style={{ display: 'flex', alignItems: 'center', marginTop: 5 }}>
-            {avatars.slice(0, 4).map((a, i) => (
-              <div key={i} style={{
-                width: 20, height: 20, borderRadius: '50%', background: '#fff',
-                border: '1.5px solid #eee', display: 'flex', alignItems: 'center', justifyContent: 'center',
-                fontSize: 11, marginLeft: i === 0 ? 0 : -6, boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
-              }}>{a}</div>
-            ))}
-            <span style={{ fontSize: 11, color: '#6b7280', marginLeft: 6 }}>
-              {avatars.length} membre{avatars.length > 1 ? 's' : ''}
-            </span>
-          </div>
-        )}
-      </div>
-      <button
-        onClick={onAction}
-        style={{
-          background: isMember ? couleur : 'transparent',
-          color: isMember ? '#fff' : couleur,
-          padding: '11px 16px', borderRadius: 20,
-          fontSize: 13, fontWeight: 600, flexShrink: 0,
-          border: `1.5px solid ${isMember ? 'transparent' : couleur}`,
-          transition: 'all 0.15s',
-        }}
-      >
-        {isMember ? 'Ouvert' : 'Rejoindre'}
-      </button>
-    </div>
+      {children}
+    </span>
   )
 }

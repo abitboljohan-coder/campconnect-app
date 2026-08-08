@@ -66,6 +66,9 @@ const STRINGS = {
   'commun.modifier':    { fr: 'Modifier',    en: 'Edit',       es: 'Editar',    nl: 'Wijzigen' },
   'commun.fermer':      { fr: 'Fermer',      en: 'Close',      es: 'Cerrar',    nl: 'Sluiten' },
   'commun.retour':      { fr: 'Retour',      en: 'Back',       es: 'Atrás',     nl: 'Terug' },
+  'erreur.titre':       { fr: 'Oups, une erreur est survenue', en: 'Oops, something went wrong', es: 'Vaya, se produjo un error', nl: 'Oeps, er ging iets mis' },
+  'erreur.texte':       { fr: "Rechargez l'application. Si le problème persiste, contactez la réception.", en: 'Reload the app. If the problem persists, contact reception.', es: 'Recarga la aplicación. Si el problema continúa, contacta con recepción.', nl: 'Herlaad de app. Blijft het probleem, neem contact op met de receptie.' },
+  'erreur.recharger':   { fr: 'Recharger',   en: 'Reload',     es: 'Recargar',  nl: 'Herladen' },
   'commun.envoyer':     { fr: 'Envoyer',     en: 'Send',       es: 'Enviar',    nl: 'Versturen' },
   'commun.chargement':  { fr: 'Chargement…',  en: 'Loading…',   es: 'Cargando…', nl: 'Laden…' },
   'commun.erreur':      { fr: 'Une erreur est survenue. Réessayez.', en: 'Something went wrong. Please try again.', es: 'Se produjo un error. Inténtalo de nuevo.', nl: 'Er is iets misgegaan. Probeer opnieuw.' },
@@ -88,6 +91,7 @@ const STRINGS = {
   'accueil.explorer_carte': { fr: 'Explorer la carte', en: 'Explore the map', es: 'Explorar el mapa', nl: 'Kaart verkennen' },
   'accueil.programme':    { fr: 'Programme',   en: 'Programme',  es: 'Programa',  nl: 'Programma' },
   'accueil.quoi_de_neuf': { fr: 'Quoi de neuf ?', en: "What's new?", es: '¿Qué hay de nuevo?', nl: 'Wat is er nieuw?' },
+  'accueil.campeur':      { fr: 'Campeur', en: 'Camper', es: 'Campista', nl: 'Kampeerder' },
   'accueil.groupes_maintenant': { fr: 'Groupes actifs maintenant', en: 'Active groups right now', es: 'Grupos activos ahora', nl: 'Nu actieve groepen' },
   'accueil.voir_tout':    { fr: 'Voir tout',   en: 'See all',    es: 'Ver todo',  nl: 'Alles bekijken' },
   'accueil.publier_statut': { fr: 'Publier',   en: 'Post',       es: 'Publicar',  nl: 'Plaatsen' },
@@ -101,6 +105,9 @@ const STRINGS = {
   'accueil.premier_creer': { fr: 'Soyez le premier à en créer un !', en: 'Be the first to create one!', es: '¡Sé el primero en crear uno!', nl: 'Wees de eerste die er een aanmaakt!' },
   'accueil.creer_groupe':  { fr: '+ Créer un groupe', en: '+ Create a group', es: '+ Crear un grupo', nl: '+ Groep aanmaken' },
   'accueil.visible24':     { fr: '(visible 24h)', en: '(visible for 24h)', es: '(visible 24h)', nl: '(24u zichtbaar)' },
+  'accueil.statut_ph':     { fr: 'ex : BBQ ce soir emplacement 47, tous invités !', en: 'e.g. BBQ tonight at pitch 47, everyone welcome!', es: 'ej.: ¡Barbacoa esta noche en la parcela 47, todos invitados!', nl: 'bijv. BBQ vanavond op plek 47, iedereen welkom!' },
+  'accueil.publier':       { fr: 'Publier', en: 'Post', es: 'Publicar', nl: 'Plaatsen' },
+  'accueil.publication':   { fr: 'Publication…', en: 'Posting…', es: 'Publicando…', nl: 'Plaatsen…' },
 
   'accueil.err_statut': { fr: 'Impossible de publier votre statut pour le moment.', en: "Couldn't post your update right now.", es: 'No se pudo publicar tu estado ahora.', nl: 'Kon je update nu niet plaatsen.' },
 

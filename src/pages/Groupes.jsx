@@ -1,12 +1,13 @@
 import { useEffect, useState } from 'react'
 import { toast } from '../toast'
 import Sheet from '../components/Sheet'
+import CarteGroupe from '../components/CarteGroupe'
 import { useNavigate } from 'react-router-dom'
 import { supabase, presentFilter } from '../supabase'
-import { t, useLangue, locale } from '../i18n'
+import { t, useLangue } from '../i18n'
 import {
   Bouton, Carte, Champ, Texte, Pile, Puce, Squelette, Vide, Fab,
-  couleur, espace, graisse, rayon, texte as tailles,
+  couleur, espace, graisse, rayon,
 } from '../design'
 
 const EMOJIS = ['🏐', '🔥', '🚶', '🎮', '🎤', '🏊', '🚴', '🎯', '♟️', '🧘', '🎸', '🍕']
@@ -122,7 +123,7 @@ export default function Groupes({ camping, vacancier }) {
           {mesGrps.length > 0 && (
             <Section title={t('groupes.mes_groupes')}>
               {mesGrps.map(g => (
-                <GroupRow key={g.id} groupe={g} isMember={true}
+                <CarteGroupe key={g.id} groupe={g} membre={true}
                   avatars={membresMap[g.id]} onAction={() => navigate(`/chat/${g.id}`)} />
               ))}
             </Section>
@@ -139,7 +140,7 @@ export default function Groupes({ camping, vacancier }) {
               <Vide emoji="🎉" texte={t('groupes.tous_rejoints')} />
             ) : (
               autresGrps.map(g => (
-                <GroupRow key={g.id} groupe={g} isMember={false}
+                <CarteGroupe key={g.id} groupe={g} membre={false}
                   avatars={membresMap[g.id]} onAction={() => rejoindre(g.id)} />
               ))
             )}
@@ -253,78 +254,5 @@ function Section({ title, children }) {
       <Texte variante="libelle" as="h2">{title}</Texte>
       <Pile espace="sm">{children}</Pile>
     </Pile>
-  )
-}
-
-function AvatarStack({ avatars }) {
-  if (!avatars?.length) return null
-  const shown = avatars.slice(0, 4)
-  const total = avatars.length
-  return (
-    <div style={{ display: 'flex', alignItems: 'center', marginTop: 5 }}>
-      {shown.map((a, i) => (
-        <span key={i} aria-hidden="true" style={{
-          width: 22, height: 22, borderRadius: rayon.rond, background: couleur.surface,
-          border: `1.5px solid ${couleur.bordure}`,
-          display: 'flex', alignItems: 'center', justifyContent: 'center',
-          fontSize: tailles.petit, marginLeft: i === 0 ? 0 : -7, zIndex: 5 - i,
-          boxShadow: '0 1px 3px rgba(26, 26, 26, 0.12)',
-        }}>{a}</span>
-      ))}
-      {total > 4 && (
-        <Texte variante="micro" as="span" style={{ fontWeight: graisse.titre, color: 'var(--cc-accent)', marginLeft: 4 }}>
-          +{total - 4}
-        </Texte>
-      )}
-      <Texte variante="micro" as="span" style={{ marginLeft: 6 }}>
-        {total > 1 ? t('commun.membres', { n: total }) : t('commun.membre', { n: total })}
-      </Texte>
-    </div>
-  )
-}
-
-function GroupRow({ groupe, isMember, onAction, avatars }) {
-  const heureStr = groupe.heure
-    ? new Date(groupe.heure).toLocaleTimeString(locale(), { hour: '2-digit', minute: '2-digit' })
-    : null
-  const meta = [
-    groupe.lieu && `📍 ${groupe.lieu}`,
-    heureStr && `🕐 ${heureStr}`,
-    groupe.max_membres && t('commun.places', { n: groupe.max_membres }),
-  ].filter(Boolean).join(' · ')
-
-  const tronque = { overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }
-
-  return (
-    <Carte hauteur="posee" padding={`14px ${espace.lg}px`}>
-      <Pile direction="ligne" espace="md" aligner="center">
-        <span aria-hidden="true" style={{
-          width: 48, height: 48, borderRadius: rayon.md, flexShrink: 0,
-          background: isMember ? 'var(--cc-accent-voile)' : couleur.fond,
-          display: 'flex', alignItems: 'center', justifyContent: 'center',
-          fontSize: 24,
-        }}>
-          {groupe.emoji || '👥'}
-        </span>
-
-        <div style={{ flex: 1, overflow: 'hidden' }}>
-          <Texte variante="sousTitre" style={{ fontSize: tailles.moyen, ...tronque }}>{groupe.titre}</Texte>
-          {meta && <Texte variante="micro" style={{ marginTop: 2, ...tronque }}>{meta}</Texte>}
-          <AvatarStack avatars={avatars} />
-        </div>
-
-        <Bouton
-          variante={isMember ? 'primaire' : 'secondaire'}
-          taille="sm"
-          onClick={onAction}
-          style={{
-            flexShrink: 0, borderRadius: rayon.rond,
-            ...(isMember ? null : { color: 'var(--cc-accent)', border: '1.5px solid var(--cc-accent)', background: 'transparent' }),
-          }}
-        >
-          {isMember ? t('groupes.ouvrir') : t('groupes.rejoindre')}
-        </Bouton>
-      </Pile>
-    </Carte>
   )
 }
