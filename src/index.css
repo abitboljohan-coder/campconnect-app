@@ -164,16 +164,21 @@ input, textarea, select {
   to { transform: translateY(0); }
 }
 
-/* Attribution des tuiles satellite : obligatoire, donc conservée, mais réduite
-   au strict nécessaire pour ne pas encombrer la carte. */
+/* Attribution des tuiles satellite. Elle ne peut pas disparaître — Esri
+   l'exige partout où son imagerie est affichée — mais rien n'oblige à la
+   mettre en évidence. Plus de cartouche blanc : le texte se pose directement
+   sur la carte, en gris clair, avec une ombre portée pour rester lisible sur
+   les zones sombres comme sur les zones claires. */
 .leaflet-control-attribution {
-  background: rgba(255, 255, 255, 0.62) !important;
-  font-size: 9px !important;
-  padding: 1px 5px !important;
-  border-radius: 6px 0 0 0;
-  color: #4b5563 !important;
+  background: transparent !important;
+  font-size: 8px !important;
+  line-height: 1.2 !important;
+  padding: 0 4px 1px 0 !important;
+  color: rgba(255, 255, 255, 0.55) !important;
+  text-shadow: 0 0 3px rgba(0, 0, 0, 0.55);
+  pointer-events: none;
 }
-.leaflet-control-attribution a { color: #4b5563 !important; }
+.leaflet-control-attribution a { color: rgba(255, 255, 255, 0.55) !important; }
 
 /* --- Filtre "cartoon" appliqué aux tuiles satellite de la Map vacancier --- */
 .cc-toon-tiles {

@@ -233,9 +233,10 @@ export default function Map({ camping: campingProp, vacancier }) {
         zoomControl: false,
         // L'attribution est une obligation contractuelle du fournisseur de
         // tuiles, pas une option esthétique : Esri exige que la source reste
-        // visible partout où son imagerie est affichée. Elle est rendue
-        // discrète en CSS plutôt que supprimée.
-        attributionControl: true,
+        // visible partout où son imagerie est affichée. Le crédit « Leaflet »
+        // qu'ajoute la bibliothèque par défaut, lui, n'est qu'un usage : il est
+        // retiré. Reste la seule mention due, réduite au strict minimum.
+        attributionControl: { prefix: false },
         maxZoom: 19,
       })
 

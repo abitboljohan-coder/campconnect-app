@@ -203,11 +203,16 @@ export default function Onboarding({ initialCamping, onDone }) {
 
   // ─── SEARCH ───────────────────────────────────────────────────────────────
   if (step === 'search') return (
-    <Screen bg="#0d1f0d">
-      <div style={{ textAlign: 'center', marginBottom: 32 }}>
-        <div style={{ fontSize: 52, marginBottom: 10 }}>🌲</div>
-        <h1 style={{ color: '#fff', fontSize: 26, fontWeight: 700, margin: 0 }}>CampConnect</h1>
-        <p style={{ color: 'rgba(255,255,255,0.5)', marginTop: 8, fontSize: 14 }}>
+    <Screen clair>
+      <div style={{ textAlign: 'center', marginBottom: 30 }}>
+        {/* La même marque que l'écran de démarrage, à la même place : le
+            passage de l'un à l'autre ne doit pas se remarquer. */}
+        <img src="/logo-mark.png" alt="" width={82} height={87}
+             style={{ display: 'block', margin: '0 auto 14px' }} />
+        <h1 style={{ color: '#2f4a26', fontSize: 27, fontWeight: 800, margin: 0, letterSpacing: '-0.5px' }}>
+          CampConnect
+        </h1>
+        <p style={{ color: '#7c8a72', marginTop: 7, fontSize: 14.5, lineHeight: 1.45 }}>
           {t('onb.rechercher')}
         </p>
       </div>
@@ -285,14 +290,14 @@ export default function Onboarding({ initialCamping, onDone }) {
 
   // ─── VERIFY ───────────────────────────────────────────────────────────────
   if (step === 'verify') return (
-    <Screen bg={couleur}>
-      <div style={{ textAlign: 'center', marginBottom: 28 }}>
+    <Screen clair>
+      <div style={{ textAlign: 'center', marginBottom: 26 }}>
         {camping.logo_url
-          ? <img src={camping.logo_url} style={{ width: 64, height: 64, objectFit: 'contain', marginBottom: 10 }} />
-          : <div style={{ fontSize: 52, marginBottom: 10 }}>🌲</div>
+          ? <img src={camping.logo_url} alt="" style={{ width: 68, height: 68, objectFit: 'contain', borderRadius: 16, marginBottom: 12 }} />
+          : <img src="/logo-mark.png" alt="" width={72} height={77} style={{ display: 'block', margin: '0 auto 12px' }} />
         }
-        <h1 style={{ color: '#fff', fontSize: 24, fontWeight: 700, margin: 0 }}>{camping.nom}</h1>
-        <p style={{ color: 'rgba(255,255,255,0.6)', marginTop: 6, fontSize: 14 }}>Vérification de votre présence</p>
+        <h1 style={{ color: '#2f4a26', fontSize: 23, fontWeight: 800, margin: 0, letterSpacing: '-0.3px' }}>{camping.nom}</h1>
+        <p style={{ color: '#7c8a72', marginTop: 6, fontSize: 14 }}>Vérification de votre présence</p>
       </div>
 
       <Card>
@@ -364,14 +369,14 @@ export default function Onboarding({ initialCamping, onDone }) {
 
   // ─── FORM ─────────────────────────────────────────────────────────────────
   return (
-    <Screen bg={couleur}>
-      <div style={{ textAlign: 'center', marginBottom: 32, color: '#fff' }}>
+    <Screen clair>
+      <div style={{ textAlign: 'center', marginBottom: 26 }}>
         {camping.logo_url
-          ? <img src={camping.logo_url} style={{ width: 60, height: 60, objectFit: 'contain', marginBottom: 10 }} />
-          : <div style={{ fontSize: 52, marginBottom: 10 }}>🌲</div>
+          ? <img src={camping.logo_url} alt="" style={{ width: 64, height: 64, objectFit: 'contain', borderRadius: 16, marginBottom: 12 }} />
+          : <img src="/logo-mark.png" alt="" width={66} height={70} style={{ display: 'block', margin: '0 auto 12px' }} />
         }
-        <h1 style={{ color: '#fff', fontSize: 24, fontWeight: 700, margin: 0 }}>{camping.nom}</h1>
-        <p style={{ color: 'rgba(255,255,255,0.7)', marginTop: 6, fontSize: 14 }}>Créez votre profil vacancier</p>
+        <h1 style={{ color: '#2f4a26', fontSize: 23, fontWeight: 800, margin: 0, letterSpacing: '-0.3px' }}>{camping.nom}</h1>
+        <p style={{ color: '#7c8a72', marginTop: 6, fontSize: 14 }}>Créez votre profil vacancier</p>
       </div>
 
       <Card>
@@ -491,18 +496,38 @@ export default function Onboarding({ initialCamping, onDone }) {
 
 // ─── Composants utilitaires ────────────────────────────────────────────────
 
-function Screen({ bg, children }) {
+function Screen({ bg, clair, children }) {
   return (
     <div style={{
       minHeight: '100dvh',
-      background: `linear-gradient(160deg, ${bg} 0%, #1b4332 100%)`,
+      // L'écran de démarrage affiche la marque sur le crème de l'application.
+      // Enchaîner sur un vert sombre casserait cette continuité au moment
+      // précis où l'utilisateur découvre le produit. Le dégradé clair reprend
+      // le fond de l'app, à peine réchauffé.
+      background: clair
+        ? 'linear-gradient(170deg, #faf7f0 0%, #f2efe4 58%, #e9efe1 100%)'
+        : `linear-gradient(160deg, ${bg} 0%, #1b4332 100%)`,
       display: 'flex', flexDirection: 'column',
-      alignItems: 'center', justifyContent: 'center',
+      alignItems: 'center',
+      // Surtout pas justify-content: center. Quand le contenu dépasse la
+      // hauteur de l'écran — ce que fait le formulaire d'inscription depuis
+      // qu'il porte les règles de la communauté — le centrage flex rogne le
+      // débordement par le haut, et cette partie devient inatteignable : le
+      // logo et le nom du camping disparaissaient sous la barre d'état.
+      // Une marge automatique centre quand il y a la place et laisse défiler
+      // sinon.
+      justifyContent: 'flex-start',
+      overflowY: 'auto',
       padding: '24px 20px',
       paddingTop: 'calc(24px + var(--cc-safe-top))',
       paddingBottom: 'calc(24px + var(--cc-safe-bottom))',
     }}>
-      {children}
+      <div style={{
+        margin: 'auto 0', width: '100%',
+        display: 'flex', flexDirection: 'column', alignItems: 'center',
+      }}>
+        {children}
+      </div>
     </div>
   )
 }
@@ -510,9 +535,12 @@ function Screen({ bg, children }) {
 function Card({ children }) {
   return (
     <div style={{
-      background: '#fff', borderRadius: 20, padding: '26px 22px',
+      background: '#fff', borderRadius: 22, padding: '26px 22px',
       width: '100%', maxWidth: 380,
-      boxShadow: '0 20px 60px rgba(0,0,0,0.25)',
+      // Sur fond clair, l'ombre dense d'origine faisait une tache grise. Une
+      // ombre douce doublée d'un liseré détache la carte sans la salir.
+      border: '1px solid rgba(47, 74, 38, 0.07)',
+      boxShadow: '0 12px 40px rgba(47, 74, 38, 0.10), 0 2px 6px rgba(47, 74, 38, 0.05)',
     }}>
       {children}
     </div>
