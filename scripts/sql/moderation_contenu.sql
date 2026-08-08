@@ -24,6 +24,12 @@ CREATE INDEX IF NOT EXISTS idx_signalements_cible ON signalements(camping_id, ci
 COMMENT ON COLUMN signalements.cible_texte IS
   'Copie du contenu signalé. Le message d''origine peut être supprimé par son auteur avant que le gérant ne traite le signalement : sans cette copie, il n''aurait plus rien à examiner.';
 
+-- ── 1 bis. Acceptation des conditions d'utilisation ─────────────────────────
+-- La règle 1.2 impose que les conditions soient acceptées avant l'inscription.
+-- Conserver la date rend cette acceptation démontrable plutôt que présumée, ce
+-- qui compte autant pour une revue que pour un litige.
+ALTER TABLE vacanciers ADD COLUMN IF NOT EXISTS cgu_acceptees_at timestamptz;
+
 -- ── 2. Blocages entre vacanciers ────────────────────────────────────────────
 CREATE TABLE IF NOT EXISTS blocages (
   vacancier_id uuid NOT NULL REFERENCES vacanciers(id) ON DELETE CASCADE,

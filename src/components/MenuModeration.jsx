@@ -41,7 +41,12 @@ export default function MenuModeration({ cible, camping, vacancier, onClose, onB
   async function confirmerBlocage() {
     if (envoi) return
     setEnvoi(true)
-    await bloquer(vacancier.id, cible.auteurId)
+    await bloquer(vacancier.id, cible.auteurId, {
+      campingId: camping.id,
+      cibleType: cible.type,
+      cibleId: cible.id,
+      texte: cible.texte,
+    })
     setEnvoi(false)
     toast(t('moderation.bloque', { pseudo }), 'succes')
     onBloque?.(cible.auteurId)

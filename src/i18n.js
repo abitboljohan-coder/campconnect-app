@@ -50,6 +50,16 @@ const STRINGS = {
   'moderation.aucun_bloque':    { fr: 'Vous n’avez bloqué personne.', en: 'You haven’t blocked anyone.', es: 'No has bloqueado a nadie.', nl: 'Je hebt niemand geblokkeerd.' },
   'moderation.debloquer':       { fr: 'Débloquer', en: 'Unblock', es: 'Desbloquear', nl: 'Deblokkeren' },
 
+  // ── Conditions d'utilisation (règle 1.2 de l'App Store) ──────────────────
+  'cgu.titre':        { fr: 'Règles de la communauté', en: 'Community rules', es: 'Normas de la comunidad', nl: 'Communityregels' },
+  'cgu.tolerance':    { fr: 'Tolérance zéro : aucun contenu offensant ni comportement abusif n’est accepté. Harcèlement, insultes, propos haineux ou contenus choquants entraînent la suppression immédiate et l’exclusion définitive de leur auteur.', en: 'Zero tolerance: no objectionable content or abusive behaviour is accepted. Harassment, insults, hate speech or shocking content lead to immediate removal and a permanent ban.', es: 'Tolerancia cero: no se acepta ningún contenido ofensivo ni comportamiento abusivo. El acoso, los insultos, el discurso de odio o el contenido chocante conllevan la eliminación inmediata y la expulsión definitiva.', nl: 'Nultolerantie: aanstootgevende inhoud of misbruik wordt niet geaccepteerd. Intimidatie, beledigingen, haatzaaien of schokkende inhoud leiden tot onmiddellijke verwijdering en permanente uitsluiting.' },
+  'cgu.accepte':      { fr: 'J’ai lu et j’accepte les', en: 'I have read and accept the', es: 'He leído y acepto las', nl: 'Ik heb gelezen en accepteer de' },
+  'cgu.lien_cgu':     { fr: 'conditions d’utilisation', en: 'terms of use', es: 'condiciones de uso', nl: 'gebruiksvoorwaarden' },
+  'cgu.lien_confid':  { fr: 'politique de confidentialité', en: 'privacy policy', es: 'política de privacidad', nl: 'privacybeleid' },
+  'cgu.visibilite':   { fr: 'Mon pseudo, mon avatar et mon emplacement seront visibles par les autres vacanciers du camping pendant mon séjour.', en: 'My nickname, avatar and pitch number will be visible to other campers during my stay.', es: 'Mi apodo, mi avatar y mi parcela serán visibles para los demás campistas durante mi estancia.', nl: 'Mijn bijnaam, avatar en plaatsnummer zijn tijdens mijn verblijf zichtbaar voor andere kampeerders.' },
+  'cgu.obligatoire':  { fr: 'Vous devez accepter les conditions d’utilisation pour continuer.', en: 'You must accept the terms of use to continue.', es: 'Debes aceptar las condiciones de uso para continuar.', nl: 'Je moet de gebruiksvoorwaarden accepteren om door te gaan.' },
+  'commun.et':        { fr: 'et', en: 'and', es: 'y', nl: 'en' },
+
   'commun.annuler':     { fr: 'Annuler',     en: 'Cancel',     es: 'Cancelar',  nl: 'Annuleren' },
   'commun.enregistrer': { fr: 'Enregistrer', en: 'Save',       es: 'Guardar',   nl: 'Opslaan' },
   'commun.modifier':    { fr: 'Modifier',    en: 'Edit',       es: 'Editar',    nl: 'Wijzigen' },

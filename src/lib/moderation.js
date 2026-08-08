@@ -75,16 +75,42 @@ export async function chargerBlocages(vacancierId) {
   return ensemble
 }
 
-export async function bloquer(vacancierId, bloqueId) {
+/**
+ * Bloque un vacancier et prévient l'équipe du camping.
+ *
+ * La règle 1.2 de l'App Store demande que le blocage « notifie le développeur
+ * du contenu inapproprié » et le retire immédiatement du fil. Bloquer sans
+ * rien remonter laisserait le contenu en place pour tous les autres : la
+ * personne gênée s'en protège, la communauté non.
+ *
+ * Le blocage est donc doublé d'une remontée automatique, distinguée d'un
+ * signalement explicite par sa catégorie. Le gérant voit la différence : l'un
+ * est une demande d'action, l'autre un signal faible à surveiller.
+ */
+export async function bloquer(vacancierId, bloqueId, contexte = {}) {
   if (!vacancierId || !bloqueId || vacancierId === bloqueId) return false
   const ensemble = new Set(blocages(vacancierId))
   ensemble.add(bloqueId)
   cache = ensemble; cacheDe = vacancierId
   ecrireLocal(vacancierId, ensemble)
+
   // Le blocage prend effet immédiatement à l'écran, même si l'enregistrement
   // échoue : la personne a demandé à ne plus voir ce contenu, pas à attendre.
   const { error } = await supabase.from('blocages')
     .upsert({ vacancier_id: vacancierId, bloque_id: bloqueId }, { onConflict: 'vacancier_id,bloque_id' })
+
+  if (contexte.campingId) {
+    await supabase.from('signalements').insert({
+      camping_id: contexte.campingId,
+      vacancier_id: vacancierId,
+      categorie: 'blocage',
+      description: 'Blocage d’un vacancier par un autre vacancier',
+      cible_type: contexte.cibleType || null,
+      cible_id: contexte.cibleId || null,
+      cible_texte: (contexte.texte || '').slice(0, 2000),
+      auteur_signale_id: bloqueId,
+    })
+  }
   return !error
 }
 

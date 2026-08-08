@@ -61,6 +61,7 @@ export default function Onboarding({ initialCamping, onDone }) {
 
   // Formulaire profil
   const [form, setForm] = useState({ pseudo: '', emplacement: '', avatar_emoji: '🏕️', date_depart: '' })
+  const [cguAcceptees, setCguAcceptees] = useState(false)
   const [formError, setFormError] = useState('')
   const [saving, setSaving] = useState(false)
 
@@ -165,6 +166,10 @@ export default function Onboarding({ initialCamping, onDone }) {
   async function handleSubmit(e) {
     e.preventDefault()
     if (!form.pseudo.trim()) { setFormError(t('onb.pseudo_oblig')); return }
+    // L'attribut required du navigateur suffit en théorie ; ce contrôle existe
+    // parce qu'un formulaire soumis par un autre chemin le contournerait, et
+    // parce que l'acceptation doit être vérifiable, pas seulement présumée.
+    if (!cguAcceptees) { setFormError(t('cgu.obligatoire')); return }
     setSaving(true)
     setFormError('')
     await ensureAnonSession()
@@ -179,6 +184,7 @@ export default function Onboarding({ initialCamping, onDone }) {
       date_depart: form.date_depart || null,
       device_id: deviceId,
       user_id: uid,
+      cgu_acceptees_at: new Date().toISOString(),
     }
 
     // Re-séjour avec la même identité (ex: retour l'année suivante) → réutiliser le profil
@@ -422,15 +428,35 @@ export default function Onboarding({ initialCamping, onDone }) {
             </span>
           </label>
 
-          {/* Consentement RGPD */}
+          {/* Règles de la communauté et acceptation des conditions.
+              La règle 1.2 de l'App Store impose que ces conditions soient
+              présentées AVANT l'inscription et qu'elles annoncent explicitement
+              une tolérance zéro. Un simple lien ne suffit pas : la phrase doit
+              être lisible à l'écran, c'est ce que vérifie l'examinateur. */}
+          <div style={{
+            background: '#fff7ed', border: '1px solid #fed7aa',
+            borderRadius: 12, padding: '14px 16px',
+          }}>
+            <div style={{ fontSize: 13, fontWeight: 700, color: '#9a3412', marginBottom: 6 }}>
+              {t('cgu.titre')}
+            </div>
+            <p style={{ fontSize: 12.5, color: '#7c2d12', lineHeight: 1.55 }}>
+              {t('cgu.tolerance')}
+            </p>
+          </div>
+
           <label style={{ display: 'flex', alignItems: 'flex-start', gap: 10, cursor: 'pointer', fontSize: 12, color: '#6b7280', lineHeight: 1.5 }}>
-            <input type="checkbox" required style={{ marginTop: 2, width: 16, height: 16, flexShrink: 0 }} />
+            <input type="checkbox" required checked={cguAcceptees}
+                   onChange={e => setCguAcceptees(e.target.checked)}
+                   style={{ marginTop: 2, width: 16, height: 16, flexShrink: 0 }} />
             <span>
-              J'accepte que mon pseudo, mon avatar et mon emplacement soient visibles
-              par les autres vacanciers du camping pendant mon séjour. Mes données sont
-              supprimées en fin de saison.{' '}
+              {t('cgu.accepte')}{' '}
+              <a href="https://www.campconnect.fr/cgu.html" target="_blank" rel="noreferrer"
+                 style={{ color: couleur, fontWeight: 600 }}>{t('cgu.lien_cgu')}</a>
+              {' '}{t('commun.et')}{' '}
               <a href="https://www.campconnect.fr/confidentialite.html" target="_blank" rel="noreferrer"
-                 style={{ color: '#639922' }}>Politique de confidentialité</a>
+                 style={{ color: couleur, fontWeight: 600 }}>{t('cgu.lien_confid')}</a>.
+              {' '}{t('cgu.visibilite')}
             </span>
           </label>
 

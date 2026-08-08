@@ -8,6 +8,7 @@ const CAT_LABELS = {
   bruit:    { emoji: '🔊', label: 'Bruit' },
   autre:    { emoji: '💬', label: 'Autre' },
   contenu:  { emoji: '🚩', label: 'Contenu signalé' },
+  blocage:  { emoji: '🚫', label: 'Vacancier bloqué' },
 }
 const cat = (id) => CAT_LABELS[id] || CAT_LABELS.autre
 
@@ -143,6 +144,7 @@ export default function Signalements({ camping }) {
                       borderRadius: 10, padding: '10px 12px', marginBottom: 8,
                     }}>
                       <div style={{ fontSize: 11.5, fontWeight: 700, color: '#b91c1c', marginBottom: 4 }}>
+                        {item.categorie === 'blocage' ? 'Auteur bloqué : ' : ''}
                         {item.cible_type === 'statut' ? 'Statut' : 'Message'} de{' '}
                         {item.auteur?.avatar_emoji} {item.auteur?.pseudo || 'un vacancier parti'}
                         {item.auteur?.banni && ' · déjà banni'}
