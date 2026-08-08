@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { supabase } from '../../supabase'
 import QRCodeGenerator from '../components/QRCodeGenerator'
+import { couleur as jetons } from '../../design'
 
 export default function Parametres({ gerant, camping, session }) {
   const [email, setEmail]       = useState(session?.user?.email || '')
@@ -91,7 +92,7 @@ export default function Parametres({ gerant, camping, session }) {
   return (
     <div>
       <div style={{ marginBottom: 28 }}>
-        <h1 style={{ fontSize: 24, fontWeight: 700, color: '#1a1a1a' }}>Paramètres</h1>
+        <h1 style={{ fontSize: 24, fontWeight: 700, color: jetons.texte }}>Paramètres</h1>
       </div>
 
       {success && <Alert type="success">{success}</Alert>}
@@ -147,8 +148,8 @@ export default function Parametres({ gerant, camping, session }) {
             </div>
             <div>
               <label style={labelStyle}>SLUG (identifiant URL)</label>
-              <input type="text" value={camping?.slug || ''} disabled style={{ ...inputStyle, background: '#f3f4f6', color: '#6b7280' }} />
-              <div style={{ fontSize: 12, color: '#6b7280', marginTop: 4 }}>Le slug ne peut pas être modifié.</div>
+              <input type="text" value={camping?.slug || ''} disabled style={{ ...inputStyle, background: jetons.surfaceDouce, color: jetons.texteDoux }} />
+              <div style={{ fontSize: 12, color: jetons.texteDoux, marginTop: 4 }}>Le slug ne peut pas être modifié.</div>
             </div>
             <button type="submit" disabled={savingCamping} style={btnStyle(savingCamping)}>
               {savingCamping ? 'Enregistrement...' : 'Enregistrer'}
@@ -158,7 +159,7 @@ export default function Parametres({ gerant, camping, session }) {
 
         {/* QR Code */}
         <Card title="QR Code de l'application">
-          <p style={{ fontSize: 14, color: '#6b7280', marginBottom: 16 }}>
+          <p style={{ fontSize: 14, color: jetons.texteDoux, marginBottom: 16 }}>
             Partagez ce QR code avec vos vacanciers pour qu'ils accèdent à l'application.
           </p>
           <QRCodeGenerator url={appUrl} campingNom={camping?.nom} />
@@ -166,7 +167,7 @@ export default function Parametres({ gerant, camping, session }) {
 
         {/* Export CSV */}
         <Card title="Export des données">
-          <p style={{ fontSize: 14, color: '#6b7280', marginBottom: 16 }}>
+          <p style={{ fontSize: 14, color: jetons.texteDoux, marginBottom: 16 }}>
             Téléchargez la liste de vos vacanciers au format CSV (Excel).
           </p>
           <button
@@ -189,7 +190,7 @@ export default function Parametres({ gerant, camping, session }) {
               URL.revokeObjectURL(a.href)
             }}
             style={{
-              background: '#639922', color: '#fff', padding: '11px 20px',
+              background: jetons.marque, color: '#fff', padding: '11px 20px',
               borderRadius: 10, border: 'none', fontSize: 14, fontWeight: 600, cursor: 'pointer',
             }}
           >
@@ -202,10 +203,10 @@ export default function Parametres({ gerant, camping, session }) {
           background: '#fff5f5', borderRadius: 14, padding: '20px 22px',
           border: '1.5px solid #fecaca',
         }}>
-          <h2 style={{ fontSize: 16, fontWeight: 700, color: '#dc2626', marginBottom: 8 }}>
+          <h2 style={{ fontSize: 16, fontWeight: 700, color: jetons.danger, marginBottom: 8 }}>
             ⚠️ Zone de danger
           </h2>
-          <p style={{ fontSize: 14, color: '#6b7280', marginBottom: 16 }}>
+          <p style={{ fontSize: 14, color: jetons.texteDoux, marginBottom: 16 }}>
             Supprime tous les vacanciers, groupes, messages et inscriptions de cette saison. Les animations et la configuration du camping sont conservées.
           </p>
           <button
@@ -213,7 +214,7 @@ export default function Parametres({ gerant, camping, session }) {
             disabled={resetting}
             style={{
               padding: '12px 20px', borderRadius: 10,
-              background: resetting ? '#9ca3af' : '#dc2626',
+              background: resetting ? '#9ca3af' : jetons.danger,
               color: '#fff', fontWeight: 700, fontSize: 14,
             }}
           >
@@ -229,7 +230,7 @@ export default function Parametres({ gerant, camping, session }) {
 function Card({ title, children }) {
   return (
     <div style={{ background: '#fff', borderRadius: 14, padding: '20px 22px', border: '1px solid rgba(0,0,0,0.07)' }}>
-      <h2 style={{ fontSize: 16, fontWeight: 700, color: '#1a1a1a', marginBottom: 18 }}>{title}</h2>
+      <h2 style={{ fontSize: 16, fontWeight: 700, color: jetons.texte, marginBottom: 18 }}>{title}</h2>
       {children}
     </div>
   )
@@ -239,8 +240,8 @@ function Alert({ type, children }) {
   const isSuccess = type === 'success'
   return (
     <div style={{
-      background: isSuccess ? '#dcfce7' : '#fef2f2',
-      color: isSuccess ? '#166534' : '#dc2626',
+      background: isSuccess ? '#dcfce7' : jetons.dangerFond,
+      color: isSuccess ? jetons.succes : jetons.danger,
       padding: '12px 16px', borderRadius: 10,
       fontSize: 14, fontWeight: 500, marginBottom: 16,
     }}>
@@ -249,11 +250,11 @@ function Alert({ type, children }) {
   )
 }
 
-const labelStyle = { fontSize: 11, fontWeight: 700, color: '#6b7280', textTransform: 'uppercase', letterSpacing: 0.8, display: 'block', marginBottom: 6 }
+const labelStyle = { fontSize: 11, fontWeight: 700, color: jetons.texteDoux, textTransform: 'uppercase', letterSpacing: 0.8, display: 'block', marginBottom: 6 }
 const inputStyle = { width: '100%', padding: '11px 13px', borderRadius: 10, border: '1.5px solid #e5e7eb', fontSize: 16, outline: 'none', background: '#fafaf8', boxSizing: 'border-box' }
 const btnStyle = (disabled) => ({
   padding: '12px', borderRadius: 10,
-  background: disabled ? '#9ca3af' : '#639922',
+  background: disabled ? '#9ca3af' : jetons.marque,
   color: '#fff', fontWeight: 600, fontSize: 14,
   alignSelf: 'flex-start',
 })

@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { supabase } from '../../supabase'
+import { couleur as jetons } from '../../design'
 
 const CAT_LABELS = {
   proprete: { emoji: '🧹', label: 'Propreté' },
@@ -13,7 +14,7 @@ const CAT_LABELS = {
 const cat = (id) => CAT_LABELS[id] || CAT_LABELS.autre
 
 const STATUTS = [
-  { id: 'nouveau',  label: 'Nouveaux',  couleur: '#dc2626', bg: '#fef2f2' },
+  { id: 'nouveau',  label: 'Nouveaux',  couleur: jetons.danger, bg: jetons.dangerFond },
   { id: 'en_cours', label: 'En cours',  couleur: '#d97706', bg: '#fffbeb' },
   { id: 'resolu',   label: 'Résolus',   couleur: '#16a34a', bg: '#f0fdf4' },
 ]
@@ -68,8 +69,8 @@ export default function Signalements({ camping }) {
 
   return (
     <div>
-      <h1 style={{ fontSize: 24, fontWeight: 800, color: '#1a1a1a', marginBottom: 4 }}>Signalements</h1>
-      <p style={{ fontSize: 14, color: '#6b7280', marginBottom: 22 }}>
+      <h1 style={{ fontSize: 24, fontWeight: 800, color: jetons.texte, marginBottom: 4 }}>Signalements</h1>
+      <p style={{ fontSize: 14, color: jetons.texteDoux, marginBottom: 22 }}>
         Les problèmes remontés par vos vacanciers, en temps réel.
       </p>
 
@@ -84,8 +85,8 @@ export default function Signalements({ camping }) {
               padding: '9px 16px', borderRadius: 10, cursor: 'pointer',
               fontSize: 14, fontWeight: 600,
               background: filtre === s.id ? s.couleur : '#fff',
-              border: `1.5px solid ${filtre === s.id ? s.couleur : '#e5e7eb'}`,
-              color: filtre === s.id ? '#fff' : '#374151',
+              border: `1.5px solid ${filtre === s.id ? s.couleur : jetons.bordure}`,
+              color: filtre === s.id ? '#fff' : jetons.texteMoyen,
             }}
           >
             {s.label}
@@ -103,7 +104,7 @@ export default function Signalements({ camping }) {
           {[1, 2, 3].map(i => <div key={i} style={{ height: 92, borderRadius: 14, background: '#eee', animation: 'pulse 1.5s ease-in-out infinite' }} />)}
         </div>
       ) : affiches.length === 0 ? (
-        <div style={{ background: '#fff', borderRadius: 16, padding: '48px 24px', textAlign: 'center', color: '#6b7280', fontSize: 14.5 }}>
+        <div style={{ background: '#fff', borderRadius: 16, padding: '48px 24px', textAlign: 'center', color: jetons.texteDoux, fontSize: 14.5 }}>
           {filtre === 'nouveau' ? '🎉 Aucun nouveau signalement.' : 'Rien dans cette catégorie.'}
         </div>
       ) : (
@@ -122,16 +123,16 @@ export default function Signalements({ camping }) {
                 )}
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6, flexWrap: 'wrap' }}>
-                    <span style={{ fontSize: 12, fontWeight: 700, padding: '3px 9px', borderRadius: 12, background: '#f3f4f6', color: '#374151' }}>
+                    <span style={{ fontSize: 12, fontWeight: 700, padding: '3px 9px', borderRadius: 12, background: jetons.surfaceDouce, color: jetons.texteMoyen }}>
                       {c.emoji} {c.label}
                     </span>
-                    {item.lieu && <span style={{ fontSize: 12.5, color: '#6b7280' }}>📍 {item.lieu}</span>}
-                    <span style={{ fontSize: 12, color: '#6b7280', marginLeft: 'auto' }}>
+                    {item.lieu && <span style={{ fontSize: 12.5, color: jetons.texteDoux }}>📍 {item.lieu}</span>}
+                    <span style={{ fontSize: 12, color: jetons.texteDoux, marginLeft: 'auto' }}>
                       {new Date(item.created_at).toLocaleString('fr-FR', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}
                     </span>
                   </div>
 
-                  <div style={{ fontSize: 14.5, color: '#1a1a1a', lineHeight: 1.6, marginBottom: 8 }}>
+                  <div style={{ fontSize: 14.5, color: jetons.texte, lineHeight: 1.6, marginBottom: 8 }}>
                     {item.description}
                   </div>
 
@@ -140,7 +141,7 @@ export default function Signalements({ camping }) {
                       gérant n'aurait qu'un motif sans rien à examiner. */}
                   {item.cible_texte && (
                     <div style={{
-                      background: '#fef2f2', border: '1px solid #fecaca',
+                      background: jetons.dangerFond, border: '1px solid #fecaca',
                       borderRadius: 10, padding: '10px 12px', marginBottom: 8,
                     }}>
                       <div style={{ fontSize: 11.5, fontWeight: 700, color: '#b91c1c', marginBottom: 4 }}>
@@ -149,14 +150,14 @@ export default function Signalements({ camping }) {
                         {item.auteur?.avatar_emoji} {item.auteur?.pseudo || 'un vacancier parti'}
                         {item.auteur?.banni && ' · déjà banni'}
                       </div>
-                      <div style={{ fontSize: 14, color: '#1a1a1a', lineHeight: 1.5, whiteSpace: 'pre-wrap' }}>
+                      <div style={{ fontSize: 14, color: jetons.texte, lineHeight: 1.5, whiteSpace: 'pre-wrap' }}>
                         {item.cible_texte}
                       </div>
                     </div>
                   )}
 
                   <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
-                    <span style={{ fontSize: 12.5, color: '#6b7280' }}>
+                    <span style={{ fontSize: 12.5, color: jetons.texteDoux }}>
                       {item.vacanciers?.avatar_emoji || '🙂'} {item.vacanciers?.pseudo || '—'}
                       {item.vacanciers?.emplacement && ` · empl. ${item.vacanciers.emplacement}`}
                     </span>

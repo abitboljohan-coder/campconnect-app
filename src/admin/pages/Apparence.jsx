@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { supabase } from '../../supabase'
 import ColorPicker from '../components/ColorPicker'
+import { couleur as jetons } from '../../design'
 
 function compressImage(file, maxWidth = 800, quality = 0.75) {
   return new Promise((resolve, reject) => {
@@ -22,8 +23,8 @@ function compressImage(file, maxWidth = 800, quality = 0.75) {
 
 export default function Apparence({ camping, setCamping }) {
   const [nom, setNom]           = useState(camping?.nom || '')
-  const [couleur1, setCouleur1] = useState(camping?.couleur_principale || '#639922')
-  const [couleur2, setCouleur2] = useState(camping?.couleur_secondaire || '#0d1f0d')
+  const [couleur1, setCouleur1] = useState(camping?.couleur_principale || jetons.marque)
+  const [couleur2, setCouleur2] = useState(camping?.couleur_secondaire || jetons.marqueSombre)
   const [saving, setSaving]     = useState(false)
   const [success, setSuccess]   = useState('')
   const [error, setError]       = useState('')
@@ -76,8 +77,8 @@ export default function Apparence({ camping, setCamping }) {
   return (
     <div>
       <div style={{ marginBottom: 28 }}>
-        <h1 style={{ fontSize: 24, fontWeight: 700, color: '#1a1a1a' }}>Apparence</h1>
-        <p style={{ color: '#6b7280', fontSize: 14, marginTop: 4 }}>Nom, couleurs et logo de votre camping dans l'app.</p>
+        <h1 style={{ fontSize: 24, fontWeight: 700, color: jetons.texte }}>Apparence</h1>
+        <p style={{ color: jetons.texteDoux, fontSize: 14, marginTop: 4 }}>Nom, couleurs et logo de votre camping dans l'app.</p>
       </div>
 
       {success && <Alert type="success">{success}</Alert>}
@@ -103,10 +104,10 @@ export default function Apparence({ camping, setCamping }) {
                   <div style={{ width: 28, height: 28, borderRadius: '50%', background: `${couleur1}40`, border: `2px solid ${couleur1}`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 14 }}>🏕️</div>
                   <div style={{ color: '#fff', fontWeight: 700, fontSize: 13 }}>{nom || camping?.nom}</div>
                 </div>
-                <div style={{ background: '#f5f2eb', padding: '10px 12px', display: 'flex', flexDirection: 'column', gap: 6 }}>
+                <div style={{ background: jetons.fond, padding: '10px 12px', display: 'flex', flexDirection: 'column', gap: 6 }}>
                   <div style={{ background: '#fff', borderRadius: 8, padding: '8px 10px', borderLeft: `3px solid ${couleur1}` }}>
-                    <div style={{ fontSize: 11, fontWeight: 600, color: '#374151' }}>🏊 Cours de natation</div>
-                    <div style={{ fontSize: 10, color: '#6b7280', marginTop: 2 }}>14:00 · Piscine</div>
+                    <div style={{ fontSize: 11, fontWeight: 600, color: jetons.texteMoyen }}>🏊 Cours de natation</div>
+                    <div style={{ fontSize: 10, color: jetons.texteDoux, marginTop: 2 }}>14:00 · Piscine</div>
                   </div>
                   <div style={{ background: couleur1, borderRadius: 8, padding: '8px 10px', textAlign: 'center' }}>
                     <span style={{ fontSize: 11, color: '#fff', fontWeight: 600 }}>+ Créer un groupe</span>
@@ -129,14 +130,14 @@ export default function Apparence({ camping, setCamping }) {
         <Card title="Logo du camping">
           <div style={{ display: 'flex', alignItems: 'flex-start', gap: 20, flexWrap: 'wrap' }}>
             {logoPreview && (
-              <img src={logoPreview} alt="Logo" style={{ width: 80, height: 80, objectFit: 'contain', borderRadius: 12, border: '1px solid #e5e7eb', background: '#f5f2eb' }} />
+              <img src={logoPreview} alt="Logo" style={{ width: 80, height: 80, objectFit: 'contain', borderRadius: 12, border: '1px solid #e5e7eb', background: jetons.fond }} />
             )}
             <div style={{ flex: 1 }}>
               <label style={labelStyle}>FICHIER (PNG/JPG/SVG, max 2MB)</label>
               <input
                 type="file" accept="image/png,image/jpeg,image/svg+xml"
                 onChange={e => handleImageUpload(e.target.files[0], 'logo_url', 2, setUploadingLogo, setLogoPreview)}
-                style={{ display: 'block', marginTop: 8, fontSize: 14, color: '#374151' }}
+                style={{ display: 'block', marginTop: 8, fontSize: 14, color: jetons.texteMoyen }}
               />
               {uploadingLogo && <UploadProgress label="Compression et enregistrement..." />}
             </div>
@@ -149,7 +150,7 @@ export default function Apparence({ camping, setCamping }) {
           disabled={saving}
           style={{
             padding: '14px', borderRadius: 12,
-            background: saving ? '#9ca3af' : '#639922',
+            background: saving ? '#9ca3af' : jetons.marque,
             color: '#fff', fontWeight: 700, fontSize: 15,
             boxShadow: '0 4px 14px rgba(99,153,34,0.35)',
           }}
@@ -166,7 +167,7 @@ function UploadProgress({ label }) {
   return (
     <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 10, padding: '8px 12px', background: '#f0fdf4', borderRadius: 8, border: '1px solid #bbf7d0' }}>
       <div style={{ width: 16, height: 16, border: '2px solid #639922', borderTopColor: 'transparent', borderRadius: '50%', animation: 'spin 0.8s linear infinite', flexShrink: 0 }} />
-      <span style={{ fontSize: 13, color: '#166534', fontWeight: 500 }}>{label}</span>
+      <span style={{ fontSize: 13, color: jetons.succes, fontWeight: 500 }}>{label}</span>
     </div>
   )
 }
@@ -174,7 +175,7 @@ function UploadProgress({ label }) {
 function Card({ title, children }) {
   return (
     <div style={{ background: '#fff', borderRadius: 14, padding: '20px 22px', border: '1px solid rgba(0,0,0,0.07)' }}>
-      <h2 style={{ fontSize: 16, fontWeight: 700, color: '#1a1a1a', marginBottom: 18 }}>{title}</h2>
+      <h2 style={{ fontSize: 16, fontWeight: 700, color: jetons.texte, marginBottom: 18 }}>{title}</h2>
       {children}
     </div>
   )
@@ -183,11 +184,11 @@ function Card({ title, children }) {
 function Alert({ type, children }) {
   const ok = type === 'success'
   return (
-    <div style={{ background: ok ? '#dcfce7' : '#fef2f2', color: ok ? '#166534' : '#dc2626', padding: '12px 16px', borderRadius: 10, fontSize: 14, fontWeight: 500, marginBottom: 16 }}>
+    <div style={{ background: ok ? '#dcfce7' : jetons.dangerFond, color: ok ? jetons.succes : jetons.danger, padding: '12px 16px', borderRadius: 10, fontSize: 14, fontWeight: 500, marginBottom: 16 }}>
       {ok ? '✅ ' : '❌ '}{children}
     </div>
   )
 }
 
-const labelStyle = { fontSize: 11, fontWeight: 700, color: '#6b7280', textTransform: 'uppercase', letterSpacing: 0.8, display: 'block', marginBottom: 6 }
+const labelStyle = { fontSize: 11, fontWeight: 700, color: jetons.texteDoux, textTransform: 'uppercase', letterSpacing: 0.8, display: 'block', marginBottom: 6 }
 const inputStyle = { width: '100%', padding: '11px 13px', borderRadius: 10, border: '1.5px solid #e5e7eb', fontSize: 15, outline: 'none', background: '#fafaf8', boxSizing: 'border-box' }

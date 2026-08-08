@@ -3,10 +3,11 @@ import { Link } from 'react-router-dom'
 import { supabase, presentFilter, todayISO } from '../../supabase'
 import StatCard from '../components/StatCard'
 import { getHourlyCode } from '../../pages/Onboarding'
+import { couleur as jetons } from '../../design'
 
 function OnboardingChecklist({ camping, stats }) {
   const hasLogo      = !!camping?.logo_url
-  const hasColor     = !!camping?.couleur_principale && camping.couleur_principale !== '#639922'
+  const hasColor     = !!camping?.couleur_principale && camping.couleur_principale !== jetons.marque
   const perimeter    = camping?.carte_config?.perimeter || []
   const pins         = camping?.carte_config?.pins || []
   const hasContour   = perimeter.length >= 3
@@ -32,11 +33,11 @@ function OnboardingChecklist({ camping, stats }) {
           <div style={{ fontSize: 16, fontWeight: 700, color: '#1a4d1a' }}>
             🚀 Bienvenue ! Configurez votre camping en 4 étapes
           </div>
-          <div style={{ fontSize: 12, color: '#166534', marginTop: 2 }}>
+          <div style={{ fontSize: 12, color: jetons.succes, marginTop: 2 }}>
             {doneCount}/{steps.length} étapes complétées
           </div>
         </div>
-        <div style={{ fontSize: 26, fontWeight: 800, color: '#166534' }}>
+        <div style={{ fontSize: 26, fontWeight: 800, color: jetons.succes }}>
           {Math.round((doneCount / steps.length) * 100)}%
         </div>
       </div>
@@ -51,8 +52,8 @@ function OnboardingChecklist({ camping, stats }) {
           }}>
             <div style={{
               width: 26, height: 26, borderRadius: '50%',
-              background: s.done ? '#639922' : '#fff',
-              border: '2px solid ' + (s.done ? '#639922' : '#d1d5db'),
+              background: s.done ? jetons.marque : '#fff',
+              border: '2px solid ' + (s.done ? jetons.marque : '#d1d5db'),
               color: '#fff', fontSize: 14, fontWeight: 800,
               display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
             }}>
@@ -60,11 +61,11 @@ function OnboardingChecklist({ camping, stats }) {
             </div>
             <span style={{ fontSize: 20 }}>{s.icon}</span>
             <span style={{ flex: 1, fontSize: 14, fontWeight: 600,
-                           color: s.done ? '#6b7280' : '#1a1a1a',
+                           color: s.done ? jetons.texteDoux : jetons.texte,
                            textDecoration: s.done ? 'line-through' : 'none' }}>
               {s.label}
             </span>
-            {!s.done && <span style={{ fontSize: 12, color: '#54821d', fontWeight: 700 }}>Commencer →</span>}
+            {!s.done && <span style={{ fontSize: 12, color: jetons.marqueTexte, fontWeight: 700 }}>Commencer →</span>}
           </Link>
         ))}
       </div>
@@ -150,8 +151,8 @@ export default function Overview({ camping }) {
   return (
     <div>
       <div style={{ marginBottom: 28 }}>
-        <h1 style={{ fontSize: 24, fontWeight: 700, color: '#1a1a1a' }}>Vue d'ensemble</h1>
-        <p style={{ color: '#6b7280', fontSize: 14, marginTop: 4 }}>
+        <h1 style={{ fontSize: 24, fontWeight: 700, color: jetons.texte }}>Vue d'ensemble</h1>
+        <p style={{ color: jetons.texteDoux, fontSize: 14, marginTop: 4 }}>
           {new Date().toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}
         </p>
       </div>
@@ -176,7 +177,7 @@ export default function Overview({ camping }) {
         {/* Départs du jour */}
         {departs.aujourdhui.length > 0 && (
           <div style={{ background: '#fff', borderRadius: 14, padding: '20px', border: '1px solid rgba(0,0,0,0.07)' }}>
-            <h2 style={{ fontSize: 16, fontWeight: 700, color: '#1a1a1a', marginBottom: 16 }}>👋 Départs aujourd'hui</h2>
+            <h2 style={{ fontSize: 16, fontWeight: 700, color: jetons.texte, marginBottom: 16 }}>👋 Départs aujourd'hui</h2>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
               {departs.aujourdhui.map((v, idx) => (
                 <div key={idx} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '10px 0', borderBottom: '1px solid #f5f2eb' }}>
@@ -187,8 +188,8 @@ export default function Overview({ camping }) {
                     {v.avatar_emoji || '🙂'}
                   </div>
                   <div style={{ flex: 1 }}>
-                    <div style={{ fontWeight: 600, fontSize: 14, color: '#1a1a1a' }}>{v.pseudo}</div>
-                    {v.emplacement && <div style={{ fontSize: 12, color: '#6b7280', marginTop: 2 }}>📍 Emplacement {v.emplacement}</div>}
+                    <div style={{ fontWeight: 600, fontSize: 14, color: jetons.texte }}>{v.pseudo}</div>
+                    {v.emplacement && <div style={{ fontSize: 12, color: jetons.texteDoux, marginTop: 2 }}>📍 Emplacement {v.emplacement}</div>}
                   </div>
                 </div>
               ))}
@@ -198,11 +199,11 @@ export default function Overview({ camping }) {
 
         {/* Derniers groupes */}
         <div style={{ background: '#fff', borderRadius: 14, padding: '20px', border: '1px solid rgba(0,0,0,0.07)' }}>
-          <h2 style={{ fontSize: 16, fontWeight: 700, color: '#1a1a1a', marginBottom: 16 }}>Derniers groupes créés</h2>
+          <h2 style={{ fontSize: 16, fontWeight: 700, color: jetons.texte, marginBottom: 16 }}>Derniers groupes créés</h2>
           {loading ? (
-            <div style={{ color: '#6b7280', fontSize: 14 }}>Chargement...</div>
+            <div style={{ color: jetons.texteDoux, fontSize: 14 }}>Chargement...</div>
           ) : recentGroupes.length === 0 ? (
-            <div style={{ color: '#6b7280', fontSize: 14 }}>Aucun groupe pour le moment.</div>
+            <div style={{ color: jetons.texteDoux, fontSize: 14 }}>Aucun groupe pour le moment.</div>
           ) : (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
               {recentGroupes.map(g => (
@@ -211,14 +212,14 @@ export default function Overview({ camping }) {
                   padding: '10px 0', borderBottom: '1px solid #f5f2eb',
                 }}>
                   <div style={{
-                    width: 38, height: 38, borderRadius: 10, background: '#f5f2eb',
+                    width: 38, height: 38, borderRadius: 10, background: jetons.fond,
                     display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20, flexShrink: 0,
                   }}>
                     {g.emoji || '👥'}
                   </div>
                   <div style={{ flex: 1, overflow: 'hidden' }}>
-                    <div style={{ fontWeight: 600, fontSize: 14, color: '#1a1a1a', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{g.titre}</div>
-                    <div style={{ fontSize: 12, color: '#6b7280', marginTop: 2 }}>
+                    <div style={{ fontWeight: 600, fontSize: 14, color: jetons.texte, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{g.titre}</div>
+                    <div style={{ fontSize: 12, color: jetons.texteDoux, marginTop: 2 }}>
                       {new Date(g.created_at).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}
                       {g.lieu && ` · 📍 ${g.lieu}`}
                     </div>
@@ -231,11 +232,11 @@ export default function Overview({ camping }) {
 
         {/* Dernières inscriptions */}
         <div style={{ background: '#fff', borderRadius: 14, padding: '20px', border: '1px solid rgba(0,0,0,0.07)' }}>
-          <h2 style={{ fontSize: 16, fontWeight: 700, color: '#1a1a1a', marginBottom: 16 }}>Dernières inscriptions</h2>
+          <h2 style={{ fontSize: 16, fontWeight: 700, color: jetons.texte, marginBottom: 16 }}>Dernières inscriptions</h2>
           {loading ? (
-            <div style={{ color: '#6b7280', fontSize: 14 }}>Chargement...</div>
+            <div style={{ color: jetons.texteDoux, fontSize: 14 }}>Chargement...</div>
           ) : recentInscriptions.length === 0 ? (
-            <div style={{ color: '#6b7280', fontSize: 14 }}>Aucune inscription pour le moment.</div>
+            <div style={{ color: jetons.texteDoux, fontSize: 14 }}>Aucune inscription pour le moment.</div>
           ) : (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
               {recentInscriptions.map((ins, idx) => (
@@ -247,17 +248,17 @@ export default function Overview({ camping }) {
                     width: 38, height: 38, borderRadius: '50%',
                     background: '#63992218',
                     display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    fontSize: 18, flexShrink: 0, color: '#54821d', fontWeight: 700,
+                    fontSize: 18, flexShrink: 0, color: jetons.marqueTexte, fontWeight: 700,
                   }}>
                     {ins.vacanciers?.pseudo?.[0]?.toUpperCase() || '?'}
                   </div>
                   <div style={{ flex: 1, overflow: 'hidden' }}>
-                    <div style={{ fontWeight: 600, fontSize: 14, color: '#1a1a1a' }}>{ins.vacanciers?.pseudo || '—'}</div>
-                    <div style={{ fontSize: 12, color: '#6b7280', marginTop: 2, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                    <div style={{ fontWeight: 600, fontSize: 14, color: jetons.texte }}>{ins.vacanciers?.pseudo || '—'}</div>
+                    <div style={{ fontSize: 12, color: jetons.texteDoux, marginTop: 2, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                       → {ins.animations?.titre || '—'}
                     </div>
                   </div>
-                  <div style={{ fontSize: 11, color: '#6b7280', flexShrink: 0 }}>
+                  <div style={{ fontSize: 11, color: jetons.texteDoux, flexShrink: 0 }}>
                     {new Date(ins.created_at).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}
                   </div>
                 </div>
@@ -303,7 +304,7 @@ function AccessCodeCard({ camping }) {
     }}>
       {/* Code tournant */}
       <div style={{
-        background: '#0d1f0d', borderRadius: 16, padding: '20px 22px',
+        background: jetons.marqueSombre, borderRadius: 16, padding: '20px 22px',
         display: 'flex', alignItems: 'center', gap: 20,
       }}>
         <div style={{ flex: 1 }}>
@@ -328,25 +329,25 @@ function AccessCodeCard({ camping }) {
         background: '#fff', border: '1px solid rgba(0,0,0,0.07)',
         borderRadius: 16, padding: '20px 22px',
       }}>
-        <div style={{ fontSize: 11, fontWeight: 700, color: '#6b7280', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 8 }}>
+        <div style={{ fontSize: 11, fontWeight: 700, color: jetons.texteDoux, textTransform: 'uppercase', letterSpacing: 1, marginBottom: 8 }}>
           Lien QR code direct
         </div>
         <div style={{
-          fontFamily: 'monospace', fontSize: 12, color: '#54821d',
+          fontFamily: 'monospace', fontSize: 12, color: jetons.marqueTexte,
           background: '#f0fdf4', borderRadius: 8, padding: '10px 12px',
           wordBreak: 'break-all', marginBottom: 12,
         }}>
           {joinUrl}
         </div>
-        <div style={{ fontSize: 12, color: '#6b7280', lineHeight: 1.6 }}>
+        <div style={{ fontSize: 12, color: jetons.texteDoux, lineHeight: 1.6 }}>
           Générez un QR code avec ce lien et affichez-le à la réception. Les vacanciers qui scannent ce lien accèdent directement sans code.
         </div>
         <button
           onClick={() => navigator.clipboard?.writeText(joinUrl)}
           style={{
-            marginTop: 10, background: '#f5f2eb', border: 'none',
+            marginTop: 10, background: jetons.fond, border: 'none',
             borderRadius: 8, padding: '7px 14px', fontSize: 12,
-            fontWeight: 600, color: '#54821d', cursor: 'pointer',
+            fontWeight: 600, color: jetons.marqueTexte, cursor: 'pointer',
           }}
         >
           📋 Copier le lien

@@ -1,5 +1,6 @@
 import { useRef } from 'react'
 import { QRCodeSVG } from 'qrcode.react'
+import { couleur as jetons } from '../../design'
 
 export default function QRCodeGenerator({ url, campingNom }) {
   const containerRef = useRef(null)
@@ -37,14 +38,14 @@ export default function QRCodeGenerator({ url, campingNom }) {
         <QRCodeSVG value={url} size={160} bgColor="#ffffff" fgColor="#0d1f0d" level="M" />
       </div>
       <div>
-        <div style={{ fontSize: 13, color: '#6b7280', marginBottom: 8, wordBreak: 'break-all' }}>
+        <div style={{ fontSize: 13, color: jetons.texteDoux, marginBottom: 8, wordBreak: 'break-all' }}>
           {url}
         </div>
         <button
           onClick={telecharger}
           style={{
             padding: '10px 18px', borderRadius: 10,
-            background: '#639922', color: '#fff',
+            background: jetons.marque, color: '#fff',
             fontSize: 14, fontWeight: 600,
           }}
         >

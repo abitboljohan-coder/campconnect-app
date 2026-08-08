@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
-import { Outlet, NavLink, useNavigate } from 'react-router-dom'
+import { Outlet, NavLink } from 'react-router-dom'
+import { Bouton, Texte, Pile, couleur as jetons, espace, graisse, rayon, texte as tailles } from '../design'
 
 const NAV_ITEMS = [
   { path: '/admin/overview',    icon: '🏠', label: 'Accueil' },
@@ -13,9 +14,14 @@ const NAV_ITEMS = [
   { path: '/admin/parametres',  icon: '⚙️', label: 'Paramètres' },
 ]
 
+// L'administration garde la charte CampConnect — vert sombre et vert clair —
+// et non l'accent du camping : c'est l'outil du gérant, pas la vitrine de son
+// établissement. Le vacancier voit ses couleurs ; le gérant voit les nôtres.
+const VERT_CLAIR = '#C0DD97'
+const LARGEUR_MENU = 220
+
 export default function AdminLayout({ gerant, camping, onLogout }) {
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768)
-  const navigate = useNavigate()
 
   useEffect(() => {
     const handler = () => setIsMobile(window.innerWidth < 768)
@@ -23,123 +29,104 @@ export default function AdminLayout({ gerant, camping, onLogout }) {
     return () => window.removeEventListener('resize', handler)
   }, [])
 
-  const sidebarW = 220
-
   return (
-    <div style={{ minHeight: '100dvh', background: '#f5f2eb', display: 'flex' }}>
+    <div style={{ minHeight: '100dvh', background: jetons.fond, display: 'flex' }}>
 
-      {/* Sidebar desktop */}
+      {/* Menu latéral */}
       {!isMobile && (
-        <aside style={{
-          width: sidebarW, background: '#0d1f0d',
+        <aside className="cc-sombre" style={{
+          width: LARGEUR_MENU, background: jetons.marqueSombre,
           display: 'flex', flexDirection: 'column',
           position: 'fixed', top: 0, left: 0, bottom: 0, zIndex: 100,
         }}>
-          {/* Logo */}
           <div style={{ padding: '28px 20px 20px' }}>
-            <div style={{ color: '#C0DD97', fontWeight: 700, fontSize: 18 }}>🌲 CampConnect</div>
-            <div style={{ color: 'rgba(192,221,151,0.5)', fontSize: 12, marginTop: 4 }}>{camping?.nom}</div>
+            <Texte variante="sousTitre" style={{ color: VERT_CLAIR, fontSize: 18 }}>🌲 CampConnect</Texte>
+            <Texte variante="doux" style={{ color: 'rgba(192,221,151,0.6)', marginTop: espace.xs }}>
+              {camping?.nom}
+            </Texte>
           </div>
 
-          {/* Nav */}
-          <nav style={{ flex: 1, padding: '0 12px' }}>
+          <nav style={{ flex: 1, padding: `0 ${espace.md}px` }} aria-label="Administration">
             {NAV_ITEMS.map(item => (
               <NavLink
                 key={item.path}
                 to={item.path}
                 style={({ isActive }) => ({
-                  display: 'flex', alignItems: 'center', gap: 10,
-                  padding: '10px 12px', borderRadius: 10, marginBottom: 2,
-                  color: isActive ? '#0d1f0d' : '#C0DD97',
-                  background: isActive ? '#C0DD97' : 'transparent',
-                  fontWeight: isActive ? 600 : 400,
-                  fontSize: 14, textDecoration: 'none',
+                  display: 'flex', alignItems: 'center', gap: espace.sm,
+                  padding: `10px ${espace.md}px`, borderRadius: rayon.md, marginBottom: 2,
+                  color: isActive ? jetons.marqueSombre : VERT_CLAIR,
+                  background: isActive ? VERT_CLAIR : 'transparent',
+                  fontWeight: isActive ? graisse.fort : graisse.normal,
+                  fontSize: tailles.base, textDecoration: 'none',
                   transition: 'all 0.15s',
                 })}
               >
-                <span style={{ fontSize: 18 }}>{item.icon}</span>
+                <span aria-hidden="true" style={{ fontSize: 18 }}>{item.icon}</span>
                 {item.label}
               </NavLink>
             ))}
           </nav>
 
-          {/* Gérant + logout */}
-          <div style={{ padding: '16px 20px', borderTop: '1px solid rgba(255,255,255,0.08)' }}>
-            <div style={{ color: 'rgba(192,221,151,0.6)', fontSize: 12, marginBottom: 12 }}>
+          <div style={{ padding: `${espace.lg}px 20px`, borderTop: '1px solid rgba(255,255,255,0.08)' }}>
+            <Texte variante="doux" style={{ color: 'rgba(192,221,151,0.6)', marginBottom: espace.md }}>
               {gerant?.nom || 'Gérant'}
-            </div>
-            <button
-              onClick={onLogout}
-              style={{
-                width: '100%', padding: '9px', borderRadius: 8,
-                background: 'rgba(220,38,38,0.15)', color: '#fca5a5',
-                fontSize: 13, fontWeight: 600, border: '1px solid rgba(220,38,38,0.2)',
-              }}
-            >
+            </Texte>
+            <Bouton variante="danger" taille="sm" pleineLargeur onClick={onLogout}
+                    style={{ background: 'rgba(220,38,38,0.15)', color: '#fca5a5', border: '1px solid rgba(220,38,38,0.2)' }}>
               Se déconnecter
-            </button>
+            </Bouton>
           </div>
         </aside>
       )}
 
-      {/* Contenu principal */}
-      <div style={{ flex: 1, marginLeft: isMobile ? 0 : sidebarW, paddingBottom: isMobile ? 70 : 0 }}>
+      {/* Contenu */}
+      <div style={{ flex: 1, marginLeft: isMobile ? 0 : LARGEUR_MENU, paddingBottom: isMobile ? 70 : 0 }}>
 
-        {/* Header mobile */}
-        {isMobile && (
-          <div style={{
-            background: '#0d1f0d', padding: '14px 16px',
+        {isMobile ? (
+          <header className="cc-sombre" style={{
+            background: jetons.marqueSombre, padding: `14px ${espace.lg}px`,
             paddingTop: 'calc(14px + var(--cc-safe-top))',
             display: 'flex', alignItems: 'center', justifyContent: 'space-between',
             position: 'sticky', top: 0, zIndex: 50,
           }}>
             <div>
-              <div style={{ color: '#C0DD97', fontWeight: 700, fontSize: 16 }}>🌲 CampConnect</div>
-              <div style={{ color: 'rgba(192,221,151,0.5)', fontSize: 11 }}>{camping?.nom}</div>
+              <Texte variante="sousTitre" style={{ color: VERT_CLAIR, fontSize: tailles.grand }}>
+                🌲 CampConnect
+              </Texte>
+              <Texte variante="micro" style={{ color: 'rgba(192,221,151,0.6)' }}>{camping?.nom}</Texte>
             </div>
-            <button onClick={onLogout} style={{ color: '#fca5a5', fontSize: 13, fontWeight: 600 }}>
+            <Bouton variante="discret" taille="sm" onClick={onLogout} style={{ color: '#fca5a5' }}>
               Déco.
-            </button>
-          </div>
-        )}
-
-        {/* Header desktop */}
-        {!isMobile && (
-          <div style={{
-            background: '#fff', borderBottom: '1px solid rgba(0,0,0,0.07)',
+            </Bouton>
+          </header>
+        ) : (
+          <header style={{
+            background: jetons.surface, borderBottom: `1px solid ${jetons.bordure}`,
             padding: '14px 28px',
             display: 'flex', alignItems: 'center', justifyContent: 'space-between',
           }}>
-            <div style={{ fontSize: 14, color: '#6b7280' }}>
-              Connecté en tant que <strong style={{ color: '#1a1a1a' }}>{gerant?.nom || 'Gérant'}</strong>
-            </div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
-              <div style={{ fontSize: 14, fontWeight: 600, color: '#54821d' }}>{camping?.nom}</div>
-              <button
-                onClick={onLogout}
-                style={{
-                  padding: '6px 14px', borderRadius: 8,
-                  background: '#fef2f2', color: '#dc2626',
-                  fontSize: 13, fontWeight: 600, border: '1px solid #fecaca',
-                }}
-              >
-                Se déconnecter
-              </button>
-            </div>
-          </div>
+            <Texte variante="corps">
+              Connecté en tant que <strong style={{ color: jetons.texte }}>{gerant?.nom || 'Gérant'}</strong>
+            </Texte>
+            <Pile direction="ligne" espace="lg" aligner="center">
+              <Texte variante="corps" as="span" style={{ fontWeight: graisse.fort, color: jetons.marqueTexte }}>
+                {camping?.nom}
+              </Texte>
+              <Bouton variante="danger" taille="sm" onClick={onLogout}>Se déconnecter</Bouton>
+            </Pile>
+          </header>
         )}
 
-        {/* Page content */}
-        <main style={{ padding: isMobile ? '20px 16px' : '28px', maxWidth: 1100, margin: '0 auto' }}>
+        <main style={{ padding: isMobile ? `${espace.xl}px ${espace.lg}px` : 28, maxWidth: 1100, margin: '0 auto' }}>
           <Outlet />
         </main>
       </div>
 
-      {/* Bottom nav mobile */}
+      {/* Barre du bas, en mobile */}
       {isMobile && (
-        <nav style={{
+        <nav className="cc-sombre" aria-label="Administration" style={{
           position: 'fixed', bottom: 0, left: 0, right: 0,
-          background: '#0d1f0d', borderTop: '1px solid rgba(255,255,255,0.08)',
+          background: jetons.marqueSombre, borderTop: '1px solid rgba(255,255,255,0.08)',
           display: 'flex', zIndex: 100,
           paddingBottom: 'var(--cc-safe-bottom)',
           height: 56,
@@ -148,14 +135,19 @@ export default function AdminLayout({ gerant, camping, onLogout }) {
             <NavLink
               key={item.path}
               to={item.path}
+              // L'icône seule ne dit rien : neuf entrées annoncées « lien »
+              // sans distinction rendaient la barre du bas inutilisable au
+              // lecteur d'écran comme à la commande vocale.
+              aria-label={item.label}
+              title={item.label}
               style={({ isActive }) => ({
                 flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center',
                 textDecoration: 'none',
-                color: isActive ? '#C0DD97' : 'rgba(192,221,151,0.35)',
-                fontSize: 24,
+                color: isActive ? VERT_CLAIR : 'rgba(192,221,151,0.35)',
+                fontSize: tailles.grosTitre,
               })}
             >
-              {item.icon}
+              <span aria-hidden="true">{item.icon}</span>
             </NavLink>
           ))}
         </nav>

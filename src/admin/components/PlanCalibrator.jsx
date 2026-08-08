@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { supabase } from '../../supabase'
+import { couleur as jetons } from '../../design'
 
 // Charge Leaflet + leaflet-distortableimage à la demande
 let LPromise = null
@@ -131,7 +132,7 @@ export default function PlanCalibrator({ camping, onClose, onSaved }) {
       }}>
         <div style={{ flex: 1 }}>
           <div style={{ fontWeight: 700, fontSize: 16 }}>Caler le plan sur le satellite</div>
-          <div style={{ fontSize: 12, color: '#6b7280', marginTop: 2 }}>
+          <div style={{ fontSize: 12, color: jetons.texteDoux, marginTop: 2 }}>
             Glissez les 4 coins pour aligner le plan sur les repères visibles (bâtiments, allées, contour…).
           </div>
         </div>
@@ -146,7 +147,7 @@ export default function PlanCalibrator({ camping, onClose, onSaved }) {
           Annuler
         </button>
         <button onClick={save} disabled={saving || !ready}
-          style={{ padding: '8px 16px', background: '#639922', color: '#fff', border: 'none', borderRadius: 8, fontSize: 13, fontWeight: 600, cursor: saving ? 'wait' : 'pointer' }}>
+          style={{ padding: '8px 16px', background: jetons.marque, color: '#fff', border: 'none', borderRadius: 8, fontSize: 13, fontWeight: 600, cursor: saving ? 'wait' : 'pointer' }}>
           {saving ? 'Enregistrement…' : 'Enregistrer le calage'}
         </button>
       </div>

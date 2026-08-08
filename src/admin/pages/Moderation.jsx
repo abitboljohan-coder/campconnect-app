@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { supabase } from '../../supabase'
+import { couleur as jetons } from '../../design'
 
 export default function Moderation({ camping }) {
   const [messages, setMessages] = useState([])
@@ -50,8 +51,8 @@ export default function Moderation({ camping }) {
   return (
     <div>
       <div style={{ marginBottom: 24 }}>
-        <h1 style={{ fontSize: 24, fontWeight: 700, color: '#1a1a1a' }}>Modération</h1>
-        <p style={{ color: '#6b7280', fontSize: 14, marginTop: 4 }}>
+        <h1 style={{ fontSize: 24, fontWeight: 700, color: jetons.texte }}>Modération</h1>
+        <p style={{ color: jetons.texteDoux, fontSize: 14, marginTop: 4 }}>
           Supprimez les contenus inappropriés et gérez les vacanciers.
         </p>
       </div>
@@ -64,14 +65,14 @@ export default function Moderation({ camping }) {
           <button key={k} onClick={() => setTab(k)} style={{
             padding: '9px 16px', borderRadius: 10, fontSize: 13, fontWeight: 600, cursor: 'pointer',
             border: 'none',
-            background: tab === k ? '#639922' : '#fff',
-            color: tab === k ? '#fff' : '#374151',
+            background: tab === k ? jetons.marque : '#fff',
+            color: tab === k ? '#fff' : jetons.texteMoyen,
             boxShadow: tab === k ? 'none' : '0 1px 3px rgba(0,0,0,0.08)',
           }}>{l}</button>
         ))}
       </div>
 
-      {loading ? <div style={{ color: '#6b7280' }}>Chargement…</div> : (
+      {loading ? <div style={{ color: jetons.texteDoux }}>Chargement…</div> : (
         <div style={{ background: '#fff', borderRadius: 14, border: '1px solid rgba(0,0,0,0.07)', overflow: 'hidden' }}>
 
           {tab === 'messages' && (messages.length === 0
@@ -80,12 +81,12 @@ export default function Moderation({ camping }) {
               <Row key={m.id}>
                 <span style={{ fontSize: 18, flexShrink: 0 }}>{m.vacanciers?.avatar_emoji || '🙂'}</span>
                 <div style={{ flex: 1, minWidth: 0 }}>
-                  <div style={{ fontSize: 12, color: '#6b7280' }}>
-                    <b style={{ color: '#1a1a1a' }}>{m.vacanciers?.pseudo}</b>
+                  <div style={{ fontSize: 12, color: jetons.texteDoux }}>
+                    <b style={{ color: jetons.texte }}>{m.vacanciers?.pseudo}</b>
                     {m.vacanciers?.banni && <Badge red>banni</Badge>}
                     {' · '}{m.groupe_nom} · {fmtDate(m.created_at)}
                   </div>
-                  <div style={{ fontSize: 14, color: '#374151', marginTop: 2, wordBreak: 'break-word' }}>{m.contenu}</div>
+                  <div style={{ fontSize: 14, color: jetons.texteMoyen, marginTop: 2, wordBreak: 'break-word' }}>{m.contenu}</div>
                 </div>
                 <DangerBtn onClick={() => supprimerMessage(m.id)}>Supprimer</DangerBtn>
               </Row>
@@ -97,12 +98,12 @@ export default function Moderation({ camping }) {
               <Row key={s.id}>
                 <span style={{ fontSize: 18, flexShrink: 0 }}>{s.vacanciers?.avatar_emoji || '🙂'}</span>
                 <div style={{ flex: 1, minWidth: 0 }}>
-                  <div style={{ fontSize: 12, color: '#6b7280' }}>
-                    <b style={{ color: '#1a1a1a' }}>{s.vacanciers?.pseudo}</b>
+                  <div style={{ fontSize: 12, color: jetons.texteDoux }}>
+                    <b style={{ color: jetons.texte }}>{s.vacanciers?.pseudo}</b>
                     {s.vacanciers?.banni && <Badge red>banni</Badge>}
                     {' · '}{fmtDate(s.created_at)}
                   </div>
-                  <div style={{ fontSize: 14, color: '#374151', marginTop: 2 }}>{s.emoji} {s.texte}</div>
+                  <div style={{ fontSize: 14, color: jetons.texteMoyen, marginTop: 2 }}>{s.emoji} {s.texte}</div>
                 </div>
                 <DangerBtn onClick={() => supprimerStatut(s.id)}>Supprimer</DangerBtn>
               </Row>
@@ -114,19 +115,19 @@ export default function Moderation({ camping }) {
               <Row key={v.id}>
                 <span style={{ fontSize: 22, flexShrink: 0 }}>{v.avatar_emoji || '🙂'}</span>
                 <div style={{ flex: 1 }}>
-                  <div style={{ fontSize: 14, fontWeight: 600, color: '#1a1a1a' }}>
+                  <div style={{ fontSize: 14, fontWeight: 600, color: jetons.texte }}>
                     {v.pseudo} {v.banni && <Badge red>banni</Badge>}
                   </div>
-                  <div style={{ fontSize: 12, color: '#6b7280' }}>
+                  <div style={{ fontSize: 12, color: jetons.texteDoux }}>
                     {v.emplacement ? `Empl. ${v.emplacement} · ` : ''}
                     inscrit le {fmtDate(v.created_at)}
                   </div>
                 </div>
                 <button onClick={() => toggleBan(v)} style={{
                   padding: '7px 14px', borderRadius: 8, fontSize: 12, fontWeight: 700, cursor: 'pointer',
-                  border: '1.5px solid ' + (v.banni ? '#639922' : '#dc2626'),
+                  border: '1.5px solid ' + (v.banni ? jetons.marque : jetons.danger),
                   background: 'transparent',
-                  color: v.banni ? '#639922' : '#dc2626',
+                  color: v.banni ? jetons.marque : jetons.danger,
                 }}>
                   {v.banni ? 'Débannir' : 'Bannir'}
                 </button>
@@ -146,16 +147,16 @@ function Row({ children }) {
   )
 }
 function EmptyRow({ text }) {
-  return <div style={{ padding: 28, textAlign: 'center', color: '#6b7280', fontSize: 14 }}>{text}</div>
+  return <div style={{ padding: 28, textAlign: 'center', color: jetons.texteDoux, fontSize: 14 }}>{text}</div>
 }
 function Badge({ children }) {
-  return <span style={{ marginLeft: 6, fontSize: 10, fontWeight: 800, background: '#fee2e2', color: '#dc2626', padding: '2px 7px', borderRadius: 8, textTransform: 'uppercase' }}>{children}</span>
+  return <span style={{ marginLeft: 6, fontSize: 10, fontWeight: 800, background: '#fee2e2', color: jetons.danger, padding: '2px 7px', borderRadius: 8, textTransform: 'uppercase' }}>{children}</span>
 }
 function DangerBtn({ onClick, children }) {
   return (
     <button onClick={onClick} style={{
       padding: '6px 12px', borderRadius: 8, fontSize: 12, fontWeight: 600, cursor: 'pointer',
-      border: '1.5px solid #dc2626', background: 'transparent', color: '#dc2626', flexShrink: 0,
+      border: '1.5px solid #dc2626', background: 'transparent', color: jetons.danger, flexShrink: 0,
     }}>{children}</button>
   )
 }

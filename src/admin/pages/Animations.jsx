@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { supabase } from '../../supabase'
 import AnimationForm from '../components/AnimationForm'
+import { couleur as jetons } from '../../design'
 
 export default function Animations({ camping }) {
   const [animations, setAnimations] = useState([])
@@ -88,14 +89,14 @@ export default function Animations({ camping }) {
     <div>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 28 }}>
         <div>
-          <h1 style={{ fontSize: 24, fontWeight: 700, color: '#1a1a1a' }}>Animations</h1>
-          <p style={{ color: '#6b7280', fontSize: 14, marginTop: 4 }}>{animations.length} animation{animations.length !== 1 ? 's' : ''} au total</p>
+          <h1 style={{ fontSize: 24, fontWeight: 700, color: jetons.texte }}>Animations</h1>
+          <p style={{ color: jetons.texteDoux, fontSize: 14, marginTop: 4 }}>{animations.length} animation{animations.length !== 1 ? 's' : ''} au total</p>
         </div>
         <button
           onClick={() => { setEditAnim(null); setShowForm(true) }}
           style={{
             padding: '10px 18px', borderRadius: 10,
-            background: '#639922', color: '#fff',
+            background: jetons.marque, color: '#fff',
             fontWeight: 700, fontSize: 14,
             boxShadow: '0 4px 12px rgba(99,153,34,0.35)',
           }}
@@ -115,17 +116,17 @@ export default function Animations({ camping }) {
           border: '2px dashed #d1d5db',
         }}>
           <div style={{ fontSize: 52, marginBottom: 14 }}>📅</div>
-          <div style={{ fontWeight: 700, fontSize: 17, color: '#1a1a1a', marginBottom: 8 }}>
+          <div style={{ fontWeight: 700, fontSize: 17, color: jetons.texte, marginBottom: 8 }}>
             Aucune animation pour le moment
           </div>
-          <div style={{ fontSize: 14, color: '#6b7280', marginBottom: 24, maxWidth: 320, margin: '0 auto 24px', lineHeight: 1.65 }}>
+          <div style={{ fontSize: 14, color: jetons.texteDoux, marginBottom: 24, maxWidth: 320, margin: '0 auto 24px', lineHeight: 1.65 }}>
             Cours de natation, tournoi de pétanque, soirée barbecue… créez votre première animation !
           </div>
           <button
             onClick={() => { setEditAnim(null); setShowForm(true) }}
             style={{
               padding: '12px 24px', borderRadius: 10,
-              background: '#639922', color: '#fff',
+              background: jetons.marque, color: '#fff',
               fontWeight: 700, fontSize: 14,
               boxShadow: '0 4px 12px rgba(99,153,34,0.35)',
             }}
@@ -143,13 +144,13 @@ export default function Animations({ camping }) {
               <div key={anim.id} style={{
                 background: '#fff', borderRadius: 14, padding: '16px 20px',
                 border: '1px solid rgba(0,0,0,0.07)',
-                borderLeft: `4px solid ${anim.publiee ? '#639922' : '#d1d5db'}`,
+                borderLeft: `4px solid ${anim.publiee ? jetons.marque : '#d1d5db'}`,
                 display: 'flex', alignItems: 'center', gap: 14,
               }}>
                 {/* Emoji */}
                 <div style={{
                   width: 44, height: 44, borderRadius: 12,
-                  background: '#f5f2eb', fontSize: 22, flexShrink: 0,
+                  background: jetons.fond, fontSize: 22, flexShrink: 0,
                   display: 'flex', alignItems: 'center', justifyContent: 'center',
                 }}>
                   {anim.emoji || '🎉'}
@@ -158,21 +159,21 @@ export default function Animations({ camping }) {
                 {/* Infos */}
                 <div style={{ flex: 1, overflow: 'hidden' }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
-                    <span style={{ fontWeight: 700, fontSize: 15, color: '#1a1a1a' }}>{anim.titre}</span>
+                    <span style={{ fontWeight: 700, fontSize: 15, color: jetons.texte }}>{anim.titre}</span>
                     <span style={{
                       fontSize: 11, fontWeight: 600, padding: '2px 8px', borderRadius: 20,
-                      background: anim.publiee ? '#dcfce7' : '#f3f4f6',
-                      color: anim.publiee ? '#166534' : '#6b7280',
+                      background: anim.publiee ? '#dcfce7' : jetons.surfaceDouce,
+                      color: anim.publiee ? jetons.succes : jetons.texteDoux,
                     }}>
                       {anim.publiee ? 'Publié' : 'Brouillon'}
                     </span>
-                    {complet && <span style={{ fontSize: 11, fontWeight: 600, padding: '2px 8px', borderRadius: 20, background: '#fef2f2', color: '#dc2626' }}>Complet</span>}
+                    {complet && <span style={{ fontSize: 11, fontWeight: 600, padding: '2px 8px', borderRadius: 20, background: jetons.dangerFond, color: jetons.danger }}>Complet</span>}
                   </div>
-                  <div style={{ fontSize: 12, color: '#6b7280', marginTop: 4, display: 'flex', gap: 12, flexWrap: 'wrap' }}>
+                  <div style={{ fontSize: 12, color: jetons.texteDoux, marginTop: 4, display: 'flex', gap: 12, flexWrap: 'wrap' }}>
                     {debut && <span>📅 {debut.toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })} à {debut.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}</span>}
                     {anim.lieu && <span>📍 {anim.lieu}</span>}
                     <span
-                      style={{ color: '#54821d', fontWeight: 500, cursor: 'pointer' }}
+                      style={{ color: jetons.marqueTexte, fontWeight: 500, cursor: 'pointer' }}
                       onClick={() => voirInscrits(anim)}
                     >
                       👥 {nb}{anim.places_max ? `/${anim.places_max}` : ''} inscrits
@@ -186,8 +187,8 @@ export default function Animations({ camping }) {
                     onClick={() => togglePublie(anim)}
                     style={{
                       padding: '6px 12px', borderRadius: 8, fontSize: 12, fontWeight: 600,
-                      background: anim.publiee ? '#fef3c7' : '#dcfce7',
-                      color: anim.publiee ? '#92400e' : '#166534',
+                      background: anim.publiee ? jetons.alerteFond : '#dcfce7',
+                      color: anim.publiee ? jetons.alerte : jetons.succes,
                       border: 'none',
                     }}
                   >
@@ -195,13 +196,13 @@ export default function Animations({ camping }) {
                   </button>
                   <button
                     onClick={() => { setEditAnim(anim); setShowForm(true) }}
-                    style={{ padding: '6px 12px', borderRadius: 8, fontSize: 12, fontWeight: 600, background: '#f3f4f6', color: '#374151' }}
+                    style={{ padding: '6px 12px', borderRadius: 8, fontSize: 12, fontWeight: 600, background: jetons.surfaceDouce, color: jetons.texteMoyen }}
                   >
                     Modifier
                   </button>
                   <button
                     onClick={() => supprimer(anim.id)}
-                    style={{ padding: '6px 12px', borderRadius: 8, fontSize: 12, fontWeight: 600, background: '#fef2f2', color: '#dc2626' }}
+                    style={{ padding: '6px 12px', borderRadius: 8, fontSize: 12, fontWeight: 600, background: jetons.dangerFond, color: jetons.danger }}
                   >
                     Supprimer
                   </button>
@@ -215,7 +216,7 @@ export default function Animations({ camping }) {
       {/* Modal formulaire */}
       {showForm && (
         <Modal onClose={() => { setShowForm(false); setEditAnim(null) }}>
-          <h2 style={{ fontSize: 20, fontWeight: 700, color: '#1a1a1a', marginBottom: 20 }}>
+          <h2 style={{ fontSize: 20, fontWeight: 700, color: jetons.texte, marginBottom: 20 }}>
             {editAnim ? 'Modifier l\'animation' : 'Nouvelle animation'}
           </h2>
           <AnimationForm
@@ -230,14 +231,14 @@ export default function Animations({ camping }) {
       {/* Modal inscrits */}
       {inscritsModal && (
         <Modal onClose={() => setInscritsModal(null)}>
-          <h2 style={{ fontSize: 20, fontWeight: 700, color: '#1a1a1a', marginBottom: 4 }}>
+          <h2 style={{ fontSize: 20, fontWeight: 700, color: jetons.texte, marginBottom: 4 }}>
             {inscritsModal.anim.emoji} {inscritsModal.anim.titre}
           </h2>
-          <p style={{ color: '#6b7280', fontSize: 14, marginBottom: 20 }}>
+          <p style={{ color: jetons.texteDoux, fontSize: 14, marginBottom: 20 }}>
             {inscritsModal.vacanciers.length} inscrit{inscritsModal.vacanciers.length !== 1 ? 's' : ''}
           </p>
           {inscritsModal.vacanciers.length === 0 ? (
-            <div style={{ color: '#6b7280', fontSize: 14, textAlign: 'center', padding: '24px 0' }}>Aucun inscrit.</div>
+            <div style={{ color: jetons.texteDoux, fontSize: 14, textAlign: 'center', padding: '24px 0' }}>Aucun inscrit.</div>
           ) : (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
               {inscritsModal.vacanciers.map((v, i) => (
@@ -249,8 +250,8 @@ export default function Animations({ camping }) {
                     {v?.pseudo?.[0]?.toUpperCase() || '?'}
                   </div>
                   <div>
-                    <div style={{ fontWeight: 600, fontSize: 14, color: '#1a1a1a' }}>{v?.pseudo}</div>
-                    <div style={{ fontSize: 12, color: '#6b7280' }}>
+                    <div style={{ fontWeight: 600, fontSize: 14, color: jetons.texte }}>{v?.pseudo}</div>
+                    <div style={{ fontSize: 12, color: jetons.texteDoux }}>
                       {[v?.emplacement && `Empl. ${v.emplacement}`, v?.tranche_age, v?.avec].filter(Boolean).join(' · ')}
                     </div>
                   </div>
@@ -260,7 +261,7 @@ export default function Animations({ camping }) {
           )}
           <button
             onClick={() => setInscritsModal(null)}
-            style={{ marginTop: 20, width: '100%', padding: '12px', borderRadius: 10, background: '#f3f4f6', color: '#374151', fontWeight: 600 }}
+            style={{ marginTop: 20, width: '100%', padding: '12px', borderRadius: 10, background: jetons.surfaceDouce, color: jetons.texteMoyen, fontWeight: 600 }}
           >
             Fermer
           </button>
@@ -285,7 +286,7 @@ function Modal({ children, onClose }) {
         }}
         onClick={e => e.stopPropagation()}
       >
-        <div style={{ width: 40, height: 4, background: '#e5e7eb', borderRadius: 2, margin: '0 auto 20px' }} />
+        <div style={{ width: 40, height: 4, background: jetons.bordure, borderRadius: 2, margin: '0 auto 20px' }} />
         {children}
       </div>
     </div>

@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { supabase } from '../supabase'
 import { isNative, setAppMode } from '../native'
+import { couleur as jetons } from '../design'
 
 export default function AdminLogin({ onLogin }) {
   const [mode, setMode]         = useState('login') // 'login' | 'signup'
@@ -81,7 +82,7 @@ export default function AdminLogin({ onLogin }) {
 
   return (
     <div style={{
-      minHeight: '100dvh', background: '#0d1f0d',
+      minHeight: '100dvh', background: jetons.marqueSombre,
       display: 'flex', alignItems: 'center', justifyContent: 'center',
       padding: '0 20px',
     }}>
@@ -134,7 +135,7 @@ export default function AdminLogin({ onLogin }) {
           </div>
 
           {error && (
-            <div style={{ background: '#fef2f2', color: '#dc2626', padding: '10px 14px', borderRadius: 8, fontSize: 14 }}>
+            <div style={{ background: jetons.dangerFond, color: jetons.danger, padding: '10px 14px', borderRadius: 8, fontSize: 14 }}>
               {error}
             </div>
           )}
@@ -144,7 +145,7 @@ export default function AdminLogin({ onLogin }) {
             disabled={loading}
             style={{
               padding: '14px', borderRadius: 12,
-              background: loading ? '#4a6a20' : '#639922',
+              background: loading ? '#4a6a20' : jetons.marque,
               color: '#fff', fontWeight: 700, fontSize: 15,
               marginTop: 4, transition: 'background 0.15s',
             }}

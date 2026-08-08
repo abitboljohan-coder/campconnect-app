@@ -4,6 +4,7 @@ import MapEditor from '../components/MapEditor'
 import PlanCalibrator from '../components/PlanCalibrator'
 import PerimeterEditor from '../components/PerimeterEditor'
 import { detectPois, geocodeCamping, findCampsitePolygon, searchCampsiteByName } from '../lib/osmPois'
+import { couleur as jetons } from '../../design'
 
 async function compressToBlob(file, maxWidth = 2000, quality = 0.82) {
   const bmp = await createImageBitmap(file)
@@ -224,8 +225,8 @@ export default function Carte({ camping, setCamping }) {
   return (
     <div>
       <div style={{ marginBottom: 28 }}>
-        <h1 style={{ fontSize: 24, fontWeight: 700, color: '#1a1a1a' }}>Carte du camping</h1>
-        <p style={{ color: '#6b7280', fontSize: 14, marginTop: 4 }}>
+        <h1 style={{ fontSize: 24, fontWeight: 700, color: jetons.texte }}>Carte du camping</h1>
+        <p style={{ color: jetons.texteDoux, fontSize: 14, marginTop: 4 }}>
           Plan image (calé sur satellite) et points d'intérêt visibles par vos vacanciers.
         </p>
       </div>
@@ -247,7 +248,7 @@ export default function Carte({ camping, setCamping }) {
               style={btnPrimary}>
               🗺️ {perimeter.length >= 3 ? 'Modifier le contour' : 'Tracer le contour'}
             </button>
-            <span style={{ fontSize: 12, color: '#6b7280' }}>
+            <span style={{ fontSize: 12, color: jetons.texteDoux }}>
               (détection auto, rectangle ou clic-à-clic — au choix dans l'éditeur)
             </span>
           </div>
@@ -290,14 +291,14 @@ export default function Carte({ camping, setCamping }) {
                 padding: '40px 20px', textAlign: 'center', background: '#fafaf8',
               }}>
                 <div style={{ fontSize: 44, marginBottom: 12 }}>🗺️</div>
-                <div style={{ fontWeight: 700, fontSize: 15, color: '#374151', marginBottom: 6 }}>
+                <div style={{ fontWeight: 700, fontSize: 15, color: jetons.texteMoyen, marginBottom: 6 }}>
                   Aucun plan téléchargé
                 </div>
-                <div style={{ fontSize: 13, color: '#6b7280', marginBottom: 20 }}>
+                <div style={{ fontSize: 13, color: jetons.texteDoux, marginBottom: 20 }}>
                   Uploadez le plan de votre camping (JPG / PNG, max 10 MB)
                 </div>
                 <span style={{
-                  background: '#639922', color: '#fff',
+                  background: jetons.marque, color: '#fff',
                   padding: '10px 22px', borderRadius: 8, fontSize: 14, fontWeight: 600,
                 }}>
                   Choisir un fichier
@@ -313,7 +314,7 @@ export default function Carte({ camping, setCamping }) {
                 <img src={planUrl} alt="Plan"
                   style={{ width: '100%', maxWidth: 400, maxHeight: 260, objectFit: 'contain',
                            borderRadius: 12, border: '1px solid #e5e7eb', display: 'block',
-                           background: '#f3f4f6' }} />
+                           background: jetons.surfaceDouce }} />
                 <button onClick={supprimerPlan}
                   style={{ position: 'absolute', top: 8, right: 8, width: 28, height: 28,
                            borderRadius: '50%', background: 'rgba(0,0,0,0.6)', color: '#fff',
@@ -322,8 +323,8 @@ export default function Carte({ camping, setCamping }) {
 
               <div style={{
                 padding: '10px 14px', borderRadius: 10, fontSize: 13, fontWeight: 500,
-                background: planBounds ? '#dcfce7' : '#fef3c7',
-                color:      planBounds ? '#166534' : '#92400e',
+                background: planBounds ? '#dcfce7' : jetons.alerteFond,
+                color:      planBounds ? jetons.succes : jetons.alerte,
               }}>
                 {planBounds
                   ? '✅ Plan calé sur le satellite — visible pour vos vacanciers'
@@ -332,12 +333,12 @@ export default function Carte({ camping, setCamping }) {
 
               <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
                 <button onClick={() => setShowCalibrator(true)}
-                  style={{ background: '#639922', color: '#fff', padding: '10px 18px',
+                  style={{ background: jetons.marque, color: '#fff', padding: '10px 18px',
                            borderRadius: 8, border: 'none', fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>
                   🎯 {planBounds ? 'Ajuster le calage' : 'Caler sur satellite'}
                 </button>
                 <label style={{ cursor: 'pointer' }}>
-                  <span style={{ background: '#f3f4f6', color: '#374151', padding: '10px 18px',
+                  <span style={{ background: jetons.surfaceDouce, color: jetons.texteMoyen, padding: '10px 18px',
                                  borderRadius: 8, fontSize: 13, fontWeight: 600, display: 'inline-block' }}>
                     Remplacer le plan
                   </span>
@@ -376,25 +377,25 @@ function UploadProgress({ label }) {
                   background: '#f0fdf4', borderRadius: 8, border: '1px solid #bbf7d0' }}>
       <div style={{ width: 16, height: 16, border: '2px solid #639922', borderTopColor: 'transparent',
                     borderRadius: '50%', animation: 'spin 0.8s linear infinite', flexShrink: 0 }} />
-      <span style={{ fontSize: 13, color: '#166534', fontWeight: 500 }}>{label}</span>
+      <span style={{ fontSize: 13, color: jetons.succes, fontWeight: 500 }}>{label}</span>
     </div>
   )
 }
 
 const btnPrimary = {
-  background: '#639922', color: '#fff', padding: '10px 18px',
+  background: jetons.marque, color: '#fff', padding: '10px 18px',
   borderRadius: 8, border: 'none', fontSize: 13, fontWeight: 600, cursor: 'pointer',
 }
 const btnDisabled = {
-  ...btnPrimary, background: '#e5e7eb', color: '#6b7280', cursor: 'not-allowed',
+  ...btnPrimary, background: jetons.bordure, color: jetons.texteDoux, cursor: 'not-allowed',
 }
 
 function Badge({ ok, children }) {
   return (
     <span style={{
       padding: '6px 12px', borderRadius: 999, fontSize: 12, fontWeight: 600,
-      background: ok ? '#dcfce7' : '#fef3c7',
-      color:      ok ? '#166534' : '#92400e',
+      background: ok ? '#dcfce7' : jetons.alerteFond,
+      color:      ok ? jetons.succes : jetons.alerte,
       whiteSpace: 'nowrap',
     }}>{children}</span>
   )
@@ -402,14 +403,14 @@ function Badge({ ok, children }) {
 
 function Step({ n, title, subtitle, done, disabled, disabledReason, optional, children }) {
   const state = disabled ? 'disabled' : done ? 'done' : 'active'
-  const numBg = state === 'done'     ? '#639922'
-              : state === 'disabled' ? '#e5e7eb'
+  const numBg = state === 'done'     ? jetons.marque
+              : state === 'disabled' ? jetons.bordure
                                      : '#1a4d1a'
   const numFg = state === 'disabled' ? '#9ca3af' : '#fff'
   return (
     <div style={{
       background: '#fff', borderRadius: 16,
-      border: '1px solid ' + (state === 'active' ? '#639922' : 'rgba(0,0,0,0.07)'),
+      border: '1px solid ' + (state === 'active' ? jetons.marque : 'rgba(0,0,0,0.07)'),
       boxShadow: state === 'active' ? '0 4px 20px rgba(99,153,34,0.10)' : 'none',
       opacity: state === 'disabled' ? 0.55 : 1,
       overflow: 'hidden', transition: 'all 0.2s',
@@ -425,20 +426,20 @@ function Step({ n, title, subtitle, done, disabled, disabledReason, optional, ch
         </div>
         <div style={{ flex: 1 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-            <h2 style={{ fontSize: 16, fontWeight: 700, color: '#1a1a1a', margin: 0 }}>{title}</h2>
+            <h2 style={{ fontSize: 16, fontWeight: 700, color: jetons.texte, margin: 0 }}>{title}</h2>
             {optional && <span style={{ fontSize: 11, padding: '2px 8px', borderRadius: 6,
-                                        background: '#f3f4f6', color: '#6b7280', fontWeight: 600 }}>
+                                        background: jetons.surfaceDouce, color: jetons.texteDoux, fontWeight: 600 }}>
               OPTIONNEL
             </span>}
           </div>
-          <p style={{ margin: '4px 0 0', fontSize: 13, color: '#6b7280', lineHeight: 1.5 }}>
+          <p style={{ margin: '4px 0 0', fontSize: 13, color: jetons.texteDoux, lineHeight: 1.5 }}>
             {subtitle}
           </p>
         </div>
       </div>
       <div style={{ padding: '18px 22px' }}>
         {disabled ? (
-          <div style={{ fontSize: 13, color: '#6b7280', fontStyle: 'italic' }}>
+          <div style={{ fontSize: 13, color: jetons.texteDoux, fontStyle: 'italic' }}>
             🔒 {disabledReason || 'Terminez l\'étape précédente.'}
           </div>
         ) : children}
@@ -450,7 +451,7 @@ function Step({ n, title, subtitle, done, disabled, disabledReason, optional, ch
 function Card({ title, children }) {
   return (
     <div style={{ background: '#fff', borderRadius: 14, padding: '20px 22px', border: '1px solid rgba(0,0,0,0.07)' }}>
-      <h2 style={{ fontSize: 16, fontWeight: 700, color: '#1a1a1a', marginBottom: 16 }}>{title}</h2>
+      <h2 style={{ fontSize: 16, fontWeight: 700, color: jetons.texte, marginBottom: 16 }}>{title}</h2>
       {children}
     </div>
   )
@@ -459,7 +460,7 @@ function Card({ title, children }) {
 function Alert({ type, children }) {
   const ok = type === 'success'
   return (
-    <div style={{ background: ok ? '#dcfce7' : '#fef2f2', color: ok ? '#166534' : '#dc2626',
+    <div style={{ background: ok ? '#dcfce7' : jetons.dangerFond, color: ok ? jetons.succes : jetons.danger,
                   padding: '12px 16px', borderRadius: 10, fontSize: 14, fontWeight: 500, marginBottom: 16 }}>
       {ok ? '✅ ' : '❌ '}{children}
     </div>
