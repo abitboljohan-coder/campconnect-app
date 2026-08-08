@@ -63,15 +63,24 @@ describe('Bouton', () => {
 
 describe('Texte', () => {
   it('choisit la balise selon le rôle', () => {
-    expect(html(<Texte role="titre">T</Texte>)).toMatch(/^<h1/)
-    expect(html(<Texte role="section">S</Texte>)).toMatch(/^<h2/)
-    expect(html(<Texte role="corps">C</Texte>)).toMatch(/^<p/)
+    expect(html(<Texte variante="titre">T</Texte>)).toMatch(/^<h1/)
+    expect(html(<Texte variante="section">S</Texte>)).toMatch(/^<h2/)
+    expect(html(<Texte variante="corps">C</Texte>)).toMatch(/^<p/)
   })
 
   it('laisse forcer la balise sans perdre le style du rôle', () => {
-    const m = html(<Texte role="libelle" as="span">L</Texte>)
+    const m = html(<Texte variante="libelle" as="span">L</Texte>)
     expect(m).toMatch(/^<span/)
     expect(m).toMatch(/text-transform:uppercase/)
+  })
+
+  it('transmet role au DOM au lieu de le confisquer', () => {
+    // La propriété de style s'appelle « variante » précisément pour laisser
+    // « role » à la plateforme : un role="alert" avalé par le composant, c'est
+    // un message d'erreur que plus aucun lecteur d'écran n'annonce.
+    const m = html(<Texte variante="doux" role="alert">Échec</Texte>)
+    expect(m).toContain('role="alert"')
+    expect(m).not.toContain('variante=')
   })
 })
 

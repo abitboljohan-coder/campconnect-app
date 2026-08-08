@@ -27,7 +27,6 @@ async function compresser(file, maxPx = 1400, qualite = 0.8) {
 export default function Signaler({ camping, vacancier }) {
   useLangue()
   const navigate = useNavigate()
-  const couleur = camping?.couleur_principale || '#639922'
 
   const [categorie, setCategorie] = useState('proprete')
   const [description, setDescription] = useState('')
@@ -88,36 +87,27 @@ export default function Signaler({ camping, vacancier }) {
   }
 
   if (envoye) return (
-    <div style={{ padding: '60px 24px', textAlign: 'center', maxWidth: 480, margin: '0 auto' }}>
-      <div style={{ fontSize: 56, marginBottom: 16 }}>✅</div>
-      <h1 style={{ fontSize: 21, fontWeight: 800, color: '#1a1a1a', marginBottom: 10 }}>
-        {t('signaler.merci_titre')}
-      </h1>
-      <p style={{ fontSize: 14.5, color: '#6b7280', lineHeight: 1.7, marginBottom: 30 }}>
-        {t('signaler.merci_texte')}
-      </p>
-      <button
-        onClick={() => navigate('/')}
-        style={{
-          padding: '13px 28px', borderRadius: 14, border: 'none',
-          background: couleur, color: '#fff', fontWeight: 700, fontSize: 15, cursor: 'pointer',
-        }}
-      >
+    <Pile espace="lg" aligner="center"
+          style={{ padding: '60px 24px', textAlign: 'center', maxWidth: 480, margin: '0 auto' }}>
+      <span aria-hidden="true" style={{ fontSize: 56 }}>✅</span>
+      <Texte variante="section">{t('signaler.merci_titre')}</Texte>
+      <Texte variante="corps" style={{ lineHeight: 1.7 }}>{t('signaler.merci_texte')}</Texte>
+      <Bouton taille="lg" onClick={() => navigate('/')} style={{ marginTop: espace.md }}>
         {t('signaler.retour')}
-      </button>
-    </div>
+      </Bouton>
+    </Pile>
   )
 
   return (
     <Pile espace="lg" style={{ padding: '20px 16px 40px', maxWidth: 600, margin: '0 auto' }}>
       <Pile espace="xs">
-        <Texte role="section">{t('signaler.titre')}</Texte>
-        <Texte role="doux">{t('signaler.sous_titre')}</Texte>
+        <Texte variante="section">{t('signaler.titre')}</Texte>
+        <Texte variante="doux">{t('signaler.sous_titre')}</Texte>
       </Pile>
 
       {/* Catégorie */}
       <Pile espace="sm">
-      <Texte role="libelle" as="span">{t('signaler.categorie')}</Texte>
+      <Texte variante="libelle" as="span">{t('signaler.categorie')}</Texte>
       <Pile direction="ligne" espace="sm" retour>
         {CATEGORIES.map(c => (
           <button
@@ -154,35 +144,39 @@ export default function Signaler({ camping, vacancier }) {
       />
 
       {/* Photo */}
-      <Texte role="libelle" as="span">{t('signaler.photo')}</Texte>
-      {apercu ? (
-        <div style={{ position: 'relative', marginBottom: 20 }}>
-          <img src={apercu} alt="" style={{ width: '100%', borderRadius: 14, display: 'block', maxHeight: 260, objectFit: 'cover' }} />
-          <button
-            onClick={() => { setPhoto(null); setApercu(null) }}
-            style={{
-              position: 'absolute', top: 10, right: 10, width: 32, height: 32, borderRadius: '50%',
-              background: 'rgba(0,0,0,0.6)', color: '#fff', border: 'none', fontSize: 18, cursor: 'pointer',
-            }}
-          >×</button>
-        </div>
-      ) : (
-        <label style={{
-          display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
-          gap: 6, padding: '26px', borderRadius: 14, marginBottom: 20,
-          border: '2px dashed #d8d4ca', background: '#fdfcfa', cursor: 'pointer',
-        }}>
-          <span style={{ fontSize: 26 }}>📷</span>
-          <span style={{ fontSize: 13.5, color: '#6b7280', fontWeight: 600 }}>{t('signaler.ajouter_photo')}</span>
-          <input type="file" accept="image/*" capture="environment" onChange={choisirPhoto} style={{ display: 'none' }} />
-        </label>
-      )}
+      <Pile espace="sm">
+        <Texte variante="libelle" as="span">{t('signaler.photo')}</Texte>
+        {apercu ? (
+          <div style={{ position: 'relative' }}>
+            <img src={apercu} alt="" style={{ width: '100%', borderRadius: rayon.lg, display: 'block', maxHeight: 260, objectFit: 'cover' }} />
+            <button
+              onClick={() => { setPhoto(null); setApercu(null) }}
+              aria-label={t('signaler.retirer_photo')}
+              style={{
+                position: 'absolute', top: 10, right: 10, width: 32, height: 32,
+                borderRadius: rayon.rond,
+                background: 'rgba(0,0,0,0.6)', color: '#fff', border: 'none', fontSize: 18, cursor: 'pointer',
+              }}
+            >×</button>
+          </div>
+        ) : (
+          <label style={{
+            display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
+            gap: espace.xs, padding: 26, borderRadius: rayon.lg,
+            border: `2px dashed ${jetonsCouleur.bordure}`, background: jetonsCouleur.fondClair, cursor: 'pointer',
+          }}>
+            <span aria-hidden="true" style={{ fontSize: 26 }}>📷</span>
+            <Texte variante="doux" as="span" style={{ fontWeight: graisse.fort }}>{t('signaler.ajouter_photo')}</Texte>
+            <input type="file" accept="image/*" capture="environment" onChange={choisirPhoto} style={{ display: 'none' }} />
+          </label>
+        )}
+      </Pile>
 
       {erreur && (
         <Carte hauteur="posee" padding={12}
                role="alert"
                style={{ background: jetonsCouleur.dangerFond, border: '1px solid #fecaca' }}>
-          <Texte role="doux" style={{ color: jetonsCouleur.danger, fontWeight: graisse.fort }}>
+          <Texte variante="doux" style={{ color: jetonsCouleur.danger, fontWeight: graisse.fort }}>
             ⚠️ {erreur}
           </Texte>
         </Carte>

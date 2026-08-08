@@ -31,7 +31,7 @@ export default function Champ({
     <div style={{ display: 'flex', flexDirection: 'column', gap: espace.xs }}>
       {libelle && (
         <label htmlFor={idChamp}>
-          <Texte role="libelle" as="span">{libelle}</Texte>
+          <Texte variante="libelle" as="span">{libelle}</Texte>
         </label>
       )}
       <Balise
@@ -53,9 +53,9 @@ export default function Champ({
         }}
         {...reste}
       />
-      {aide && !erreur && <Texte role="micro" id={idAide}>{aide}</Texte>}
+      {aide && !erreur && <Texte variante="micro" id={idAide}>{aide}</Texte>}
       {erreur && (
-        <Texte role="micro" id={idErreur} style={{ color: couleur.danger, fontWeight: graisse.fort }}>
+        <Texte variante="micro" id={idErreur} style={{ color: couleur.danger, fontWeight: graisse.fort }}>
           {erreur}
         </Texte>
       )}

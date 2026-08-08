@@ -16,6 +16,7 @@ import Signaler from './pages/Signaler'
 import Annonces from './pages/Annonces'
 import Layout from './components/Layout'
 import { t, useLangue } from './i18n'
+import { appliquerTheme } from './design'
 
 // Génère un identifiant unique et permanent pour cet appareil
 function getDeviceId() {
@@ -131,6 +132,12 @@ function App() {
     window.addEventListener('focus', onFocus)
     return () => window.removeEventListener('focus', onFocus)
   }, [])
+
+  // La couleur du camping devient une propriété personnalisée, lue par le CSS et
+  // par les composants du système de conception. C'est ce qui remplace le
+  // passage de la couleur de composant en composant : un écran n'a plus à
+  // connaître le camping pour s'afficher à ses couleurs.
+  useEffect(() => { appliquerTheme(camping) }, [camping])
 
   // Notifications push : enregistrer l'appareil dès que le vacancier est identifié
   useEffect(() => {

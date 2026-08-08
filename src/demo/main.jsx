@@ -14,8 +14,10 @@ import Profil from '../pages/Profil'
 import Overview from '../admin/pages/Overview'
 import { DEMO_CAMPING, DEMO_VACANCIER } from './mockSupabase'
 import { ToastHost } from '../components/Toast'
+import { appliquerTheme } from '../design'
 
 const c = DEMO_CAMPING, v = DEMO_VACANCIER
+appliquerTheme(c)
 const s = new URLSearchParams(location.search).get('s') || 'accueil'
 const routeFor = { accueil: '/', groupes: '/groupes', map: '/map', agenda: '/agenda', infos: '/infos', profil: '/profil', chat: '/chat/g1', admin: '/admin/overview' }
 const entry = routeFor[s] || '/'
