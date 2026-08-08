@@ -5,7 +5,7 @@ import { mkdirSync } from 'node:fs'
 
 const DOSSIER = process.argv[2] || '/tmp/ecrans'
 const PORT = process.argv[3] || 5300
-const ECRANS = ['accueil', 'groupes', 'agenda', 'infos', 'profil', 'chat', 'admin', 'onboarding']
+const ECRANS = ['accueil', 'groupes', 'agenda', 'infos', 'profil', 'chat', 'admin', 'onboarding', 'map']
 
 mkdirSync(DOSSIER, { recursive: true })
 const b = await chromium.launch({ executablePath: '/opt/pw-browsers/chromium-1194/chrome-linux/chrome' })

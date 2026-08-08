@@ -5,6 +5,7 @@ import { supabase } from '../supabase'
 import { esc } from '../utils/esc'
 import { t, useLangue, locale } from '../i18n'
 import { desencombrer } from '../lib/poiCategories'
+import { couleur as jetons, espace, graisse, ombre, rayon, texte as tailles } from '../design'
 
 let L = null
 
@@ -106,7 +107,11 @@ export default function Map({ camping: campingProp, vacancier }) {
   // Position effective : simulation ou GPS réel
   const effectivePos = simulating ? simPos : userPos
 
-  const couleur = camping?.couleur_principale || '#639922'
+  // L'accent reste ici une valeur hexadécimale, et non var(--cc-accent) : il
+  // est interpolé dans le HTML des marqueurs Leaflet, où `${couleur}40` compose
+  // une teinte translucide à huit chiffres. Une propriété personnalisée ne s'y
+  // concaténerait pas.
+  const couleur = camping?.couleur_principale || jetons.marque
 
 
   const campingCoords = (() => {
@@ -370,7 +375,7 @@ export default function Map({ camping: campingProp, vacancier }) {
     })
     userMarker.current = L.marker([effectivePos.lat, effectivePos.lng], { icon, zIndexOffset: 1000 })
       .addTo(leafletMap.current)
-      .bindPopup(`<b>${avatar} Vous êtes ici</b>`)
+      .bindPopup(`<b>${avatar} ${esc(t('carte.ici'))}</b>`)
 
     if (followingRef.current) {
       leafletMap.current.setView([effectivePos.lat, effectivePos.lng], 19, { animate: true })
@@ -498,20 +503,20 @@ export default function Map({ camping: campingProp, vacancier }) {
   const planUrl = camping?.plan_url
 
   return (
-    <div style={{ position: 'relative', height: 'calc(100dvh - 88px - var(--cc-safe-bottom))', overflow: 'hidden', background: '#0d1f0d' }}>
+    <div style={{ position: 'relative', height: 'calc(100dvh - 88px - var(--cc-safe-bottom))', overflow: 'hidden', background: jetons.marqueSombre }}>
 
       {/* Panneau simulation GPS */}
       {simulating && simPos && (
         <div style={{
           position: 'absolute', bottom: 80, left: 12, zIndex: 1000,
           background: 'rgba(15,23,42,0.95)', backdropFilter: 'blur(10px)',
-          borderRadius: 16, padding: '12px 14px', color: '#fff',
+          borderRadius: 16, padding: '12px 14px', color: jetons.surface,
           boxShadow: '0 4px 24px rgba(0,0,0,0.4)', minWidth: 200,
           border: '1px solid rgba(255,255,255,0.12)',
         }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
             <span style={{ fontSize: 12, fontWeight: 700, color: '#f472b6' }}>🎮 Simulation GPS</span>
-            <button onClick={stopSim} style={{ background: 'rgba(255,255,255,0.1)', border: 'none', color: '#fff', borderRadius: 6, padding: '2px 8px', cursor: 'pointer', fontSize: 12 }}>Stop ✕</button>
+            <button onClick={stopSim} style={{ background: 'rgba(255,255,255,0.1)', border: 'none', color: jetons.surface, borderRadius: 6, padding: '2px 8px', cursor: 'pointer', fontSize: 12 }}>Stop ✕</button>
           </div>
           <div style={{ fontSize: 10, color: '#cbd5e1', marginBottom: 8, lineHeight: 1.4 }}>
             💡 Cliquez sur la carte : l'avatar s'y déplace en marchant · flèches pour ajuster
@@ -521,12 +526,12 @@ export default function Map({ camping: campingProp, vacancier }) {
           <div style={{ display: 'flex', flexDirection: 'column', gap: 4, marginBottom: 10 }}>
             {[['Lat', 'lat'], ['Lng', 'lng']].map(([label, key]) => (
               <div key={key} style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                <span style={{ fontSize: 10, color: '#6b7280', width: 22 }}>{label}</span>
+                <span style={{ fontSize: 10, color: jetons.texteDoux, width: 22 }}>{label}</span>
                 <input
                   type="number" step="0.00001"
                   value={simPos[key].toFixed(6)}
                   onChange={e => setSimPos(p => ({ ...p, [key]: parseFloat(e.target.value) || p[key] }))}
-                  style={{ flex: 1, background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.15)', borderRadius: 6, color: '#fff', fontSize: 11, padding: '4px 6px', outline: 'none' }}
+                  style={{ flex: 1, background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.15)', borderRadius: 6, color: jetons.surface, fontSize: 11, padding: '4px 6px', outline: 'none' }}
                 />
               </div>
             ))}
@@ -540,7 +545,7 @@ export default function Map({ camping: campingProp, vacancier }) {
               [null, '↓', null],
             ].map((row, ri) => row.map((btn, ci) => btn ? (
               <button key={`${ri}-${ci}`} onMouseDown={e => { e.preventDefault(); moveSimPos(btn==='↑'?simStep:btn==='↓'?-simStep:0, btn==='→'?simStep:btn==='←'?-simStep:0) }}
-                style={{ padding: '8px', borderRadius: 8, background: 'rgba(255,255,255,0.12)', border: '1px solid rgba(255,255,255,0.2)', color: '#fff', fontSize: 16, cursor: 'pointer', lineHeight: 1 }}>
+                style={{ padding: '8px', borderRadius: 8, background: 'rgba(255,255,255,0.12)', border: '1px solid rgba(255,255,255,0.2)', color: jetons.surface, fontSize: 16, cursor: 'pointer', lineHeight: 1 }}>
                 {btn}
               </button>
             ) : (
@@ -554,7 +559,7 @@ export default function Map({ camping: campingProp, vacancier }) {
               <button key={label} onClick={() => setSimStep(val)} style={{
                 padding: '3px 8px', borderRadius: 10, fontSize: 10, fontWeight: 700, cursor: 'pointer', border: 'none',
                 background: simStep === val ? '#f472b6' : 'rgba(255,255,255,0.1)',
-                color: simStep === val ? '#fff' : '#94a3b8',
+                color: simStep === val ? jetons.surface : '#94a3b8',
               }}>{label}</button>
             ))}
           </div>
@@ -570,7 +575,7 @@ export default function Map({ camping: campingProp, vacancier }) {
           position: 'absolute', bottom: 80, left: 12, zIndex: 1000,
           padding: '8px 14px', borderRadius: 20, fontSize: 12, fontWeight: 700,
           background: 'rgba(15,23,42,0.85)', backdropFilter: 'blur(8px)',
-          color: '#6b7280', border: '1px solid rgba(255,255,255,0.12)',
+          color: jetons.texteDoux, border: '1px solid rgba(255,255,255,0.12)',
           cursor: 'pointer', boxShadow: '0 2px 10px rgba(0,0,0,0.2)',
         }}>🎮 Simuler GPS</button>
       )}
@@ -580,10 +585,11 @@ export default function Map({ camping: campingProp, vacancier }) {
         <div style={{ position: 'absolute', top: 'calc(12px + var(--cc-safe-top))', left: 12, zIndex: 1500, maxWidth: 'calc(100% - 24px)' }}>
           <button
             onClick={() => setShowDest(v => !v)}
+            aria-expanded={showDest}
             style={{
               padding: '8px 14px', borderRadius: 20, fontSize: 13, fontWeight: 700,
               background: showDest ? couleur : 'rgba(15,23,42,0.85)', backdropFilter: 'blur(8px)',
-              color: '#fff', border: '1px solid rgba(255,255,255,0.15)',
+              color: jetons.surface, border: '1px solid rgba(255,255,255,0.15)',
               cursor: 'pointer', boxShadow: '0 2px 10px rgba(0,0,0,0.25)',
               display: 'flex', alignItems: 'center', gap: 6,
             }}
@@ -593,9 +599,9 @@ export default function Map({ camping: campingProp, vacancier }) {
 
           {showDest && (
             <div style={{
-              marginTop: 8, width: 230, maxHeight: 260, overflowY: 'auto',
+              marginTop: espace.sm, width: 230, maxHeight: 260, overflowY: 'auto',
               background: 'rgba(255,255,255,0.97)', backdropFilter: 'blur(10px)',
-              borderRadius: 14, padding: 6, boxShadow: '0 6px 28px rgba(0,0,0,0.28)',
+              borderRadius: rayon.lg, padding: 6, boxShadow: ombre.flottante,
               display: 'flex', flexDirection: 'column', gap: 2,
             }}>
               {lieuxDest.map(dest => (
@@ -611,19 +617,19 @@ export default function Map({ camping: campingProp, vacancier }) {
                   onMouseUp={e => e.currentTarget.style.background = 'transparent'}
                 >
                   <span style={{
-                    width: 34, height: 34, borderRadius: '50%', flexShrink: 0,
+                    width: 34, height: 34, borderRadius: rayon.rond, flexShrink: 0,
                     background: `${dest.color || '#60a5fa'}22`,
                     display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18,
                   }}>{dest.emoji}</span>
                   <span style={{ flex: 1, minWidth: 0 }}>
-                    <span style={{ display: 'block', fontSize: 14, fontWeight: 600, color: '#1e293b', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{dest.label}</span>
+                    <span style={{ display: 'block', fontSize: tailles.base, fontWeight: graisse.fort, color: jetons.texte, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{dest.label}</span>
                     {dest.dist != null && (
-                      <span style={{ fontSize: 12, color: '#54821d', fontWeight: 600 }}>
+                      <span style={{ fontSize: tailles.petit, color: jetons.marqueTexte, fontWeight: graisse.fort }}>
                         {bearingArrow(bearingDeg(effectivePos, dest))} {fmtDist(dest.dist)}
                       </span>
                     )}
                   </span>
-                  <span style={{ fontSize: 16, color: '#6b7280', flexShrink: 0 }}>🧭</span>
+                  <span style={{ fontSize: 16, color: jetons.texteDoux, flexShrink: 0 }}>🧭</span>
                 </button>
               ))}
             </div>
@@ -633,6 +639,8 @@ export default function Map({ camping: campingProp, vacancier }) {
 
       {/* Bouton recentrer / suivre */}
       <button
+        aria-label={t('carte.recentrer')}
+        aria-pressed={following}
         onClick={() => {
           if (!leafletMap.current) return
           followingRef.current = true
@@ -643,7 +651,7 @@ export default function Map({ camping: campingProp, vacancier }) {
         }}
         style={{
           position: 'absolute', bottom: activePin ? 200 : 70, right: 14, zIndex: 1000,
-          width: 44, height: 44, borderRadius: 12,
+          width: 44, height: 44, borderRadius: rayon.md,
           background: following ? couleur : 'rgba(255,255,255,0.95)',
           boxShadow: following ? `0 2px 14px ${couleur}80` : '0 2px 10px rgba(0,0,0,0.2)',
           display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20,
@@ -661,11 +669,11 @@ export default function Map({ camping: campingProp, vacancier }) {
           boxShadow: '0 2px 12px rgba(0,0,0,0.3)',
         }}>
           {[['satellite', '🛰️', t('carte.satellite')], ['plan', '🗺️', t('carte.plan')]].map(([mode, icon, label]) => (
-            <button key={mode} onClick={() => setMapMode(mode)} style={{
+            <button key={mode} onClick={() => setMapMode(mode)} aria-pressed={mapMode === mode} style={{
               padding: '7px 16px', borderRadius: 26, fontSize: 13, fontWeight: 600,
               border: 'none', cursor: 'pointer', transition: 'all 0.2s',
               background: mapMode === mode ? couleur : 'transparent',
-              color: mapMode === mode ? '#fff' : 'rgba(255,255,255,0.5)',
+              color: mapMode === mode ? jetons.surface : 'rgba(255,255,255,0.5)',
             }}>{icon} {label}</button>
           ))}
         </div>
@@ -681,7 +689,7 @@ export default function Map({ camping: campingProp, vacancier }) {
         >
           <img
             src={planUrl}
-            alt="Plan du camping"
+            alt={t('carte.plan_alt')}
             style={{ maxWidth: 'none', height: '100%', objectFit: 'contain', touchAction: 'pan-x pan-y pinch-zoom' }}
             draggable={false}
           />
@@ -700,20 +708,20 @@ export default function Map({ camping: campingProp, vacancier }) {
         <div style={{
           position: 'absolute', bottom: 12, left: 12, zIndex: 1000,
           background: 'rgba(255,255,255,0.92)', backdropFilter: 'blur(6px)',
-          borderRadius: 12, padding: '7px 12px',
-          display: 'flex', gap: 12, alignItems: 'center',
-          boxShadow: '0 2px 10px rgba(0,0,0,0.12)',
+          borderRadius: rayon.md, padding: `7px ${espace.md}px`,
+          display: 'flex', gap: espace.md, alignItems: 'center',
+          boxShadow: ombre.levee,
         }}>
           {[['#f472b6', t('carte.animations')], ['#fb923c', t('carte.groupes')]].map(([c, l]) => (
             <div key={l} style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-              <div style={{ width: 8, height: 8, borderRadius: '50%', background: c }} />
-              <span style={{ fontSize: 11, color: '#374151', fontWeight: 500 }}>{l}</span>
+              <div style={{ width: 8, height: 8, borderRadius: rayon.rond, background: c }} />
+              <span style={{ fontSize: tailles.micro, color: jetons.texteMoyen, fontWeight: graisse.normal }}>{l}</span>
             </div>
           ))}
           {effectivePos && posSurSiteNow && (
             <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-              <div style={{ width: 8, height: 8, borderRadius: '50%', background: couleur }} />
-              <span style={{ fontSize: 11, color: '#374151', fontWeight: 500 }}>{simulating ? '🎮' : t('carte.vous')}</span>
+              <div style={{ width: 8, height: 8, borderRadius: rayon.rond, background: couleur }} />
+              <span style={{ fontSize: tailles.micro, color: jetons.texteMoyen, fontWeight: graisse.normal }}>{simulating ? '🎮' : t('carte.vous')}</span>
             </div>
           )}
         </div>
@@ -723,12 +731,12 @@ export default function Map({ camping: campingProp, vacancier }) {
       {activePin && pinData && (
         <div style={{
           position: 'absolute', bottom: 0, left: 0, right: 0, zIndex: 2000,
-          background: '#fff', borderRadius: '20px 20px 0 0',
-          boxShadow: '0 -6px 32px rgba(0,0,0,0.18)',
+          background: jetons.surface, borderRadius: `${rayon.xl}px ${rayon.xl}px 0 0`,
+          boxShadow: '0 -6px 32px rgba(26, 26, 26, 0.18)',
           animation: 'slideUp 0.25s ease',
         }}>
-          <div style={{ width: 40, height: 4, background: '#e5e7eb', borderRadius: 2, margin: '12px auto 0' }} />
-          <div style={{ padding: '16px 20px 28px' }}>
+          <div aria-hidden="true" style={{ width: 40, height: 4, background: jetons.bordure, borderRadius: 2, margin: '12px auto 0' }} />
+          <div style={{ padding: `${espace.lg}px 20px 28px` }}>
             {activePin.ref_type === 'animation' && (
               <AnimFiche
                 anim={pinData}
@@ -751,17 +759,18 @@ export default function Map({ camping: campingProp, vacancier }) {
             {activePin.ref_type === 'lieu' && (
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
-                  <div style={{ width: 52, height: 52, borderRadius: 14, background: `${activePin.color}20`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 28 }}>{activePin.emoji}</div>
+                  <div aria-hidden="true" style={{ width: 52, height: 52, borderRadius: rayon.lg, background: `${activePin.color}20`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 28 }}>{activePin.emoji}</div>
                   <div>
-                    <div style={{ fontWeight: 700, fontSize: 17 }}>{activePin.label}</div>
+                    <div style={{ fontWeight: graisse.titre, fontSize: tailles.grand }}>{activePin.label}</div>
                     {effectivePos && posSurSiteNow && activePin.lat && activePin.lng && (
-                      <div style={{ fontSize: 13, color: '#54821d', fontWeight: 600, marginTop: 3 }}>
+                      <div style={{ fontSize: tailles.petit, color: jetons.marqueTexte, fontWeight: graisse.fort, marginTop: 3 }}>
                         {bearingArrow(bearingDeg(effectivePos, activePin))} {fmtDist(haversineM(effectivePos, activePin))}
                       </div>
                     )}
                   </div>
                 </div>
-                <button onClick={() => setActivePin(null)} style={{ color: '#6b7280', fontSize: 22, background: 'none', border: 'none', cursor: 'pointer' }}>×</button>
+                <button onClick={() => setActivePin(null)} aria-label={t('commun.fermer')}
+                        style={{ color: jetons.texteDoux, fontSize: 22, background: 'none', border: 'none', cursor: 'pointer' }}>×</button>
               </div>
             )}
 
@@ -769,9 +778,10 @@ export default function Map({ camping: campingProp, vacancier }) {
               <button
                 onClick={() => { setGuideTarget(activePin); setActivePin(null); setFollowing(true); followingRef.current = true }}
                 style={{
-                  marginTop: 16, width: '100%', padding: '13px', borderRadius: 12, border: 'none',
-                  background: couleur, color: '#fff', fontSize: 15, fontWeight: 700, cursor: 'pointer',
-                  display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
+                  marginTop: espace.lg, width: '100%', padding: '13px', borderRadius: rayon.md, border: 'none',
+                  background: couleur, color: jetons.texteSurAccent, fontSize: tailles.moyen,
+                  fontWeight: graisse.titre, cursor: 'pointer',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center', gap: espace.sm,
                 }}
               >
                 🧭 {t('carte.guider')}
@@ -800,7 +810,7 @@ function GuideBanner({ target, pos, surSite, couleur, onClose }) {
   if (!pos) {
     return (
       <div style={guideBannerBox}>
-        <div style={{ flex: 1, fontSize: 13, color: '#fff', fontWeight: 600 }}>
+        <div style={{ flex: 1, fontSize: 13, color: jetons.surface, fontWeight: 600 }}>
           📍 {t('carte.activez_pos', { lieu: target.label })}
         </div>
         <button onClick={onClose} style={guideCloseBtn} aria-label="Fermer">×</button>
@@ -815,7 +825,7 @@ function GuideBanner({ target, pos, surSite, couleur, onClose }) {
       <div style={guideBannerBox}>
         <div style={{ fontSize: 26, lineHeight: 1, flexShrink: 0 }}>🧭</div>
         <div style={{ flex: 1, minWidth: 0 }}>
-          <div style={{ fontSize: 15, fontWeight: 700, color: '#fff', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+          <div style={{ fontSize: 15, fontWeight: 700, color: jetons.surface, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
             {target.emoji} {target.label}
           </div>
           <div style={{ fontSize: 13, color: '#C0DD97', fontWeight: 600, marginTop: 2 }}>
@@ -831,7 +841,7 @@ function GuideBanner({ target, pos, surSite, couleur, onClose }) {
   const bearing = bearingDeg(pos, target)
   const arrived = dist < 8
   return (
-    <div style={{ ...guideBannerBox, background: arrived ? '#166534' : 'rgba(13,31,13,0.94)' }}>
+    <div style={{ ...guideBannerBox, background: arrived ? jetons.succes : 'rgba(13,31,13,0.94)' }}>
       {arrived ? (
         <div style={{ fontSize: 30, lineHeight: 1 }}>✅</div>
       ) : (
@@ -840,11 +850,11 @@ function GuideBanner({ target, pos, surSite, couleur, onClose }) {
           display: 'flex', alignItems: 'center', justifyContent: 'center',
           boxShadow: '0 2px 10px rgba(0,0,0,0.35)',
         }}>
-          <span style={{ fontSize: 26, color: '#fff', transform: `rotate(${bearing}deg)`, display: 'inline-block', lineHeight: 1 }}>↑</span>
+          <span style={{ fontSize: 26, color: jetons.surface, transform: `rotate(${bearing}deg)`, display: 'inline-block', lineHeight: 1 }}>↑</span>
         </div>
       )}
       <div style={{ flex: 1, minWidth: 0 }}>
-        <div style={{ fontSize: 15, fontWeight: 700, color: '#fff', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+        <div style={{ fontSize: 15, fontWeight: 700, color: jetons.surface, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
           {target.emoji} {target.label}
         </div>
         <div style={{ fontSize: 13, color: arrived ? '#bbf7d0' : '#C0DD97', fontWeight: 600, marginTop: 2 }}>
@@ -864,7 +874,7 @@ const guideBannerBox = {
 }
 const guideCloseBtn = {
   width: 30, height: 30, borderRadius: '50%', flexShrink: 0,
-  background: 'rgba(255,255,255,0.15)', color: '#fff', border: 'none',
+  background: 'rgba(255,255,255,0.15)', color: jetons.surface, border: 'none',
   fontSize: 18, cursor: 'pointer', lineHeight: 1,
 }
 
@@ -881,18 +891,18 @@ function AnimFiche({ anim, inscrit, nbInscrits, couleur, onToggle, onClose }) {
           <div>
             <div style={{ fontWeight: 700, fontSize: 17 }}>{anim.titre}</div>
             <div style={{ display: 'flex', gap: 10, marginTop: 5, flexWrap: 'wrap' }}>
-              {debut && <span style={{ fontSize: 13, color: '#54821d', fontWeight: 600 }}>🕐 {debut.toLocaleTimeString(locale(), { hour: '2-digit', minute: '2-digit' })}</span>}
-              {anim.lieu && <span style={{ fontSize: 13, color: '#6b7280' }}>📍 {anim.lieu}</span>}
+              {debut && <span style={{ fontSize: 13, color: jetons.marqueTexte, fontWeight: 600 }}>🕐 {debut.toLocaleTimeString(locale(), { hour: '2-digit', minute: '2-digit' })}</span>}
+              {anim.lieu && <span style={{ fontSize: 13, color: jetons.texteDoux }}>📍 {anim.lieu}</span>}
             </div>
             {anim.places_max && <div style={{ fontSize: 12, color: complet ? '#ef4444' : '#9ca3af', marginTop: 4 }}>{nbInscrits}/{anim.places_max} places</div>}
           </div>
         </div>
-        <button onClick={onClose} style={{ color: '#6b7280', fontSize: 22, background: 'none', border: 'none', cursor: 'pointer' }} aria-label="Fermer">×</button>
+        <button onClick={onClose} style={{ color: jetons.texteDoux, fontSize: 22, background: 'none', border: 'none', cursor: 'pointer' }} aria-label="Fermer">×</button>
       </div>
       <button onClick={onToggle} disabled={complet} style={{
         marginTop: 14, width: '100%', padding: '13px', borderRadius: 14, fontWeight: 700, fontSize: 15,
-        background: complet ? '#e5e7eb' : inscrit ? `${couleur}18` : couleur,
-        color: complet ? '#9ca3af' : inscrit ? couleur : '#fff',
+        background: complet ? jetons.bordure : inscrit ? `${couleur}18` : couleur,
+        color: complet ? '#9ca3af' : inscrit ? couleur : jetons.surface,
         border: inscrit ? `2px solid ${couleur}` : 'none',
         cursor: complet ? 'default' : 'pointer',
       }}>
@@ -914,15 +924,15 @@ function GroupeFiche({ groupe, isMember, couleur, onAction, onClose }) {
             <div style={{ fontWeight: 700, fontSize: 17 }}>{groupe.titre}</div>
             <div style={{ display: 'flex', gap: 10, marginTop: 5, flexWrap: 'wrap' }}>
               {heureStr && <span style={{ fontSize: 13, color: '#f59e0b', fontWeight: 600 }}>🕐 {heureStr}</span>}
-              {groupe.lieu && <span style={{ fontSize: 13, color: '#6b7280' }}>📍 {groupe.lieu}</span>}
+              {groupe.lieu && <span style={{ fontSize: 13, color: jetons.texteDoux }}>📍 {groupe.lieu}</span>}
             </div>
           </div>
         </div>
-        <button onClick={onClose} style={{ color: '#6b7280', fontSize: 22, background: 'none', border: 'none', cursor: 'pointer' }} aria-label="Fermer">×</button>
+        <button onClick={onClose} style={{ color: jetons.texteDoux, fontSize: 22, background: 'none', border: 'none', cursor: 'pointer' }} aria-label="Fermer">×</button>
       </div>
       <button onClick={onAction} style={{
         marginTop: 14, width: '100%', padding: '13px', borderRadius: 14, fontWeight: 700, fontSize: 15,
-        background: isMember ? couleur : 'transparent', color: isMember ? '#fff' : couleur, border: `2px solid ${couleur}`,
+        background: isMember ? couleur : 'transparent', color: isMember ? jetons.surface : couleur, border: `2px solid ${couleur}`,
         cursor: 'pointer',
       }}>
         {isMember ? t('groupes.ouvrir_chat') : t('carte.rejoindre_grp')}

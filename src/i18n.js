@@ -193,6 +193,9 @@ const STRINGS = {
   'infos.tout_sur':{ fr: "Tout ce qu'il faut savoir sur {camping}", en: 'Everything you need to know about {camping}', es: 'Todo lo que necesitas saber sobre {camping}', nl: 'Alles wat je moet weten over {camping}' },
 
   'carte.pincez':   { fr: 'Pincez pour zoomer', en: 'Pinch to zoom', es: 'Pellizca para ampliar', nl: 'Knijp om te zoomen' },
+  'carte.ici':      { fr: 'Vous êtes ici', en: 'You are here', es: 'Estás aquí', nl: 'Je bent hier' },
+  'carte.plan_alt': { fr: 'Plan du camping', en: 'Campsite map', es: 'Plano del camping', nl: 'Plattegrond van de camping' },
+  'carte.recentrer': { fr: 'Recentrer sur ma position', en: 'Recentre on my position', es: 'Centrar en mi posición', nl: 'Centreer op mijn positie' },
   'infos.question': { fr: 'Une question ?', en: 'A question?', es: '¿Una pregunta?', nl: 'Een vraag?' },
 
   // ── Profil ──────────────────────────────────────────────────────────────
