@@ -215,7 +215,13 @@ input, textarea, select {
 
    :focus-visible plutôt que :focus : l'anneau n'apparaît qu'à la navigation
    clavier, jamais après un clic à la souris ou un toucher, où il ferait
-   simplement sale. */
+   simplement sale.
+
+   La couleur de l'anneau ne suit délibérément pas l'accent du camping. Un
+   gérant est libre de choisir un jaune ou un beige clair ; l'anneau
+   disparaîtrait alors sur le fond crème de l'application, et la navigation au
+   clavier redeviendrait aveugle. Un vert sombre fixe garantit le contraste
+   quelle que soit la charte — la cohérence de marque ne vaut pas ce prix. */
 :where(button, a, input, textarea, select, [tabindex]):focus-visible {
   outline: 2px solid #2f6f2f;
   outline-offset: 2px;
