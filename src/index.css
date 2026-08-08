@@ -77,6 +77,22 @@ button, a, [role="button"] {
      à moitié vide — le motif que l'App Store range sous « non optimisée pour
      toutes les tailles d'écran ». */
   --cc-colonne: 560px;
+
+  /* Accent du camping. Une valeur de repli est posée ici pour que rien ne
+     paraisse cassé avant que le camping ne soit chargé ; appliquerTheme()
+     l'écrase dès qu'il l'est. Voir src/design/tokens.js. */
+  --cc-accent: #639922;
+  --cc-accent-sombre: #0d1f0d;
+  --cc-accent-voile: #63992218;
+  --cc-accent-bordure: #63992240;
+
+  /* Jetons lisibles depuis le CSS. Leur équivalent JavaScript vit dans
+     src/design/tokens.js — une seule décision, deux points d'accès. */
+  --cc-fond: #f5f2eb;
+  --cc-surface: #ffffff;
+  --cc-bordure: #e8e4da;
+  --cc-texte: #1a1a1a;
+  --cc-texte-doux: #6b7280;
 }
 
 /* Sur un écran large, aucune encoche à compenser : le plancher ne s'applique

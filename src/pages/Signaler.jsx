@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { supabase } from '../supabase'
 import { t, useLangue } from '../i18n'
+import { Bouton, Carte, Champ, Texte, Pile, couleur as jetonsCouleur, espace, graisse, rayon, texte as jetonsTexte } from '../design'
 
 const CATEGORIES = [
   { id: 'proprete', emoji: '🧹' },
@@ -108,56 +109,52 @@ export default function Signaler({ camping, vacancier }) {
   )
 
   return (
-    <div style={{ padding: '20px 16px 40px', maxWidth: 600, margin: '0 auto' }}>
-      <h1 style={{ fontSize: 22, fontWeight: 800, color: '#1a1a1a', marginBottom: 4 }}>
-        {t('signaler.titre')}
-      </h1>
-      <p style={{ fontSize: 13.5, color: '#6b7280', marginBottom: 22, lineHeight: 1.6 }}>
-        {t('signaler.sous_titre')}
-      </p>
+    <Pile espace="lg" style={{ padding: '20px 16px 40px', maxWidth: 600, margin: '0 auto' }}>
+      <Pile espace="xs">
+        <Texte role="section">{t('signaler.titre')}</Texte>
+        <Texte role="doux">{t('signaler.sous_titre')}</Texte>
+      </Pile>
 
       {/* Catégorie */}
-      <label style={labelStyle}>{t('signaler.categorie')}</label>
-      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginBottom: 20 }}>
+      <Pile espace="sm">
+      <Texte role="libelle" as="span">{t('signaler.categorie')}</Texte>
+      <Pile direction="ligne" espace="sm" retour>
         {CATEGORIES.map(c => (
           <button
             key={c.id}
             onClick={() => setCategorie(c.id)}
             style={{
-              display: 'flex', alignItems: 'center', gap: 6,
-              padding: '9px 14px', borderRadius: 22, cursor: 'pointer',
-              fontSize: 13.5, fontWeight: 600,
-              background: categorie === c.id ? `${couleur}18` : '#fff',
-              border: categorie === c.id ? `2px solid ${couleur}` : '2px solid #e5e7eb',
-              color: categorie === c.id ? couleur : '#374151',
+              display: 'flex', alignItems: 'center', gap: espace.xs,
+              padding: `9px ${espace.lg}px`, borderRadius: rayon.rond, cursor: 'pointer',
+              fontSize: jetonsTexte.petit, fontWeight: graisse.fort,
+              background: categorie === c.id ? 'var(--cc-accent-voile)' : jetonsCouleur.surface,
+              border: `2px solid ${categorie === c.id ? 'var(--cc-accent)' : jetonsCouleur.bordure}`,
+              color: categorie === c.id ? 'var(--cc-accent)' : jetonsCouleur.texteMoyen,
             }}
           >
-            <span style={{ fontSize: 16 }}>{c.emoji}</span>{t(`signaler.cat_${c.id}`)}
+            <span style={{ fontSize: 16 }} aria-hidden="true">{c.emoji}</span>{t(`signaler.cat_${c.id}`)}
           </button>
         ))}
-      </div>
+      </Pile>
+      </Pile>
 
-      {/* Description */}
-      <label style={labelStyle}>{t('signaler.description')} *</label>
-      <textarea
+      <Champ
+        multiligne
+        libelle={`${t('signaler.description')} *`}
         value={description}
         onChange={e => { setDescription(e.target.value); if (erreur) setErreur('') }}
         placeholder={t('signaler.description_ph')}
-        rows={4}
-        style={{ ...inputStyle, resize: 'vertical', marginBottom: 18, fontFamily: 'inherit' }}
       />
 
-      {/* Lieu */}
-      <label style={labelStyle}>{t('signaler.lieu')}</label>
-      <input
+      <Champ
+        libelle={t('signaler.lieu')}
         value={lieu}
         onChange={e => setLieu(e.target.value)}
         placeholder={t('signaler.lieu_ph')}
-        style={{ ...inputStyle, marginBottom: 18 }}
       />
 
       {/* Photo */}
-      <label style={labelStyle}>{t('signaler.photo')}</label>
+      <Texte role="libelle" as="span">{t('signaler.photo')}</Texte>
       {apercu ? (
         <div style={{ position: 'relative', marginBottom: 20 }}>
           <img src={apercu} alt="" style={{ width: '100%', borderRadius: 14, display: 'block', maxHeight: 260, objectFit: 'cover' }} />
@@ -182,26 +179,20 @@ export default function Signaler({ camping, vacancier }) {
       )}
 
       {erreur && (
-        <div style={{ background: '#fef2f2', border: '1px solid #fecaca', color: '#dc2626', borderRadius: 10, padding: '10px 12px', fontSize: 13, fontWeight: 600, marginBottom: 14 }}>
-          ⚠️ {erreur}
-        </div>
+        <Carte hauteur="posee" padding={12}
+               role="alert"
+               style={{ background: jetonsCouleur.dangerFond, border: '1px solid #fecaca' }}>
+          <Texte role="doux" style={{ color: jetonsCouleur.danger, fontWeight: graisse.fort }}>
+            ⚠️ {erreur}
+          </Texte>
+        </Carte>
       )}
 
-      <button
-        onClick={envoyer}
-        disabled={!description.trim() || envoi}
-        style={{
-          width: '100%', padding: '15px', borderRadius: 14, border: 'none',
-          background: !description.trim() || envoi ? '#d1d5db' : couleur,
-          color: '#fff', fontWeight: 700, fontSize: 15.5,
-          cursor: !description.trim() || envoi ? 'default' : 'pointer',
-        }}
-      >
+      <Bouton taille="lg" pleineLargeur onClick={envoyer}
+              charge={envoi} disabled={!description.trim()}>
         {envoi ? t('signaler.envoi') : t('signaler.envoyer')}
-      </button>
-    </div>
+      </Bouton>
+    </Pile>
   )
 }
 
-const labelStyle = { fontSize: 11, fontWeight: 700, color: '#6b7280', textTransform: 'uppercase', letterSpacing: 0.8, display: 'block', marginBottom: 7 }
-const inputStyle = { padding: '12px 14px', borderRadius: 12, border: '1.5px solid #e5e7eb', fontSize: 16, outline: 'none', width: '100%', background: '#fafafa', boxSizing: 'border-box' }
