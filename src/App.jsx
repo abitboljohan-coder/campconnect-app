@@ -17,6 +17,7 @@ import Annonces from './pages/Annonces'
 import Layout from './components/Layout'
 import { t, useLangue } from './i18n'
 import { appliquerTheme } from './design'
+import { retirerSplash } from './splash'
 
 // Génère un identifiant unique et permanent pour cet appareil
 function getDeviceId() {
@@ -46,16 +47,12 @@ function App() {
 
   const sejourTermine = v => v?.date_depart && v.date_depart < new Date().toISOString().slice(0, 10)
 
-  // Retrait du calque de démarrage, une fois seulement, quand l'application a
-  // quelque chose à afficher. La classe déclenche la transition d'opacité ; le
-  // nœud est ensuite supprimé pour qu'il n'intercepte plus rien.
+  // Retrait du calque de démarrage dès que l'application a quelque chose à
+  // afficher. La mécanique vit dans src/splash.js : elle ne doit dépendre
+  // d'aucune des deux applications, sans quoi celle qui l'oublie reste
+  // invisible sous le voile.
   useEffect(() => {
-    if (loading) return
-    const boot = document.getElementById('cc-boot')
-    if (!boot) return
-    boot.classList.add('cc-parti')
-    const t = setTimeout(() => boot.remove(), 320)
-    return () => clearTimeout(t)
+    if (!loading) retirerSplash()
   }, [loading])
 
   useEffect(() => {

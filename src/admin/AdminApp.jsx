@@ -13,6 +13,7 @@ import Signalements from './pages/Signalements'
 import Parametres from './pages/Parametres'
 import InfosAdmin from './pages/Infos'
 import { couleur as jetons } from '../design'
+import { retirerSplash } from '../splash'
 
 function slugify(nom) {
   return nom.toLowerCase()
@@ -26,6 +27,13 @@ export default function AdminApp() {
   const [gerant, setGerant]   = useState(null)
   const [camping, setCamping] = useState(null)
   const [loading, setLoading] = useState(true)
+
+  // Le calque de démarrage d'index.html couvre les deux applications. Sans ce
+  // retrait, l'administration se chargeait normalement mais restait cachée
+  // dessous, avec une barre de progression qui tournait sans fin.
+  useEffect(() => {
+    if (!loading) retirerSplash()
+  }, [loading])
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session: s } }) => {
