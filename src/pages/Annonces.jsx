@@ -2,11 +2,16 @@ import { useEffect, useState } from 'react'
 import Sheet from '../components/Sheet'
 import { supabase } from '../supabase'
 import { t, useLangue, locale } from '../i18n'
+import {
+  Bouton, Carte, Champ, Texte, Pile, Puce, Badge, Squelette, Vide, Fab,
+  couleur, espace, graisse, rayon, texte as tailles,
+} from '../design'
 
+// Le ton vient du système ; le type d'annonce ne choisit plus sa propre teinte.
 const TYPES = [
-  { id: 'annonce', emoji: '📣', couleur: '#639922' },
-  { id: 'trouve',  emoji: '🔎', couleur: '#0ea5e9' },
-  { id: 'perdu',   emoji: '❓', couleur: '#f59e0b' },
+  { id: 'annonce', emoji: '📣', ton: 'accent' },
+  { id: 'trouve',  emoji: '🔎', ton: 'succes' },
+  { id: 'perdu',   emoji: '❓', ton: 'alerte' },
 ]
 const typeInfo = (id) => TYPES.find(x => x.id === id) || TYPES[0]
 
@@ -22,7 +27,6 @@ async function compresser(file, maxPx = 1200, qualite = 0.8) {
 
 export default function Annonces({ camping, vacancier }) {
   useLangue()
-  const couleur = camping?.couleur_principale || '#639922'
 
   const [annonces, setAnnonces] = useState([])
   const [loading, setLoading]   = useState(true)
@@ -109,199 +113,162 @@ export default function Annonces({ camping, vacancier }) {
   const affichees = filtre === 'tous' ? annonces : annonces.filter(a => a.type === filtre)
 
   return (
-    <div style={{ padding: '20px 16px 100px', maxWidth: 600, margin: '0 auto' }}>
-      <h1 style={{ fontSize: 22, fontWeight: 800, color: '#1a1a1a', marginBottom: 4 }}>
-        {t('annonces.titre')}
-      </h1>
-      <p style={{ fontSize: 13.5, color: '#6b7280', marginBottom: 18, lineHeight: 1.6 }}>
-        {t('annonces.sous_titre')}
-      </p>
+    <Pile espace="lg" style={{ padding: `${espace.xl}px ${espace.lg}px 100px`, maxWidth: 600, margin: '0 auto' }}>
+      <Pile espace="xs">
+        <Texte variante="titre">{t('annonces.titre')}</Texte>
+        <Texte variante="doux" style={{ lineHeight: 1.6 }}>{t('annonces.sous_titre')}</Texte>
+      </Pile>
 
       {/* Filtres */}
-      <div style={{ display: 'flex', gap: 7, marginBottom: 18, overflowX: 'auto', paddingBottom: 4 }}>
+      <div role="group" aria-label={t('annonces.titre')}
+           style={{ display: 'flex', gap: 7, overflowX: 'auto', paddingBottom: espace.xs }}>
         {[{ id: 'tous', emoji: '✨' }, ...TYPES].map(f => (
-          <button
-            key={f.id}
-            onClick={() => setFiltre(f.id)}
-            style={{
-              flexShrink: 0, display: 'flex', alignItems: 'center', gap: 5,
-              padding: '7px 14px', borderRadius: 20, cursor: 'pointer',
-              fontSize: 13, fontWeight: 600,
-              background: filtre === f.id ? `${couleur}18` : '#fff',
-              border: filtre === f.id ? `1.5px solid ${couleur}` : '1.5px solid #e5e7eb',
-              color: filtre === f.id ? couleur : '#6b7280',
-            }}
-          >
-            <span>{f.emoji}</span>{t(`annonces.f_${f.id}`)}
-          </button>
+          <Puce key={f.id} taille="sm" actif={filtre === f.id}
+                onClick={() => setFiltre(f.id)} style={{ flexShrink: 0 }}>
+            <span aria-hidden="true">{f.emoji}</span>{t(`annonces.f_${f.id}`)}
+          </Puce>
         ))}
       </div>
 
       {loading ? (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-          {[1, 2, 3].map(i => <div key={i} style={{ height: 84, borderRadius: 14, background: '#e8e4da', animation: 'pulse 1.5s ease-in-out infinite' }} />)}
-        </div>
+        <Squelette lignes={3} hauteur={84} libelle={t('commun.chargement')} />
       ) : indispo ? (
-        <div style={{ textAlign: 'center', padding: '44px 20px', color: '#6b7280', fontSize: 14, background: '#fff', borderRadius: 16, lineHeight: 1.8 }}>
-          {t('annonces.indispo')}
-        </div>
+        <Vide emoji="📭" texte={t('annonces.indispo')} />
       ) : affichees.length === 0 ? (
-        <div style={{ textAlign: 'center', padding: '44px 20px', color: '#6b7280', fontSize: 14, background: '#fff', borderRadius: 16, lineHeight: 1.8 }}>
-          {t('annonces.aucune')}<br />{t('annonces.premier')}
-        </div>
+        <Vide
+          emoji="📣"
+          texte={`${t('annonces.aucune')} ${t('annonces.premier')}`}
+          action={<Bouton onClick={() => { setErreur(''); setModal(true) }}>{t('annonces.nouvelle')}</Bouton>}
+        />
       ) : (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+        <Pile espace="sm">
           {affichees.map(a => {
             const info = typeInfo(a.type)
             const mien = a.vacancier_id === vacancier.id
             return (
-              <div key={a.id} style={{ background: '#fff', borderRadius: 16, overflow: 'hidden', boxShadow: '0 1px 4px rgba(0,0,0,0.07)' }}>
+              <Carte key={a.id} hauteur="posee" padding={0} style={{ overflow: 'hidden' }}>
                 {a.photo_url && (
                   <img src={a.photo_url} alt="" style={{ width: '100%', maxHeight: 200, objectFit: 'cover', display: 'block' }} />
                 )}
-                <div style={{ padding: '13px 15px' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 7, marginBottom: 6 }}>
-                    <span style={{
-                      fontSize: 10.5, fontWeight: 700, padding: '3px 9px', borderRadius: 12,
-                      background: `${info.couleur}18`, color: info.couleur,
-                    }}>
-                      {info.emoji} {t(`annonces.type_${a.type}`)}
-                    </span>
-                    <span style={{ fontSize: 11, color: '#6b7280', marginLeft: 'auto' }}>
+                <Pile espace="sm" style={{ padding: `13px ${espace.lg}px` }}>
+                  <Pile direction="ligne" espace="sm" aligner="center">
+                    <Badge ton={info.ton}>{info.emoji} {t(`annonces.type_${a.type}`)}</Badge>
+                    <Texte variante="micro" as="span" style={{ marginLeft: 'auto' }}>
                       {new Date(a.created_at).toLocaleDateString(locale(), { day: 'numeric', month: 'short' })}
-                    </span>
-                  </div>
-                  <div style={{ fontSize: 15.5, fontWeight: 700, color: '#1a1a1a', marginBottom: 3 }}>{a.titre}</div>
-                  {a.description && (
-                    <div style={{ fontSize: 13.5, color: '#6b7280', lineHeight: 1.6, marginBottom: 8 }}>{a.description}</div>
-                  )}
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 8 }}>
-                    <span style={{ fontSize: 15 }}>{a.vacanciers?.avatar_emoji || '🙂'}</span>
-                    <span style={{ fontSize: 12.5, color: '#6b7280', fontWeight: 500 }}>
-                      {a.vacanciers?.pseudo || '—'}
-                    </span>
-                    {mien && (
-                      <button
-                        onClick={() => marquerResolu(a)}
-                        style={{
-                          marginLeft: 'auto', fontSize: 12, fontWeight: 600, color: couleur,
-                          background: 'none', border: 'none', cursor: 'pointer', padding: '4px 6px',
-                        }}
-                      >
-                        ✓ {t('annonces.marquer_resolu')}
-                      </button>
+                    </Texte>
+                  </Pile>
+
+                  <div>
+                    <Texte variante="sousTitre" style={{ fontSize: tailles.moyen }}>{a.titre}</Texte>
+                    {a.description && (
+                      <Texte variante="doux" style={{ marginTop: espace.xs, lineHeight: 1.6 }}>{a.description}</Texte>
                     )}
                   </div>
-                </div>
-              </div>
+
+                  <Pile direction="ligne" espace="xs" aligner="center">
+                    <span aria-hidden="true" style={{ fontSize: tailles.moyen }}>{a.vacanciers?.avatar_emoji || '🙂'}</span>
+                    <Texte variante="doux" as="span">{a.vacanciers?.pseudo || '—'}</Texte>
+                    {mien && (
+                      <Bouton variante="discret" taille="sm" onClick={() => marquerResolu(a)}
+                              style={{ marginLeft: 'auto', color: 'var(--cc-accent)' }}>
+                        ✓ {t('annonces.marquer_resolu')}
+                      </Bouton>
+                    )}
+                  </Pile>
+                </Pile>
+              </Carte>
             )
           })}
-        </div>
+        </Pile>
       )}
 
-      {/* FAB */}
-      {!indispo && (
-      <button
-        onClick={() => { setErreur(''); setModal(true) }}
-        style={{
-          position: 'fixed', bottom: 82, right: 20, width: 56, height: 56, borderRadius: '50%',
-          background: couleur, color: '#fff', fontSize: 28, fontWeight: 300, border: 'none',
-          boxShadow: `0 4px 16px ${couleur}66`, cursor: 'pointer', zIndex: 50,
-        }}
-      >+</button>
-      )}
+      {!indispo && <Fab label={t('annonces.nouvelle')} onClick={() => { setErreur(''); setModal(true) }} />}
 
-      {/* Modal publication */}
+      {/* Publication */}
       {modal && (
         <Sheet onClose={() => setModal(false)}>
-            <h2 style={{ fontSize: 19, marginBottom: 16, color: '#1a1a1a' }}>{t('annonces.nouvelle')}</h2>
+          <Pile espace="lg">
+            <Texte variante="section" as="h2">{t('annonces.nouvelle')}</Texte>
 
-            {/* Type */}
-            <div style={{ display: 'flex', gap: 8, marginBottom: 16 }}>
+            <Pile direction="ligne" espace="sm" role="group" aria-label={t('annonces.nouvelle')}>
               {TYPES.map(ty => (
-                <button
+                <Puce
                   key={ty.id}
+                  actif={form.type === ty.id}
                   onClick={() => setForm(f => ({ ...f, type: ty.id }))}
                   style={{
-                    flex: 1, padding: '11px 6px', borderRadius: 12, cursor: 'pointer',
-                    fontSize: 12.5, fontWeight: 600, display: 'flex', flexDirection: 'column',
-                    alignItems: 'center', gap: 4,
-                    background: form.type === ty.id ? `${ty.couleur}15` : '#fafafa',
-                    border: form.type === ty.id ? `2px solid ${ty.couleur}` : '2px solid #e5e7eb',
-                    color: form.type === ty.id ? ty.couleur : '#6b7280',
+                    flex: 1, flexDirection: 'column', gap: espace.xs,
+                    padding: `11px ${espace.xs}px`, borderRadius: rayon.md,
+                    fontSize: tailles.petit,
                   }}
                 >
-                  <span style={{ fontSize: 19 }}>{ty.emoji}</span>{t(`annonces.type_${ty.id}`)}
-                </button>
+                  <span aria-hidden="true" style={{ fontSize: 19 }}>{ty.emoji}</span>
+                  {t(`annonces.type_${ty.id}`)}
+                </Puce>
               ))}
-            </div>
+            </Pile>
 
-            <label style={labelStyle}>{t('annonces.titre_champ')} *</label>
-            <input
+            <Champ
+              libelle={`${t('annonces.titre_champ')} *`}
               value={form.titre}
               onChange={e => setForm(f => ({ ...f, titre: e.target.value }))}
               placeholder={t('annonces.titre_ph')}
-              style={{ ...inputStyle, marginBottom: 14 }}
               autoFocus
             />
 
-            <label style={labelStyle}>{t('annonces.description_champ')}</label>
-            <textarea
+            <Champ
+              multiligne
+              libelle={t('annonces.description_champ')}
               value={form.description}
               onChange={e => setForm(f => ({ ...f, description: e.target.value }))}
               placeholder={t('annonces.description_ph')}
-              rows={3}
-              style={{ ...inputStyle, marginBottom: 14, resize: 'vertical', fontFamily: 'inherit' }}
             />
 
-            {/* Photo */}
             {apercu ? (
-              <div style={{ position: 'relative', marginBottom: 16 }}>
-                <img src={apercu} alt="" style={{ width: '100%', borderRadius: 12, maxHeight: 200, objectFit: 'cover', display: 'block' }} />
+              <div style={{ position: 'relative' }}>
+                <img src={apercu} alt="" style={{ width: '100%', borderRadius: rayon.md, maxHeight: 200, objectFit: 'cover', display: 'block' }} />
                 <button
                   onClick={() => { setPhoto(null); setApercu(null) }}
-                  style={{ position: 'absolute', top: 8, right: 8, width: 30, height: 30, borderRadius: '50%', background: 'rgba(0,0,0,0.6)', color: '#fff', border: 'none', fontSize: 17, cursor: 'pointer' }}
+                  aria-label={t('signaler.retirer_photo')}
+                  style={{
+                    position: 'absolute', top: 8, right: 8, width: 30, height: 30,
+                    borderRadius: rayon.rond, background: 'rgba(0,0,0,0.6)',
+                    color: '#fff', border: 'none', fontSize: 17, cursor: 'pointer',
+                  }}
                 >×</button>
               </div>
             ) : (
               <label style={{
-                display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
-                padding: '14px', borderRadius: 12, marginBottom: 16,
-                border: '2px dashed #d8d4ca', background: '#fdfcfa', cursor: 'pointer',
-                fontSize: 13.5, color: '#6b7280', fontWeight: 600,
+                display: 'flex', alignItems: 'center', justifyContent: 'center', gap: espace.sm,
+                padding: espace.lg, borderRadius: rayon.md,
+                border: `2px dashed ${couleur.bordure}`, background: couleur.fondClair, cursor: 'pointer',
               }}>
-                📷 {t('signaler.ajouter_photo')}
+                <Texte variante="doux" as="span" style={{ fontWeight: graisse.fort }}>
+                  📷 {t('signaler.ajouter_photo')}
+                </Texte>
                 <input type="file" accept="image/*" onChange={choisirPhoto} style={{ display: 'none' }} />
               </label>
             )}
 
             {erreur && (
-              <div style={{ background: '#fef2f2', border: '1px solid #fecaca', color: '#dc2626', borderRadius: 10, padding: '10px 12px', fontSize: 13, fontWeight: 600, marginBottom: 12 }}>
-                ⚠️ {erreur}
-              </div>
+              <Carte hauteur="posee" padding={espace.md} role="alert"
+                     style={{ background: couleur.dangerFond, border: '1px solid #fecaca' }}>
+                <Texte variante="doux" style={{ color: couleur.danger, fontWeight: graisse.fort }}>⚠️ {erreur}</Texte>
+              </Carte>
             )}
 
-            <div style={{ display: 'flex', gap: 10 }}>
-              <button
-                onClick={() => setModal(false)}
-                style={{ flex: 1, padding: '13px', borderRadius: 12, background: '#f3f4f6', color: '#374151', fontWeight: 600, border: 'none', cursor: 'pointer' }}
-              >{t('commun.annuler')}</button>
-              <button
-                onClick={publier}
-                disabled={!form.titre.trim() || saving}
-                style={{
-                  flex: 2, padding: '13px', borderRadius: 12, border: 'none',
-                  background: !form.titre.trim() || saving ? '#d1d5db' : couleur,
-                  color: '#fff', fontWeight: 700, fontSize: 15,
-                  cursor: !form.titre.trim() || saving ? 'default' : 'pointer',
-                }}
-              >{saving ? t('annonces.publication') : t('annonces.publier')}</button>
-            </div>
+            <Pile direction="ligne" espace="sm">
+              <Bouton variante="secondaire" taille="lg" style={{ flex: 1 }} onClick={() => setModal(false)}>
+                {t('commun.annuler')}
+              </Bouton>
+              <Bouton taille="lg" style={{ flex: 2 }} charge={saving}
+                      disabled={!form.titre.trim()} onClick={publier}>
+                {saving ? t('annonces.publication') : t('annonces.publier')}
+              </Bouton>
+            </Pile>
+          </Pile>
         </Sheet>
       )}
-    </div>
+    </Pile>
   )
 }
-
-const labelStyle = { fontSize: 11, fontWeight: 700, color: '#6b7280', textTransform: 'uppercase', letterSpacing: 0.8, display: 'block', marginBottom: 6 }
-const inputStyle = { padding: '12px 14px', borderRadius: 12, border: '1.5px solid #e5e7eb', fontSize: 16, outline: 'none', width: '100%', background: '#fafafa', boxSizing: 'border-box' }

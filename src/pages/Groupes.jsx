@@ -1,9 +1,14 @@
 import { useEffect, useState } from 'react'
 import { toast } from '../toast'
 import Sheet from '../components/Sheet'
+import CarteGroupe from '../components/CarteGroupe'
 import { useNavigate } from 'react-router-dom'
 import { supabase, presentFilter } from '../supabase'
-import { t, useLangue, locale } from '../i18n'
+import { t, useLangue } from '../i18n'
+import {
+  Bouton, Carte, Champ, Texte, Pile, Puce, Squelette, Vide, Fab,
+  couleur, espace, graisse, rayon,
+} from '../design'
 
 const EMOJIS = ['🏐', '🔥', '🚶', '🎮', '🎤', '🏊', '🚴', '🎯', '♟️', '🧘', '🎸', '🍕']
 
@@ -28,7 +33,6 @@ export default function Groupes({ camping, vacancier }) {
   const [saving, setSaving] = useState(false)
   const [erreur, setErreur] = useState('')
   const navigate = useNavigate()
-  const couleur = camping?.couleur_principale || '#639922'
 
   async function load() {
     const [{ data: grps }, { data: membres }] = await Promise.all([
@@ -110,20 +114,16 @@ export default function Groupes({ camping, vacancier }) {
   const autresGrps = groupes.filter(g => !mesGroupes.includes(g.id))
 
   return (
-    <div style={{ padding: '20px 16px', maxWidth: 600, margin: '0 auto' }}>
+    <Pile espace="xl" style={{ padding: `${espace.xl}px ${espace.lg}px`, maxWidth: 600, margin: '0 auto' }}>
 
       {loading ? (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginTop: 8 }}>
-          {[1,2,3,4].map(i => (
-            <div key={i} style={{ height: 76, borderRadius: 14, background: '#e8e4da', animation: 'pulse 1.5s ease-in-out infinite' }} />
-          ))}
-        </div>
+        <Squelette lignes={4} hauteur={76} libelle={t('commun.chargement')} />
       ) : (
         <>
           {mesGrps.length > 0 && (
             <Section title={t('groupes.mes_groupes')}>
               {mesGrps.map(g => (
-                <GroupRow key={g.id} groupe={g} couleur={couleur} isMember={true}
+                <CarteGroupe key={g.id} groupe={g} membre={true}
                   avatars={membresMap[g.id]} onAction={() => navigate(`/chat/${g.id}`)} />
               ))}
             </Section>
@@ -131,12 +131,16 @@ export default function Groupes({ camping, vacancier }) {
 
           <Section title={mesGrps.length > 0 ? t('groupes.autres') : t('groupes.tous')}>
             {autresGrps.length === 0 && mesGrps.length === 0 ? (
-              <Empty text={t('groupes.aucun')} />
+              <Vide
+                emoji="👥"
+                texte={t('groupes.aucun')}
+                action={<Bouton onClick={() => { setErreur(''); setShowModal(true) }}>{t('groupes.creer')}</Bouton>}
+              />
             ) : autresGrps.length === 0 ? (
-              <Empty text={t('groupes.tous_rejoints')} />
+              <Vide emoji="🎉" texte={t('groupes.tous_rejoints')} />
             ) : (
               autresGrps.map(g => (
-                <GroupRow key={g.id} groupe={g} couleur={couleur} isMember={false}
+                <CarteGroupe key={g.id} groupe={g} membre={false}
                   avatars={membresMap[g.id]} onAction={() => rejoindre(g.id)} />
               ))
             )}
@@ -144,229 +148,111 @@ export default function Groupes({ camping, vacancier }) {
         </>
       )}
 
-      {/* FAB + */}
-      <button
-        onClick={() => { setErreur(''); setShowModal(true) }}
-        style={{
-          position: 'fixed', bottom: 82, right: 20,
-          width: 56, height: 56, borderRadius: '50%',
-          background: couleur, color: '#fff',
-          fontSize: 28, fontWeight: 300,
-          boxShadow: `0 4px 16px ${couleur}66`,
-          display: 'flex', alignItems: 'center', justifyContent: 'center',
-          zIndex: 50, transition: 'transform 0.15s, box-shadow 0.15s',
-        }}
-      >
-        +
-      </button>
+      <Fab label={t('groupes.creer')} onClick={() => { setErreur(''); setShowModal(true) }} />
 
-      {/* Modal création */}
+      {/* Création */}
       {showModal && (
         <Sheet onClose={() => setShowModal(false)}>
-            <h2 style={{ fontSize: 20, marginBottom: 14, color: '#1a1a1a' }}>{t('groupes.creer')}</h2>
+          <Pile espace="lg">
+            <Texte variante="section" as="h2">{t('groupes.creer')}</Texte>
 
-            {/* Templates 1-tap */}
-            <div style={{ display: 'flex', gap: 8, overflowX: 'auto', paddingBottom: 10, marginBottom: 8 }}>
+            {/* Modèles en un appui */}
+            <div style={{ display: 'flex', gap: espace.sm, overflowX: 'auto', paddingBottom: espace.sm }}>
               {TEMPLATES.map(tpl => (
-                <button key={tpl.titre} type="button"
+                <Puce
+                  key={tpl.titre}
+                  taille="sm"
+                  actif={form.titre === tpl.titre}
                   onClick={() => setForm(f => ({ ...f, titre: tpl.titre, emoji: tpl.emoji, lieu: tpl.lieu }))}
-                  style={{
-                    flexShrink: 0, padding: '8px 13px', borderRadius: 20,
-                    border: form.titre === tpl.titre ? `2px solid ${couleur}` : '1.5px solid #e5e7eb',
-                    background: form.titre === tpl.titre ? `${couleur}15` : '#fafafa',
-                    fontSize: 13, fontWeight: 600, color: '#374151', cursor: 'pointer',
-                  }}>
+                  style={{ flexShrink: 0 }}
+                >
                   {tpl.emoji} {tpl.titre}
-                </button>
+                </Puce>
               ))}
             </div>
 
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
-              {/* Emoji picker */}
-              <div>
-                <label style={labelStyle}>{t('groupes.emoji')}</label>
-                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginTop: 6 }}>
-                  {EMOJIS.map(e => (
-                    <button
-                      key={e}
-                      type="button"
-                      onClick={() => setForm(f => ({ ...f, emoji: e }))}
-                      style={{
-                        width: 44, height: 44, fontSize: 22, borderRadius: 10,
-                        border: form.emoji === e ? `2px solid ${couleur}` : '2px solid #e5e7eb',
-                        background: form.emoji === e ? `${couleur}18` : '#f9f9f7',
-                        transition: 'all 0.1s',
-                      }}
-                    >
-                      {e}
-                    </button>
-                  ))}
-                </div>
-              </div>
+            <Pile espace="sm" role="group" aria-label={t('groupes.emoji')}>
+              <Texte variante="libelle" as="span">{t('groupes.emoji')}</Texte>
+              <Pile direction="ligne" espace="sm" retour>
+                {EMOJIS.map(e => (
+                  <button
+                    key={e}
+                    type="button"
+                    aria-label={e}
+                    aria-pressed={form.emoji === e}
+                    onClick={() => setForm(f => ({ ...f, emoji: e }))}
+                    style={{
+                      width: 44, height: 44, fontSize: 22, borderRadius: rayon.md, cursor: 'pointer',
+                      border: `2px solid ${form.emoji === e ? 'var(--cc-accent)' : couleur.bordure}`,
+                      background: form.emoji === e ? 'var(--cc-accent-voile)' : couleur.surface,
+                      transition: 'all 0.1s',
+                    }}
+                  >
+                    {e}
+                  </button>
+                ))}
+              </Pile>
+            </Pile>
 
-              <div>
-                <label style={labelStyle}>{t('groupes.titre')}</label>
-                <input
-                  type="text"
-                  value={form.titre}
-                  onChange={e => setForm(f => ({ ...f, titre: e.target.value }))}
-                  placeholder={t('groupes.titre_place')}
-                  style={inputStyle}
-                  autoFocus
-                />
-              </div>
+            <Champ
+              libelle={t('groupes.titre')}
+              value={form.titre}
+              onChange={e => setForm(f => ({ ...f, titre: e.target.value }))}
+              placeholder={t('groupes.titre_place')}
+              autoFocus
+            />
 
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
-                <div>
-                  <label style={labelStyle}>{t('groupes.lieu')}</label>
-                  <input
-                    type="text"
-                    value={form.lieu}
-                    onChange={e => setForm(f => ({ ...f, lieu: e.target.value }))}
-                    placeholder={t('groupes.lieu_place')}
-                    style={inputStyle}
-                  />
-                </div>
-                <div>
-                  <label style={labelStyle}>{t('groupes.heure')}</label>
-                  <input
-                    type="time"
-                    value={form.heure}
-                    onChange={e => setForm(f => ({ ...f, heure: e.target.value }))}
-                    style={inputStyle}
-                  />
-                </div>
-              </div>
-
-              <div>
-                <label style={labelStyle}>{t('groupes.max')}</label>
-                <input
-                  type="number"
-                  min="2"
-                  max="50"
-                  value={form.max_membres}
-                  onChange={e => setForm(f => ({ ...f, max_membres: e.target.value }))}
-                  placeholder="ex: 10"
-                  style={inputStyle}
-                />
-              </div>
-
-              {erreur && (
-                <div style={{ background: '#fef2f2', border: '1px solid #fecaca', color: '#dc2626', borderRadius: 10, padding: '10px 12px', fontSize: 13, fontWeight: 600 }}>
-                  ⚠️ {erreur}
-                </div>
-              )}
-
-              <div style={{ display: 'flex', gap: 10, marginTop: 4 }}>
-                <button
-                  onClick={() => setShowModal(false)}
-                  style={{ flex: 1, padding: '13px', borderRadius: 12, background: '#f3f4f6', color: '#374151', fontWeight: 600 }}
-                >
-                  {t('commun.annuler')}
-                </button>
-                <button
-                  onClick={creerGroupe}
-                  disabled={saving || !form.titre.trim()}
-                  style={{
-                    flex: 2, padding: '13px', borderRadius: 12,
-                    background: saving || !form.titre.trim() ? '#9ca3af' : couleur,
-                    color: '#fff', fontWeight: 700, fontSize: 15,
-                    transition: 'background 0.15s',
-                  }}
-                >
-                  {saving ? t('groupes.creation') : `${form.emoji} ${t('groupes.creer_btn')}`}
-                </button>
-              </div>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: espace.md }}>
+              <Champ
+                libelle={t('groupes.lieu')}
+                value={form.lieu}
+                onChange={e => setForm(f => ({ ...f, lieu: e.target.value }))}
+                placeholder={t('groupes.lieu_place')}
+              />
+              <Champ
+                libelle={t('groupes.heure')}
+                type="time"
+                value={form.heure}
+                onChange={e => setForm(f => ({ ...f, heure: e.target.value }))}
+              />
             </div>
+
+            <Champ
+              libelle={t('groupes.max')}
+              type="number" min="2" max="50"
+              value={form.max_membres}
+              onChange={e => setForm(f => ({ ...f, max_membres: e.target.value }))}
+              placeholder="ex : 10"
+            />
+
+            {erreur && (
+              <Carte hauteur="posee" padding={espace.md} role="alert"
+                     style={{ background: couleur.dangerFond, border: '1px solid #fecaca' }}>
+                <Texte variante="doux" style={{ color: couleur.danger, fontWeight: graisse.fort }}>⚠️ {erreur}</Texte>
+              </Carte>
+            )}
+
+            <Pile direction="ligne" espace="sm">
+              <Bouton variante="secondaire" taille="lg" style={{ flex: 1 }} onClick={() => setShowModal(false)}>
+                {t('commun.annuler')}
+              </Bouton>
+              <Bouton taille="lg" style={{ flex: 2 }} charge={saving}
+                      disabled={!form.titre.trim()} onClick={creerGroupe}>
+                {saving ? t('groupes.creation') : `${form.emoji} ${t('groupes.creer_btn')}`}
+              </Bouton>
+            </Pile>
+          </Pile>
         </Sheet>
       )}
-    </div>
+    </Pile>
   )
 }
 
 function Section({ title, children }) {
   return (
-    <div style={{ marginBottom: 24 }}>
-      <h3 style={{ fontSize: 12, fontWeight: 700, color: '#6b7280', textTransform: 'uppercase', letterSpacing: 1.2, marginBottom: 10 }}>
-        {title}
-      </h3>
-      {children}
-    </div>
+    <Pile espace="sm">
+      <Texte variante="libelle" as="h2">{title}</Texte>
+      <Pile espace="sm">{children}</Pile>
+    </Pile>
   )
 }
-
-function AvatarStack({ avatars, couleur }) {
-  if (!avatars?.length) return null
-  const shown = avatars.slice(0, 4)
-  return (
-    <div style={{ display: 'flex', alignItems: 'center', marginTop: 5 }}>
-      {shown.map((a, i) => (
-        <div key={i} style={{
-          width: 22, height: 22, borderRadius: '50%', background: '#fff',
-          border: '1.5px solid #eee', display: 'flex', alignItems: 'center', justifyContent: 'center',
-          fontSize: 12, marginLeft: i === 0 ? 0 : -7, zIndex: 5 - i,
-          boxShadow: '0 1px 3px rgba(0,0,0,0.12)',
-        }}>{a}</div>
-      ))}
-      {avatars.length > 4 && (
-        <span style={{ fontSize: 11, fontWeight: 700, color: couleur, marginLeft: 4 }}>
-          +{avatars.length - 4}
-        </span>
-      )}
-      <span style={{ fontSize: 11, color: '#6b7280', marginLeft: 6 }}>
-        {avatars.length > 1 ? t('commun.membres', { n: avatars.length }) : t('commun.membre', { n: avatars.length })}
-      </span>
-    </div>
-  )
-}
-
-function GroupRow({ groupe, couleur, isMember, onAction, avatars }) {
-  const heureStr = groupe.heure
-    ? new Date(groupe.heure).toLocaleTimeString(locale(), { hour: '2-digit', minute: '2-digit' })
-    : null
-  const meta = [groupe.lieu && `📍 ${groupe.lieu}`, heureStr && `🕐 ${heureStr}`, groupe.max_membres && t('commun.places', { n: groupe.max_membres })].filter(Boolean).join(' · ')
-
-  return (
-    <div style={{
-      background: '#fff', borderRadius: 14, padding: '14px 16px', marginBottom: 10,
-      display: 'flex', alignItems: 'center', gap: 12,
-      boxShadow: '0 1px 4px rgba(0,0,0,0.07)',
-    }}>
-      <div style={{
-        width: 48, height: 48, borderRadius: 12,
-        background: isMember ? `${couleur}20` : '#f5f2eb',
-        display: 'flex', alignItems: 'center', justifyContent: 'center',
-        fontSize: 24, flexShrink: 0,
-      }}>
-        {groupe.emoji || '👥'}
-      </div>
-      <div style={{ flex: 1, overflow: 'hidden' }}>
-        <div style={{ fontWeight: 600, fontSize: 15, color: '#1a1a1a', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-          {groupe.titre}
-        </div>
-        {meta && <div style={{ fontSize: 12, color: '#6b7280', marginTop: 2, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{meta}</div>}
-        <AvatarStack avatars={avatars} couleur={couleur} />
-      </div>
-      <button
-        onClick={onAction}
-        style={{
-          background: isMember ? couleur : 'transparent',
-          color: isMember ? '#fff' : couleur,
-          padding: '7px 14px', borderRadius: 20,
-          fontSize: 13, fontWeight: 600, flexShrink: 0,
-          border: `1.5px solid ${isMember ? 'transparent' : couleur}`,
-          transition: 'all 0.15s',
-        }}
-      >
-        {isMember ? t('groupes.ouvrir') : t('groupes.rejoindre')}
-      </button>
-    </div>
-  )
-}
-
-function Empty({ text }) {
-  return <div style={{ textAlign: 'center', padding: '28px', color: '#6b7280', fontSize: 14, background: '#fff', borderRadius: 14 }}>{text}</div>
-}
-
-const labelStyle = { fontSize: 11, fontWeight: 700, color: '#6b7280', textTransform: 'uppercase', letterSpacing: 0.8, display: 'block', marginBottom: 6 }
-const inputStyle = { padding: '11px 13px', borderRadius: 10, border: '1.5px solid #e5e7eb', fontSize: 16, outline: 'none', width: '100%', background: '#fafafa' }

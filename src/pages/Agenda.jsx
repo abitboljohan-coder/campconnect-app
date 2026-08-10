@@ -2,6 +2,10 @@ import { useEffect, useState } from 'react'
 import { toast } from '../toast'
 import { supabase } from '../supabase'
 import { t, useLangue, locale } from '../i18n'
+import {
+  Bouton, Carte, Texte, Pile, Badge, Squelette, Vide,
+  couleur, espace, graisse, rayon, texte as tailles,
+} from '../design'
 
 const slotLabel = (k) => t(`agenda.slot_${k}`)
 
@@ -28,19 +32,13 @@ function getSectionKey(anim) {
   return dayLabel ? `${dayLabel} — ${slot}` : slot
 }
 
-const TAG_COLORS = {
-  sport:    { bg: '#dcfce7', color: '#166534' },
-  famille:  { bg: '#fef3c7', color: '#92400e' },
-  soiree:   { bg: '#fce7f3', color: '#9d174d' },
-  default:  { bg: '#f3f4f6', color: '#374151' },
-}
-
+// Le ton du badge vient du système ; seul le classement est propre à l'agenda.
 function getTag(anim) {
   const txt = `${anim.titre} ${anim.description || ''} ${anim.emoji || ''}`.toLowerCase()
-  if (/sport|foot|tennis|swim|natation|vélo|velo|yoga|petan|march|rando/.test(txt)) return { label: 'Sport',   ...TAG_COLORS.sport }
-  if (/famille|enfant|kid|parent|junior/.test(txt))                                 return { label: 'Famille', ...TAG_COLORS.famille }
-  if (/soir|soiree|soirée|karaok|disco|fest|spectacl/.test(txt))                    return { label: 'Soirée',  ...TAG_COLORS.soiree }
-  return { label: anim.emoji || '🎉', ...TAG_COLORS.default }
+  if (/sport|foot|tennis|swim|natation|vélo|velo|yoga|petan|march|rando/.test(txt)) return { label: 'Sport',   ton: 'succes' }
+  if (/famille|enfant|kid|parent|junior/.test(txt))                                 return { label: 'Famille', ton: 'alerte' }
+  if (/soir|soiree|soirée|karaok|disco|fest|spectacl/.test(txt))                    return { label: 'Soirée',  ton: 'accent' }
+  return { label: anim.emoji || '🎉', ton: 'neutre' }
 }
 
 export default function Agenda({ camping, vacancier }) {
@@ -50,7 +48,6 @@ export default function Agenda({ camping, vacancier }) {
   const [counts, setCounts]             = useState({}) // animId -> nb inscrits
   const [loading, setLoading]           = useState(true)
   const [filter, setFilter]             = useState('all')
-  const couleur = camping?.couleur_principale || '#639922'
 
   async function load() {
     const [{ data: anims }, { data: inscs }] = await Promise.all([
@@ -125,24 +122,28 @@ export default function Agenda({ camping, vacancier }) {
   const today = new Date().toLocaleDateString(locale(), { weekday: 'long', day: 'numeric', month: 'long' })
 
   return (
-    <div style={{ padding: '20px 16px', maxWidth: 600, margin: '0 auto' }}>
-      {/* En-tête */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: 20 }}>
-        <div>
-          <h1 style={{ fontSize: 22, color: '#1a1a1a', fontWeight: 700 }}>{t('agenda.titre')}</h1>
-          <div style={{ fontSize: 13, color: '#6b7280', marginTop: 2, textTransform: 'capitalize' }}>{today}</div>
-        </div>
-        {/* Toggle filtre */}
-        <div style={{ display: 'flex', background: '#e8e4da', borderRadius: 20, padding: 3, gap: 2 }}>
+    <Pile espace="xl" style={{ padding: `${espace.xl}px ${espace.lg}px`, maxWidth: 600, margin: '0 auto' }}>
+
+      <Pile direction="ligne" justifier="space-between" aligner="flex-end">
+        <Pile espace="xs">
+          <Texte variante="section" as="h1">{t('agenda.titre')}</Texte>
+          <Texte variante="doux" style={{ textTransform: 'capitalize' }}>{today}</Texte>
+        </Pile>
+
+        {/* Bascule tout / mes inscriptions */}
+        <div role="group" aria-label={t('agenda.titre')}
+             style={{ display: 'flex', background: couleur.bordure, borderRadius: rayon.rond, padding: 3, gap: 2 }}>
           {[['all', t('agenda.tout')], ['mine', t('agenda.mes_inscr')]].map(([val, label]) => (
             <button
               key={val}
               onClick={() => setFilter(val)}
+              aria-pressed={filter === val}
               style={{
-                padding: '5px 12px', borderRadius: 18, fontSize: 13, fontWeight: 500,
-                background: filter === val ? '#fff' : 'transparent',
-                color: filter === val ? '#1a1a1a' : '#6b7280',
-                boxShadow: filter === val ? '0 1px 3px rgba(0,0,0,0.1)' : 'none',
+                padding: `5px ${espace.md}px`, borderRadius: rayon.rond,
+                fontSize: tailles.petit, fontWeight: graisse.fort, cursor: 'pointer',
+                background: filter === val ? couleur.surface : 'transparent',
+                color: filter === val ? couleur.texte : couleur.texteDoux,
+                boxShadow: filter === val ? ombreOnglet : 'none',
                 transition: 'all 0.15s',
               }}
             >
@@ -150,111 +151,110 @@ export default function Agenda({ camping, vacancier }) {
             </button>
           ))}
         </div>
-      </div>
+      </Pile>
 
       {loading ? (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-          {[1,2,3,4].map(i => <div key={i} style={{ height: 88, borderRadius: 14, background: '#e8e4da', animation: 'pulse 1.5s ease-in-out infinite' }} />)}
-        </div>
+        <Squelette lignes={4} hauteur={88} libelle={t('commun.chargement')} />
       ) : displayed.length === 0 ? (
-        <div style={{ textAlign: 'center', padding: '48px 0', color: '#6b7280', fontSize: 14 }}>
-          {filter === 'mine' ? t('agenda.aucune_mine') : t('agenda.aucune')}
-        </div>
+        <Vide
+          emoji="📅"
+          texte={filter === 'mine' ? t('agenda.aucune_mine') : t('agenda.aucune')}
+          action={filter === 'mine'
+            ? <Bouton variante="secondaire" onClick={() => setFilter('all')}>{t('agenda.tout')}</Bouton>
+            : null}
+        />
       ) : (
         sectionOrder.map(sectionKey => (
-          <div key={sectionKey} style={{ marginBottom: 28 }}>
-            <h2 style={{
-              fontSize: 13, fontWeight: 700, color: '#6b7280',
-              textTransform: 'uppercase', letterSpacing: 1.2,
-              marginBottom: 10,
-            }}>
-              {sectionKey}
-            </h2>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+          <Pile key={sectionKey} espace="sm">
+            <Texte variante="libelle" as="h2">{sectionKey}</Texte>
+            <Pile espace="sm">
               {sections[sectionKey].map(anim => (
                 <AnimCard
                   key={anim.id}
                   anim={anim}
-                  couleur={couleur}
                   inscrit={inscriptions.includes(anim.id)}
                   nbInscrits={counts[anim.id] || 0}
                   onToggle={() => toggleInscription(anim)}
                 />
               ))}
-            </div>
-          </div>
+            </Pile>
+          </Pile>
         ))
       )}
-    </div>
+    </Pile>
   )
 }
 
-function AnimCard({ anim, couleur, inscrit, nbInscrits, onToggle }) {
+const ombreOnglet = '0 1px 3px rgba(26, 26, 26, 0.1)'
+
+function AnimCard({ anim, inscrit, nbInscrits, onToggle }) {
   const debut = anim.debut ? new Date(anim.debut) : null
   const tag = getTag(anim)
   const complet = anim.places_max && nbInscrits >= anim.places_max && !inscrit
 
   return (
-    <div style={{
-      background: '#fff', borderRadius: 14, padding: '14px 16px',
-      boxShadow: '0 1px 4px rgba(0,0,0,0.07)',
-      borderLeft: inscrit ? `4px solid ${couleur}` : '4px solid #e5e7eb',
-      animation: 'fadeIn 0.2s ease',
-    }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 12 }}>
-        <div style={{ flex: 1 }}>
-          {/* Heure + tag */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}>
+    <Carte
+      hauteur="posee"
+      padding={`14px ${espace.lg}px`}
+      style={{
+        // L'inscription se lit au premier coup d'œil dans une liste, sans avoir
+        // à parcourir chaque bouton : le liseré tient ce rôle.
+        borderLeft: `4px solid ${inscrit ? 'var(--cc-accent)' : couleur.bordure}`,
+        animation: 'fadeIn 0.2s ease',
+      }}
+    >
+      <Pile direction="ligne" espace="md" justifier="space-between" aligner="flex-start">
+        <Pile espace="xs" style={{ flex: 1 }}>
+          <Pile direction="ligne" espace="sm" aligner="center">
             {debut && (
-              <span style={{ fontSize: 13, fontWeight: 700, color: couleur }}>
+              <Texte variante="doux" as="span" style={{ fontWeight: graisse.titre, color: 'var(--cc-accent)' }}>
                 {debut.toLocaleTimeString(locale(), { hour: '2-digit', minute: '2-digit' })}
-              </span>
+              </Texte>
             )}
-            <span style={{
-              fontSize: 11, fontWeight: 600, padding: '2px 8px', borderRadius: 20,
-              background: tag.bg, color: tag.color,
-            }}>
-              {tag.label}
-            </span>
-          </div>
+            <Badge ton={tag.ton}>{tag.label}</Badge>
+          </Pile>
 
-          <div style={{ fontWeight: 600, fontSize: 16, color: '#1a1a1a', lineHeight: 1.3 }}>
-            {anim.emoji && <span style={{ marginRight: 6 }}>{anim.emoji}</span>}{anim.titre}
-          </div>
+          <Texte variante="sousTitre" style={{ fontSize: tailles.grand }}>
+            {anim.emoji && <span aria-hidden="true" style={{ marginRight: 6 }}>{anim.emoji}</span>}{anim.titre}
+          </Texte>
 
-          {anim.lieu && (
-            <div style={{ fontSize: 13, color: '#6b7280', marginTop: 4 }}>📍 {anim.lieu}</div>
-          )}
+          {anim.lieu && <Texte variante="doux">📍 {anim.lieu}</Texte>}
 
-          {anim.places_max && (
-            <div style={{ fontSize: 12, color: complet ? '#ef4444' : '#9ca3af', marginTop: 4 }}>
+          {/* Comparaison explicite : `places_max && …` affichait littéralement
+              « 0 » sous les animations sans limite de places — React rend le
+              zéro d'un ET logique. */}
+          {anim.places_max > 0 && (
+            <Texte variante="micro" style={complet ? { color: couleur.danger, fontWeight: graisse.fort } : undefined}>
               {nbInscrits}/{anim.places_max} {t('agenda.places_mot')}
-            </div>
+            </Texte>
           )}
-        </div>
+        </Pile>
 
-        <button
+        <Bouton
+          variante={complet ? 'secondaire' : inscrit ? 'secondaire' : 'primaire'}
+          taille="sm"
           onClick={onToggle}
           disabled={complet}
           style={{
-            background: complet ? '#e5e7eb' : inscrit ? `${couleur}20` : couleur,
-            color: complet ? '#9ca3af' : inscrit ? couleur : '#fff',
-            padding: '9px 14px', borderRadius: 20,
-            fontSize: 13, fontWeight: 600, flexShrink: 0,
-            border: inscrit ? `1.5px solid ${couleur}` : 'none',
-            transition: 'all 0.15s',
-            cursor: complet ? 'not-allowed' : 'pointer',
+            flexShrink: 0,
+            borderRadius: rayon.rond,
+            ...(inscrit && !complet
+              ? { background: 'var(--cc-accent-voile)', color: 'var(--cc-accent)', border: '1.5px solid var(--cc-accent)' }
+              : null),
           }}
         >
           {complet ? t('commun.complet') : inscrit ? t('agenda.inscrit') : t('agenda.inscrire')}
-        </button>
-      </div>
+        </Bouton>
+      </Pile>
 
       {anim.description && (
-        <div style={{ fontSize: 13, color: '#6b7280', marginTop: 10, lineHeight: 1.5, borderTop: '1px solid #f3f4f6', paddingTop: 10 }}>
+        <Texte variante="doux" style={{
+          marginTop: espace.sm, paddingTop: espace.sm,
+          borderTop: `1px solid ${couleur.surfaceDouce}`, lineHeight: 1.5,
+        }}>
           {anim.description}
-        </div>
+        </Texte>
       )}
-    </div>
+    </Carte>
   )
 }

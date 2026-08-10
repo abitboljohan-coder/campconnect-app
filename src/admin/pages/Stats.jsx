@@ -4,8 +4,10 @@ import {
   LineChart, Line, BarChart, Bar, PieChart, Pie, Cell,
   XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer,
 } from 'recharts'
+import { Bloc, Alerte, EnTete } from '../components/Bloc'
+import { Pile, Vide, couleur as jetons } from '../../design'
 
-const COLORS = ['#639922', '#f59e0b', '#8b5cf6', '#ef4444', '#06b6d4', '#f97316', '#ec4899', '#14b8a6']
+const COLORS = [jetons.marque, '#f59e0b', '#8b5cf6', '#ef4444', '#06b6d4', '#f97316', '#ec4899', '#14b8a6']
 
 function groupByDate(items, dateField) {
   const counts = {}
@@ -109,13 +111,8 @@ export default function Stats({ camping }) {
   )
 
   return (
-    <div>
-      <div style={{ marginBottom: 28 }}>
-        <h1 style={{ fontSize: 24, fontWeight: 700, color: '#1a1a1a' }}>Statistiques</h1>
-        <p style={{ color: '#6b7280', fontSize: 14, marginTop: 4 }}>30 derniers jours</p>
-      </div>
-
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
+    <Pile espace="xl">
+      <EnTete titre="Statistiques" sous="30 derniers jours" />
 
         {/* Vacanciers par jour */}
         <ChartCard title="Inscriptions vacanciers par jour">
@@ -137,7 +134,7 @@ export default function Stats({ camping }) {
               <BarChart data={data.animStats} layout="vertical">
                 <CartesianGrid strokeDasharray="3 3" stroke="#f0ede6" horizontal={false} />
                 <XAxis type="number" tick={{ fontSize: 11, fill: '#9ca3af' }} allowDecimals={false} />
-                <YAxis type="category" dataKey="name" tick={{ fontSize: 11, fill: '#374151' }} width={100} />
+                <YAxis type="category" dataKey="name" tick={{ fontSize: 11, fill: jetons.texteMoyen }} width={100} />
                 <Tooltip contentStyle={{ borderRadius: 8, border: '1px solid #e5e7eb', fontSize: 13 }} />
                 <Bar dataKey="inscrits" fill="#639922" radius={[0, 4, 4, 0]} name="Inscrits" />
               </BarChart>
@@ -180,7 +177,7 @@ export default function Stats({ camping }) {
             <ResponsiveContainer width="100%" height={200}>
               <BarChart data={data.topInterets}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#f0ede6" />
-                <XAxis dataKey="name" tick={{ fontSize: 12, fill: '#374151' }} />
+                <XAxis dataKey="name" tick={{ fontSize: 12, fill: jetons.texteMoyen }} />
                 <YAxis tick={{ fontSize: 11, fill: '#9ca3af' }} allowDecimals={false} />
                 <Tooltip contentStyle={{ borderRadius: 8, border: '1px solid #e5e7eb', fontSize: 13 }} />
                 <Bar dataKey="value" fill="#8b5cf6" radius={[4, 4, 0, 0]} name="Vacanciers" />
@@ -201,21 +198,14 @@ export default function Stats({ camping }) {
             </LineChart>
           </ResponsiveContainer>
         </ChartCard>
-
-      </div>
-    </div>
+    </Pile>
   )
 }
 
 function ChartCard({ title, children }) {
-  return (
-    <div style={{ background: '#fff', borderRadius: 14, padding: '20px 22px', border: '1px solid rgba(0,0,0,0.07)' }}>
-      <h2 style={{ fontSize: 15, fontWeight: 700, color: '#1a1a1a', marginBottom: 20 }}>{title}</h2>
-      {children}
-    </div>
-  )
+  return <Bloc titre={title}>{children}</Bloc>
 }
 
 function Empty() {
-  return <div style={{ textAlign: 'center', padding: '32px 0', color: '#6b7280', fontSize: 14 }}>Pas encore de données.</div>
+  return <Vide emoji="📊" texte="Pas encore de données." />
 }

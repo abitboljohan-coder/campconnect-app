@@ -1,5 +1,7 @@
 import { useEffect, useState } from 'react'
 import { supabase } from '../../supabase'
+import { Bloc, EnTete } from '../components/Bloc'
+import { Texte, Pile, Squelette, Vide, couleur as jetons, espace, graisse, rayon } from '../../design'
 
 const CAT_LABELS = {
   proprete: { emoji: '🧹', label: 'Propreté' },
@@ -13,7 +15,7 @@ const CAT_LABELS = {
 const cat = (id) => CAT_LABELS[id] || CAT_LABELS.autre
 
 const STATUTS = [
-  { id: 'nouveau',  label: 'Nouveaux',  couleur: '#dc2626', bg: '#fef2f2' },
+  { id: 'nouveau',  label: 'Nouveaux',  couleur: jetons.danger, bg: jetons.dangerFond },
   { id: 'en_cours', label: 'En cours',  couleur: '#d97706', bg: '#fffbeb' },
   { id: 'resolu',   label: 'Résolus',   couleur: '#16a34a', bg: '#f0fdf4' },
 ]
@@ -67,25 +69,24 @@ export default function Signalements({ camping }) {
   const affiches = items.filter(i => i.statut === filtre)
 
   return (
-    <div>
-      <h1 style={{ fontSize: 24, fontWeight: 800, color: '#1a1a1a', marginBottom: 4 }}>Signalements</h1>
-      <p style={{ fontSize: 14, color: '#6b7280', marginBottom: 22 }}>
-        Les problèmes remontés par vos vacanciers, en temps réel.
-      </p>
+    <Pile espace="lg">
+      <EnTete titre="Signalements" sous="Les problèmes remontés par vos vacanciers, en temps réel." />
 
       {/* Onglets par statut */}
-      <div style={{ display: 'flex', gap: 8, marginBottom: 20, flexWrap: 'wrap' }}>
+      <div role="group" aria-label="Statut des signalements"
+           style={{ display: 'flex', gap: espace.sm, flexWrap: 'wrap' }}>
         {STATUTS.map(s => (
           <button
             key={s.id}
             onClick={() => setFiltre(s.id)}
+            aria-pressed={filtre === s.id}
             style={{
               display: 'flex', alignItems: 'center', gap: 7,
               padding: '9px 16px', borderRadius: 10, cursor: 'pointer',
               fontSize: 14, fontWeight: 600,
               background: filtre === s.id ? s.couleur : '#fff',
-              border: `1.5px solid ${filtre === s.id ? s.couleur : '#e5e7eb'}`,
-              color: filtre === s.id ? '#fff' : '#374151',
+              border: `1.5px solid ${filtre === s.id ? s.couleur : jetons.bordure}`,
+              color: filtre === s.id ? '#fff' : jetons.texteMoyen,
             }}
           >
             {s.label}
@@ -99,39 +100,40 @@ export default function Signalements({ camping }) {
       </div>
 
       {loading ? (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-          {[1, 2, 3].map(i => <div key={i} style={{ height: 92, borderRadius: 14, background: '#eee', animation: 'pulse 1.5s ease-in-out infinite' }} />)}
-        </div>
+        <Squelette lignes={3} hauteur={92} libelle="Chargement…" />
       ) : affiches.length === 0 ? (
-        <div style={{ background: '#fff', borderRadius: 16, padding: '48px 24px', textAlign: 'center', color: '#6b7280', fontSize: 14.5 }}>
-          {filtre === 'nouveau' ? '🎉 Aucun nouveau signalement.' : 'Rien dans cette catégorie.'}
-        </div>
+        <Bloc>
+          <Vide
+            emoji={filtre === 'nouveau' ? '🎉' : '📭'}
+            texte={filtre === 'nouveau' ? 'Aucun nouveau signalement.' : 'Rien dans cette catégorie.'}
+          />
+        </Bloc>
       ) : (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+        <Pile espace="md">
           {affiches.map(item => {
             const c = cat(item.categorie)
             return (
-              <div key={item.id} style={{ background: '#fff', borderRadius: 16, padding: 16, boxShadow: '0 1px 4px rgba(0,0,0,0.06)', display: 'flex', gap: 14 }}>
+              <Bloc key={item.id} padding={espace.lg} style={{ display: 'flex', gap: 14 }}>
                 {item.photo_url && (
                   <img
                     src={item.photo_url}
                     alt=""
                     onClick={() => setPhoto(item.photo_url)}
-                    style={{ width: 84, height: 84, borderRadius: 12, objectFit: 'cover', flexShrink: 0, cursor: 'zoom-in' }}
+                    style={{ width: 84, height: 84, borderRadius: rayon.md, objectFit: 'cover', flexShrink: 0, cursor: 'zoom-in' }}
                   />
                 )}
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6, flexWrap: 'wrap' }}>
-                    <span style={{ fontSize: 12, fontWeight: 700, padding: '3px 9px', borderRadius: 12, background: '#f3f4f6', color: '#374151' }}>
+                    <span style={{ fontSize: 12, fontWeight: 700, padding: '3px 9px', borderRadius: 12, background: jetons.surfaceDouce, color: jetons.texteMoyen }}>
                       {c.emoji} {c.label}
                     </span>
-                    {item.lieu && <span style={{ fontSize: 12.5, color: '#6b7280' }}>📍 {item.lieu}</span>}
-                    <span style={{ fontSize: 12, color: '#6b7280', marginLeft: 'auto' }}>
+                    {item.lieu && <span style={{ fontSize: 12.5, color: jetons.texteDoux }}>📍 {item.lieu}</span>}
+                    <span style={{ fontSize: 12, color: jetons.texteDoux, marginLeft: 'auto' }}>
                       {new Date(item.created_at).toLocaleString('fr-FR', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}
                     </span>
                   </div>
 
-                  <div style={{ fontSize: 14.5, color: '#1a1a1a', lineHeight: 1.6, marginBottom: 8 }}>
+                  <div style={{ fontSize: 14.5, color: jetons.texte, lineHeight: 1.6, marginBottom: 8 }}>
                     {item.description}
                   </div>
 
@@ -140,23 +142,23 @@ export default function Signalements({ camping }) {
                       gérant n'aurait qu'un motif sans rien à examiner. */}
                   {item.cible_texte && (
                     <div style={{
-                      background: '#fef2f2', border: '1px solid #fecaca',
+                      background: jetons.dangerFond, border: '1px solid #fecaca',
                       borderRadius: 10, padding: '10px 12px', marginBottom: 8,
                     }}>
-                      <div style={{ fontSize: 11.5, fontWeight: 700, color: '#b91c1c', marginBottom: 4 }}>
+                      <Texte variante="doux" style={{ fontWeight: graisse.titre, color: jetons.danger, marginBottom: 4 }}>
                         {item.categorie === 'blocage' ? 'Auteur bloqué : ' : ''}
                         {item.cible_type === 'statut' ? 'Statut' : 'Message'} de{' '}
                         {item.auteur?.avatar_emoji} {item.auteur?.pseudo || 'un vacancier parti'}
                         {item.auteur?.banni && ' · déjà banni'}
-                      </div>
-                      <div style={{ fontSize: 14, color: '#1a1a1a', lineHeight: 1.5, whiteSpace: 'pre-wrap' }}>
+                      </Texte>
+                      <div style={{ fontSize: 14, color: jetons.texte, lineHeight: 1.5, whiteSpace: 'pre-wrap' }}>
                         {item.cible_texte}
                       </div>
                     </div>
                   )}
 
                   <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
-                    <span style={{ fontSize: 12.5, color: '#6b7280' }}>
+                    <span style={{ fontSize: 12.5, color: jetons.texteDoux }}>
                       {item.vacanciers?.avatar_emoji || '🙂'} {item.vacanciers?.pseudo || '—'}
                       {item.vacanciers?.emplacement && ` · empl. ${item.vacanciers.emplacement}`}
                     </span>
@@ -177,10 +179,10 @@ export default function Signalements({ camping }) {
                     </div>
                   </div>
                 </div>
-              </div>
+              </Bloc>
             )
           })}
-        </div>
+        </Pile>
       )}
 
       {/* Photo plein écran */}
@@ -195,6 +197,6 @@ export default function Signalements({ camping }) {
           <img src={photo} alt="" style={{ maxWidth: '100%', maxHeight: '100%', borderRadius: 12 }} />
         </div>
       )}
-    </div>
+    </Pile>
   )
 }

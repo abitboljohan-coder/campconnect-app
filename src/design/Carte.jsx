@@ -12,12 +12,17 @@ export default function Carte({
   padding = espace.lg,
   bordure = true,
   cliquable = false,
+  // Une carte que l'on active doit être un bouton, pas un div muni d'un
+  // gestionnaire de clic : c'est ce qui la rend atteignable au clavier et
+  // annoncée comme actionnable.
+  as,
   children,
   style,
   ...reste
 }) {
+  const Balise = as || 'div'
   return (
-    <div
+    <Balise
       style={{
         background: couleur.surface,
         borderRadius: rayon.lg,
@@ -30,6 +35,6 @@ export default function Carte({
       {...reste}
     >
       {children}
-    </div>
+    </Balise>
   )
 }

@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
+import { couleur as jetons } from '../../design'
 
 let L = null
 async function getLeaflet() {
@@ -108,7 +109,7 @@ export default function GpsLocator({ camping, onSave }) {
           placeholder="Rechercher une adresse..."
           style={{ flex: 1, padding: '9px 12px', borderRadius: 8, border: '1.5px solid #e5e7eb', fontSize: 14, outline: 'none' }}
         />
-        <button onClick={searchPlace} disabled={searching} style={{ padding: '9px 14px', borderRadius: 8, background: '#639922', color: '#fff', fontWeight: 600, fontSize: 14 }}>
+        <button onClick={searchPlace} disabled={searching} style={{ padding: '9px 14px', borderRadius: 8, background: jetons.marque, color: '#fff', fontWeight: 600, fontSize: 14 }}>
           {searching ? '...' : '🔍'}
         </button>
       </div>
@@ -116,12 +117,12 @@ export default function GpsLocator({ camping, onSave }) {
       <div ref={mapRef} style={{ width: '100%', height: 260, borderRadius: 10, overflow: 'hidden', border: '1px solid #e5e7eb', marginBottom: 10 }} />
 
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <div style={{ fontSize: 12, color: '#6b7280' }}>
+        <div style={{ fontSize: 12, color: jetons.texteDoux }}>
           {pos ? `📍 ${pos.lat.toFixed(5)}, ${pos.lng.toFixed(5)}` : 'Cliquez sur la carte pour positionner le camping'}
         </div>
         <button onClick={save} disabled={!pos} style={{
           padding: '8px 16px', borderRadius: 8, fontWeight: 600, fontSize: 13,
-          background: saved ? '#16a34a' : pos ? '#639922' : '#9ca3af', color: '#fff',
+          background: saved ? '#16a34a' : pos ? jetons.marque : '#9ca3af', color: '#fff',
         }}>
           {saved ? '✓ Enregistré' : 'Enregistrer'}
         </button>

@@ -1,7 +1,8 @@
 import { useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
-import { supabase } from '../../supabase'
 import { searchCampsiteByName } from '../lib/osmPois'
+import { fusionnerCarteConfig } from '../lib/carteConfig'
+import { couleur as jetons } from '../../design'
 
 let LPromise = null
 function loadLeaflet() {
@@ -155,7 +156,7 @@ export default function PerimeterEditor({ camping, onClose, onSaved }) {
     setDropdownRect({ top: r.bottom + 4, left: r.left, width: Math.max(r.width, 300) })
   }, [searchResults])
 
-  const couleur = camping?.couleur_principale || '#639922'
+  const couleur = camping?.couleur_principale || jetons.marque
 
   useEffect(() => {
     let mounted = true
@@ -412,12 +413,10 @@ export default function PerimeterEditor({ camping, onClose, onSaved }) {
 
   async function save() {
     setSaving(true)
-    const newCfg = { ...(camping.carte_config || {}), perimeter: points }
-    const { error } = await supabase.from('campings')
-      .update({ carte_config: newCfg }).eq('id', camping.id)
+    const { config, error } = await fusionnerCarteConfig(camping.id, { perimeter: points })
     setSaving(false)
     if (error) { alert('Erreur : ' + error.message); return }
-    onSaved?.(newCfg)
+    onSaved?.(config)
     onClose?.()
   }
 
@@ -435,7 +434,7 @@ export default function PerimeterEditor({ camping, onClose, onSaved }) {
       }}>
         <div style={{ minWidth: 180 }}>
           <div style={{ fontWeight: 700, fontSize: 15 }}>Tracer le contour</div>
-          <div style={{ fontSize: 11, color: '#6b7280' }}>
+          <div style={{ fontSize: 11, color: jetons.texteDoux }}>
             {points.length} pt · {mode === 'rect' ? 'Drag pour dessiner un rectangle' : 'Clic pour ajouter · drag pour bouger · clic droit pour retirer'}
           </div>
         </div>
@@ -447,7 +446,7 @@ export default function PerimeterEditor({ camping, onClose, onSaved }) {
             placeholder="Ex : Camping du Lac, 12345 Villeneuve"
             style={{ padding: '7px 10px', border: '1px solid #d1d5db', borderRadius: 8, fontSize: 13, width: 220 }} />
           <button onClick={runSearch}
-            style={{ padding: '7px 12px', background: '#f3f4f6', border: '1px solid #d1d5db', borderRadius: 8, cursor: 'pointer', fontSize: 13 }} aria-label="Rechercher">
+            style={{ padding: '7px 12px', background: jetons.surfaceDouce, border: '1px solid #d1d5db', borderRadius: 8, cursor: 'pointer', fontSize: 13 }} aria-label="Rechercher">
             🔍
           </button>
         </div>
@@ -472,9 +471,9 @@ export default function PerimeterEditor({ camping, onClose, onSaved }) {
         {/* Outils */}
         <button onClick={() => setMode(mode === 'rect' ? 'click' : 'rect')}
           style={{ padding: '7px 12px', borderRadius: 8, fontSize: 13, cursor: 'pointer', fontWeight: 600,
-                   background: mode === 'rect' ? '#639922' : '#f3f4f6',
-                   color:      mode === 'rect' ? '#fff'    : '#374151',
-                   border: '1px solid ' + (mode === 'rect' ? '#639922' : '#d1d5db') }}>
+                   background: mode === 'rect' ? jetons.marque : jetons.surfaceDouce,
+                   color:      mode === 'rect' ? '#fff'    : jetons.texteMoyen,
+                   border: '1px solid ' + (mode === 'rect' ? jetons.marque : '#d1d5db') }}>
           ▭ Rectangle
         </button>
 
@@ -496,14 +495,14 @@ export default function PerimeterEditor({ camping, onClose, onSaved }) {
           Annuler
         </button>
         <button onClick={save} disabled={saving || points.length < 3}
-          style={{ padding: '7px 14px', background: '#639922', color: '#fff', border: 'none', borderRadius: 8, fontSize: 13, fontWeight: 600, cursor: (saving || points.length < 3) ? 'not-allowed' : 'pointer', opacity: points.length < 3 ? 0.5 : 1 }}>
+          style={{ padding: '7px 14px', background: jetons.marque, color: '#fff', border: 'none', borderRadius: 8, fontSize: 13, fontWeight: 600, cursor: (saving || points.length < 3) ? 'not-allowed' : 'pointer', opacity: points.length < 3 ? 0.5 : 1 }}>
           {saving ? '…' : 'Enregistrer'}
         </button>
       </div>
 
       {notice && (
-        <div style={{ padding: '8px 16px', background: notice.startsWith('✅') ? '#dcfce7' : '#fef2f2',
-                      color: notice.startsWith('✅') ? '#166534' : '#dc2626', fontSize: 13, fontWeight: 500 }}>
+        <div style={{ padding: '8px 16px', background: notice.startsWith('✅') ? '#dcfce7' : jetons.dangerFond,
+                      color: notice.startsWith('✅') ? jetons.succes : jetons.danger, fontSize: 13, fontWeight: 500 }}>
           {notice}
         </div>
       )}

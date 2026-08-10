@@ -2,6 +2,8 @@ import { useEffect, useRef, useState } from 'react'
 import { supabase } from '../../supabase'
 import { CAMPING_LIEUX } from '../utils/analyzeMap'
 import { esc } from '../../utils/esc'
+import { fusionnerCarteConfig } from '../lib/carteConfig'
+import { couleur as jetons } from '../../design'
 
 let _L = null
 async function getLeaflet() {
@@ -58,12 +60,14 @@ export default function MapEditor({ camping, setCamping }) {
 
   async function saveConfig(newPins) {
     setSaving(true)
-    // Fusionne avec l'existant pour NE PAS écraser le contour / lat-lng déjà réglés
-    const config = { ...(camping.carte_config || loadLocal(camping.id) || {}), pins: newPins }
-    const { error } = await supabase.from('campings').update({ carte_config: config }).eq('id', camping.id)
-    if (error) { setDbSupport(false); saveLocal(camping.id, config) }
-    else { setDbSupport(true); saveLocal(camping.id, config) }
-    setCamping(c => ({ ...c, carte_config: config }))
+    // La fusion se fait sur la valeur relue en base, pas sur celle affichée :
+    // le contour ou la position réglés depuis un autre écran ne doivent pas
+    // repartir dans l'état où ce composant les a chargés.
+    const { config, error } = await fusionnerCarteConfig(camping.id, { pins: newPins })
+    const retenu = config || { ...(camping.carte_config || loadLocal(camping.id) || {}), pins: newPins }
+    setDbSupport(!error)
+    saveLocal(camping.id, retenu)
+    setCamping(c => ({ ...c, carte_config: retenu }))
     setSaving(false)
   }
 
@@ -160,9 +164,9 @@ export default function MapEditor({ camping, setCamping }) {
   return (
     <div>
       {!dbSupport && (
-        <div style={{ marginBottom: 10, padding: '8px 12px', background: '#fffbeb', border: '1px solid #fcd34d', borderRadius: 8, fontSize: 12, color: '#92400e' }}>
+        <div style={{ marginBottom: 10, padding: '8px 12px', background: '#fffbeb', border: '1px solid #fcd34d', borderRadius: 8, fontSize: 12, color: jetons.alerte }}>
           ⚠️ Pins sauvegardés localement. Exécutez dans Supabase SQL Editor :&nbsp;
-          <code style={{ background: '#fef3c7', padding: '2px 6px', borderRadius: 4, fontSize: 11 }}>
+          <code style={{ background: jetons.alerteFond, padding: '2px 6px', borderRadius: 4, fontSize: 11 }}>
             ALTER TABLE campings ADD COLUMN IF NOT EXISTS carte_config jsonb DEFAULT {'{}'}::jsonb;
           </code>
         </div>
@@ -179,7 +183,7 @@ export default function MapEditor({ camping, setCamping }) {
           borderRadius: 12, boxShadow: '0 4px 24px rgba(0,0,0,0.15)',
           display: 'flex', flexDirection: 'column', gap: 4, padding: '10px 10px',
         }}>
-          <div style={{ fontSize: 12, color: selected ? '#639922' : '#6b7280', fontWeight: 600, marginBottom: 4, lineHeight: 1.3 }}>
+          <div style={{ fontSize: 12, color: selected ? jetons.marque : jetons.texteDoux, fontWeight: 600, marginBottom: 4, lineHeight: 1.3 }}>
             {selected ? `🎯 Cliquez sur la carte pour placer « ${selected.label} »` : '💡 Sélectionnez puis cliquez sur la carte'}
           </div>
 
@@ -231,12 +235,12 @@ export default function MapEditor({ camping, setCamping }) {
 
         {/* Indicateur sauvegarde */}
         {saving && (
-          <div style={{ position: 'absolute', top: 10, right: 10, zIndex: 1000, background: 'rgba(255,255,255,0.95)', borderRadius: 20, padding: '4px 12px', fontSize: 12, color: '#54821d', fontWeight: 700, boxShadow: '0 2px 8px rgba(0,0,0,0.1)' }}>
+          <div style={{ position: 'absolute', top: 10, right: 10, zIndex: 1000, background: 'rgba(255,255,255,0.95)', borderRadius: 20, padding: '4px 12px', fontSize: 12, color: jetons.marqueTexte, fontWeight: 700, boxShadow: '0 2px 8px rgba(0,0,0,0.1)' }}>
             💾 Sauvegarde...
           </div>
         )}
         {!saving && pins.length > 0 && (
-          <div style={{ position: 'absolute', top: 10, right: 10, zIndex: 1000, background: 'rgba(255,255,255,0.95)', borderRadius: 20, padding: '4px 12px', fontSize: 12, color: '#6b7280', boxShadow: '0 2px 8px rgba(0,0,0,0.1)' }}>
+          <div style={{ position: 'absolute', top: 10, right: 10, zIndex: 1000, background: 'rgba(255,255,255,0.95)', borderRadius: 20, padding: '4px 12px', fontSize: 12, color: jetons.texteDoux, boxShadow: '0 2px 8px rgba(0,0,0,0.1)' }}>
             ✓ {pins.length} pin{pins.length > 1 ? 's' : ''}
           </div>
         )}
@@ -274,7 +278,7 @@ function LieuPicker({ onAdd, existingLabels }) {
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4, marginBottom: 6 }}>
           {GROUPES_LIEUX.map(g => (
             <button key={g.label} onClick={() => setGroupe(groupe === g.label ? null : g.label)}
-              style={{ padding: '4px 8px', borderRadius: 14, fontSize: 11, fontWeight: 600, border: '1px solid #e5e7eb', background: groupe === g.label ? '#63992218' : '#f9fafb', color: groupe === g.label ? '#639922' : '#6b7280', cursor: 'pointer' }}>
+              style={{ padding: '4px 8px', borderRadius: 14, fontSize: 11, fontWeight: 600, border: '1px solid #e5e7eb', background: groupe === g.label ? '#63992218' : '#f9fafb', color: groupe === g.label ? jetons.marque : jetons.texteDoux, cursor: 'pointer' }}>
               {g.label}
             </button>
           ))}
@@ -286,11 +290,11 @@ function LieuPicker({ onAdd, existingLabels }) {
             const already = existingLabels.includes(lieu.label)
             return (
               <button key={lieu.id} onClick={() => !already && onAdd(lieu)} disabled={already}
-                style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '6px 8px', borderRadius: 7, background: already ? '#f3f4f6' : '#fff', border: '1px solid #e5e7eb', opacity: already ? 0.5 : 1, cursor: already ? 'default' : 'pointer', textAlign: 'left' }}>
+                style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '6px 8px', borderRadius: 7, background: already ? jetons.surfaceDouce : '#fff', border: '1px solid #e5e7eb', opacity: already ? 0.5 : 1, cursor: already ? 'default' : 'pointer', textAlign: 'left' }}>
                 <span style={{ fontSize: 18, flexShrink: 0 }}>{lieu.emoji}</span>
-                <span style={{ fontSize: 12, fontWeight: 500, color: '#374151', flex: 1 }}>{lieu.label}</span>
+                <span style={{ fontSize: 12, fontWeight: 500, color: jetons.texteMoyen, flex: 1 }}>{lieu.label}</span>
                 <div style={{ width: 8, height: 8, borderRadius: '50%', background: lieu.color, flexShrink: 0 }} />
-                {already && <span style={{ fontSize: 10, color: '#6b7280' }}>✓</span>}
+                {already && <span style={{ fontSize: 10, color: jetons.texteDoux }}>✓</span>}
               </button>
             )
           })}
@@ -301,18 +305,18 @@ function LieuPicker({ onAdd, existingLabels }) {
 }
 
 function SectionLabel({ children, style }) {
-  return <div style={{ fontSize: 11, fontWeight: 700, color: '#6b7280', textTransform: 'uppercase', letterSpacing: 0.8, marginBottom: 2, ...style }}>{children}</div>
+  return <div style={{ fontSize: 11, fontWeight: 700, color: jetons.texteDoux, textTransform: 'uppercase', letterSpacing: 0.8, marginBottom: 2, ...style }}>{children}</div>
 }
 
 function ListItem({ emoji, label, pinned, selected, color, onClick, onRemove }) {
   return (
     <div style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '6px 8px', borderRadius: 8, cursor: 'pointer', background: selected ? `${color}18` : pinned ? '#f9fafb' : '#fff', border: selected ? `1.5px solid ${color}` : '1px solid #e5e7eb', transition: 'all 0.1s' }} onClick={onClick}>
       <span style={{ fontSize: 16, flexShrink: 0 }}>{emoji}</span>
-      <span style={{ flex: 1, fontSize: 12, fontWeight: 500, color: '#374151', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{label}</span>
+      <span style={{ flex: 1, fontSize: 12, fontWeight: 500, color: jetons.texteMoyen, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{label}</span>
       {pinned && <div style={{ width: 8, height: 8, borderRadius: '50%', background: color, flexShrink: 0 }} />}
       {onRemove && (
         <button type="button" onClick={e => { e.stopPropagation(); onRemove() }}
-          style={{ width: 18, height: 18, borderRadius: '50%', background: '#fef2f2', color: '#dc2626', fontSize: 11, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, border: 'none', cursor: 'pointer' }}>
+          style={{ width: 18, height: 18, borderRadius: '50%', background: jetons.dangerFond, color: jetons.danger, fontSize: 11, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, border: 'none', cursor: 'pointer' }}>
           ×
         </button>
       )}

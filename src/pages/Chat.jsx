@@ -4,16 +4,16 @@ import { supabase, presentFilter } from '../supabase'
 import { t, useLangue, locale } from '../i18n'
 import MenuModeration from '../components/MenuModeration'
 import { chargerBlocages, estBloque } from '../lib/moderation'
+import { Texte, Pile, Vide, couleur, espace, graisse, ombre, rayon, texte as tailles } from '../design'
 
 const REACTIONS = ['❤️', '😂', '👍', '🔥', '🎉']
 
 export default function Chat({ camping, vacancier }) {
   useLangue()
   // La fiche Store promet « un espace aux couleurs de l'établissement » : le
-  // chat doit suivre la charte du camping comme le reste de l'app, et non
-  // rester sur le vert par défaut.
-  const couleur = camping?.couleur_principale || '#639922'
-  const fonce   = camping?.couleur_secondaire || '#0d1f0d'
+  // chat suit la charte du camping comme le reste de l'application. L'accent
+  // n'est plus lu ici mais dans les propriétés personnalisées posées par
+  // appliquerTheme() — un écran n'a pas à connaître le camping pour s'y teinter.
   const { groupeId } = useParams()
   const navigate = useNavigate()
   const [groupe, setGroupe]         = useState(null)
@@ -125,64 +125,63 @@ export default function Chat({ camping, vacancier }) {
   const grouped = groupByDate(messages)
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', height: '100dvh', background: '#f5f2eb' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', height: '100dvh', background: couleur.fond }}>
 
       {/* Header — Layout masque le sien sur les routes /chat/, c'est donc à cet
           en-tête de réserver la place de la barre d'état. Sans ce paddingTop,
           l'heure de l'iPhone recouvre la flèche retour et la rend incliquable. */}
       <div style={{
-        background: fonce,
-        padding: '12px 16px',
+        background: 'var(--cc-accent-sombre)',
+        padding: `${espace.md}px ${espace.lg}px`,
         paddingTop: 'calc(12px + var(--cc-safe-top))',
-        display: 'flex', alignItems: 'center', gap: 12,
+        display: 'flex', alignItems: 'center', gap: espace.md,
         flexShrink: 0,
-        boxShadow: '0 2px 8px rgba(0,0,0,0.2)',
+        boxShadow: '0 2px 8px rgba(26, 26, 26, 0.2)',
       }}>
         <button
           onClick={() => navigate('/groupes')}
-          style={{ color: '#fff', fontSize: 24, lineHeight: 1, padding: '0 4px', flexShrink: 0 }}
+          aria-label={t('commun.retour')}
+          style={{ color: '#fff', fontSize: 24, lineHeight: 1, padding: '0 4px', flexShrink: 0, background: 'none', border: 'none', cursor: 'pointer' }}
         >
           ‹
         </button>
-        <div style={{
-          width: 38, height: 38, borderRadius: 10,
+        <span aria-hidden="true" style={{
+          width: 38, height: 38, borderRadius: rayon.md,
           background: 'rgba(255,255,255,0.16)',
-          display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20, flexShrink: 0,
+          display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: tailles.titre, flexShrink: 0,
         }}>
           {groupe?.emoji || '👥'}
-        </div>
+        </span>
         <div style={{ flex: 1, overflow: 'hidden' }}>
-          <div style={{ fontWeight: 700, fontSize: 16, color: '#fff', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-            {groupe?.titre || '...'}
-          </div>
-          <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.72)' }}>
+          <Texte variante="sousTitre" as="h1" style={{
+            color: '#fff', fontSize: tailles.grand,
+            overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+          }}>
+            {groupe?.titre || '…'}
+          </Texte>
+          <Texte variante="doux" style={{ color: 'rgba(255,255,255,0.72)' }}>
             {nbMembres > 1 ? t('chat.participants', { n: nbMembres }) : t('chat.participant', { n: nbMembres })}
             {groupe?.lieu && ` · 📍 ${groupe.lieu}`}
-          </div>
+          </Texte>
         </div>
       </div>
 
       {/* Messages */}
-      <div style={{ flex: 1, overflowY: 'auto', padding: '16px 12px', display: 'flex', flexDirection: 'column', gap: 4 }}>
+      <div style={{ flex: 1, overflowY: 'auto', padding: `${espace.lg}px ${espace.md}px`, display: 'flex', flexDirection: 'column', gap: 4 }}>
         {messages.length === 0 && (
-          <div style={{ textAlign: 'center', color: '#6b7280', fontSize: 14, marginTop: 60, lineHeight: 2 }}>
-            {t('chat.aucun_msg')}<br />{t('chat.premier')}
-          </div>
+          <Vide emoji="💬" texte={`${t('chat.aucun_msg')} ${t('chat.premier')}`} style={{ marginTop: 40 }} />
         )}
 
         {grouped.map(({ dateLabel, msgs }) => (
           <div key={dateLabel}>
             {/* Séparateur date */}
-            <div style={{
-              textAlign: 'center', margin: '16px 0 12px',
-              position: 'relative',
-            }}>
-              <span style={{
-                background: '#e8e4da', color: '#6b7280',
-                fontSize: 11, fontWeight: 600, padding: '3px 10px', borderRadius: 20,
+            <div style={{ textAlign: 'center', margin: `${espace.lg}px 0 ${espace.md}px` }}>
+              <Texte variante="micro" as="span" style={{
+                background: couleur.bordure, fontWeight: graisse.fort,
+                padding: `3px ${espace.sm}px`, borderRadius: rayon.rond,
               }}>
                 {dateLabel}
-              </span>
+              </Texte>
             </div>
 
             {/* Les messages des personnes bloquées disparaissent avant tout
@@ -205,9 +204,12 @@ export default function Chat({ camping, vacancier }) {
                   }}
                 >
                   {showAuthor && auteur && (
-                    <div style={{ fontSize: 11, color: couleur, marginBottom: 3, marginLeft: 46, fontWeight: 600 }}>
+                    <Texte variante="micro" style={{
+                      color: 'var(--cc-accent)', fontWeight: graisse.fort,
+                      marginBottom: 3, marginLeft: 46,
+                    }}>
                       {auteur.avatar_emoji} {auteur.pseudo}
-                    </div>
+                    </Texte>
                   )}
                   {/* width 100% indispensable : la bulle porte un maxWidth en
                       pourcentage, qui a besoin d'une largeur de référence
@@ -218,15 +220,15 @@ export default function Chat({ camping, vacancier }) {
                   <div style={{ display: 'flex', alignItems: 'flex-end', gap: 6, width: '100%', flexDirection: isMine ? 'row-reverse' : 'row' }}>
                     {/* Avatar auteur (them) */}
                     {!isMine && (
-                      <div style={{
-                        width: 32, height: 32, borderRadius: '50%',
-                        background: '#e8e4da',
+                      <span aria-hidden="true" style={{
+                        width: 32, height: 32, borderRadius: rayon.rond,
+                        background: couleur.bordure,
                         display: 'flex', alignItems: 'center', justifyContent: 'center',
                         fontSize: 16, flexShrink: 0,
                         opacity: showAuthor ? 1 : 0,
                       }}>
                         {auteur?.avatar_emoji || '🏕️'}
-                      </div>
+                      </span>
                     )}
                     <div style={{ position: 'relative', maxWidth: '72%' }}>
                       <div
@@ -251,12 +253,12 @@ export default function Chat({ camping, vacancier }) {
                           ouvrirModeration(msg, auteur)
                         }}
                         style={{
-                          background: isMine ? couleur : 'rgba(255,255,255,0.92)',
-                          color: isMine ? '#fff' : '#1a1a1a',
-                          padding: '10px 14px',
+                          background: isMine ? 'var(--cc-accent)' : couleur.surface,
+                          color: isMine ? couleur.texteSurAccent : couleur.texte,
+                          padding: `10px ${espace.lg}px`,
                           borderRadius: isMine ? '18px 18px 3px 18px' : '18px 18px 18px 3px',
-                          fontSize: 15, lineHeight: 1.45,
-                          boxShadow: isMine ? `0 2px 8px ${couleur}45` : '0 1px 4px rgba(0,0,0,0.08)',
+                          fontSize: tailles.moyen, lineHeight: 1.45,
+                          boxShadow: isMine ? ombre.levee : ombre.posee,
                           overflowWrap: 'break-word',
                           cursor: 'pointer',
                         }}>
@@ -267,9 +269,9 @@ export default function Chat({ camping, vacancier }) {
                         <div style={{
                           position: 'absolute', bottom: '100%', marginBottom: 6,
                           [isMine ? 'right' : 'left']: 0,
-                          background: '#fff', borderRadius: 24, padding: '6px 10px',
+                          background: couleur.surface, borderRadius: rayon.rond, padding: `6px ${espace.sm}px`,
                           display: 'flex', gap: 6, zIndex: 30,
-                          boxShadow: '0 4px 18px rgba(0,0,0,0.18)',
+                          boxShadow: ombre.flottante,
                         }}>
                           {REACTIONS.map(e => (
                             <button key={e} onClick={ev => { ev.stopPropagation(); toggleReaction(msg, e) }}
@@ -287,11 +289,12 @@ export default function Chat({ camping, vacancier }) {
                         }}>
                           {Object.entries(msg.reactions).map(([e, ids]) => ids.length > 0 && (
                             <button key={e} onClick={() => toggleReaction(msg, e)}
+                              aria-pressed={ids.includes(vacancier.id)}
                               style={{
-                                fontSize: 12, padding: '2px 7px', borderRadius: 12,
-                                background: ids.includes(vacancier.id) ? `${couleur}22` : '#fff',
-                                border: '1px solid ' + (ids.includes(vacancier.id) ? couleur : '#e5e7eb'),
-                                cursor: 'pointer', fontWeight: 600, color: '#374151',
+                                fontSize: tailles.petit, padding: '2px 7px', borderRadius: rayon.md,
+                                background: ids.includes(vacancier.id) ? 'var(--cc-accent-voile)' : couleur.surface,
+                                border: `1px solid ${ids.includes(vacancier.id) ? 'var(--cc-accent)' : couleur.bordure}`,
+                                cursor: 'pointer', fontWeight: graisse.fort, color: couleur.texteMoyen,
                               }}>
                               {e} {ids.length > 1 ? ids.length : ''}
                             </button>
@@ -300,13 +303,13 @@ export default function Chat({ camping, vacancier }) {
                       )}
                     </div>
                   </div>
-                  <div style={{
-                    fontSize: 10, color: '#6b7280', marginTop: 3,
+                  <Texte variante="micro" style={{
+                    fontSize: 10, marginTop: 3,
                     marginLeft: isMine ? 0 : 46,
                     marginRight: isMine ? 4 : 0,
                   }}>
                     {new Date(msg.created_at).toLocaleTimeString(locale(), { hour: '2-digit', minute: '2-digit' })}
-                  </div>
+                  </Texte>
                 </div>
               )
             })}
@@ -315,19 +318,22 @@ export default function Chat({ camping, vacancier }) {
         <div ref={bottomRef} />
       </div>
 
-      {/* Input */}
+      {/* Saisie */}
       {erreur && (
-        <div style={{ background: '#fef2f2', color: '#dc2626', fontSize: 13, fontWeight: 600, textAlign: 'center', padding: '8px 12px', flexShrink: 0 }}>
+        <Texte variante="doux" role="alert" style={{
+          background: couleur.dangerFond, color: couleur.danger, fontWeight: graisse.fort,
+          textAlign: 'center', padding: `${espace.sm}px ${espace.md}px`, flexShrink: 0,
+        }}>
           ⚠️ {erreur}
-        </div>
+        </Texte>
       )}
       <form
         onSubmit={envoyer}
         style={{
-          padding: '10px 12px',
-          background: '#fff',
-          borderTop: '1px solid #e5e7eb',
-          display: 'flex', gap: 8, alignItems: 'center',
+          padding: `10px ${espace.md}px`,
+          background: couleur.surface,
+          borderTop: `1px solid ${couleur.bordure}`,
+          display: 'flex', gap: espace.sm, alignItems: 'center',
           paddingBottom: 'max(10px, var(--cc-safe-bottom))',
           flexShrink: 0,
         }}
@@ -335,28 +341,33 @@ export default function Chat({ camping, vacancier }) {
         <input
           ref={inputRef}
           type="text"
+          aria-label={t('chat.ecrire')}
           placeholder={t('chat.ecrire')}
           value={texte}
           onChange={e => { setTexte(e.target.value); if (erreur) setErreur('') }}
           style={{
-            flex: 1, padding: '11px 16px',
-            borderRadius: 24, border: '1.5px solid #e5e7eb',
-            fontSize: 16, outline: 'none', background: '#f9f7f3',
+            flex: 1, padding: `11px ${espace.lg}px`,
+            borderRadius: rayon.rond, border: `1.5px solid ${couleur.bordure}`,
+            fontSize: 16, outline: 'none', background: couleur.fondClair,
+            fontFamily: 'inherit',
             transition: 'border-color 0.15s',
           }}
         />
         <button
           type="submit"
           disabled={!texte.trim() || sending}
+          aria-label={t('commun.envoyer')}
           style={{
-            width: 44, height: 44, borderRadius: '50%',
-            background: !texte.trim() || sending ? '#e5e7eb' : couleur,
-            color: '#fff', fontSize: 20,
+            width: 44, height: 44, borderRadius: rayon.rond,
+            background: !texte.trim() || sending ? couleur.bordure : 'var(--cc-accent)',
+            color: couleur.texteSurAccent, fontSize: tailles.titre,
             display: 'flex', alignItems: 'center', justifyContent: 'center',
-            flexShrink: 0, transition: 'background 0.15s',
-            boxShadow: texte.trim() ? '0 2px 8px rgba(99,153,34,0.4)' : 'none',
+            flexShrink: 0, border: 'none',
+            cursor: !texte.trim() || sending ? 'default' : 'pointer',
+            transition: 'background 0.15s',
+            boxShadow: texte.trim() ? ombre.levee : 'none',
           }}
-         aria-label="Envoyer">
+        >
           ↑
         </button>
       </form>

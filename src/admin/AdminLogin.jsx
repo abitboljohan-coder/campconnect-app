@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { supabase } from '../supabase'
 import { isNative, setAppMode } from '../native'
+import { couleur as jetons } from '../design'
 
 export default function AdminLogin({ onLogin }) {
   const [mode, setMode]         = useState('login') // 'login' | 'signup'
@@ -81,16 +82,25 @@ export default function AdminLogin({ onLogin }) {
 
   return (
     <div style={{
-      minHeight: '100dvh', background: '#0d1f0d',
+      minHeight: '100dvh', background: jetons.marqueSombre,
       display: 'flex', alignItems: 'center', justifyContent: 'center',
       padding: '0 20px',
     }}>
       <div style={{ width: '100%', maxWidth: 380 }}>
-        {/* Logo */}
+        {/* Marque — le vrai logo, comme sur l'écran d'entrée du vacancier.
+            La plaque claire lui rend son contraste : sur le vert sombre, la
+            tente et le sol du logo, eux-mêmes vert foncé, disparaîtraient. */}
         <div style={{ textAlign: 'center', marginBottom: 40 }}>
-          <div style={{ fontSize: 48, marginBottom: 12 }}>🌲</div>
+          <span style={{
+            width: 84, height: 84, borderRadius: 22,
+            background: jetons.fondClair, margin: '0 auto 14px',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+          }}>
+            <img src="/logo-mark.png" alt="" width={60} height={64}
+                 style={{ display: 'block', objectFit: 'contain' }} />
+          </span>
           <div style={{ color: '#C0DD97', fontSize: 24, fontWeight: 700, letterSpacing: -0.5 }}>CampConnect</div>
-          <div style={{ color: 'rgba(255,255,255,0.4)', fontSize: 14, marginTop: 4 }}>Espace gérant</div>
+          <div style={{ color: 'rgba(255,255,255,0.55)', fontSize: 14, marginTop: 4 }}>Espace gérant</div>
         </div>
 
         {/* Formulaire */}
@@ -134,7 +144,7 @@ export default function AdminLogin({ onLogin }) {
           </div>
 
           {error && (
-            <div style={{ background: '#fef2f2', color: '#dc2626', padding: '10px 14px', borderRadius: 8, fontSize: 14 }}>
+            <div style={{ background: jetons.dangerFond, color: jetons.danger, padding: '10px 14px', borderRadius: 8, fontSize: 14 }}>
               {error}
             </div>
           )}
@@ -144,7 +154,7 @@ export default function AdminLogin({ onLogin }) {
             disabled={loading}
             style={{
               padding: '14px', borderRadius: 12,
-              background: loading ? '#4a6a20' : '#639922',
+              background: loading ? '#4a6a20' : jetons.marque,
               color: '#fff', fontWeight: 700, fontSize: 15,
               marginTop: 4, transition: 'background 0.15s',
             }}

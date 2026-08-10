@@ -1,5 +1,6 @@
-import { useState } from 'react'
+import { useId, useState } from 'react'
 import { t, useLangue } from '../i18n'
+import { Texte, Pile, couleur, espace, graisse, rayon, texte as tailles } from '../design'
 
 const DEFAULT_INFOS = [
   { id: 'piscine',    emoji: '🏊', titre: 'Piscine',          contenu: 'Ouverte 9h – 20h\nSurveillée 10h – 19h' },
@@ -14,105 +15,105 @@ const DEFAULT_INFOS = [
 
 export default function Infos({ camping }) {
   useLangue()
-  const couleur = camping?.couleur_principale || '#639922'
   const infos = (camping?.infos && camping.infos.length > 0) ? camping.infos : DEFAULT_INFOS
-  const [open, setOpen] = useState(null)
+  const [ouvert, setOuvert] = useState(null)
+  const prefixe = useId()
 
   return (
-    <div style={{ padding: '16px 16px 24px', maxWidth: 520, margin: '0 auto' }}>
+    <Pile espace="xl" style={{ padding: `${espace.lg}px ${espace.lg}px ${espace.xl}px`, maxWidth: 520, margin: '0 auto' }}>
 
-      {/* Header */}
-      <div style={{ marginBottom: 20 }}>
-        <div style={{ fontSize: 11, fontWeight: 700, color: couleur, letterSpacing: 1.5, textTransform: 'uppercase', marginBottom: 4 }}>
-          {t('infos.livret')}
-        </div>
-        <h1 style={{ fontSize: 22, fontWeight: 800, color: '#0d1f0d', margin: 0, lineHeight: 1.2 }}>
-          {t('infos.utiles')}
-        </h1>
-        <p style={{ fontSize: 13, color: '#6b7280', margin: '6px 0 0' }}>
-          {t('infos.tout_sur', { camping: camping?.nom || '' })}
-        </p>
-      </div>
+      <Pile espace="xs">
+        <Texte variante="libelle" as="span" style={{ color: 'var(--cc-accent)' }}>{t('infos.livret')}</Texte>
+        <Texte variante="titre">{t('infos.utiles')}</Texte>
+        <Texte variante="doux">{t('infos.tout_sur', { camping: camping?.nom || '' })}</Texte>
+      </Pile>
 
-      {/* Cartes */}
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-        {infos.map(info => (
-          <button
-            key={info.id}
-            onClick={() => setOpen(open === info.id ? null : info.id)}
-            style={{
-              background: '#fff',
-              border: `1.5px solid ${open === info.id ? couleur : '#e5e7eb'}`,
-              borderRadius: 16,
-              padding: '14px 16px',
-              cursor: 'pointer',
-              textAlign: 'left',
-              width: '100%',
-              transition: 'border-color 0.15s',
-            }}
-          >
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                <div style={{
-                  width: 42, height: 42,
-                  background: open === info.id ? couleur + '18' : '#f5f2eb',
-                  borderRadius: 12,
-                  display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  fontSize: 20,
-                  flexShrink: 0,
-                }}>
-                  {info.emoji}
+      <Pile espace="sm">
+        {infos.map(info => {
+          const actif = ouvert === info.id
+          // Le panneau est décrit par le bouton qui le commande : sans
+          // aria-expanded, un lecteur d'écran annonce un bouton sans dire qu'il
+          // ouvre ou ferme quelque chose, ni dans quel état il se trouve.
+          const idPanneau = `${prefixe}-${info.id}`
+          return (
+            <button
+              key={info.id}
+              onClick={() => setOuvert(actif ? null : info.id)}
+              aria-expanded={actif}
+              aria-controls={idPanneau}
+              style={{
+                background: couleur.surface,
+                border: `1.5px solid ${actif ? 'var(--cc-accent)' : couleur.bordure}`,
+                borderRadius: rayon.lg,
+                padding: `14px ${espace.lg}px`,
+                cursor: 'pointer',
+                textAlign: 'left',
+                width: '100%',
+                transition: 'border-color 0.15s',
+              }}
+            >
+              <Pile direction="ligne" aligner="center" justifier="space-between">
+                <Pile direction="ligne" espace="md" aligner="center">
+                  <span
+                    aria-hidden="true"
+                    style={{
+                      width: 42, height: 42, flexShrink: 0,
+                      background: actif ? 'var(--cc-accent-voile)' : couleur.fond,
+                      borderRadius: rayon.md,
+                      display: 'flex', alignItems: 'center', justifyContent: 'center',
+                      fontSize: tailles.titre,
+                    }}
+                  >
+                    {info.emoji}
+                  </span>
+                  <Texte variante="sousTitre" as="span" style={{ fontSize: tailles.moyen, fontWeight: graisse.titre }}>
+                    {info.titre}
+                  </Texte>
+                </Pile>
+                <span
+                  aria-hidden="true"
+                  style={{
+                    fontSize: 18, color: couleur.texteDoux, display: 'inline-block',
+                    transform: actif ? 'rotate(180deg)' : 'none',
+                    transition: 'transform 0.2s',
+                  }}
+                >›</span>
+              </Pile>
+
+              {actif && (
+                <div
+                  id={idPanneau}
+                  style={{
+                    marginTop: espace.md, paddingTop: espace.md,
+                    borderTop: `1px solid ${couleur.bordure}`,
+                  }}
+                >
+                  <Texte variante="corps" style={{ whiteSpace: 'pre-line', lineHeight: 1.7 }}>
+                    {info.contenu}
+                  </Texte>
                 </div>
-                <span style={{ fontWeight: 700, fontSize: 15, color: '#0d1f0d' }}>
-                  {info.titre}
-                </span>
-              </div>
-              <span style={{
-                fontSize: 18,
-                color: '#6b7280',
-                transform: open === info.id ? 'rotate(180deg)' : 'none',
-                transition: 'transform 0.2s',
-                display: 'inline-block',
-              }}>
-                ›
-              </span>
-            </div>
+              )}
+            </button>
+          )
+        })}
+      </Pile>
 
-            {open === info.id && (
-              <div style={{
-                marginTop: 12,
-                paddingTop: 12,
-                borderTop: '1px solid #f0f0f0',
-                fontSize: 14,
-                color: '#374151',
-                lineHeight: 1.7,
-                whiteSpace: 'pre-line',
-              }}>
-                {info.contenu}
-              </div>
-            )}
-          </button>
-        ))}
-      </div>
-
-      {/* Contact réception */}
-      <div style={{
-        marginTop: 24,
-        background: '#0d1f0d',
-        borderRadius: 16,
-        padding: '16px 20px',
-        display: 'flex',
-        alignItems: 'center',
-        gap: 14,
-      }}>
-        <div style={{ fontSize: 28 }}>📞</div>
+      <Pile
+        direction="ligne" espace="md" aligner="center"
+        style={{
+          background: couleur.marqueSombre,
+          borderRadius: rayon.lg,
+          padding: `${espace.lg}px 20px`,
+        }}
+      >
+        <span aria-hidden="true" style={{ fontSize: 28 }}>📞</span>
         <div>
-          <div style={{ fontSize: 13, fontWeight: 700, color: '#97C459' }}>{t('infos.question')}</div>
-          <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.7)', marginTop: 2 }}>
-            Passez à la réception ou signalez un problème à l'équipe.
-          </div>
+          <Texte variante="corps" style={{ fontWeight: graisse.titre, color: '#C0DD97' }}>{t('infos.question')}</Texte>
+          <Texte variante="doux" style={{ color: 'rgba(255,255,255,0.72)', marginTop: 2 }}>
+            Passez à la réception ou signalez un problème à l’équipe.
+          </Texte>
         </div>
-      </div>
-    </div>
+      </Pile>
+    </Pile>
   )
 }

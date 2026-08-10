@@ -2,6 +2,15 @@ import { useState, useEffect, useRef } from 'react'
 import { supabase, ensureAnonSession } from '../supabase'
 import { isNative, setAppMode } from '../native'
 import { t, useLangue } from '../i18n'
+import {
+  Bouton, Carte, Champ, Texte, Pile, appliquerTheme,
+  couleur as jetons, espace, graisse, rayon,
+} from '../design'
+
+// Le vert profond de l'écran d'entrée : il précède le chargement du camping,
+// donc il ne peut pas venir de l'accent — celui-ci n'est pas encore connu.
+const TITRE = '#2f4a26'
+const SOUS_TITRE = '#6d7964'
 
 const AVATARS = ['🏕️', '🌲', '⛺', '🎯', '🚴', '🏊', '🎣', '🌻', '🦜', '🌈']
 
@@ -46,7 +55,10 @@ export default function Onboarding({ initialCamping, onDone }) {
     : (fromQR || estAccesLibre(initialCamping) ? 'form' : 'verify')
   const [step, setStep] = useState(initialStep)
   const [camping, setCamping] = useState(initialCamping)
-  const couleur = camping?.couleur_principale || '#639922'
+
+  // L'accent du camping est posé dès qu'il est identifié : l'inscription se
+  // fait donc déjà à ses couleurs, avant même d'entrer dans l'application.
+  useEffect(() => { appliquerTheme(camping) }, [camping])
 
   // Recherche de camping
   const [query, setQuery] = useState('')
@@ -87,14 +99,27 @@ export default function Onboarding({ initialCamping, onDone }) {
         const campingLat = camping.carte_config?.center?.lat
         const campingLng = camping.carte_config?.center?.lng
 
+        // Camping pas encore calibré : on bascule sur le code d'accès.
+        //
+        // Cet écran écrivait ici la position du vacancier dans le camping, en
+        // guise de calibration automatique. Deux dégâts, tous deux constatés :
+        //
+        //   • l'écriture recomposait carte_config à partir de la copie que ce
+        //     client avait en mémoire. Elle remplaçait donc l'objet entier, et
+        //     effaçait ce qu'un autre écran y avait mis entre-temps — les
+        //     points d'intérêt détectés depuis l'administration ont disparu
+        //     ainsi, remplacés par un objet ne contenant qu'un « center » ;
+        //
+        //   • le centre retenu était celui du téléphone du premier arrivant.
+        //     Quelqu'un qui installe l'application depuis chez lui définissait
+        //     le camping à son domicile, et la vérification GPS devenait fausse
+        //     pour tous les suivants.
+        //
+        // Le centre est une donnée du camping : il se règle depuis
+        // l'administration, à l'étape « Position du camping ». Sans lui, le
+        // code affiché à la réception prend le relais — ce qu'il sait déjà faire.
         if (!campingLat || !campingLng) {
-          // Camping pas encore calibré → on sauvegarde cette position comme centre
-          // et on vérifie automatiquement (premier vacancier = calibration)
-          await supabase.from('campings').update({
-            carte_config: { ...(camping.carte_config || {}), center: { lat, lng } }
-          }).eq('id', camping.id)
-          setGpsStatus('ok')
-          setTimeout(() => setStep('form'), 900)
+          setGpsStatus('fail')
           return
         }
 
@@ -197,7 +222,7 @@ export default function Onboarding({ initialCamping, onDone }) {
       ? await supabase.from('vacanciers').update(profil).eq('id', existing.id).select().single()
       : await supabase.from('vacanciers').insert(profil).select().single()
 
-    if (error) { setFormError('Erreur. Réessayez.'); setSaving(false); return }
+    if (error) { setFormError(t('onb.err_generique')); setSaving(false); return }
     onDone(camping, data)
   }
 
@@ -209,81 +234,77 @@ export default function Onboarding({ initialCamping, onDone }) {
             passage de l'un à l'autre ne doit pas se remarquer. */}
         <img src="/logo-mark.png" alt="" width={82} height={87}
              style={{ display: 'block', margin: '0 auto 14px' }} />
-        <h1 style={{ color: '#2f4a26', fontSize: 27, fontWeight: 800, margin: 0, letterSpacing: '-0.5px' }}>
-          CampConnect
-        </h1>
-        <p style={{ color: '#6d7964', marginTop: 7, fontSize: 14.5, lineHeight: 1.45 }}>
+        <Texte variante="titre" style={{ fontSize: 27, color: TITRE }}>CampConnect</Texte>
+        <Texte variante="corps" style={{ marginTop: 7, color: SOUS_TITRE }}>
           {t('onb.rechercher')}
-        </p>
+        </Texte>
       </div>
 
       <Card>
-        <label style={labelStyle}>{t('onb.votre_camping')}</label>
-        <div style={{ position: 'relative', marginTop: 8 }}>
-          <input
-            type="text"
-            value={query}
-            onChange={e => handleQueryChange(e.target.value)}
-            placeholder="ex: Camping Les Pins Verts"
-            style={{ ...inputStyle, paddingLeft: 40 }}
-            autoFocus
-          />
-          <span style={{ position: 'absolute', left: 13, top: '50%', transform: 'translateY(-50%)', fontSize: 17 }}>🔍</span>
-        </div>
-
-        {searching && (
-          <div style={{ color: '#6b7280', fontSize: 13, marginTop: 12, textAlign: 'center' }}>Recherche...</div>
-        )}
-
-        {results.length > 0 && (
-          <div style={{ marginTop: 10, display: 'flex', flexDirection: 'column', gap: 6 }}>
-            {results.map(c => (
-              <button
-                key={c.id}
-                onClick={() => selectCamping(c)}
-                style={{
-                  display: 'flex', alignItems: 'center', gap: 12,
-                  padding: '12px 14px', borderRadius: 10,
-                  border: '1.5px solid #e5e7eb', background: '#fafaf8',
-                  cursor: 'pointer', textAlign: 'left', width: '100%',
-                  transition: 'border-color 0.15s',
-                }}
-              >
-                <div style={{
-                  width: 36, height: 36, borderRadius: 8, flexShrink: 0,
-                  background: c.couleur_principale || '#639922',
-                  display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  fontSize: 18,
-                }}>
-                  {c.logo_url ? <img src={c.logo_url} style={{ width: 28, height: 28, objectFit: 'contain' }} /> : '🏕️'}
-                </div>
-                <div>
-                  <div style={{ fontWeight: 600, fontSize: 14, color: '#1f2937' }}>{c.nom}</div>
-                  <div style={{ fontSize: 12, color: '#6b7280', marginTop: 1 }}>{t('onb.appuyer')}</div>
-                </div>
-              </button>
-            ))}
+        <Pile espace="lg">
+          <div style={{ position: 'relative' }}>
+            <Champ
+              libelle={t('onb.votre_camping')}
+              value={query}
+              onChange={e => handleQueryChange(e.target.value)}
+              placeholder={t('onb.camping_ph')}
+              style={{ paddingLeft: 40 }}
+              autoFocus
+            />
+            <span aria-hidden="true" style={{ position: 'absolute', left: 13, bottom: 15, fontSize: 17 }}>🔍</span>
           </div>
-        )}
 
-        {query.length >= 2 && !searching && results.length === 0 && (
-          <div style={{ color: '#6b7280', fontSize: 13, marginTop: 12, textAlign: 'center' }}>
-            Aucun camping trouvé. Vérifiez l'orthographe.
-          </div>
-        )}
+          {searching && <Texte variante="doux" style={{ textAlign: 'center' }}>{t('onb.en_recherche')}</Texte>}
 
-        <div style={{ marginTop: 20, padding: '12px 14px', background: '#f5f2eb', borderRadius: 10, fontSize: 12, color: '#6b7280', textAlign: 'center' }}>
-          💡 Ou scannez le QR code affiché à la réception de votre camping
-        </div>
+          {results.length > 0 && (
+            <Pile espace="xs">
+              {results.map(c => (
+                <button
+                  key={c.id}
+                  onClick={() => selectCamping(c)}
+                  style={{
+                    display: 'flex', alignItems: 'center', gap: espace.md,
+                    padding: `${espace.md}px 14px`, borderRadius: rayon.md,
+                    border: `1.5px solid ${jetons.bordure}`, background: jetons.fondClair,
+                    cursor: 'pointer', textAlign: 'left', width: '100%',
+                    transition: 'border-color 0.15s',
+                  }}
+                >
+                  <span aria-hidden="true" style={{
+                    width: 36, height: 36, borderRadius: rayon.sm, flexShrink: 0,
+                    background: c.couleur_principale || jetons.marque,
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    fontSize: 18,
+                  }}>
+                    {c.logo_url ? <img src={c.logo_url} alt="" style={{ width: 28, height: 28, objectFit: 'contain' }} /> : '🏕️'}
+                  </span>
+                  <span>
+                    <Texte variante="corps" as="span" style={{ display: 'block', fontWeight: graisse.fort, color: jetons.texte }}>{c.nom}</Texte>
+                    <Texte variante="doux" as="span" style={{ display: 'block', marginTop: 1 }}>{t('onb.appuyer')}</Texte>
+                  </span>
+                </button>
+              ))}
+            </Pile>
+          )}
 
-        {isNative && (
-          <button
-            onClick={() => setAppMode('gerant')}
-            style={{ marginTop: 14, width: '100%', background: 'none', border: 'none', fontSize: 12, color: '#6b7280', textDecoration: 'underline', cursor: 'pointer' }}
-          >
-            {t('onb.gerant')}
-          </button>
-        )}
+          {query.length >= 2 && !searching && results.length === 0 && (
+            <Texte variante="doux" style={{ textAlign: 'center' }}>{t('onb.aucun_camping')}</Texte>
+          )}
+
+          <Texte variante="doux" style={{
+            padding: `${espace.md}px 14px`, background: jetons.fond,
+            borderRadius: rayon.md, textAlign: 'center',
+          }}>
+            {t('onb.qr_astuce')}
+          </Texte>
+
+          {isNative && (
+            <Bouton variante="discret" pleineLargeur onClick={() => setAppMode('gerant')}
+                    style={{ textDecoration: 'underline' }}>
+              {t('onb.gerant')}
+            </Bouton>
+          )}
+        </Pile>
       </Card>
     </Screen>
   )
@@ -296,73 +317,73 @@ export default function Onboarding({ initialCamping, onDone }) {
           ? <img src={camping.logo_url} alt="" style={{ width: 68, height: 68, objectFit: 'contain', borderRadius: 16, marginBottom: 12 }} />
           : <img src="/logo-mark.png" alt="" width={72} height={77} style={{ display: 'block', margin: '0 auto 12px' }} />
         }
-        <h1 style={{ color: '#2f4a26', fontSize: 23, fontWeight: 800, margin: 0, letterSpacing: '-0.3px' }}>{camping.nom}</h1>
-        <p style={{ color: '#6d7964', marginTop: 6, fontSize: 14 }}>Vérification de votre présence</p>
+        <Texte variante="titre" style={{ fontSize: 23, color: TITRE }}>{camping.nom}</Texte>
+        <Texte variante="corps" style={{ marginTop: 6, color: SOUS_TITRE }}>{t('onb.verif_presence')}</Texte>
       </div>
 
       <Card>
-        {/* GPS */}
-        <div style={{ marginBottom: 20 }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 6 }}>
-            <span style={{ fontSize: 20 }}>📍</span>
-            <span style={{ fontWeight: 600, fontSize: 14, color: '#1f2937' }}>Vérification GPS</span>
-            {gpsStatus === 'checking' && <Spinner />}
-            {gpsStatus === 'ok' && <span style={{ color: '#16a34a', fontSize: 13, fontWeight: 600 }}>✓ Confirmé</span>}
-            {gpsStatus === 'fail' && <span style={{ color: '#dc2626', fontSize: 13 }}>Non disponible</span>}
-          </div>
-          <p style={{ fontSize: 12, color: '#6b7280', margin: 0 }}>
-            {gpsStatus === 'checking' && 'Localisation en cours...'}
-            {gpsStatus === 'ok' && 'Vous êtes bien dans le camping !'}
-            {gpsStatus === 'fail' && 'GPS non disponible ou trop loin — utilisez le code ci-dessous.'}
-            {gpsStatus === 'idle' && 'Chargement...'}
-          </p>
-        </div>
+        <Pile espace="lg">
+          {/* GPS — l'état est annoncé aux lecteurs d'écran, pas seulement teinté. */}
+          <Pile espace="xs" role="status" aria-live="polite">
+            <Pile direction="ligne" espace="sm" aligner="center">
+              <span aria-hidden="true" style={{ fontSize: 20 }}>📍</span>
+              <Texte variante="corps" as="span" style={{ fontWeight: graisse.fort, color: jetons.texte }}>
+                {t('onb.verif_gps')}
+              </Texte>
+              {gpsStatus === 'checking' && <Spinner />}
+              {gpsStatus === 'ok' && (
+                <Texte variante="doux" as="span" style={{ color: jetons.succes, fontWeight: graisse.fort }}>
+                  {t('onb.gps_confirme')}
+                </Texte>
+              )}
+              {gpsStatus === 'fail' && (
+                <Texte variante="doux" as="span" style={{ color: jetons.danger }}>{t('onb.gps_indispo')}</Texte>
+              )}
+            </Pile>
+            <Texte variante="micro">
+              {gpsStatus === 'checking' && t('onb.gps_en_cours')}
+              {gpsStatus === 'ok' && t('onb.gps_ok')}
+              {gpsStatus === 'fail' && t('onb.gps_echec')}
+              {gpsStatus === 'idle' && t('commun.chargement')}
+            </Texte>
+          </Pile>
 
-        {/* Code */}
-        {(gpsStatus === 'fail') && (
-          <div style={{ borderTop: '1px solid #e5e7eb', paddingTop: 18 }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10 }}>
-              <span style={{ fontSize: 18 }}>🔑</span>
-              <span style={{ fontWeight: 600, fontSize: 14, color: '#1f2937' }}>Code d'accès du jour</span>
-            </div>
-            <p style={{ fontSize: 12, color: '#6b7280', marginBottom: 12 }}>
-              Affiché à la réception et sur le tableau d'affichage. Change toutes les heures.
-            </p>
-            <div style={{ display: 'flex', gap: 8 }}>
-              <input
-                type="number"
-                value={code}
-                onChange={e => { setCode(e.target.value); setCodeError('') }}
-                placeholder="_ _ _ _"
-                maxLength={4}
-                style={{ ...inputStyle, flex: 1, fontSize: 22, textAlign: 'center', letterSpacing: 8, fontWeight: 700 }}
-                onKeyDown={e => e.key === 'Enter' && checkCode()}
-              />
-              <button
-                onClick={checkCode}
-                style={{
-                  background: couleur, color: '#fff', padding: '0 18px',
-                  borderRadius: 10, fontWeight: 600, fontSize: 14,
-                  border: 'none', cursor: 'pointer', flexShrink: 0,
-                }}
-              >
-                OK
-              </button>
-            </div>
-            {codeError && (
-              <p style={{ color: '#dc2626', fontSize: 12, marginTop: 8, padding: '8px 10px', background: '#fef2f2', borderRadius: 8 }}>
-                {codeError}
-              </p>
-            )}
-          </div>
-        )}
+          {/* Code du jour, en repli quand le GPS ne tranche pas */}
+          {gpsStatus === 'fail' && (
+            <Pile espace="sm" style={{ borderTop: `1px solid ${jetons.bordure}`, paddingTop: 18 }}>
+              <Pile direction="ligne" espace="sm" aligner="center">
+                <span aria-hidden="true" style={{ fontSize: 18 }}>🔑</span>
+                <Texte variante="corps" as="span" style={{ fontWeight: graisse.fort, color: jetons.texte }}>
+                  {t('onb.code_titre')}
+                </Texte>
+              </Pile>
+              <Texte variante="micro">{t('onb.code_detail')}</Texte>
+              <Pile direction="ligne" espace="sm" aligner="flex-end">
+                {/* Champ empile son libellé au-dessus de sa saisie ; sans cette
+                    enveloppe extensible, il se dimensionne sur son contenu et
+                    le bouton OK part à l'autre bout de la carte. */}
+                <div style={{ flex: 1 }}>
+                <Champ
+                  type="number"
+                  libelle={t('onb.code_titre')}
+                  value={code}
+                  onChange={e => { setCode(e.target.value); setCodeError('') }}
+                  onKeyDown={e => e.key === 'Enter' && checkCode()}
+                  placeholder="_ _ _ _"
+                  maxLength={4}
+                  erreur={codeError || undefined}
+                  style={{ fontSize: 22, textAlign: 'center', letterSpacing: 8, fontWeight: graisse.titre }}
+                />
+                </div>
+                <Bouton taille="lg" onClick={checkCode} style={{ flexShrink: 0, minHeight: 48 }}>OK</Bouton>
+              </Pile>
+            </Pile>
+          )}
 
-        <button
-          onClick={changerCamping}
-          style={{ marginTop: 20, background: 'none', border: 'none', color: '#6b7280', fontSize: 13, cursor: 'pointer', width: '100%' }}
-        >
-          ← Changer de camping
-        </button>
+          <Bouton variante="discret" pleineLargeur onClick={changerCamping}>
+            {t('onb.changer')}
+          </Bouton>
+        </Pile>
       </Card>
     </Screen>
   )
@@ -375,120 +396,108 @@ export default function Onboarding({ initialCamping, onDone }) {
           ? <img src={camping.logo_url} alt="" style={{ width: 64, height: 64, objectFit: 'contain', borderRadius: 16, marginBottom: 12 }} />
           : <img src="/logo-mark.png" alt="" width={66} height={70} style={{ display: 'block', margin: '0 auto 12px' }} />
         }
-        <h1 style={{ color: '#2f4a26', fontSize: 23, fontWeight: 800, margin: 0, letterSpacing: '-0.3px' }}>{camping.nom}</h1>
-        <p style={{ color: '#6d7964', marginTop: 6, fontSize: 14 }}>Créez votre profil vacancier</p>
+        <Texte variante="titre" style={{ fontSize: 23, color: TITRE }}>{camping.nom}</Texte>
+        <Texte variante="corps" style={{ marginTop: 6, color: SOUS_TITRE }}>{t('onb.creez_profil')}</Texte>
       </div>
 
       <Card>
         <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
-          {/* Avatar */}
-          <div>
-            <label style={labelStyle}>AVATAR</label>
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginTop: 8 }}>
+          <Pile espace="sm" role="group" aria-label={t('onb.avatar')}>
+            <Texte variante="libelle" as="span">{t('onb.avatar')}</Texte>
+            <Pile direction="ligne" espace="sm" retour>
               {AVATARS.map(emoji => (
                 <button
                   key={emoji} type="button"
+                  aria-label={emoji}
+                  aria-pressed={form.avatar_emoji === emoji}
                   onClick={() => setForm(f => ({ ...f, avatar_emoji: emoji }))}
                   style={{
-                    width: 44, height: 44, fontSize: 24, borderRadius: 10,
-                    border: form.avatar_emoji === emoji ? `2px solid ${couleur}` : '2px solid #e5e7eb',
-                    background: form.avatar_emoji === emoji ? `${couleur}15` : '#f9fafb',
+                    width: 44, height: 44, fontSize: 24, borderRadius: rayon.md,
+                    border: `2px solid ${form.avatar_emoji === emoji ? 'var(--cc-accent)' : jetons.bordure}`,
+                    background: form.avatar_emoji === emoji ? 'var(--cc-accent-voile)' : jetons.surface,
                     cursor: 'pointer',
                   }}
                 >
                   {emoji}
                 </button>
               ))}
-            </div>
-          </div>
+            </Pile>
+          </Pile>
 
-          <label style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-            <span style={labelStyle}>PSEUDO *</span>
-            <input
-              type="text" value={form.pseudo}
-              onChange={e => setForm(f => ({ ...f, pseudo: e.target.value }))}
-              placeholder="ex: Marie42" style={inputStyle} autoFocus
-            />
-          </label>
+          <Champ
+            libelle={`${t('profil.pseudo')} *`}
+            value={form.pseudo}
+            onChange={e => setForm(f => ({ ...f, pseudo: e.target.value }))}
+            placeholder={t('onb.pseudo_place')}
+            autoFocus
+          />
 
-          <label style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-            <span style={labelStyle}>N° EMPLACEMENT</span>
-            <input
-              type="text" value={form.emplacement}
-              onChange={e => setForm(f => ({ ...f, emplacement: e.target.value }))}
-              placeholder="ex: A42 (optionnel)" style={inputStyle}
-            />
-          </label>
+          <Champ
+            libelle={t('profil.emplacement')}
+            value={form.emplacement}
+            onChange={e => setForm(f => ({ ...f, emplacement: e.target.value }))}
+            placeholder={t('onb.emplacement_ph')}
+          />
 
-          <label style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-            <span style={labelStyle}>DATE DE DÉPART</span>
-            <input
-              type="date" value={form.date_depart}
-              min={new Date().toISOString().slice(0, 10)}
-              onChange={e => setForm(f => ({ ...f, date_depart: e.target.value }))}
-              style={inputStyle}
-            />
-            <span style={{ fontSize: 11, color: '#6b7280' }}>
-              Jusqu'à quand restez-vous ? Modifiable dans votre profil si vous prolongez.
-            </span>
-          </label>
+          <Champ
+            type="date"
+            libelle={t('profil.depart')}
+            aide={t('onb.depart_aide')}
+            value={form.date_depart}
+            min={new Date().toISOString().slice(0, 10)}
+            onChange={e => setForm(f => ({ ...f, date_depart: e.target.value }))}
+          />
 
           {/* Règles de la communauté et acceptation des conditions.
               La règle 1.2 de l'App Store impose que ces conditions soient
               présentées AVANT l'inscription et qu'elles annoncent explicitement
               une tolérance zéro. Un simple lien ne suffit pas : la phrase doit
               être lisible à l'écran, c'est ce que vérifie l'examinateur. */}
-          <div style={{
-            background: '#fff7ed', border: '1px solid #fed7aa',
-            borderRadius: 12, padding: '14px 16px',
-          }}>
-            <div style={{ fontSize: 13, fontWeight: 700, color: '#9a3412', marginBottom: 6 }}>
+          <Carte
+            hauteur="posee"
+            padding={`14px ${espace.lg}px`}
+            style={{ background: jetons.alerteFond, border: '1px solid #fed7aa', boxShadow: 'none' }}
+          >
+            <Texte variante="doux" style={{ fontWeight: graisse.titre, color: jetons.alerte, marginBottom: 6 }}>
               {t('cgu.titre')}
-            </div>
-            <p style={{ fontSize: 12.5, color: '#7c2d12', lineHeight: 1.55 }}>
+            </Texte>
+            <Texte variante="doux" style={{ color: '#7c2d12', lineHeight: 1.55 }}>
               {t('cgu.tolerance')}
-            </p>
-          </div>
+            </Texte>
+          </Carte>
 
-          <label style={{ display: 'flex', alignItems: 'flex-start', gap: 10, cursor: 'pointer', fontSize: 12, color: '#6b7280', lineHeight: 1.5 }}>
+          <label style={{ display: 'flex', alignItems: 'flex-start', gap: espace.sm, cursor: 'pointer' }}>
             <input type="checkbox" required checked={cguAcceptees}
                    onChange={e => setCguAcceptees(e.target.checked)}
                    style={{ marginTop: 2, width: 16, height: 16, flexShrink: 0 }} />
-            <span>
+            <Texte variante="doux" as="span">
               {t('cgu.accepte')}{' '}
               <a href="https://www.campconnect.fr/cgu.html" target="_blank" rel="noreferrer"
-                 style={{ color: couleur, fontWeight: 600 }}>{t('cgu.lien_cgu')}</a>
+                 style={{ color: 'var(--cc-accent)', fontWeight: graisse.fort }}>{t('cgu.lien_cgu')}</a>
               {' '}{t('commun.et')}{' '}
               <a href="https://www.campconnect.fr/confidentialite.html" target="_blank" rel="noreferrer"
-                 style={{ color: couleur, fontWeight: 600 }}>{t('cgu.lien_confid')}</a>.
+                 style={{ color: 'var(--cc-accent)', fontWeight: graisse.fort }}>{t('cgu.lien_confid')}</a>.
               {' '}{t('cgu.visibilite')}
-            </span>
+            </Texte>
           </label>
 
           {formError && (
-            <p style={{ color: '#dc2626', fontSize: 13, padding: '10px 12px', background: '#fef2f2', borderRadius: 8 }}>
+            <Texte variante="doux" role="alert" style={{
+              color: jetons.danger, fontWeight: graisse.fort,
+              padding: `10px ${espace.md}px`, background: jetons.dangerFond, borderRadius: rayon.sm,
+            }}>
               {formError}
-            </p>
+            </Texte>
           )}
 
-          <button
-            type="submit" disabled={saving}
-            style={{
-              background: saving ? '#9ca3af' : couleur, color: '#fff',
-              padding: '14px', borderRadius: 12, fontSize: 16, fontWeight: 600,
-              border: 'none', cursor: saving ? 'default' : 'pointer',
-            }}
-          >
+          <Bouton type="submit" taille="lg" pleineLargeur charge={saving}>
             {saving ? t('onb.enregistrement') : t('onb.cest_parti')}
-          </button>
+          </Bouton>
         </form>
 
-        <button
-          onClick={changerCamping}
-          style={{ marginTop: 16, background: 'none', border: 'none', color: '#6b7280', fontSize: 13, cursor: 'pointer', width: '100%' }}
-        >
-          ← Changer de camping
-        </button>
+        <Bouton variante="discret" pleineLargeur onClick={changerCamping} style={{ marginTop: espace.lg }}>
+          {t('onb.changer')}
+        </Bouton>
       </Card>
     </Screen>
   )
@@ -534,32 +543,30 @@ function Screen({ bg, clair, children }) {
 
 function Card({ children }) {
   return (
-    <div style={{
-      background: '#fff', borderRadius: 22, padding: '26px 22px',
-      width: '100%', maxWidth: 380,
-      // Sur fond clair, l'ombre dense d'origine faisait une tache grise. Une
-      // ombre douce doublée d'un liseré détache la carte sans la salir.
-      border: '1px solid rgba(47, 74, 38, 0.07)',
-      boxShadow: '0 12px 40px rgba(47, 74, 38, 0.10), 0 2px 6px rgba(47, 74, 38, 0.05)',
-    }}>
+    <Carte
+      hauteur="flottante"
+      padding="26px 22px"
+      style={{
+        borderRadius: 22, width: '100%', maxWidth: 380,
+        // Sur fond clair, une ombre dense ferait une tache grise. Le liseré
+        // teinté détache la carte sans la salir.
+        border: '1px solid rgba(47, 74, 38, 0.07)',
+      }}
+    >
       {children}
-    </div>
+    </Carte>
   )
 }
 
 function Spinner() {
   return (
-    <div style={{
-      width: 14, height: 14, border: '2px solid #e5e7eb',
-      borderTopColor: '#639922', borderRadius: '50%',
-      animation: 'spin 0.7s linear infinite', flexShrink: 0,
-    }} />
+    <span
+      aria-hidden="true"
+      style={{
+        width: 14, height: 14, border: `2px solid ${jetons.bordure}`,
+        borderTopColor: 'var(--cc-accent)', borderRadius: rayon.rond,
+        animation: 'spin 0.7s linear infinite', flexShrink: 0,
+      }}
+    />
   )
-}
-
-const labelStyle = { fontSize: 11, fontWeight: 700, color: '#6b7280', textTransform: 'uppercase', letterSpacing: 0.8 }
-const inputStyle = {
-  padding: '12px 14px', borderRadius: 10,
-  border: '1.5px solid #e5e7eb', fontSize: 16,
-  outline: 'none', width: '100%',
 }

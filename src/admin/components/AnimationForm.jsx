@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { couleur as jetons } from '../../design'
 
 const EMOJIS = ['🎉', '🏊', '🎸', '⚽', '🎯', '🎤', '🧘', '🚴', '🎮', '🍕', '🎨', '🏐', '🌅', '🔥', '🎭']
 
@@ -120,7 +121,7 @@ export default function AnimationForm({ initial, onSave, onCancel, saving }) {
           onClick={() => setForm(f => ({ ...f, publiee: !f.publiee }))}
           style={{
             width: 44, height: 24, borderRadius: 12,
-            background: form.publiee ? '#639922' : '#d1d5db',
+            background: form.publiee ? jetons.marque : '#d1d5db',
             position: 'relative', cursor: 'pointer', transition: 'background 0.2s',
             flexShrink: 0,
           }}
@@ -133,7 +134,7 @@ export default function AnimationForm({ initial, onSave, onCancel, saving }) {
             transition: 'left 0.2s',
           }} />
         </div>
-        <span style={{ fontSize: 14, color: '#374151' }}>
+        <span style={{ fontSize: 14, color: jetons.texteMoyen }}>
           {form.publiee ? 'Publier immédiatement' : 'Enregistrer en brouillon'}
         </span>
       </div>
@@ -142,7 +143,7 @@ export default function AnimationForm({ initial, onSave, onCancel, saving }) {
       <div style={{ display: 'flex', gap: 10, marginTop: 4 }}>
         <button
           type="button" onClick={onCancel}
-          style={{ flex: 1, padding: '12px', borderRadius: 10, background: '#f3f4f6', color: '#374151', fontWeight: 600 }}
+          style={{ flex: 1, padding: '12px', borderRadius: 10, background: jetons.surfaceDouce, color: jetons.texteMoyen, fontWeight: 600 }}
         >
           Annuler
         </button>
@@ -151,7 +152,7 @@ export default function AnimationForm({ initial, onSave, onCancel, saving }) {
           disabled={saving || !form.titre.trim()}
           style={{
             flex: 2, padding: '12px', borderRadius: 10,
-            background: saving || !form.titre.trim() ? '#9ca3af' : '#639922',
+            background: saving || !form.titre.trim() ? '#9ca3af' : jetons.marque,
             color: '#fff', fontWeight: 700,
           }}
         >
@@ -163,7 +164,7 @@ export default function AnimationForm({ initial, onSave, onCancel, saving }) {
 }
 
 const labelStyle = {
-  fontSize: 11, fontWeight: 700, color: '#6b7280',
+  fontSize: 11, fontWeight: 700, color: jetons.texteDoux,
   textTransform: 'uppercase', letterSpacing: 0.8, display: 'block', marginBottom: 6,
 }
 const inputStyle = {

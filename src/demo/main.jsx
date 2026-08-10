@@ -12,12 +12,15 @@ import Chat from '../pages/Chat'
 import Infos from '../pages/Infos'
 import Profil from '../pages/Profil'
 import Overview from '../admin/pages/Overview'
+import Onboarding from '../pages/Onboarding'
 import { DEMO_CAMPING, DEMO_VACANCIER } from './mockSupabase'
 import { ToastHost } from '../components/Toast'
+import { appliquerTheme } from '../design'
 
 const c = DEMO_CAMPING, v = DEMO_VACANCIER
+appliquerTheme(c)
 const s = new URLSearchParams(location.search).get('s') || 'accueil'
-const routeFor = { accueil: '/', groupes: '/groupes', map: '/map', agenda: '/agenda', infos: '/infos', profil: '/profil', chat: '/chat/g1', admin: '/admin/overview' }
+const routeFor = { accueil: '/', groupes: '/groupes', map: '/map', agenda: '/agenda', infos: '/infos', profil: '/profil', chat: '/chat/g1', admin: '/admin/overview', onboarding: '/onboarding' }
 const entry = routeFor[s] || '/'
 
 function DemoApp() {
@@ -32,6 +35,7 @@ function DemoApp() {
         <Route path="/profil" element={<Profil camping={c} vacancier={v} onLogout={() => {}} />} />
       </Route>
       <Route path="/chat/:groupeId" element={<Chat camping={c} vacancier={v} />} />
+      <Route path="/onboarding" element={<Onboarding initialCamping={c} onDone={() => {}} />} />
       <Route element={<AdminLayout gerant={{ nom: 'Gérant démo' }} camping={c} onLogout={() => {}} />}>
         <Route path="/admin/overview" element={<Overview camping={c} />} />
       </Route>

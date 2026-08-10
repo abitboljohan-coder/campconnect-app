@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { t, useLangue, locale } from '../i18n'
+import { Carte, Texte, Pile, couleur, espace, graisse, texte as tailles } from '../design'
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Météo du camping — Open-Meteo (gratuit, sans clé API, sans compte)
@@ -42,7 +43,7 @@ function coordsCamping(camping) {
   return null
 }
 
-export default function Meteo({ camping, couleur }) {
+export default function Meteo({ camping }) {
   useLangue()
   const coords = coordsCamping(camping)
   // Init paresseuse depuis le cache (évite un setState synchrone dans l'effet)
@@ -84,27 +85,28 @@ export default function Meteo({ camping, couleur }) {
   const jours = data.daily?.time?.slice(1, 4) || []
 
   return (
-    <div style={{
-      background: '#fff', borderRadius: 16, padding: '14px 16px',
-      margin: '14px 16px 0', boxShadow: '0 1px 4px rgba(0,0,0,0.07)',
-      display: 'flex', alignItems: 'center', gap: 14,
-    }}>
+    <Carte
+      hauteur="posee"
+      padding={`14px ${espace.lg}px`}
+      style={{
+        margin: `14px ${espace.lg}px 0`,
+        display: 'flex', alignItems: 'center', gap: espace.lg,
+      }}
+    >
       {/* Aujourd'hui */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: 11, flexShrink: 0 }}>
-        <span style={{ fontSize: 34, lineHeight: 1 }}>{emoji}</span>
+      <Pile direction="ligne" espace="md" aligner="center" style={{ flexShrink: 0 }}>
+        <span aria-hidden="true" style={{ fontSize: 34, lineHeight: 1 }}>{emoji}</span>
         <div>
-          <div style={{ fontSize: 24, fontWeight: 800, color: '#1a1a1a', lineHeight: 1.1 }}>
-            {temp}°
-          </div>
-          <div style={{ fontSize: 11.5, color: '#6b7280' }}>{t(`meteo.${libelle}`)}</div>
+          <Texte variante="titre" style={{ fontSize: tailles.grosTitre, lineHeight: 1.1 }}>{temp}°</Texte>
+          <Texte variante="micro">{t(`meteo.${libelle}`)}</Texte>
         </div>
-      </div>
+      </Pile>
 
-      {/* 3 prochains jours */}
+      {/* Les trois jours suivants */}
       {jours.length > 0 && (
         <div style={{
-          display: 'flex', gap: 4, marginLeft: 'auto',
-          borderLeft: '1px solid #f0ede6', paddingLeft: 12,
+          display: 'flex', gap: espace.xs, marginLeft: 'auto',
+          borderLeft: `1px solid ${couleur.bordure}`, paddingLeft: espace.md,
         }}>
           {jours.map((iso, i) => {
             const idx = i + 1
@@ -114,17 +116,17 @@ export default function Meteo({ camping, couleur }) {
             const jour = new Date(iso + 'T12:00').toLocaleDateString(locale(), { weekday: 'short' })
             return (
               <div key={iso} style={{ textAlign: 'center', minWidth: 42 }}>
-                <div style={{ fontSize: 10, color: '#6b7280', textTransform: 'capitalize', fontWeight: 600 }}>
+                <Texte variante="micro" style={{ fontSize: 10, textTransform: 'capitalize', fontWeight: graisse.fort }}>
                   {jour}
-                </div>
-                <div style={{ fontSize: 17, margin: '1px 0' }}>{em}</div>
-                <div style={{ fontSize: 10.5, fontWeight: 700, color: couleur }}>{max}°</div>
-                <div style={{ fontSize: 9.5, color: '#c4c0b6' }}>{min}°</div>
+                </Texte>
+                <div aria-hidden="true" style={{ fontSize: 17, margin: '1px 0' }}>{em}</div>
+                <Texte variante="micro" style={{ fontSize: 10.5, fontWeight: graisse.titre, color: 'var(--cc-accent)' }}>{max}°</Texte>
+                <Texte variante="micro" style={{ fontSize: 9.5 }}>{min}°</Texte>
               </div>
             )
           })}
         </div>
       )}
-    </div>
+    </Carte>
   )
 }

@@ -1,6 +1,8 @@
 import { useState } from 'react'
 import { supabase } from '../../supabase'
 import QRCodeGenerator from '../components/QRCodeGenerator'
+import { Bloc, Alerte, EnTete } from '../components/Bloc'
+import { Bouton, Texte, Pile, couleur as jetons, espace, graisse, rayon } from '../../design'
 
 export default function Parametres({ gerant, camping, session }) {
   const [email, setEmail]       = useState(session?.user?.email || '')
@@ -89,18 +91,14 @@ export default function Parametres({ gerant, camping, session }) {
   const appUrl = `${window.location.origin}?camping=${camping?.slug || 'demo'}`
 
   return (
-    <div>
-      <div style={{ marginBottom: 28 }}>
-        <h1 style={{ fontSize: 24, fontWeight: 700, color: '#1a1a1a' }}>Paramètres</h1>
-      </div>
+    <Pile espace="xl">
+      <EnTete titre="Paramètres" />
 
-      {success && <Alert type="success">{success}</Alert>}
-      {error   && <Alert type="error">{error}</Alert>}
-
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
+      {success && <Alerte type="succes">{success}</Alerte>}
+      {error   && <Alerte type="erreur">{error}</Alerte>}
 
         {/* Email */}
-        <Card title="Adresse email">
+        <Bloc titre="Adresse email">
           <form onSubmit={updateEmail} style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
             <input
               type="email" value={email}
@@ -111,10 +109,10 @@ export default function Parametres({ gerant, camping, session }) {
               {savingEmail ? 'Mise à jour...' : 'Modifier l\'email'}
             </button>
           </form>
-        </Card>
+        </Bloc>
 
         {/* Mot de passe */}
-        <Card title="Mot de passe">
+        <Bloc titre="Mot de passe">
           <form onSubmit={updatePassword} style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
             <input
               type="password" value={newPwd}
@@ -132,10 +130,10 @@ export default function Parametres({ gerant, camping, session }) {
               {savingPwd ? 'Modification...' : 'Changer le mot de passe'}
             </button>
           </form>
-        </Card>
+        </Bloc>
 
         {/* Infos camping */}
-        <Card title="Informations du camping">
+        <Bloc titre="Informations du camping">
           <form onSubmit={updateCamping} style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
             <div>
               <label style={labelStyle}>NOM DU CAMPING</label>
@@ -147,26 +145,26 @@ export default function Parametres({ gerant, camping, session }) {
             </div>
             <div>
               <label style={labelStyle}>SLUG (identifiant URL)</label>
-              <input type="text" value={camping?.slug || ''} disabled style={{ ...inputStyle, background: '#f3f4f6', color: '#6b7280' }} />
-              <div style={{ fontSize: 12, color: '#6b7280', marginTop: 4 }}>Le slug ne peut pas être modifié.</div>
+              <input type="text" value={camping?.slug || ''} disabled style={{ ...inputStyle, background: jetons.surfaceDouce, color: jetons.texteDoux }} />
+              <div style={{ fontSize: 12, color: jetons.texteDoux, marginTop: 4 }}>Le slug ne peut pas être modifié.</div>
             </div>
             <button type="submit" disabled={savingCamping} style={btnStyle(savingCamping)}>
               {savingCamping ? 'Enregistrement...' : 'Enregistrer'}
             </button>
           </form>
-        </Card>
+        </Bloc>
 
         {/* QR Code */}
-        <Card title="QR Code de l'application">
-          <p style={{ fontSize: 14, color: '#6b7280', marginBottom: 16 }}>
+        <Bloc titre="QR Code de l'application">
+          <p style={{ fontSize: 14, color: jetons.texteDoux, marginBottom: 16 }}>
             Partagez ce QR code avec vos vacanciers pour qu'ils accèdent à l'application.
           </p>
           <QRCodeGenerator url={appUrl} campingNom={camping?.nom} />
-        </Card>
+        </Bloc>
 
         {/* Export CSV */}
-        <Card title="Export des données">
-          <p style={{ fontSize: 14, color: '#6b7280', marginBottom: 16 }}>
+        <Bloc titre="Export des données">
+          <p style={{ fontSize: 14, color: jetons.texteDoux, marginBottom: 16 }}>
             Téléchargez la liste de vos vacanciers au format CSV (Excel).
           </p>
           <button
@@ -189,71 +187,47 @@ export default function Parametres({ gerant, camping, session }) {
               URL.revokeObjectURL(a.href)
             }}
             style={{
-              background: '#639922', color: '#fff', padding: '11px 20px',
+              background: jetons.marque, color: '#fff', padding: '11px 20px',
               borderRadius: 10, border: 'none', fontSize: 14, fontWeight: 600, cursor: 'pointer',
             }}
           >
             📥 Exporter les vacanciers (CSV)
           </button>
-        </Card>
+        </Bloc>
 
-        {/* Zone danger */}
-        <div style={{
-          background: '#fff5f5', borderRadius: 14, padding: '20px 22px',
-          border: '1.5px solid #fecaca',
-        }}>
-          <h2 style={{ fontSize: 16, fontWeight: 700, color: '#dc2626', marginBottom: 8 }}>
-            ⚠️ Zone de danger
-          </h2>
-          <p style={{ fontSize: 14, color: '#6b7280', marginBottom: 16 }}>
-            Supprime tous les vacanciers, groupes, messages et inscriptions de cette saison. Les animations et la configuration du camping sont conservées.
-          </p>
-          <button
-            onClick={resetDonnees}
-            disabled={resetting}
-            style={{
-              padding: '12px 20px', borderRadius: 10,
-              background: resetting ? '#9ca3af' : '#dc2626',
-              color: '#fff', fontWeight: 700, fontSize: 14,
-            }}
-          >
-            {resetting ? 'Réinitialisation...' : 'Réinitialiser les données de la saison'}
-          </button>
-        </div>
-
-      </div>
-    </div>
+      {/* Zone danger */}
+      <Bloc style={{ background: jetons.dangerFond, border: '1.5px solid #fecaca' }}>
+        <Texte variante="sousTitre" as="h2" style={{ fontSize: 16, color: jetons.danger }}>
+          ⚠️ Zone de danger
+        </Texte>
+        <Texte variante="corps">
+          Supprime tous les vacanciers, groupes, messages et inscriptions de cette saison. Les animations et la configuration du camping sont conservées.
+        </Texte>
+        <Bouton
+          taille="lg" charge={resetting} onClick={resetDonnees}
+          style={{ alignSelf: 'flex-start', background: jetons.danger, color: '#fff' }}
+        >
+          {resetting ? 'Réinitialisation…' : 'Réinitialiser les données de la saison'}
+        </Bouton>
+      </Bloc>
+    </Pile>
   )
 }
 
-function Card({ title, children }) {
-  return (
-    <div style={{ background: '#fff', borderRadius: 14, padding: '20px 22px', border: '1px solid rgba(0,0,0,0.07)' }}>
-      <h2 style={{ fontSize: 16, fontWeight: 700, color: '#1a1a1a', marginBottom: 18 }}>{title}</h2>
-      {children}
-    </div>
-  )
-}
 
-function Alert({ type, children }) {
-  const isSuccess = type === 'success'
-  return (
-    <div style={{
-      background: isSuccess ? '#dcfce7' : '#fef2f2',
-      color: isSuccess ? '#166534' : '#dc2626',
-      padding: '12px 16px', borderRadius: 10,
-      fontSize: 14, fontWeight: 500, marginBottom: 16,
-    }}>
-      {isSuccess ? '✅ ' : '❌ '}{children}
-    </div>
-  )
-}
 
-const labelStyle = { fontSize: 11, fontWeight: 700, color: '#6b7280', textTransform: 'uppercase', letterSpacing: 0.8, display: 'block', marginBottom: 6 }
-const inputStyle = { width: '100%', padding: '11px 13px', borderRadius: 10, border: '1.5px solid #e5e7eb', fontSize: 16, outline: 'none', background: '#fafaf8', boxSizing: 'border-box' }
+const labelStyle = {
+  fontSize: 11, fontWeight: graisse.titre, color: jetons.texteDoux,
+  textTransform: 'uppercase', letterSpacing: 0.8, display: 'block', marginBottom: espace.xs,
+}
+const inputStyle = {
+  width: '100%', padding: `11px 13px`, borderRadius: rayon.md,
+  border: `1.5px solid ${jetons.bordure}`, fontSize: 16, outline: 'none',
+  background: jetons.fondClair, boxSizing: 'border-box',
+}
 const btnStyle = (disabled) => ({
   padding: '12px', borderRadius: 10,
-  background: disabled ? '#9ca3af' : '#639922',
+  background: disabled ? '#9ca3af' : jetons.marque,
   color: '#fff', fontWeight: 600, fontSize: 14,
   alignSelf: 'flex-start',
 })

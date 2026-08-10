@@ -1,6 +1,12 @@
 import { Component } from 'react'
+import { t } from '../i18n'
+import { couleur, espace, graisse, rayon, texte as tailles } from '../design'
 
 // Empêche l'écran blanc : capture toute erreur de rendu et affiche un écran propre.
+//
+// Les couleurs sont écrites en dur plutôt que lues dans les propriétés
+// personnalisées : cet écran doit s'afficher même quand le rendu a échoué
+// avant que le thème du camping n'ait été appliqué.
 export default class ErrorBoundary extends Component {
   state = { error: null }
 
@@ -12,23 +18,29 @@ export default class ErrorBoundary extends Component {
     if (!this.state.error) return this.props.children
     return (
       <div style={{
-        minHeight: '100dvh', background: '#0d1f0d', color: '#fff',
+        minHeight: '100dvh', background: couleur.marqueSombre, color: '#fff',
         display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
-        padding: '24px 20px', textAlign: 'center', fontFamily: 'sans-serif',
+        padding: `${espace.xl}px 20px`, textAlign: 'center', fontFamily: 'sans-serif',
       }}>
-        <div style={{ fontSize: 52, marginBottom: 16 }}>🌲</div>
-        <h1 style={{ fontSize: 22, fontWeight: 700, margin: 0 }}>Oups, une erreur est survenue</h1>
-        <p style={{ color: 'rgba(255,255,255,0.6)', marginTop: 12, fontSize: 15, maxWidth: 320, lineHeight: 1.6 }}>
-          Rechargez l'application. Si le problème persiste, contactez la réception.
+        <div aria-hidden="true" style={{ fontSize: 52, marginBottom: espace.lg }}>🌲</div>
+        <h1 style={{ fontSize: 22, fontWeight: graisse.titre, margin: 0 }}>
+          {t('erreur.titre')}
+        </h1>
+        <p style={{
+          color: 'rgba(255,255,255,0.72)', marginTop: espace.md,
+          fontSize: tailles.moyen, maxWidth: 320, lineHeight: 1.6,
+        }}>
+          {t('erreur.texte')}
         </p>
         <button
           onClick={() => { window.location.href = '/' }}
           style={{
-            marginTop: 28, padding: '14px 28px', borderRadius: 12, border: 'none',
-            background: '#639922', color: '#fff', fontSize: 15, fontWeight: 700, cursor: 'pointer',
+            marginTop: 28, padding: `${espace.lg}px 28px`, borderRadius: rayon.md, border: 'none',
+            background: couleur.marque, color: '#fff',
+            fontSize: tailles.moyen, fontWeight: graisse.titre, cursor: 'pointer',
           }}
         >
-          Recharger
+          {t('erreur.recharger')}
         </button>
       </div>
     )

@@ -3,10 +3,12 @@ import { Link } from 'react-router-dom'
 import { supabase, presentFilter, todayISO } from '../../supabase'
 import StatCard from '../components/StatCard'
 import { getHourlyCode } from '../../pages/Onboarding'
+import { Bloc, EnTete } from '../components/Bloc'
+import { Bouton, Texte, Pile, Squelette, Vide, couleur as jetons, espace, graisse, rayon, texte as tailles } from '../../design'
 
 function OnboardingChecklist({ camping, stats }) {
   const hasLogo      = !!camping?.logo_url
-  const hasColor     = !!camping?.couleur_principale && camping.couleur_principale !== '#639922'
+  const hasColor     = !!camping?.couleur_principale && camping.couleur_principale !== jetons.marque
   const perimeter    = camping?.carte_config?.perimeter || []
   const pins         = camping?.carte_config?.pins || []
   const hasContour   = perimeter.length >= 3
@@ -22,53 +24,70 @@ function OnboardingChecklist({ camping, stats }) {
   if (doneCount === steps.length) return null // tout est fait → on masque
 
   return (
-    <div style={{
+    <Bloc style={{
       background: 'linear-gradient(135deg, #f0fdf4, #ecfccb)',
-      borderRadius: 16, padding: '20px 22px', marginBottom: 24,
       border: '1px solid #bbf7d0',
+      borderRadius: rayon.lg,
     }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 }}>
+      <Pile direction="ligne" espace="md" justifier="space-between" aligner="center">
         <div>
-          <div style={{ fontSize: 16, fontWeight: 700, color: '#1a4d1a' }}>
+          <Texte variante="sousTitre" as="h2" style={{ fontSize: 16, color: '#1a4d1a' }}>
             🚀 Bienvenue ! Configurez votre camping en 4 étapes
-          </div>
-          <div style={{ fontSize: 12, color: '#166534', marginTop: 2 }}>
+          </Texte>
+          <Texte variante="doux" style={{ color: jetons.succes, marginTop: 2 }}>
             {doneCount}/{steps.length} étapes complétées
-          </div>
+          </Texte>
         </div>
-        <div style={{ fontSize: 26, fontWeight: 800, color: '#166534' }}>
+        {/* La progression est aussi une valeur : annoncée, elle ne dépend plus
+            du seul repérage visuel du grand pourcentage. */}
+        <div
+          role="progressbar"
+          aria-valuenow={doneCount}
+          aria-valuemin={0}
+          aria-valuemax={steps.length}
+          aria-label="Configuration du camping"
+          style={{ fontSize: 26, fontWeight: graisse.affiche, color: jetons.succes, flexShrink: 0 }}
+        >
           {Math.round((doneCount / steps.length) * 100)}%
         </div>
-      </div>
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+      </Pile>
+
+      <Pile espace="sm">
         {steps.map((s, i) => (
           <Link key={i} to={s.to} style={{
-            display: 'flex', alignItems: 'center', gap: 12, padding: '10px 14px',
-            background: s.done ? 'rgba(22,101,52,0.08)' : '#fff',
-            borderRadius: 10, textDecoration: 'none',
-            border: '1px solid ' + (s.done ? 'transparent' : 'rgba(0,0,0,0.06)'),
+            display: 'flex', alignItems: 'center', gap: espace.md,
+            padding: `10px ${espace.lg}px`,
+            background: s.done ? 'rgba(22,101,52,0.08)' : jetons.surface,
+            borderRadius: rayon.md, textDecoration: 'none',
+            border: `1px solid ${s.done ? 'transparent' : jetons.bordure}`,
             opacity: s.done ? 0.7 : 1,
           }}>
-            <div style={{
-              width: 26, height: 26, borderRadius: '50%',
-              background: s.done ? '#639922' : '#fff',
-              border: '2px solid ' + (s.done ? '#639922' : '#d1d5db'),
-              color: '#fff', fontSize: 14, fontWeight: 800,
+            <span aria-hidden="true" style={{
+              width: 26, height: 26, borderRadius: rayon.rond,
+              background: s.done ? jetons.marque : jetons.surface,
+              border: `2px solid ${s.done ? jetons.marque : jetons.bordure}`,
+              color: '#fff', fontSize: 14, fontWeight: graisse.affiche,
               display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
             }}>
               {s.done ? '✓' : ''}
-            </div>
-            <span style={{ fontSize: 20 }}>{s.icon}</span>
-            <span style={{ flex: 1, fontSize: 14, fontWeight: 600,
-                           color: s.done ? '#6b7280' : '#1a1a1a',
-                           textDecoration: s.done ? 'line-through' : 'none' }}>
-              {s.label}
             </span>
-            {!s.done && <span style={{ fontSize: 12, color: '#54821d', fontWeight: 700 }}>Commencer →</span>}
+            <span aria-hidden="true" style={{ fontSize: 20 }}>{s.icon}</span>
+            <Texte variante="corps" as="span" style={{
+              flex: 1, fontWeight: graisse.fort,
+              color: s.done ? jetons.texteDoux : jetons.texte,
+              textDecoration: s.done ? 'line-through' : 'none',
+            }}>
+              {s.label}
+            </Texte>
+            {!s.done && (
+              <Texte variante="doux" as="span" style={{ color: jetons.marqueTexte, fontWeight: graisse.titre }}>
+                Commencer →
+              </Texte>
+            )}
           </Link>
         ))}
-      </div>
-    </div>
+      </Pile>
+    </Bloc>
   )
 }
 
@@ -148,13 +167,11 @@ export default function Overview({ camping }) {
   }
 
   return (
-    <div>
-      <div style={{ marginBottom: 28 }}>
-        <h1 style={{ fontSize: 24, fontWeight: 700, color: '#1a1a1a' }}>Vue d'ensemble</h1>
-        <p style={{ color: '#6b7280', fontSize: 14, marginTop: 4 }}>
-          {new Date().toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}
-        </p>
-      </div>
+    <Pile espace="xl">
+      <EnTete
+        titre="Vue d'ensemble"
+        sous={new Date().toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}
+      />
 
       {/* Guide de démarrage — masqué quand tout est configuré */}
       <OnboardingChecklist camping={camping} stats={stats} />
@@ -162,8 +179,7 @@ export default function Overview({ camping }) {
       {/* Code d'accès + QR */}
       <AccessCodeCard camping={camping} />
 
-      {/* Stats cards */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(200px, 100%), 1fr))', gap: 14, marginBottom: 32 }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(200px, 100%), 1fr))', gap: 14 }}>
         <StatCard icon="🏕️" value={stats.vacanciers} label="Vacanciers présents" sub="Actuellement au camping" />
         <StatCard icon="👋" value={departs.semaine} label="Départs sous 7 jours" sub={departs.aujourdhui.length ? `dont ${departs.aujourdhui.length} aujourd'hui` : 'Aucun aujourd\'hui'} color="#0ea5e9" />
         <StatCard icon="👥" value={stats.groupes} label="Groupes actifs" sub="En ce moment" color="#f59e0b" />
@@ -171,103 +187,97 @@ export default function Overview({ camping }) {
         <StatCard icon="📈" value={`${stats.taux}%`} label="Taux de remplissage" sub="Animations publiées" color="#ef4444" />
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(300px, 100%), 1fr))', gap: 20 }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(300px, 100%), 1fr))', gap: espace.xl }}>
 
         {/* Départs du jour */}
         {departs.aujourdhui.length > 0 && (
-          <div style={{ background: '#fff', borderRadius: 14, padding: '20px', border: '1px solid rgba(0,0,0,0.07)' }}>
-            <h2 style={{ fontSize: 16, fontWeight: 700, color: '#1a1a1a', marginBottom: 16 }}>👋 Départs aujourd'hui</h2>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+          <Bloc titre="👋 Départs aujourd'hui">
+            <Pile espace="sm">
               {departs.aujourdhui.map((v, idx) => (
-                <div key={idx} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '10px 0', borderBottom: '1px solid #f5f2eb' }}>
-                  <div style={{
-                    width: 38, height: 38, borderRadius: '50%', background: '#e0f2fe',
+                <Pile key={idx} direction="ligne" espace="md" aligner="center"
+                      style={{ padding: '10px 0', borderBottom: `1px solid ${jetons.fond}` }}>
+                  <span aria-hidden="true" style={{
+                    width: 38, height: 38, borderRadius: rayon.rond, background: '#e0f2fe',
                     display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18, flexShrink: 0,
                   }}>
                     {v.avatar_emoji || '🙂'}
-                  </div>
+                  </span>
                   <div style={{ flex: 1 }}>
-                    <div style={{ fontWeight: 600, fontSize: 14, color: '#1a1a1a' }}>{v.pseudo}</div>
-                    {v.emplacement && <div style={{ fontSize: 12, color: '#6b7280', marginTop: 2 }}>📍 Emplacement {v.emplacement}</div>}
+                    <Texte variante="corps" style={{ fontWeight: graisse.fort, color: jetons.texte }}>{v.pseudo}</Texte>
+                    {v.emplacement && <Texte variante="doux" style={{ marginTop: 2 }}>📍 Emplacement {v.emplacement}</Texte>}
                   </div>
-                </div>
+                </Pile>
               ))}
-            </div>
-          </div>
+            </Pile>
+          </Bloc>
         )}
 
         {/* Derniers groupes */}
-        <div style={{ background: '#fff', borderRadius: 14, padding: '20px', border: '1px solid rgba(0,0,0,0.07)' }}>
-          <h2 style={{ fontSize: 16, fontWeight: 700, color: '#1a1a1a', marginBottom: 16 }}>Derniers groupes créés</h2>
+        <Bloc titre="Derniers groupes créés">
           {loading ? (
-            <div style={{ color: '#6b7280', fontSize: 14 }}>Chargement...</div>
+            <Squelette lignes={3} hauteur={44} libelle="Chargement…" />
           ) : recentGroupes.length === 0 ? (
-            <div style={{ color: '#6b7280', fontSize: 14 }}>Aucun groupe pour le moment.</div>
+            <Vide emoji="👥" texte="Aucun groupe pour le moment." />
           ) : (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+            <Pile espace="sm">
               {recentGroupes.map(g => (
-                <div key={g.id} style={{
-                  display: 'flex', alignItems: 'center', gap: 12,
-                  padding: '10px 0', borderBottom: '1px solid #f5f2eb',
-                }}>
-                  <div style={{
-                    width: 38, height: 38, borderRadius: 10, background: '#f5f2eb',
+                <Pile key={g.id} direction="ligne" espace="md" aligner="center"
+                      style={{ padding: '10px 0', borderBottom: `1px solid ${jetons.fond}` }}>
+                  <span aria-hidden="true" style={{
+                    width: 38, height: 38, borderRadius: rayon.md, background: jetons.fond,
                     display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20, flexShrink: 0,
                   }}>
                     {g.emoji || '👥'}
-                  </div>
+                  </span>
                   <div style={{ flex: 1, overflow: 'hidden' }}>
-                    <div style={{ fontWeight: 600, fontSize: 14, color: '#1a1a1a', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{g.titre}</div>
-                    <div style={{ fontSize: 12, color: '#6b7280', marginTop: 2 }}>
+                    <Texte variante="corps" style={{ fontWeight: graisse.fort, color: jetons.texte, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{g.titre}</Texte>
+                    <Texte variante="doux" style={{ marginTop: 2 }}>
                       {new Date(g.created_at).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}
                       {g.lieu && ` · 📍 ${g.lieu}`}
-                    </div>
+                    </Texte>
                   </div>
-                </div>
+                </Pile>
               ))}
-            </div>
+            </Pile>
           )}
-        </div>
+        </Bloc>
 
         {/* Dernières inscriptions */}
-        <div style={{ background: '#fff', borderRadius: 14, padding: '20px', border: '1px solid rgba(0,0,0,0.07)' }}>
-          <h2 style={{ fontSize: 16, fontWeight: 700, color: '#1a1a1a', marginBottom: 16 }}>Dernières inscriptions</h2>
+        <Bloc titre="Dernières inscriptions">
           {loading ? (
-            <div style={{ color: '#6b7280', fontSize: 14 }}>Chargement...</div>
+            <Squelette lignes={3} hauteur={44} libelle="Chargement…" />
           ) : recentInscriptions.length === 0 ? (
-            <div style={{ color: '#6b7280', fontSize: 14 }}>Aucune inscription pour le moment.</div>
+            <Vide emoji="📅" texte="Aucune inscription pour le moment." />
           ) : (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+            <Pile espace="sm">
               {recentInscriptions.map((ins, idx) => (
-                <div key={idx} style={{
-                  display: 'flex', alignItems: 'center', gap: 12,
-                  padding: '10px 0', borderBottom: '1px solid #f5f2eb',
-                }}>
-                  <div style={{
-                    width: 38, height: 38, borderRadius: '50%',
-                    background: '#63992218',
+                <Pile key={idx} direction="ligne" espace="md" aligner="center"
+                      style={{ padding: '10px 0', borderBottom: `1px solid ${jetons.fond}` }}>
+                  <span aria-hidden="true" style={{
+                    width: 38, height: 38, borderRadius: rayon.rond,
+                    background: 'var(--cc-accent-voile)',
                     display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    fontSize: 18, flexShrink: 0, color: '#54821d', fontWeight: 700,
+                    fontSize: 18, flexShrink: 0, color: jetons.marqueTexte, fontWeight: graisse.titre,
                   }}>
                     {ins.vacanciers?.pseudo?.[0]?.toUpperCase() || '?'}
-                  </div>
+                  </span>
                   <div style={{ flex: 1, overflow: 'hidden' }}>
-                    <div style={{ fontWeight: 600, fontSize: 14, color: '#1a1a1a' }}>{ins.vacanciers?.pseudo || '—'}</div>
-                    <div style={{ fontSize: 12, color: '#6b7280', marginTop: 2, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                    <Texte variante="corps" style={{ fontWeight: graisse.fort, color: jetons.texte }}>{ins.vacanciers?.pseudo || '—'}</Texte>
+                    <Texte variante="doux" style={{ marginTop: 2, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                       → {ins.animations?.titre || '—'}
-                    </div>
+                    </Texte>
                   </div>
-                  <div style={{ fontSize: 11, color: '#6b7280', flexShrink: 0 }}>
+                  <Texte variante="micro" style={{ flexShrink: 0 }}>
                     {new Date(ins.created_at).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}
-                  </div>
-                </div>
+                  </Texte>
+                </Pile>
               ))}
-            </div>
+            </Pile>
           )}
-        </div>
+        </Bloc>
 
       </div>
-    </div>
+    </Pile>
   )
 }
 
@@ -302,56 +312,55 @@ function AccessCodeCard({ camping }) {
       gap: 14, marginBottom: 24,
     }}>
       {/* Code tournant */}
-      <div style={{
-        background: '#0d1f0d', borderRadius: 16, padding: '20px 22px',
-        display: 'flex', alignItems: 'center', gap: 20,
+      <div className="cc-sombre" style={{
+        background: jetons.marqueSombre, borderRadius: rayon.lg, padding: '20px 22px',
+        display: 'flex', alignItems: 'center', gap: espace.xl,
       }}>
         <div style={{ flex: 1 }}>
-          <div style={{ fontSize: 11, fontWeight: 700, color: 'rgba(151,196,89,0.6)', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 6 }}>
+          <Texte variante="libelle" as="span" style={{ color: 'rgba(151,196,89,0.7)', display: 'block', marginBottom: 6 }}>
             Code d'accès vacanciers
-          </div>
-          <div style={{ fontFamily: 'monospace', fontSize: 42, fontWeight: 900, color: '#97C459', letterSpacing: 8, lineHeight: 1 }}>
+          </Texte>
+          {/* Le code change toutes les heures : une région live l'annonce au
+              lieu de le laisser muter en silence sous les yeux du gérant. */}
+          <div role="status" style={{
+            fontFamily: 'monospace', fontSize: 42, fontWeight: graisse.affiche,
+            color: '#97C459', letterSpacing: 8, lineHeight: 1,
+          }}>
             {code}
           </div>
-          <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.3)', marginTop: 8 }}>
-            Change dans <strong style={{ color: 'rgba(151,196,89,0.7)' }}>{remaining}</strong>
-          </div>
+          <Texte variante="micro" style={{ color: 'rgba(255,255,255,0.45)', marginTop: espace.sm }}>
+            Change dans <strong style={{ color: 'rgba(151,196,89,0.8)' }}>{remaining}</strong>
+          </Texte>
         </div>
         <div style={{ textAlign: 'center' }}>
-          <div style={{ fontSize: 28, marginBottom: 4 }}>🔑</div>
-          <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.3)', textAlign: 'center' }}>Affiché à<br/>la réception</div>
+          <div aria-hidden="true" style={{ fontSize: 28, marginBottom: espace.xs }}>🔑</div>
+          <Texte variante="micro" style={{ fontSize: 10, color: 'rgba(255,255,255,0.45)' }}>
+            Affiché à<br/>la réception
+          </Texte>
         </div>
       </div>
 
       {/* Lien QR / accès direct */}
-      <div style={{
-        background: '#fff', border: '1px solid rgba(0,0,0,0.07)',
-        borderRadius: 16, padding: '20px 22px',
-      }}>
-        <div style={{ fontSize: 11, fontWeight: 700, color: '#6b7280', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 8 }}>
-          Lien QR code direct
-        </div>
+      <Bloc>
+        <Texte variante="libelle" as="span">Lien QR code direct</Texte>
         <div style={{
-          fontFamily: 'monospace', fontSize: 12, color: '#54821d',
-          background: '#f0fdf4', borderRadius: 8, padding: '10px 12px',
-          wordBreak: 'break-all', marginBottom: 12,
+          fontFamily: 'monospace', fontSize: tailles.petit, color: jetons.marqueTexte,
+          background: '#f0fdf4', borderRadius: rayon.sm, padding: `10px ${espace.md}px`,
+          wordBreak: 'break-all',
         }}>
           {joinUrl}
         </div>
-        <div style={{ fontSize: 12, color: '#6b7280', lineHeight: 1.6 }}>
+        <Texte variante="doux" style={{ lineHeight: 1.6 }}>
           Générez un QR code avec ce lien et affichez-le à la réception. Les vacanciers qui scannent ce lien accèdent directement sans code.
-        </div>
-        <button
+        </Texte>
+        <Bouton
+          variante="secondaire" taille="sm"
           onClick={() => navigator.clipboard?.writeText(joinUrl)}
-          style={{
-            marginTop: 10, background: '#f5f2eb', border: 'none',
-            borderRadius: 8, padding: '7px 14px', fontSize: 12,
-            fontWeight: 600, color: '#54821d', cursor: 'pointer',
-          }}
+          style={{ alignSelf: 'flex-start', borderRadius: rayon.sm, border: 'none', background: jetons.fond, color: jetons.marqueTexte }}
         >
           📋 Copier le lien
-        </button>
-      </div>
+        </Bouton>
+      </Bloc>
     </div>
   )
 }

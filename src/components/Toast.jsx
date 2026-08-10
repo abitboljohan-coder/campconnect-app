@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { sAbonner } from '../toast'
+import { espace, graisse, ombre, rayon, texte as tailles } from '../design'
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Notifications passagères.
@@ -42,7 +43,7 @@ export function ToastHost() {
         // Au-dessus de la barre de navigation flottante, pas derrière.
         bottom: 'calc(88px + var(--cc-safe-bottom))',
         left: 12, right: 12,
-        display: 'flex', flexDirection: 'column', gap: 8,
+        display: 'flex', flexDirection: 'column', gap: espace.sm,
         alignItems: 'center',
         zIndex: 2000,
         pointerEvents: 'none',
@@ -62,19 +63,19 @@ export function ToastHost() {
               color: ton.texte,
               backdropFilter: 'blur(12px)',
               WebkitBackdropFilter: 'blur(12px)',
-              padding: '12px 18px',
-              borderRadius: 14,
-              fontSize: 14, fontWeight: 600, lineHeight: 1.35,
-              boxShadow: '0 8px 28px rgba(0,0,0,0.28)',
+              padding: `${espace.md}px 18px`,
+              borderRadius: rayon.lg,
+              fontSize: tailles.base, fontWeight: graisse.fort, lineHeight: 1.35,
+              boxShadow: ombre.flottante,
               animation: 'ccToastIn 0.22s cubic-bezier(0.32, 0.72, 0, 1)',
             }}
           >
             {ton.icone && (
-              <span style={{
-                flexShrink: 0, width: 18, height: 18, borderRadius: '50%',
+              <span aria-hidden="true" style={{
+                flexShrink: 0, width: 18, height: 18, borderRadius: rayon.rond,
                 background: 'rgba(255,255,255,0.22)',
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
-                fontSize: 11, fontWeight: 800,
+                fontSize: 11, fontWeight: graisse.affiche,
               }}>{ton.icone}</span>
             )}
             <span>{t.message}</span>

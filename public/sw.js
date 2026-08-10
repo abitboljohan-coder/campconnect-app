@@ -18,7 +18,11 @@
 // message vieux d'une heure présenté comme actuel est pire qu'un message
 // absent — on ne ment pas sur la fraîcheur d'une conversation.
 
-const VERSION = 'cc-v1'
+// Changer ce numéro purge les anciens caches à l'activation. C'est le seul
+// moyen de se débarrasser d'une coquille périmée déjà installée chez un
+// utilisateur — v1 servait index.html depuis le cache en priorité, et pouvait
+// donc y rester indéfiniment.
+const VERSION = 'cc-v2'
 const COQUILLE = `${VERSION}-coquille`
 const TUILES = `${VERSION}-tuiles`
 const TUILES_MAX = 300
@@ -77,22 +81,35 @@ self.addEventListener('fetch', (e) => {
     return
   }
 
-  // Navigation : la coquille en cache d'abord, puis rafraîchie en arrière-plan.
-  // L'utilisateur voit son application immédiatement ; la version suivante sera
-  // à jour. C'est le compromis habituel, et le bon ici : le contenu vient de
-  // toute façon du réseau une fois l'interface affichée.
+  // Navigation : le réseau d'abord, borné dans le temps, cache en secours.
+  //
+  // Cette coquille était servie depuis le cache en priorité, et rafraîchie en
+  // arrière-plan. Le compromis paraissait bon — l'application s'affiche
+  // instantanément — mais il a un coût qui ne se voit qu'au déploiement
+  // suivant : index.html référence les fichiers JS par leur empreinte. Servir
+  // l'ancien index.html, c'est servir tout l'ancien code. Un correctif publié
+  // n'atteignait donc l'utilisateur qu'au deuxième lancement, et la version du
+  // cache ne changeant jamais entre deux déploiements, rien ne forçait la
+  // bascule.
+  //
+  // Le délai borné garde l'essentiel du bénéfice : sur le réseau d'un camping,
+  // au-delà de deux secondes, on sert la coquille connue plutôt que d'attendre.
   if (request.mode === 'navigate') {
-    e.respondWith(
-      caches.match('/index.html').then(cache => {
-        const reseau = fetch(request)
-          .then(rep => {
-            caches.open(COQUILLE).then(c => c.put('/index.html', rep.clone()))
-            return rep
-          })
-          .catch(() => cache)
-        return cache || reseau
+    e.respondWith((async () => {
+      const reseau = fetch(request).then(rep => {
+        if (rep.ok) caches.open(COQUILLE).then(c => c.put('/index.html', rep.clone()))
+        return rep
       })
-    )
+      const borne = new Promise(resoudre => setTimeout(() => resoudre(null), 2000))
+      // `catch` sur la course, pas sur la promesse : une panne réseau doit
+      // mener au cache, pas faire échouer la navigation.
+      const gagnant = await Promise.race([reseau.catch(() => null), borne])
+      if (gagnant) return gagnant
+      const cache = await caches.match('/index.html')
+      // Sans coquille en cache, mieux vaut attendre le réseau que ne rien
+      // rendre du tout : respondWith(undefined) casse la navigation.
+      return cache || reseau
+    })())
     return
   }
 
