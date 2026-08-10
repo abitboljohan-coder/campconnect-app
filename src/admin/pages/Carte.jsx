@@ -4,6 +4,7 @@ import MapEditor from '../components/MapEditor'
 import PlanCalibrator from '../components/PlanCalibrator'
 import PerimeterEditor from '../components/PerimeterEditor'
 import { detectPois, geocodeCamping, findCampsitePolygon, searchCampsiteByName } from '../lib/osmPois'
+import { fusionnerCarteConfig } from '../lib/carteConfig'
 import { Bloc, Alerte, EnTete } from '../components/Bloc'
 import { Texte, Pile, couleur as jetons } from '../../design'
 
@@ -124,15 +125,11 @@ export default function Carte({ camping, setCamping }) {
         log(`✅ Contour déjà obtenu via OSM (${poly.length} points)`)
       }
 
-      let newCfg = { ...(camping.carte_config || {}) }
-
       // Sauvegarde intermédiaire : si on a un contour, on l'enregistre TOUT DE SUITE
       if (poly) {
-        newCfg.perimeter = poly
-        const { error: dbErr1 } = await supabase.from('campings')
-          .update({ carte_config: newCfg }).eq('id', camping.id)
+        const { config, error: dbErr1 } = await fusionnerCarteConfig(camping.id, { perimeter: poly })
         if (!dbErr1) {
-          setCamping(c => ({ ...c, carte_config: newCfg }))
+          setCamping(c => ({ ...c, carte_config: config }))
           savedSomething = true
         }
       }
@@ -146,13 +143,11 @@ export default function Carte({ camping, setCamping }) {
         log(`⚠️  POI OSM indisponibles (retry a échoué) — le contour est enregistré, ajoutez les POI à la main.`)
       }
       const manuals = (camping?.carte_config?.pins || []).filter(p => !p.osm)
-      newCfg.pins = [...manuals, ...pois]
       if (pois.length) log(`   (${manuals.length} POI manuels conservés)`)
 
-      const { error: dbErr } = await supabase.from('campings')
-        .update({ carte_config: newCfg }).eq('id', camping.id)
+      const { config, error: dbErr } = await fusionnerCarteConfig(camping.id, { pins: [...manuals, ...pois] })
       if (dbErr) throw dbErr
-      setCamping(c => ({ ...c, carte_config: newCfg }))
+      setCamping(c => ({ ...c, carte_config: config }))
       savedSomething = true
       log(`💾 Configuration enregistrée`)
       setSuccess('Auto-configuration terminée !')
@@ -201,11 +196,9 @@ export default function Carte({ camping, setCamping }) {
       }
       // Remplace tous les POI OSM par la détection fraîche ; garde uniquement les manuels
       const manuals = (camping?.carte_config?.pins || []).filter(p => !p.osm)
-      const newCfg = { ...(camping.carte_config || {}), pins: [...manuals, ...pois] }
-      const { error: dbErr } = await supabase.from('campings')
-        .update({ carte_config: newCfg }).eq('id', camping.id)
+      const { config, error: dbErr } = await fusionnerCarteConfig(camping.id, { pins: [...manuals, ...pois] })
       if (dbErr) throw dbErr
-      setCamping(c => ({ ...c, carte_config: newCfg }))
+      setCamping(c => ({ ...c, carte_config: config }))
       setSuccess(`✅ ${pois.length} POI détectés depuis OpenStreetMap`)
       setTimeout(() => setSuccess(''), 5000)
     } catch (e) {

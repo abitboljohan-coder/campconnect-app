@@ -1,7 +1,7 @@
 import { useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
-import { supabase } from '../../supabase'
 import { searchCampsiteByName } from '../lib/osmPois'
+import { fusionnerCarteConfig } from '../lib/carteConfig'
 import { couleur as jetons } from '../../design'
 
 let LPromise = null
@@ -413,12 +413,10 @@ export default function PerimeterEditor({ camping, onClose, onSaved }) {
 
   async function save() {
     setSaving(true)
-    const newCfg = { ...(camping.carte_config || {}), perimeter: points }
-    const { error } = await supabase.from('campings')
-      .update({ carte_config: newCfg }).eq('id', camping.id)
+    const { config, error } = await fusionnerCarteConfig(camping.id, { perimeter: points })
     setSaving(false)
     if (error) { alert('Erreur : ' + error.message); return }
-    onSaved?.(newCfg)
+    onSaved?.(config)
     onClose?.()
   }
 

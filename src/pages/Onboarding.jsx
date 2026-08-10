@@ -99,14 +99,27 @@ export default function Onboarding({ initialCamping, onDone }) {
         const campingLat = camping.carte_config?.center?.lat
         const campingLng = camping.carte_config?.center?.lng
 
+        // Camping pas encore calibré : on bascule sur le code d'accès.
+        //
+        // Cet écran écrivait ici la position du vacancier dans le camping, en
+        // guise de calibration automatique. Deux dégâts, tous deux constatés :
+        //
+        //   • l'écriture recomposait carte_config à partir de la copie que ce
+        //     client avait en mémoire. Elle remplaçait donc l'objet entier, et
+        //     effaçait ce qu'un autre écran y avait mis entre-temps — les
+        //     points d'intérêt détectés depuis l'administration ont disparu
+        //     ainsi, remplacés par un objet ne contenant qu'un « center » ;
+        //
+        //   • le centre retenu était celui du téléphone du premier arrivant.
+        //     Quelqu'un qui installe l'application depuis chez lui définissait
+        //     le camping à son domicile, et la vérification GPS devenait fausse
+        //     pour tous les suivants.
+        //
+        // Le centre est une donnée du camping : il se règle depuis
+        // l'administration, à l'étape « Position du camping ». Sans lui, le
+        // code affiché à la réception prend le relais — ce qu'il sait déjà faire.
         if (!campingLat || !campingLng) {
-          // Camping pas encore calibré → on sauvegarde cette position comme centre
-          // et on vérifie automatiquement (premier vacancier = calibration)
-          await supabase.from('campings').update({
-            carte_config: { ...(camping.carte_config || {}), center: { lat, lng } }
-          }).eq('id', camping.id)
-          setGpsStatus('ok')
-          setTimeout(() => setStep('form'), 900)
+          setGpsStatus('fail')
           return
         }
 

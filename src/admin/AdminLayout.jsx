@@ -20,6 +20,33 @@ const NAV_ITEMS = [
 const VERT_CLAIR = '#C0DD97'
 const LARGEUR_MENU = 220
 
+/**
+ * Marque CampConnect.
+ *
+ * L'administration affichait un sapin en emoji là où l'application du
+ * vacancier montre le vrai logo. Sur le vert sombre du bandeau, le logo seul
+ * s'efface — sa tente et son sol sont eux-mêmes vert foncé. La plaque claire
+ * lui rend son contraste, et reprend le cadre arrondi déjà employé pour le
+ * logo du camping dans l'en-tête vacancier.
+ */
+function Marque({ taille = 26, texte: tailleTexte = 18 }) {
+  return (
+    <span style={{ display: 'inline-flex', alignItems: 'center', gap: espace.sm }}>
+      <span style={{
+        width: taille + 10, height: taille + 10, borderRadius: rayon.md,
+        background: jetons.fondClair, flexShrink: 0,
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+      }}>
+        <img src="/logo-mark.png" alt="" width={taille} height={taille}
+             style={{ display: 'block', objectFit: 'contain' }} />
+      </span>
+      <Texte variante="sousTitre" as="span" style={{ color: VERT_CLAIR, fontSize: tailleTexte }}>
+        CampConnect
+      </Texte>
+    </span>
+  )
+}
+
 export default function AdminLayout({ gerant, camping, onLogout }) {
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768)
 
@@ -40,7 +67,7 @@ export default function AdminLayout({ gerant, camping, onLogout }) {
           position: 'fixed', top: 0, left: 0, bottom: 0, zIndex: 100,
         }}>
           <div style={{ padding: '28px 20px 20px' }}>
-            <Texte variante="sousTitre" style={{ color: VERT_CLAIR, fontSize: 18 }}>🌲 CampConnect</Texte>
+            <Marque />
             <Texte variante="doux" style={{ color: 'rgba(192,221,151,0.6)', marginTop: espace.xs }}>
               {camping?.nom}
             </Texte>
@@ -90,9 +117,7 @@ export default function AdminLayout({ gerant, camping, onLogout }) {
             position: 'sticky', top: 0, zIndex: 50,
           }}>
             <div>
-              <Texte variante="sousTitre" style={{ color: VERT_CLAIR, fontSize: tailles.grand }}>
-                🌲 CampConnect
-              </Texte>
+              <Marque taille={22} texte={tailles.grand} />
               <Texte variante="micro" style={{ color: 'rgba(192,221,151,0.6)' }}>{camping?.nom}</Texte>
             </div>
             <Bouton variante="discret" taille="sm" onClick={onLogout} style={{ color: '#fca5a5' }}>

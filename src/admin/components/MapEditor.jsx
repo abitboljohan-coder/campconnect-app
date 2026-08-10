@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { supabase } from '../../supabase'
 import { CAMPING_LIEUX } from '../utils/analyzeMap'
 import { esc } from '../../utils/esc'
+import { fusionnerCarteConfig } from '../lib/carteConfig'
 import { couleur as jetons } from '../../design'
 
 let _L = null
@@ -59,12 +60,14 @@ export default function MapEditor({ camping, setCamping }) {
 
   async function saveConfig(newPins) {
     setSaving(true)
-    // Fusionne avec l'existant pour NE PAS écraser le contour / lat-lng déjà réglés
-    const config = { ...(camping.carte_config || loadLocal(camping.id) || {}), pins: newPins }
-    const { error } = await supabase.from('campings').update({ carte_config: config }).eq('id', camping.id)
-    if (error) { setDbSupport(false); saveLocal(camping.id, config) }
-    else { setDbSupport(true); saveLocal(camping.id, config) }
-    setCamping(c => ({ ...c, carte_config: config }))
+    // La fusion se fait sur la valeur relue en base, pas sur celle affichée :
+    // le contour ou la position réglés depuis un autre écran ne doivent pas
+    // repartir dans l'état où ce composant les a chargés.
+    const { config, error } = await fusionnerCarteConfig(camping.id, { pins: newPins })
+    const retenu = config || { ...(camping.carte_config || loadLocal(camping.id) || {}), pins: newPins }
+    setDbSupport(!error)
+    saveLocal(camping.id, retenu)
+    setCamping(c => ({ ...c, carte_config: retenu }))
     setSaving(false)
   }
 

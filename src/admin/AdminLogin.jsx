@@ -87,11 +87,20 @@ export default function AdminLogin({ onLogin }) {
       padding: '0 20px',
     }}>
       <div style={{ width: '100%', maxWidth: 380 }}>
-        {/* Logo */}
+        {/* Marque — le vrai logo, comme sur l'écran d'entrée du vacancier.
+            La plaque claire lui rend son contraste : sur le vert sombre, la
+            tente et le sol du logo, eux-mêmes vert foncé, disparaîtraient. */}
         <div style={{ textAlign: 'center', marginBottom: 40 }}>
-          <div style={{ fontSize: 48, marginBottom: 12 }}>🌲</div>
+          <span style={{
+            width: 84, height: 84, borderRadius: 22,
+            background: jetons.fondClair, margin: '0 auto 14px',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+          }}>
+            <img src="/logo-mark.png" alt="" width={60} height={64}
+                 style={{ display: 'block', objectFit: 'contain' }} />
+          </span>
           <div style={{ color: '#C0DD97', fontSize: 24, fontWeight: 700, letterSpacing: -0.5 }}>CampConnect</div>
-          <div style={{ color: 'rgba(255,255,255,0.4)', fontSize: 14, marginTop: 4 }}>Espace gérant</div>
+          <div style={{ color: 'rgba(255,255,255,0.55)', fontSize: 14, marginTop: 4 }}>Espace gérant</div>
         </div>
 
         {/* Formulaire */}
