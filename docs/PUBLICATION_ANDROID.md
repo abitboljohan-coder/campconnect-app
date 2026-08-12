@@ -162,9 +162,28 @@ rien changer au code.
 
 ## 7. Mises à jour suivantes
 
-À chaque envoi : incrémenter `versionCode` (+1) et `versionName` dans
-`android/app/build.gradle`, puis refaire l'étape 3. Play Console refuse un AAB
-dont le `versionCode` a déjà été utilisé.
+Refaire l'étape 3, et c'est tout : le `versionCode` se calcule seul.
+
+`android/app/build.gradle` le dérive du nombre de minutes écoulées depuis 1970.
+Il croît de lui-même, ne redescend jamais, et vaut une trentaine de millions —
+loin du plafond de Play (2 100 000 000), qui ne serait atteint qu'au quarantième
+siècle. Le build l'affiche au passage :
+
+```
+──▶ versionCode = 29775834
+```
+
+C'est le seul chiffre à retenir si Play Console conteste un envoi.
+
+`versionName`, lui, reste à la main : c'est la version que voient les
+utilisateurs, elle ne change qu'à une vraie livraison.
+
+> Le passage à ce calcul est sans retour : après un envoi à 29 775 834, Play
+> n'acceptera plus jamais un numéro inférieur. C'est voulu — c'est ce qui rend
+> l'oubli impossible.
+
+> Pour rejouer un build à l'identique, ou reprendre une numérotation existante :
+> `CC_VERSION_CODE=42 .\gradlew bundleRelease`.
 
 ## Rappels
 
