@@ -18,6 +18,34 @@ if (keystorePropertiesFile.exists() && !keystoreProperties['storeFile']) {
         "voir docs/PUBLICATION_ANDROID.md §2.")
 }
 
+// Numéro de build, calculé et non tenu à la main.
+//
+// Play Console refuse un AAB dont le versionCode a déjà été téléversé, et le
+// refus arrive après l'import, avec un message qui ne dit pas quoi faire. Le
+// numéro restait figé à 1 : chaque envoi après le premier échouait, toujours
+// au moment où l'on croyait avoir fini.
+//
+// La valeur retenue est le nombre de minutes écoulées depuis le 1er janvier
+// 1970. Elle croît d'elle-même, ne redescend jamais, et vaut aujourd'hui une
+// trentaine de millions — très loin du plafond de Play (2 100 000 000), qui ne
+// serait atteint qu'au quarantième siècle.
+//
+// La minute comme unité, et non la seconde : Play impose un entier, deux
+// builds lancés dans la même minute produiraient le même numéro. C'est sans
+// conséquence — le second échouerait à l'import, il suffit de le relancer —
+// alors que des secondes dépasseraient le plafond dès 2038.
+//
+// CC_VERSION_CODE permet de forcer une valeur, pour rejouer un build à
+// l'identique ou reprendre une numérotation existante.
+def numeroDeBuild = {
+    def force = System.getenv("CC_VERSION_CODE")
+    if (force) return force.toInteger()
+    // intdiv et non « / » : en Groovy la division de deux entiers rend un
+    // BigDecimal, que versionCode refuse.
+    return System.currentTimeMillis().intdiv(60000L) as int
+}()
+println "──▶ versionCode = ${numeroDeBuild}"
+
 android {
     namespace = "com.campconnect.app"
     compileSdk = rootProject.ext.compileSdkVersion
@@ -25,8 +53,8 @@ android {
         applicationId "com.campconnect.app"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
-        versionCode 1
-        versionName "1.0"
+        versionCode numeroDeBuild
+        versionName "1.0"   // visible par les utilisateurs : se change à la main
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         aaptOptions {
              // Files and dirs to omit from the packaged assets dir, modified to accommodate modern web apps.
