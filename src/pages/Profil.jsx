@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { toast } from '../toast'
 import { supabase } from '../supabase'
+import Sheet from '../components/Sheet'
 import { t, useLangue, locale, LANGUES, setLangue } from '../i18n'
 import {
   Bouton, Carte, Champ, Texte, Pile, Puce,
@@ -27,6 +28,8 @@ export default function Profil({ camping, vacancier, onLogout }) {
   const [saving, setSaving] = useState(false)
   const [success, setSuccess] = useState(false)
   const [stats, setStats] = useState({ groupes: 0, animations: 0 })
+  const [confirmerSuppression, setConfirmerSuppression] = useState(false)
+  const [suppression, setSuppression] = useState(false)
 
   useEffect(() => {
     async function loadStats() {
@@ -69,6 +72,42 @@ export default function Profil({ camping, vacancier, onLogout }) {
     setSuccess(true)
     setTimeout(() => setSuccess(false), 3000)
     setSaving(false)
+  }
+
+  /**
+   * Suppression du compte, exigée par la règle 5.1.1(v) de l'App Store : une
+   * application qui permet de créer un compte doit permettre de le supprimer,
+   * depuis l'application elle-même.
+   *
+   * Une seule ligne suffit : les clés étrangères de la base font le reste.
+   * Messages, statuts, annonces, inscriptions, appartenances aux groupes,
+   * positions et blocages sont en CASCADE — ils partent avec le profil.
+   *
+   * Deux choses survivent, volontairement :
+   *   • les groupes créés par la personne, dont le créateur passe à NULL.
+   *     Les supprimer emporterait les conversations de tous les autres
+   *     membres, qui n'ont rien demandé ;
+   *   • les signalements la concernant, anonymisés de la même façon. Un
+   *     signalement qui disparaît quand son auteur s'en va laisserait la
+   *     modération sans trace de ce qui a été signalé.
+   *
+   * La session anonyme est fermée dans la foulée : sans cela, le prochain
+   * lancement rouvrirait l'application avec la même identité auth, sur un
+   * profil qui n'existe plus.
+   */
+  async function supprimerCompte() {
+    if (suppression) return
+    setSuppression(true)
+    const { error } = await supabase.from('vacanciers').delete().eq('id', vacancier.id)
+    if (error) {
+      console.error('Suppression du compte échouée :', error)
+      setSuppression(false)
+      setConfirmerSuppression(false)
+      toast(t('profil.suppr_erreur'), 'erreur')
+      return
+    }
+    await supabase.auth.signOut()
+    onLogout()
   }
 
   const interests = Array.isArray(vacancier.interests) ? vacancier.interests : []
@@ -242,14 +281,55 @@ export default function Profil({ camping, vacancier, onLogout }) {
           </Pile>
         </Carte>
 
-        <Bouton variante="danger" taille="lg" pleineLargeur onClick={onLogout}>
-          {t('profil.deconnexion')}
-        </Bouton>
+        <Pile espace="sm">
+          <Bouton variante="danger" taille="lg" pleineLargeur onClick={onLogout}>
+            {t('profil.deconnexion')}
+          </Bouton>
+
+          {/* Se déconnecter et supprimer son compte ne sont pas la même chose,
+              et rien ne doit laisser croire le contraire : le second est écrit
+              en clair, séparé, et demande une confirmation. */}
+          <Bouton variante="discret" pleineLargeur
+                  onClick={() => setConfirmerSuppression(true)}
+                  style={{ color: couleur.danger }}>
+            {t('profil.suppr_compte')}
+          </Bouton>
+        </Pile>
 
         <Texte variante="micro" style={{ textAlign: 'center' }}>
           CampConnect — {camping?.nom}
         </Texte>
       </Pile>
+
+      {confirmerSuppression && (
+        <Sheet onClose={() => !suppression && setConfirmerSuppression(false)}>
+          <Pile espace="lg">
+            <Pile espace="xs">
+              <Texte variante="section" as="h2">{t('profil.suppr_titre')}</Texte>
+              <Texte variante="corps">{t('profil.suppr_texte')}</Texte>
+            </Pile>
+
+            <Carte hauteur="posee" padding={espace.md}
+                   style={{ background: couleur.dangerFond, border: '1px solid #fecaca' }}>
+              <Texte variante="doux" style={{ color: couleur.danger, fontWeight: graisse.fort }}>
+                {t('profil.suppr_definitif')}
+              </Texte>
+            </Carte>
+
+            <Pile direction="ligne" espace="sm">
+              <Bouton variante="secondaire" taille="lg" style={{ flex: 1 }}
+                      disabled={suppression}
+                      onClick={() => setConfirmerSuppression(false)}>
+                {t('commun.annuler')}
+              </Bouton>
+              <Bouton variante="danger" taille="lg" style={{ flex: 1 }}
+                      charge={suppression} onClick={supprimerCompte}>
+                {suppression ? t('profil.suppr_en_cours') : t('profil.suppr_confirmer')}
+              </Bouton>
+            </Pile>
+          </Pile>
+        </Sheet>
+      )}
     </div>
   )
 }
