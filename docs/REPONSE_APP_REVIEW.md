@@ -37,14 +37,16 @@ Un seul enregistrement continu, sur iPhone physique, sans coupure.
 8. « **Signaler ce contenu** » → choisir un motif → la confirmation apparaît.
 9. **Appui long** à nouveau → « **Bloquer** » → le message disparaît
    immédiatement à l'écran.
-10. Onglet **Signaler** → « Ajouter une photo » → **la demande d'accès à
-    l'appareil photo s'affiche** → accepter.
-11. Onglet **Profil** → « **Supprimer mon compte** » → la confirmation →
+10. Onglet **Profil** → « **Supprimer mon compte** » → la confirmation →
     **Supprimer** → retour à l'écran d'entrée.
 
-Les étapes **9** et **11** sont celles qu'Apple veut voir de ses yeux.
-L'étape **10** existe pour montrer une demande d'autorisation : le camping de
-démonstration n'en déclenche aucune à l'inscription.
+Les étapes **9** et **10** sont celles qu'Apple veut voir de ses yeux.
+
+> Aucune demande d'autorisation n'apparaît dans ce parcours, et c'est normal :
+> le camping de démonstration a la vérification de présence désactivée, et la
+> photo d'un signalement est facultative. Le texte l'explique au point 1 plutôt
+> que de promettre un écran que la vidéo ne montre pas — c'est précisément
+> l'écart qui a valu les deux premiers refus.
 
 ---
 
@@ -66,17 +68,30 @@ with the app launch and shows, in one continuous take:
   - User-generated content moderation: long press on a message, then
     "Report this content" with its five categories, then "Block", showing
     the blocked person's content disappear immediately
-  - A camera permission prompt, when attaching a photo to an issue report
   - Account deletion, from Profile > Delete my account
 
 There is no login step and no paid content: see points 3 and 4.
 
-Note on location: the app asks for location only to verify that a
-holidaymaker is physically on the campsite they are joining. The demo
-campsite provided for review has that check disabled, so no location prompt
-appears in the recording. The purpose string is declared in Info.plist:
-"Votre position sert uniquement à vérifier que vous êtes bien dans le
-camping lors de l'inscription."
+PERMISSION PROMPTS - why none appears in the recording
+
+The app declares three purpose strings. None of them is triggered along the
+demo path shown in the video, and we would rather say so than describe a
+screen you will not see:
+
+  - Location (NSLocationWhenInUseUsageDescription) is requested only to
+    verify that a holidaymaker is physically on the campsite they are
+    joining. The demo campsite provided for review has that check disabled
+    so that you can reach the app from anywhere, so the prompt does not
+    appear. String: "Votre position sert uniquement a verifier que vous etes
+    bien dans le camping lors de l'inscription."
+  - Camera (NSCameraUsageDescription) and Photo Library
+    (NSPhotoLibraryUsageDescription) are requested only when a user chooses
+    to attach a photo to an issue report or to a small ad. Both are optional
+    and are not part of the core flow. Strings: "L'appareil photo sert a
+    joindre une photo a un signalement ou a une annonce." and "Vos photos
+    servent a illustrer un signalement ou une annonce que vous publiez."
+
+To see the camera prompt: Home tab > "Signaler" card > "Ajouter une photo".
 
 2. DEVICES AND OPERATING SYSTEMS TESTED
 
