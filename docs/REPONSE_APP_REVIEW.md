@@ -1,44 +1,54 @@
-# Réponses à l'App Review
+# Réponse à l'App Review — Guideline 2.1
 
-> À coller dans **App Store Connect → App Review Information → Notes**, et à
-> renvoyer dans le Resolution Center. En anglais.
+> À coller dans **App Review Information → Notes** *et* dans le Resolution
+> Center. Apple demande deux fois que ce soit dans le champ Notes.
 >
-> **Chaque affirmation est vérifiée dans le code.** Le premier refus est venu
-> d'une note décrivant un geste inexistant : l'examinateur l'a cherché, ne l'a
-> pas trouvé, et a refusé. Ne rien ajouter ici qui ne soit pas démontrable.
+> **Chaque phrase décrit ce que la vidéo montre.** Les deux premiers refus
+> viennent d'écarts entre ce qui était écrit et ce qui existait.
 
 ---
 
-## Historique
+## 1. Vérifier le build AVANT de filmer
 
-| Date | Guideline | Issue |
+| À vérifier | Où | Si absent |
 |---|---|---|
-| 1er refus | 1.2 UGC + 4.0 Design | modération absente, mise en page tablette |
-| 2e refus | **2.1 Information Needed** | dossier de nouvelle app incomplet |
+| « Supprimer mon compte » | Profil, tout en bas | relancer un build |
+| Accès sans code | recherche « Flots » → clic | ne pas filmer, me le dire |
+| Agenda non vide | onglet Agenda | relancer le décalage des animations |
 
-Le 2.1 ne conteste plus la modération : la réponse précédente est passée. Il
-s'agit maintenant du dossier standard exigé de toute nouvelle application.
-
----
-
-## Avant d'envoyer
-
-1. **Nouveau build** incluant la suppression de compte (ajoutée pour ce refus).
-   Sans elle, le prochain refus sera un 5.1.1(v).
-2. `scripts/sql/moderation_contenu.sql` exécuté en production :
-
-   ```sql
-   select to_regclass('public.blocages') as table_blocages,
-          count(*) filter (where column_name = 'cible_texte')       as cible_texte,
-          count(*) filter (where column_name = 'auteur_signale_id') as auteur_signale_id
-   from information_schema.columns where table_name = 'signalements';
-   ```
-3. `scripts/sql/seed_flots_bleus.sql` relancé — un agenda vide suffit à faire
-   refuser.
+Le camping de démonstration est en accès libre : **aucune demande de code, aucun
+écran GPS**. Si l'un des deux apparaît, le build est antérieur au correctif.
 
 ---
 
-## Texte à coller
+## 2. Ce qu'il faut filmer, dans l'ordre
+
+Un seul enregistrement continu, sur iPhone physique, sans coupure.
+
+1. **Lancement de l'app** — l'enregistrement doit commencer là.
+2. Recherche « **Flots** », sélectionner « Camping Les Flots Bleus ».
+3. **S'arrêter deux secondes sur le bloc « Règles de la communauté »** — le
+   texte doit être lisible à l'image.
+4. Tenter de valider **sans cocher** la case → le refus s'affiche.
+5. Cocher, choisir un avatar, saisir un pseudo, valider.
+6. Parcourir : **Accueil**, **Groupes**, **Agenda**, **Carte**, **Infos**.
+7. Ouvrir un groupe. **Appui long** sur un message écrit par quelqu'un d'autre
+   (tenir une seconde pleine).
+8. « **Signaler ce contenu** » → choisir un motif → la confirmation apparaît.
+9. **Appui long** à nouveau → « **Bloquer** » → le message disparaît
+   immédiatement à l'écran.
+10. Onglet **Signaler** → « Ajouter une photo » → **la demande d'accès à
+    l'appareil photo s'affiche** → accepter.
+11. Onglet **Profil** → « **Supprimer mon compte** » → la confirmation →
+    **Supprimer** → retour à l'écran d'entrée.
+
+Les étapes **9** et **11** sont celles qu'Apple veut voir de ses yeux.
+L'étape **10** existe pour montrer une demande d'autorisation : le camping de
+démonstration n'en déclenche aucune à l'inscription.
+
+---
+
+## 3. Texte à coller
 
 ```
 Hello,
@@ -47,24 +57,30 @@ Please find below the information requested. A screen recording is attached.
 
 1. SCREEN RECORDING
 
-Attached, captured on a physical iPhone running the latest iOS. It starts
+Attached, captured on a physical iPhone running the latest iOS. It begins
 with the app launch and shows, in one continuous take:
 
-  - Account registration, including the Community Rules panel and the
-    required terms checkbox that blocks sign-up until ticked
-  - The location permission prompt, and the fallback access code shown at
-    the campsite reception when GPS is unavailable
-  - The core flow: groups, group chat, events, map, welcome booklet
+  - Account registration: the Community Rules panel, and the required terms
+    checkbox that blocks sign-up until it is ticked
+  - The core flow: home, groups, group chat, events, map, welcome booklet
   - User-generated content moderation: long press on a message, then
     "Report this content" with its five categories, then "Block", showing
-    the blocked person's content disappearing immediately
+    the blocked person's content disappear immediately
+  - A camera permission prompt, when attaching a photo to an issue report
   - Account deletion, from Profile > Delete my account
 
 There is no login step and no paid content: see points 3 and 4.
 
+Note on location: the app asks for location only to verify that a
+holidaymaker is physically on the campsite they are joining. The demo
+campsite provided for review has that check disabled, so no location prompt
+appears in the recording. The purpose string is declared in Info.plist:
+"Votre position sert uniquement à vérifier que vous êtes bien dans le
+camping lors de l'inscription."
+
 2. DEVICES AND OPERATING SYSTEMS TESTED
 
-  - iPhone [MODÈLE], iOS [VERSION]        ← à compléter
+  - iPhone [MODÈLE], iOS [VERSION]
   - Layout verified at 320, 390, 768, 820 and 1180 points
 
 3. WHAT THE APP DOES, AND FOR WHOM
@@ -74,8 +90,8 @@ CampConnect is a private social app for a single campsite.
 The problem: holidaymakers staying on the same campsite have no way to find
 each other. Someone looking for a fourth player for pétanque, or parents
 hoping their children will meet others, currently rely on notice boards and
-chance. Campsite managers, for their part, announce their activities on
-paper and never know how many people will show up.
+chance. Campsite managers announce their activities on paper and never know
+how many people will show up.
 
 The app gives each campsite a private space where holidaymakers create
 activity groups, chat, sign up for the campsite's events, find their way
@@ -92,32 +108,32 @@ No account, no password, no credentials required. Access is by physical
 presence: real campsites verify the holidaymaker is on site, by GPS or by a
 QR code displayed at reception.
 
-A demo campsite is open specifically for review, with no location check. It
-is reachable from anywhere:
+A demo campsite is open specifically for review, with that check disabled.
+It is reachable from anywhere, including outside France:
 
   1. Launch the app.
-  2. On the first screen, search for "Les Flots Bleus".
-  3. Select it, tick the terms checkbox, enter any nickname.
-  4. The app opens fully.
+  2. On the first screen, type "Flots" in the search field.
+  3. Select "Camping Les Flots Bleus".
+  4. Tick the terms checkbox, enter any nickname, and the app opens fully.
 
 To see moderation: open any group, then press and hold a message written by
 someone else.
 To see account deletion: Profile tab, then "Delete my account".
 
-The manager console is a separate mode, not part of the holidaymaker app
-and not required for review. Credentials can be provided on request.
+The manager console is a separate mode, not part of the holidaymaker app and
+not required for review. Credentials can be provided on request.
 
 5. EXTERNAL SERVICES
 
   - Supabase - database, anonymous authentication and image storage.
     Authentication is anonymous: no email, no password, no personal
     identifier is collected. https://supabase.com
-  - Esri ArcGIS World Imagery - satellite tiles for the campsite map.
-    Attribution is displayed on the map. https://www.esri.com
+  - Esri ArcGIS World Imagery - satellite tiles for the campsite map,
+    attribution displayed on the map. https://www.esri.com
   - OpenStreetMap Nominatim and Overpass - geocoding a campsite and
-    detecting its points of interest. Used by the manager console when a
+    detecting its points of interest, used by the manager console when a
     campsite is first set up. Data under ODbL. https://www.openstreetmap.org
-  - Open-Meteo - the campsite weather forecast. No key, no account.
+  - Open-Meteo - the campsite weather forecast, no key, no account.
     https://open-meteo.com
 
 No payment processor, no advertising network, no analytics, no AI service,
@@ -141,21 +157,21 @@ Thank you for your time.
 
 ---
 
-## Le tournage
+## 4. L'ordre des opérations
 
-Un seul enregistrement continu, sur iPhone physique. Ne pas couper : une
-coupure au mauvais endroit fait douter que le geste marche vraiment.
+1. Vérifier le build (tableau ci-dessus)
+2. Filmer les 11 étapes
+3. Coller le texte dans **App Review Information → Notes**, remplir la ligne
+   `[MODÈLE]` / `[VERSION]` (Réglages → Général → Informations)
+4. Attacher le build à la version, corriger la date de sortie si besoin
+5. **Update Review**, avec la vidéo en pièce jointe dans le Resolution Center
 
-1. Lancement, recherche « Les Flots Bleus », sélection.
-2. **Le bloc « Règles de la communauté »** — s'y arrêter deux secondes.
-3. Tenter de valider **sans** cocher → le refus s'affiche.
-4. Cocher, saisir un pseudo, valider.
-5. **La demande d'autorisation de localisation** — la montrer à l'écran.
-6. Parcourir : groupes, agenda, carte, infos.
-7. Ouvrir un groupe. **Appui long** sur un message d'un autre.
-8. « Signaler ce contenu » → un motif → la confirmation.
-9. **Appui long** → « Bloquer » → le message disparaît immédiatement.
-10. Onglet **Profil** → **« Supprimer mon compte »** → la feuille de
-    confirmation → **Supprimer** → retour à l'écran d'entrée.
+---
 
-Les étapes 9 et 10 sont celles qu'Apple veut voir de ses yeux.
+## Historique des refus
+
+| Refus | Guideline | Cause réelle |
+|---|---|---|
+| 1er | 1.2 + 4.0 | modération absente ; notes décrivant un geste inexistant |
+| 2e | 2.1 | examinateur bloqué à la porte : `acces_libre` jamais posé |
+| 3e | 2.1 | idem — le correctif n'était pas encore déployé |
