@@ -164,10 +164,35 @@ export default function Onboarding({ initialCamping, onDone }) {
     }, 300)
   }
 
-  function selectCamping(c) {
+  /**
+   * Choix d'un camping dans la liste de recherche.
+   *
+   * La recherche ne ramène que de quoi dessiner la liste — nom, slug, couleur,
+   * logo. Elle laisse volontairement carte_config de côté : cet objet contient
+   * le contour et les points d'intérêt, et le tirer pour vingt campings
+   * chargerait des centaines de kilo-octets sur le réseau d'un camping, pour
+   * n'en garder qu'un.
+   *
+   * Mais la suite en dépend : c'est carte_config qui porte le drapeau d'accès
+   * libre et le centre GPS. Sans lui, un camping ouvert sans vérification de
+   * position passait quand même par le contrôle GPS, qui échouait, et
+   * réclamait un code que le visiteur n'a pas. La ligne complète est donc
+   * relue ici, pour ce camping-là seulement.
+   */
+  async function selectCamping(c) {
     setCamping(c)
     setStep('verify')
     setGpsStatus('idle')
+
+    const { data } = await supabase
+      .from('campings').select('*').eq('id', c.id).maybeSingle()
+
+    // En cas d'échec on garde la version partielle : le contrôle GPS prendra
+    // le relais, avec le code en secours. Mieux vaut un accès plus strict
+    // qu'un écran bloqué.
+    if (!data) return
+    setCamping(data)
+    if (estAccesLibre(data)) setStep('form')
   }
 
   // Reset complet : oublie le camping mémorisé pour repartir du choix (change de camping)
