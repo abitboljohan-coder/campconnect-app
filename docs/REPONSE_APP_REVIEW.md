@@ -1,185 +1,141 @@
-# Réponse à l'App Review — Guideline 2.1
+# Réponse à l'App Review — refus du 19 août 2026
 
-> À coller dans **App Review Information → Notes** *et* dans le Resolution
-> Center. Apple demande deux fois que ce soit dans le champ Notes.
->
-> **Chaque phrase décrit ce que la vidéo montre.** Les deux premiers refus
-> viennent d'écarts entre ce qui était écrit et ce qui existait.
+> Build examiné : **1.0 (81)**, sur **iPad Air 11-inch (M3)**.
+> Submission ID : `3eb90f96-7ffb-4567-a56b-9dcc058fdbd1`
 
----
+Ce n'est pas le même refus que les précédents. Le contrôleur **est entré dans
+l'app** : il a parcouru le parcours vacancier, et ses trois demandes sont
+concrètes. Aucune ne porte sur le code.
 
-## 1. Vérifier le build AVANT de filmer
-
-| À vérifier | Où | Si absent |
+| Point | Ce qu'Apple demande | Ce qu'il faut faire |
 |---|---|---|
-| « Supprimer mon compte » | Profil, tout en bas | relancer un build |
-| Accès sans code | recherche « Flots » → clic | ne pas filmer, me le dire |
-| Agenda non vide | onglet Agenda | relancer le décalage des animations |
+| 2.1 | du contenu dans Events, Groups, Notices | exécuter `scripts/sql/revue_apple.sql` |
+| 2.1(a) | un compte **gérant** avec identifiants | créer le compte, le mettre dans App Review Information |
+| 2.1(b) | le modèle économique | répondre aux 8 questions (texte ci-dessous) |
 
-Le camping de démonstration est en accès libre : **aucune demande de code, aucun
-écran GPS**. Si l'un des deux apparaît, le build est antérieur au correctif.
+**Pas de nouveau build à envoyer, pas de vidéo à tourner.** Apple écrit noir sur
+blanc : *« providing a demo video showing the app in use is not sufficient »*.
+Ce qu'il veut, c'est un identifiant et un mot de passe dans **App Review
+Information**.
 
----
-
-## 2. Ce qu'il faut filmer, dans l'ordre
-
-Un seul enregistrement continu, sur iPhone physique, sans coupure.
-
-1. **Lancement de l'app** — l'enregistrement doit commencer là.
-2. Recherche « **Flots** », sélectionner « Camping Les Flots Bleus ».
-3. **S'arrêter deux secondes sur le bloc « Règles de la communauté »** — le
-   texte doit être lisible à l'image.
-4. Tenter de valider **sans cocher** la case → le refus s'affiche.
-5. Cocher, choisir un avatar, saisir un pseudo, valider.
-6. Parcourir : **Accueil**, **Groupes**, **Agenda**, **Carte**, **Infos**.
-7. Ouvrir un groupe. **Appui long** sur un message écrit par quelqu'un d'autre
-   (tenir une seconde pleine).
-8. « **Signaler ce contenu** » → choisir un motif → la confirmation apparaît.
-9. **Appui long** à nouveau → « **Bloquer** » → le message disparaît
-   immédiatement à l'écran.
-10. Onglet **Profil** → « **Supprimer mon compte** » → la confirmation →
-    **Supprimer** → retour à l'écran d'entrée.
-
-Les étapes **9** et **10** sont celles qu'Apple veut voir de ses yeux.
-
-> Aucune demande d'autorisation n'apparaît dans ce parcours, et c'est normal :
-> le camping de démonstration a la vérification de présence désactivée, et la
-> photo d'un signalement est facultative. Le texte l'explique au point 1 plutôt
-> que de promettre un écran que la vidéo ne montre pas — c'est précisément
-> l'écart qui a valu les deux premiers refus.
+Le refus 2.1(a) vient de ma formulation précédente — *« Credentials can be
+provided on request »*. C'est exactement ce qui déclenche ce refus.
 
 ---
 
-## 3. Texte à coller
+## 1. Créer le compte gérant du contrôleur
+
+Supabase → **Authentication → Users → Add user → Create new user**
+
+| Champ | Valeur |
+|---|---|
+| Email | `appreview@campconnect.fr` |
+| Password | celui que vous mettrez dans App Review Information |
+| **Auto Confirm User** | ☑ **à cocher** — sinon la connexion est refusée |
+
+Le compte ne peut pas être créé en SQL : `auth.users` contient un hachage et
+une dizaine de champs internes que Supabase gère lui-même.
+
+## 2. Exécuter le script
+
+`scripts/sql/revue_apple.sql`, d'un bloc, dans l'éditeur SQL Supabase. Il pose
+`acces_libre`, décale les animations sur les jours à venir, insère trois
+annonces (une par type) et rattache le compte ci-dessus à Les Flots Bleus —
+**sans toucher au vôtre** : `is_gerant()` teste le couple (user_id, camping_id),
+deux gérants peuvent partager un camping.
+
+La dernière requête du script est un contrôle : **aucune colonne ne doit être
+nulle ou à zéro.**
+
+## 3. Remplir App Review Information
+
+App Store Connect → la version → **App Review Information**
+
+- **Sign-In Required** : ☑
+- **User Name** : `appreview@campconnect.fr`
+- **Password** : celui choisi à l'étape 1
+- **Notes** : le texte ci-dessous (2 400 caractères, la limite est à 4 000)
+
+Puis **répondre dans le Resolution Center** avec le même texte.
+
+---
+
+## Texte à coller
 
 ```
-Hello,
+DEMO ACCOUNT (Camp Manager)
 
-Please find below the information requested. A screen recording is attached.
+  User name: appreview@campconnect.fr
+  Password:  [LE MOT DE PASSE]
 
-1. SCREEN RECORDING
+HOW TO REACH EACH MODE
 
-Attached, captured on a physical iPhone running the latest iOS. It begins
-with the app launch and shows, in one continuous take:
+The app ships two modes in a single binary.
 
-  - Account registration: the Community Rules panel, and the required terms
-    checkbox that blocks sign-up until it is ticked
-  - The core flow: home, groups, group chat, events, map, welcome booklet
-  - User-generated content moderation: long press on a message, then
-    "Report this content" with its five categories, then "Block", showing
-    the blocked person's content disappear immediately
-  - Account deletion, from Profile > Delete my account
+A. Holidaymaker - no account, no password, nothing to type
+   1. Launch the app.
+   2. Type "Flots" in the search field.
+   3. Select "Camping Les Flots Bleus".
+   4. Tick the terms checkbox, pick an avatar, enter any nickname.
+   The demo campsite has the on-site presence check disabled, so it opens
+   from anywhere, including outside France.
+   Tabs: Home, Groups, Events, Map, Notices, Welcome booklet, Profile.
+   Moderation: open a group, press and hold a message written by someone
+   else, then "Report this content" or "Block".
+   Account deletion: Profile tab > "Delete my account".
 
-There is no login step and no paid content: see points 3 and 4.
+B. Camp Manager - the account above
+   From the very first screen, tap "Je suis gerant de camping"
+   (I'm a campsite manager), at the bottom.
+   Then sign in with the credentials above.
 
-PERMISSION PROMPTS - why none appears in the recording
+1. PRE-POPULATED CONTENT
 
-The app declares three purpose strings. None of them is triggered along the
-demo path shown in the video, and we would rather say so than describe a
-screen you will not see:
+Camping Les Flots Bleus now holds upcoming Events, active Groups with
+conversations, Notices (small ads, lost and found), holidaymaker profiles,
+a site map with points of interest, and a welcome booklet. The manager
+account opens that same campsite, so every console screen - events,
+attendance, statistics, moderation - is populated as well.
 
-  - Location (NSLocationWhenInUseUsageDescription) is requested only to
-    verify that a holidaymaker is physically on the campsite they are
-    joining. The demo campsite provided for review has that check disabled
-    so that you can reach the app from anywhere, so the prompt does not
-    appear. String: "Votre position sert uniquement a verifier que vous etes
-    bien dans le camping lors de l'inscription."
-  - Camera (NSCameraUsageDescription) and Photo Library
-    (NSPhotoLibraryUsageDescription) are requested only when a user chooses
-    to attach a photo to an issue report or to a small ad. Both are optional
-    and are not part of the core flow. Strings: "L'appareil photo sert a
-    joindre une photo a un signalement ou a une annonce." and "Vos photos
-    servent a illustrer un signalement ou une annonce que vous publiez."
+2. BUSINESS MODEL
 
-To see the camera prompt: Home tab > "Signaler" card > "Ajouter une photo".
+- Is the app an extension of an existing online service?
+  Yes. It is the mobile client of CampConnect, a service a campsite
+  subscribes to as a business.
 
-2. DEVICES AND OPERATING SYSTEMS TESTED
+- Does this service have a cost?
+  Not for users. The campsite pays an annual subscription, between EUR 490
+  and EUR 1290 per year depending on how many pitches it has.
 
-  - iPhone [MODÈLE], iOS [VERSION]
-  - Layout verified at 320, 390, 768, 820 and 1180 points
+- What are the paid content or services?
+  None inside the app. There is no in-app purchase, no paywall, no
+  subscription screen, no unlockable feature, and no external purchase
+  link. Everything a user can see is free.
 
-3. WHAT THE APP DOES, AND FOR WHOM
+- Do individual professionals pay for the content or services?
+  No.
 
-CampConnect is a private social app for a single campsite.
+- Does a company or organization pay for the content or services?
+  Yes: the campsite, which is a business.
 
-The problem: holidaymakers staying on the same campsite have no way to find
-each other. Someone looking for a fourth player for pétanque, or parents
-hoping their children will meet others, currently rely on notice boards and
-chance. Campsite managers announce their activities on paper and never know
-how many people will show up.
+- Where do they pay, and what's the payment method?
+  Never in the app, and never on any page the app links to. The campsite
+  signs a contract with us directly and is invoiced annually, offline. For
+  the 2026 season the service is provided free of charge to the pilot
+  campsites, so no payment is collected at all today.
 
-The app gives each campsite a private space where holidaymakers create
-activity groups, chat, sign up for the campsite's events, find their way
-around a map of the site, read the welcome booklet, report a problem to the
-manager, and post small ads. Managers get a console to publish events, see
-attendance, and moderate content.
+- If users create an account to use your app, are there fees involved?
+  Holidaymakers do not create an account. Authentication is anonymous: no
+  email, no password, no personal identifier is collected. There are no
+  fees of any kind, ever.
 
-Target audience: holidaymakers of all ages staying on a campsite, and
-campsite managers. Content is scoped to one campsite and is never public.
-
-4. HOW TO ACCESS THE APP
-
-No account, no password, no credentials required. Access is by physical
-presence: real campsites verify the holidaymaker is on site, by GPS or by a
-QR code displayed at reception.
-
-A demo campsite is open specifically for review, with that check disabled.
-It is reachable from anywhere, including outside France:
-
-  1. Launch the app.
-  2. On the first screen, type "Flots" in the search field.
-  3. Select "Camping Les Flots Bleus".
-  4. Tick the terms checkbox, enter any nickname, and the app opens fully.
-
-To see moderation: open any group, then press and hold a message written by
-someone else.
-To see account deletion: Profile tab, then "Delete my account".
-
-The manager console is a separate mode, not part of the holidaymaker app and
-not required for review. Credentials can be provided on request.
-
-5. EXTERNAL SERVICES
-
-  - Supabase - database, anonymous authentication and image storage.
-    Authentication is anonymous: no email, no password, no personal
-    identifier is collected. https://supabase.com
-  - Esri ArcGIS World Imagery - satellite tiles for the campsite map,
-    attribution displayed on the map. https://www.esri.com
-  - OpenStreetMap Nominatim and Overpass - geocoding a campsite and
-    detecting its points of interest, used by the manager console when a
-    campsite is first set up. Data under ODbL. https://www.openstreetmap.org
-  - Open-Meteo - the campsite weather forecast, no key, no account.
-    https://open-meteo.com
-
-No payment processor, no advertising network, no analytics, no AI service,
-no third-party tracking. Push notifications are not enabled in this version.
-
-6. REGIONAL DIFFERENCES
-
-None. The app behaves identically everywhere. Its interface is available in
-French, English, Spanish and Dutch, selected from the phone's language and
-changeable in the Profile tab. Content depends only on which campsite the
-user has joined, never on their country.
-
-7. REGULATED INDUSTRY OR PROTECTED MATERIAL
-
-Not applicable. The app operates in no regulated industry and includes no
-protected third-party material. Map imagery and map data are used under
-their providers' terms, with attribution displayed in the app.
+- How do users obtain an account?
+  Holidaymakers do not need one, as described above. Camp manager accounts
+  are created by us for the campsite once its subscription is signed, and
+  attached to that campsite.
 
 Thank you for your time.
 ```
-
----
-
-## 4. L'ordre des opérations
-
-1. Vérifier le build (tableau ci-dessus)
-2. Filmer les 11 étapes
-3. Coller le texte dans **App Review Information → Notes**, remplir la ligne
-   `[MODÈLE]` / `[VERSION]` (Réglages → Général → Informations)
-4. Attacher le build à la version, corriger la date de sortie si besoin
-5. **Update Review**, avec la vidéo en pièce jointe dans le Resolution Center
 
 ---
 
@@ -190,3 +146,8 @@ Thank you for your time.
 | 1er | 1.2 + 4.0 | modération absente ; notes décrivant un geste inexistant |
 | 2e | 2.1 | examinateur bloqué à la porte : `acces_libre` jamais posé |
 | 3e | 2.1 | idem — le correctif n'était pas encore déployé |
+| 4e | 2.1 + 2.1(a) + 2.1(b) | il est entré ; contenu vide, pas d'accès gérant, modèle économique non expliqué |
+
+Le fil rouge des trois premiers : **j'avais décrit des états qui n'existaient
+pas.** Chaque phrase du texte ci-dessus décrit ce que le contrôle du script
+vérifie.

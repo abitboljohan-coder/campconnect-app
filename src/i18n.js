@@ -214,6 +214,7 @@ const STRINGS = {
 
   // Suppression du compte — exigée par la règle 5.1.1(v) de l'App Store.
   'profil.suppr_compte':   { fr: 'Supprimer mon compte', en: 'Delete my account', es: 'Eliminar mi cuenta', nl: 'Mijn account verwijderen' },
+  'profil.espace_gerant':  { fr: 'Espace gérant', en: 'Manager console', es: 'Espacio del gerente', nl: 'Beheerdersruimte' },
   'profil.suppr_titre':    { fr: 'Supprimer votre compte ?', en: 'Delete your account?', es: '¿Eliminar tu cuenta?', nl: 'Je account verwijderen?' },
   'profil.suppr_texte':    { fr: 'Votre profil, vos messages, vos statuts, vos annonces et vos inscriptions aux animations seront effacés. Les groupes que vous avez créés resteront ouverts pour leurs autres membres, sans votre nom.', en: 'Your profile, messages, statuses, listings and event sign-ups will be erased. Groups you created stay open for their other members, without your name.', es: 'Tu perfil, mensajes, estados, anuncios e inscripciones se borrarán. Los grupos que creaste seguirán abiertos para sus demás miembros, sin tu nombre.', nl: 'Je profiel, berichten, statussen, advertenties en inschrijvingen worden gewist. Groepen die je hebt aangemaakt blijven open voor de andere leden, zonder je naam.' },
   'profil.suppr_definitif':{ fr: '⚠️ Cette action est définitive : rien ne pourra être récupéré.', en: '⚠️ This cannot be undone: nothing can be recovered.', es: '⚠️ Esta acción es definitiva: no se podrá recuperar nada.', nl: '⚠️ Dit is definitief: niets kan worden hersteld.' },
