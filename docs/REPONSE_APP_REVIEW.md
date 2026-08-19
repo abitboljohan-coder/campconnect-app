@@ -86,8 +86,11 @@ A. Holidaymaker - no account, no password, nothing to type
 
 B. Camp Manager - the account above
    From the very first screen, tap "Je suis gerant de camping"
-   (I'm a campsite manager), at the bottom.
-   Then sign in with the credentials above.
+   (I'm a campsite manager), at the bottom. Then sign in with the
+   credentials above.
+   If you have already joined the campsite as a holidaymaker, that first
+   screen no longer appears. Either reinstall the app, or use Profile tab >
+   "Delete my account", which returns you to it.
 
 1. PRE-POPULATED CONTENT
 
