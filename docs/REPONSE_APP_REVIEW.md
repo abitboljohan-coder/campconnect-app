@@ -1,60 +1,65 @@
-# Réponse à l'App Review — refus du 19 août 2026
+# Réponse à l'App Review — refus du 20 août 2026
 
 > Build examiné : **1.0 (81)**, sur **iPad Air 11-inch (M3)**.
 > Submission ID : `3eb90f96-7ffb-4567-a56b-9dcc058fdbd1`
 
-Ce n'est pas le même refus que les précédents. Le contrôleur **est entré dans
-l'app** : il a parcouru le parcours vacancier, et ses trois demandes sont
-concrètes. Aucune ne porte sur le code.
+Le 20 août, **2.1 et 2.1(b) sont tombés** : le contenu et le modèle
+économique ont satisfait Apple. Il ne reste que **2.1(a)** — l'accès gérant.
 
-| Point | Ce qu'Apple demande | Ce qu'il faut faire |
-|---|---|---|
-| 2.1 | du contenu dans Events, Groups, Notices | exécuter `scripts/sql/revue_apple.sql` |
-| 2.1(a) | un compte **gérant** avec identifiants | créer le compte, le mettre dans App Review Information |
-| 2.1(b) | le modèle économique | répondre aux 8 questions (texte ci-dessous) |
+Vérifié en base le 20 août :
 
-**Pas de nouveau build à envoyer, pas de vidéo à tourner.** Apple écrit noir sur
-blanc : *« providing a demo video showing the app in use is not sufficient »*.
-Ce qu'il veut, c'est un identifiant et un mot de passe dans **App Review
-Information**.
+| Fait | Valeur |
+|---|---|
+| `appreview@campconnect.fr` existe et est confirmé | oui |
+| rattaché à Camping Les Flots Bleus | oui |
+| **dernière connexion réussie** | **19 août 16 h 12** — vous, pas le contrôleur |
+| Les Flots Bleus | 6 événements, 6 groupes, 3 annonces, 26 points, 13 vacanciers |
 
-Le refus 2.1(a) vient de ma formulation précédente — *« Credentials can be
-provided on request »*. C'est exactement ce qui déclenche ce refus.
+Le compte est bon. Le contrôleur ne s'est jamais connecté avec. La cause est
+dans le code du build 81, pas dans la base.
+
+## La cause, et elle est dans le code
+
+Sur natif, le seul chemin vers la console gérant est le bouton « Je suis
+gérant de camping », et il ne s'affiche que sur **l'écran de recherche de
+camping**. Dès qu'un camping est rejoint, `Onboarding` ne se rend plus : le
+bouton disparaît, et `setAppMode('gerant')` n'est plus appelable de nulle part.
+
+Mes notes précédentes disaient au contrôleur de rejoindre le camping en
+vacancier **d'abord**. Il a donc suivi l'instruction qui referme la porte
+derrière lui.
+
+Deux conséquences :
+
+1. **Un nouveau build est nécessaire.** Je m'étais trompé en écrivant le
+   contraire : l'information demandée tenait dans un texte, mais le contrôleur
+   n'avait aucun moyen de s'en servir. L'entrée « Espace gérant » est ajoutée
+   en bas de l'onglet Profil (commit `134a69e`).
+2. **Les notes inversent l'ordre** : gérant d'abord, vacancier ensuite. Ainsi
+   le piège ne se referme plus, même sur un build qui n'aurait pas le correctif.
+
+Apple écrit par ailleurs noir sur blanc : *« providing a demo video showing the
+app in use is not sufficient »*. Pas de vidéo à tourner.
 
 ---
 
-## 1. Créer le compte gérant du contrôleur
+## 1 et 2 — déjà faits, vérifiés en base
 
-Supabase → **Authentication → Users → Add user → Create new user**
+Le compte existe, est confirmé, et est rattaché à Les Flots Bleus. Le script
+`scripts/sql/revue_apple.sql` a bien tourné : 6 événements à venir, 6 groupes,
+3 annonces. **Rien à refaire de ce côté.**
 
-| Champ | Valeur |
-|---|---|
-| Email | `appreview@campconnect.fr` |
-| Password | celui que vous mettrez dans App Review Information |
-| **Auto Confirm User** | ☑ **à cocher** — sinon la connexion est refusée |
+## 3. Refaire un build, puis remplir App Review Information
 
-Le compte ne peut pas être créé en SQL : `auth.users` contient un hachage et
-une dizaine de champs internes que Supabase gère lui-même.
+D'abord le build : `npm run build:mobile`, puis Xcode Cloud. Le numéro de build
+s'aligne seul sur `$CI_BUILD_NUMBER`.
 
-## 2. Exécuter le script
-
-`scripts/sql/revue_apple.sql`, d'un bloc, dans l'éditeur SQL Supabase. Il pose
-`acces_libre`, décale les animations sur les jours à venir, insère trois
-annonces (une par type) et rattache le compte ci-dessus à Les Flots Bleus —
-**sans toucher au vôtre** : `is_gerant()` teste le couple (user_id, camping_id),
-deux gérants peuvent partager un camping.
-
-La dernière requête du script est un contrôle : **aucune colonne ne doit être
-nulle ou à zéro.**
-
-## 3. Remplir App Review Information
-
-App Store Connect → la version → **App Review Information**
+Puis App Store Connect → la version → **App Review Information**
 
 - **Sign-In Required** : ☑
 - **User Name** : `appreview@campconnect.fr`
 - **Password** : celui choisi à l'étape 1
-- **Notes** : le texte ci-dessous (2 400 caractères, la limite est à 4 000)
+- **Notes** : le texte ci-dessous (3 441 caractères, la limite est à 4 000)
 
 Puis **répondre dans le Resolution Center** avec le même texte.
 
@@ -72,33 +77,41 @@ HOW TO REACH EACH MODE
 
 The app ships two modes in a single binary.
 
-A. Holidaymaker - no account, no password, nothing to type
+A. Camp Manager - START HERE, before anything else
+
    1. Launch the app.
-   2. Type "Flots" in the search field.
-   3. Select "Camping Les Flots Bleus".
-   4. Tick the terms checkbox, pick an avatar, enter any nickname.
-   The demo campsite has the on-site presence check disabled, so it opens
-   from anywhere, including outside France.
+   2. On the very first screen, scroll to the bottom and tap
+      "Je suis gerant de camping" (I'm a campsite manager).
+   3. Sign in with the credentials above.
+   You will land on the console for Camping Les Flots Bleus: events,
+   attendance, statistics, site map, appearance, welcome booklet and
+   moderation, all with real content.
+
+   IMPORTANT - please do this FIRST. In this build, that manager link sits
+   on the campsite-search screen, which stops being shown once you have
+   joined a campsite as a holidaymaker. If you have already joined, use
+   Profile tab > "Delete my account" to return to that first screen. We are
+   sorry for the detour; the next build puts a permanent "Espace gerant"
+   entry in the Profile tab.
+
+B. Holidaymaker - no account, no password, nothing to type
+
+   1. On the first screen, type "Flots" in the search field.
+   2. Select "Camping Les Flots Bleus" - please pick this one exactly. It is
+      the campsite prepared for review, and the only one open without an
+      on-site check.
+   3. Tick the terms checkbox, pick an avatar, enter any nickname.
    Tabs: Home, Groups, Events, Map, Notices, Welcome booklet, Profile.
    Moderation: open a group, press and hold a message written by someone
    else, then "Report this content" or "Block".
    Account deletion: Profile tab > "Delete my account".
 
-B. Camp Manager - the account above
-   From the very first screen, tap "Je suis gerant de camping"
-   (I'm a campsite manager), at the bottom. Then sign in with the
-   credentials above.
-   If you have already joined the campsite as a holidaymaker, that first
-   screen no longer appears. Either reinstall the app, or use Profile tab >
-   "Delete my account", which returns you to it.
-
 1. PRE-POPULATED CONTENT
 
-Camping Les Flots Bleus now holds upcoming Events, active Groups with
-conversations, Notices (small ads, lost and found), holidaymaker profiles,
-a site map with points of interest, and a welcome booklet. The manager
-account opens that same campsite, so every console screen - events,
-attendance, statistics, moderation - is populated as well.
+Camping Les Flots Bleus currently holds 6 upcoming events, 6 active groups
+with conversations, 3 notices, 13 holidaymaker profiles, 26 map points of
+interest and a welcome booklet. The manager account opens that same
+campsite, so every console screen is populated too.
 
 2. BUSINESS MODEL
 
