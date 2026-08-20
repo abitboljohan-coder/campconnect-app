@@ -15,31 +15,43 @@ Vérifié en base le 20 août :
 | **dernière connexion réussie** | **19 août 16 h 12** — vous, pas le contrôleur |
 | Les Flots Bleus | 6 événements, 6 groupes, 3 annonces, 26 points, 13 vacanciers |
 
-Le compte est bon. Le contrôleur ne s'est jamais connecté avec. La cause est
-dans le code du build 81, pas dans la base.
+Le compte est bon. Le contrôleur ne s'est jamais connecté avec — parce qu'on ne
+lui a jamais montré les identifiants.
 
-## La cause, et elle est dans le code
+## La cause : deux champs vides dans App Store Connect
 
-Sur natif, le seul chemin vers la console gérant est le bouton « Je suis
-gérant de camping », et il ne s'affiche que sur **l'écran de recherche de
-camping**. Dès qu'un camping est rejoint, `Onboarding` ne se rend plus : le
-bouton disparaît, et `setAppMode('gerant')` n'est plus appelable de nulle part.
+Le contrôleur **a trouvé l'écran de connexion gérant** — sa capture du 20 août
+le montre dessus, à 10 h 23. Les deux champs y affichent leurs placeholders en
+gris (`gerant@camping.fr` et `••••••••`) : le formulaire est **vide**. Il est
+arrivé devant la porte sans rien à taper.
 
-Mes notes précédentes disaient au contrôleur de rejoindre le camping en
-vacancier **d'abord**. Il a donc suivi l'instruction qui referme la porte
-derrière lui.
+Les identifiants avaient été collés dans **Notes** seulement. Or l'interface du
+contrôleur lit le compte de démonstration dans un panneau distinct : la case
+**Sign-In Required** et les champs **User Name** / **Password**. Case décochée,
+champs vides → son panneau n'affiche aucun compte, quoi qu'il y ait dans Notes.
 
-Deux conséquences :
+C'est pour cela qu'Apple répète la même phrase depuis deux tours, mot pour mot :
+*« provide a user name and password in the App Review Information section of
+App Store Connect »*.
 
-1. **Un nouveau build est nécessaire.** Je m'étais trompé en écrivant le
-   contraire : l'information demandée tenait dans un texte, mais le contrôleur
-   n'avait aucun moyen de s'en servir. L'entrée « Espace gérant » est ajoutée
-   en bas de l'onglet Profil (commit `134a69e`).
-2. **Les notes inversent l'ordre** : gérant d'abord, vacancier ensuite. Ainsi
-   le piège ne se referme plus, même sur un build qui n'aurait pas le correctif.
+**Rien à corriger dans le code ni dans la base.** Vérifié le 20 août :
+
+| Contrôle | Résultat |
+|---|---|
+| email identique dans `auth.users` et `gerants` | ✅ |
+| `user_id` correctement lié | ✅ |
+| mot de passe posé, email confirmé | ✅ |
+| compte ni banni ni supprimé | ✅ |
+| rattaché à Camping Les Flots Bleus | ✅ |
+| connexion réussie le 19 août 16 h 12 | ✅ (par le propriétaire) |
+
+> Ce que j'avais écrit la veille — « la porte gérant se referme derrière le
+> contrôleur » — était faux : il l'a trouvée. Le trou existe quand même (le
+> bouton ne vit que sur l'écran de recherche) et le correctif reste utile pour
+> le prochain build, mais **ce n'est pas ce qui a causé ce refus**.
 
 Apple écrit par ailleurs noir sur blanc : *« providing a demo video showing the
-app in use is not sufficient »*. Pas de vidéo à tourner.
+app in use is not sufficient »*. Pas de vidéo à tourner, pas de build à envoyer.
 
 ---
 
@@ -49,19 +61,43 @@ Le compte existe, est confirmé, et est rattaché à Les Flots Bleus. Le script
 `scripts/sql/revue_apple.sql` a bien tourné : 6 événements à venir, 6 groupes,
 3 annonces. **Rien à refaire de ce côté.**
 
-## 3. Refaire un build, puis remplir App Review Information
+## 3. Le geste qui débloque tout
 
-D'abord le build : `npm run build:mobile`, puis Xcode Cloud. Le numéro de build
-s'aligne seul sur `$CI_BUILD_NUMBER`.
+App Store Connect → **My Apps** → CampConnect → dans la colonne de gauche, la
+version **1.0** sous « iOS App » → descendre jusqu'à la section
+**App Review Information**
 
-Puis App Store Connect → la version → **App Review Information**
+| Champ | Valeur |
+|---|---|
+| **Sign-In Required** | ☑ **à cocher — c'est ce qui manquait** |
+| **User Name** | `appreview@campconnect.fr` |
+| **Password** | celui que vous avez posé le 19 août |
+| **Notes** | le texte ci-dessous (3 441 caractères, limite 4 000) |
 
-- **Sign-In Required** : ☑
-- **User Name** : `appreview@campconnect.fr`
-- **Password** : celui choisi à l'étape 1
-- **Notes** : le texte ci-dessous (3 441 caractères, la limite est à 4 000)
+Cocher la case fait apparaître les deux champs : tant qu'elle est décochée, ils
+n'existent pas, et c'est exactement ce qui s'est passé.
 
-Puis **répondre dans le Resolution Center** avec le même texte.
+Puis **Save**, et répondre dans le Resolution Center :
+
+```
+Hello,
+
+Apologies - the demo account was included in the Notes field only, and the
+"Sign-In Required" box was left unchecked, so the credentials never appeared
+in your review panel. That is fixed: Sign-In Required is now ticked and the
+user name and password are filled in the App Review Information section.
+
+  User name: appreview@campconnect.fr
+  Password:  [LE MOT DE PASSE]
+
+Please sign in from the app's first screen, at the bottom:
+"Je suis gerant de camping" (I'm a campsite manager). The account opens the
+console for Camping Les Flots Bleus, which holds 6 upcoming events, 6 active
+groups with conversations, 3 notices, 13 holidaymaker profiles and 26 map
+points of interest.
+
+Full instructions are in the Notes field. Thank you for your patience.
+```
 
 ---
 
