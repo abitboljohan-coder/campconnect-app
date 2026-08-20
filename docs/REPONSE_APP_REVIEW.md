@@ -25,14 +25,20 @@ le montre dessus, à 10 h 23. Les deux champs y affichent leurs placeholders en
 gris (`gerant@camping.fr` et `••••••••`) : le formulaire est **vide**. Il est
 arrivé devant la porte sans rien à taper.
 
-Les identifiants avaient été collés dans **Notes** seulement. Or l'interface du
-contrôleur lit le compte de démonstration dans un panneau distinct : la case
-**Sign-In Required** et les champs **User Name** / **Password**. Case décochée,
-champs vides → son panneau n'affiche aucun compte, quoi qu'il y ait dans Notes.
+Les identifiants **avaient bien été fournis**, mot de passe compris, dans la
+réponse au Resolution Center. Ce n'est pas un oubli.
 
-C'est pour cela qu'Apple répète la même phrase depuis deux tours, mot pour mot :
-*« provide a user name and password in the App Review Information section of
-App Store Connect »*.
+Mais le panneau où le contrôleur lit un compte de démonstration est alimenté par
+la case **Sign-In Required** et les champs **User Name** / **Password** de la
+version — et par rien d'autre. Case décochée, son outil enregistre « no demo
+account provided » et envoie le gabarit correspondant. C'est pourquoi la phrase
+revient à l'identique depuis deux tours : elle est déclenchée par un état, pas
+rédigée après lecture du texte.
+
+Second piège, du même ordre : Apple demande *« reply to this message »*, donc la
+réponse part dans le **Resolution Center**. Ce fil n'est pas le champ **Notes**
+de la version. Les deux s'appellent « notes » dans la conversation courante, ce
+ne sont pas les mêmes champs.
 
 **Rien à corriger dans le code ni dans la base.** Vérifié le 20 août :
 
@@ -82,10 +88,13 @@ Puis **Save**, et répondre dans le Resolution Center :
 ```
 Hello,
 
-Apologies - the demo account was included in the Notes field only, and the
-"Sign-In Required" box was left unchecked, so the credentials never appeared
-in your review panel. That is fixed: Sign-In Required is now ticked and the
-user name and password are filled in the App Review Information section.
+The demo account was already supplied, with its password, in our previous
+reply. We believe it did not reach your review panel because the
+"Sign-In Required" box on the version was not ticked, which leaves the
+User Name and Password fields empty regardless of what the notes contain.
+
+That is now done: Sign-In Required is ticked, and the credentials are filled
+in the App Review Information section of the version.
 
   User name: appreview@campconnect.fr
   Password:  [LE MOT DE PASSE]
