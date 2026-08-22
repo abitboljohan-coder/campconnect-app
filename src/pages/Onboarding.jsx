@@ -48,11 +48,28 @@ const fromQR = !!window.location.pathname.match(/^\/join\/([^/?#]+)/)
 // Les campings réels n'ont pas ce drapeau et gardent leur vérification GPS.
 const estAccesLibre = c => c?.carte_config?.acces_libre === true
 
+/**
+ * Un camping n'est joignable que s'il sait dire oui à quelqu'un.
+ *
+ * Sans accès libre et sans centre GPS, le contrôle de présence n'a rien à
+ * comparer : il échoue, et l'écran retombe sur le code du jour — un code que
+ * seule la réception affiche, et qu'un camping non configuré n'affiche nulle
+ * part. Le visiteur se retrouvait donc devant une porte dont personne ne
+ * possède la clé. Mieux vaut le lui dire.
+ */
+export const estJoignable = c =>
+  estAccesLibre(c) || !!(c?.carte_config?.center?.lat && c?.carte_config?.center?.lng)
+
 export default function Onboarding({ initialCamping, onDone }) {
   useLangue()
+  // L'arrivée par QR vaut preuve de présence : elle passe devant tout le
+  // reste, y compris devant un camping que la réception n'a pas fini de
+  // configurer — c'est justement elle qui a affiché ce QR.
   const initialStep = !initialCamping
     ? 'search'
-    : (fromQR || estAccesLibre(initialCamping) ? 'form' : 'verify')
+    : fromQR || estAccesLibre(initialCamping) ? 'form'
+    : !estJoignable(initialCamping) ? 'pas_pret'
+    : 'verify'
   const [step, setStep] = useState(initialStep)
   const [camping, setCamping] = useState(initialCamping)
 
@@ -196,7 +213,13 @@ export default function Onboarding({ initialCamping, onDone }) {
     const complet = data || c
     setCamping(complet)
     setGpsStatus('idle')
-    setStep(estAccesLibre(complet) ? 'form' : 'verify')
+
+    if (estAccesLibre(complet)) { setStep('form'); return }
+    // La relecture doit avoir abouti pour conclure qu'un camping n'est pas
+    // prêt : sur une lecture ratée, `complet` n'a pas de carte_config du tout
+    // et tout camping paraîtrait fermé.
+    if (data && !estJoignable(complet)) { setStep('pas_pret'); return }
+    setStep('verify')
   }
 
   // Reset complet : oublie le camping mémorisé pour repartir du choix (change de camping)
@@ -335,6 +358,29 @@ export default function Onboarding({ initialCamping, onDone }) {
               {t('onb.gerant')}
             </Bouton>
           )}
+        </Pile>
+      </Card>
+    </Screen>
+  )
+
+  // ─── CAMPING PAS ENCORE OUVERT ────────────────────────────────────────────
+  if (step === 'pas_pret') return (
+    <Screen clair>
+      <div style={{ textAlign: 'center', marginBottom: 26 }}>
+        {camping.logo_url
+          ? <img src={camping.logo_url} alt="" style={{ width: 68, height: 68, objectFit: 'contain', borderRadius: 16, marginBottom: 12 }} />
+          : <img src="/logo-mark.png" alt="" width={72} height={77} style={{ display: 'block', margin: '0 auto 12px' }} />
+        }
+        <Texte variante="titre" style={{ fontSize: 23, color: TITRE }}>{camping.nom}</Texte>
+      </div>
+
+      <Card>
+        <Pile espace="lg">
+          <Pile espace="sm" role="status">
+            <Texte variante="sousTitre" as="h2">{t('onb.pas_pret_titre')}</Texte>
+            <Texte variante="corps">{t('onb.pas_pret_detail')}</Texte>
+          </Pile>
+          <Bouton pleineLargeur onClick={changerCamping}>{t('onb.changer')}</Bouton>
         </Pile>
       </Card>
     </Screen>

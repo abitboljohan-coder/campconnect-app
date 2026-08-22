@@ -213,6 +213,8 @@ const STRINGS = {
   'profil.err_save':     { fr: "Impossible d'enregistrer votre profil pour le moment.", en: "Couldn't save your profile right now.", es: 'No se pudo guardar tu perfil ahora.', nl: 'Kon je profiel nu niet opslaan.' },
 
   // Suppression du compte — exigée par la règle 5.1.1(v) de l'App Store.
+  'onb.pas_pret_titre':  { fr: "Ce camping n'est pas encore ouvert", en: 'This campsite is not open yet', es: 'Este camping aún no está abierto', nl: 'Deze camping is nog niet open' },
+  'onb.pas_pret_detail': { fr: "Son espace CampConnect n'a pas encore été configuré par la réception. Réessayez dans quelques jours, ou demandez-leur où en est la mise en place.", en: 'Its CampConnect space has not been set up by reception yet. Try again in a few days, or ask them how the setup is going.', es: 'La recepción todavía no ha configurado su espacio CampConnect. Vuelve a intentarlo en unos días o pregúntales cómo va la instalación.', nl: 'De receptie heeft de CampConnect-ruimte nog niet ingesteld. Probeer het over een paar dagen opnieuw of vraag hoe het ervoor staat.' },
   'profil.suppr_compte':   { fr: 'Supprimer mon compte', en: 'Delete my account', es: 'Eliminar mi cuenta', nl: 'Mijn account verwijderen' },
   'profil.espace_gerant':  { fr: 'Espace gérant', en: 'Manager console', es: 'Espacio del gerente', nl: 'Beheerdersruimte' },
   'profil.suppr_titre':    { fr: 'Supprimer votre compte ?', en: 'Delete your account?', es: '¿Eliminar tu cuenta?', nl: 'Je account verwijderen?' },
