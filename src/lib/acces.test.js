@@ -1,10 +1,22 @@
 import { describe, it, expect } from 'vitest'
-import { estJoignable } from './Onboarding'
+import { estJoignable, estAccesLibre } from './acces'
 
 // Un camping sans accès libre et sans centre GPS ne peut dire oui à personne :
 // le contrôle de présence n'a rien à comparer, il échoue, et l'écran retombe
 // sur un code du jour qu'un camping non configuré n'affiche nulle part. La
 // règle ci-dessous est ce qui évite d'envoyer un vacancier devant cette porte.
+
+describe('estAccesLibre', () => {
+  it("n'ouvre que sur le booléen vrai", () => {
+    expect(estAccesLibre({ carte_config: { acces_libre: true } })).toBe(true)
+    // carte_config est du jsonb : une valeur mal écrite ne doit pas ouvrir un
+    // camping réel, dont la vérification de présence est la seule protection.
+    expect(estAccesLibre({ carte_config: { acces_libre: 'true' } })).toBe(false)
+    expect(estAccesLibre({ carte_config: { acces_libre: 1 } })).toBe(false)
+    expect(estAccesLibre({ carte_config: {} })).toBe(false)
+    expect(estAccesLibre(null)).toBe(false)
+  })
+})
 
 describe('estJoignable', () => {
   it('accepte un camping en accès libre, même sans centre', () => {

@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { supabase, ensureAnonSession } from '../supabase'
 import { isNative, setAppMode } from '../native'
+import { estAccesLibre, estJoignable } from '../lib/acces'
 import { t, useLangue } from '../i18n'
 import {
   Bouton, Carte, Champ, Texte, Pile, appliquerTheme,
@@ -40,25 +41,6 @@ function haversine(lat1, lng1, lat2, lng2) {
 // recharge sur la racine. D'où le drapeau ci-dessous, posé au même moment.
 const fromQR = !!window.location.pathname.match(/^\/join\/([^/?#]+)/)
              || localStorage.getItem('arriveeParQR') === '1'
-
-// Camping en accès libre : contrôle de présence désactivé pour ce camping-là.
-// Réservé au camping de démonstration, qui doit rester ouvrable depuis
-// n'importe où — par un prospect à qui l'on fait la démonstration, et surtout
-// par les testeurs d'Apple et de Google, à des milliers de kilomètres du site.
-// Les campings réels n'ont pas ce drapeau et gardent leur vérification GPS.
-const estAccesLibre = c => c?.carte_config?.acces_libre === true
-
-/**
- * Un camping n'est joignable que s'il sait dire oui à quelqu'un.
- *
- * Sans accès libre et sans centre GPS, le contrôle de présence n'a rien à
- * comparer : il échoue, et l'écran retombe sur le code du jour — un code que
- * seule la réception affiche, et qu'un camping non configuré n'affiche nulle
- * part. Le visiteur se retrouvait donc devant une porte dont personne ne
- * possède la clé. Mieux vaut le lui dire.
- */
-export const estJoignable = c =>
-  estAccesLibre(c) || !!(c?.carte_config?.center?.lat && c?.carte_config?.center?.lng)
 
 export default function Onboarding({ initialCamping, onDone }) {
   useLangue()
