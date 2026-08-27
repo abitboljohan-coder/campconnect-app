@@ -7,7 +7,7 @@
 //
 // Secrets requis (supabase secrets set ...) :
 //   FCM_SERVICE_ACCOUNT   = contenu JSON du compte de service Firebase
-//   PUSH_WEBHOOK_SECRET   = (optionnel) secret partagé avec le webhook
+//   PUSH_WEBHOOK_SECRET   = secret partagé avec le webhook (OBLIGATOIRE)
 //   SUPABASE_URL / SUPABASE_SERVICE_ROLE_KEY = injectés automatiquement
 // ─────────────────────────────────────────────────────────────────────────────
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
@@ -15,7 +15,16 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!
 const SERVICE_ROLE = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
 const FCM_SA        = Deno.env.get('FCM_SERVICE_ACCOUNT')!
-const WEBHOOK_SECRET = Deno.env.get('PUSH_WEBHOOK_SECRET') // optionnel
+// Le secret n'est pas optionnel.
+//
+// Cette fonction est joignable depuis l'extérieur, et la clé anonyme de
+// Supabase est publique par construction — elle est dans le bundle de l'app.
+// Sans secret partagé, n'importe qui pouvant lire ce bundle peut appeler la
+// fonction avec { table: 'animations', record: { publiee: true, camping_id } }
+// et faire sonner tous les téléphones d'un camping. On refuse donc de servir
+// tant qu'il n'est pas posé, plutôt que de laisser la porte ouverte par
+// simple omission de configuration.
+const WEBHOOK_SECRET = Deno.env.get('PUSH_WEBHOOK_SECRET')
 
 const admin = createClient(SUPABASE_URL, SERVICE_ROLE)
 const todayISO = () => new Date().toISOString().slice(0, 10)
@@ -72,31 +81,47 @@ async function importKey(pem: string): Promise<CryptoKey> {
 // ── Envoi FCM v1 (un message par token, purge des tokens morts) ──────────────
 type Tok = { token: string; device_id: string }
 
+const LOT = 100
+
 async function sendToTokens(tokens: Tok[], notif: { title: string; body: string }, data: Record<string, string>) {
   if (!tokens.length) return
   const { token: access, projectId } = await getAccessToken()
   const url = `https://fcm.googleapis.com/v1/projects/${projectId}/messages:send`
+  const morts: string[] = []
 
-  await Promise.all(tokens.map(async (t) => {
-    const message = {
-      message: {
-        token: t.token,
-        notification: { title: notif.title, body: notif.body },
-        data,
-        android: { priority: 'HIGH', notification: { sound: 'default' } },
-        apns: { payload: { aps: { sound: 'default', badge: 1 } } },
-      },
-    }
-    const r = await fetch(url, {
-      method: 'POST',
-      headers: { Authorization: `Bearer ${access}`, 'Content-Type': 'application/json' },
-      body: JSON.stringify(message),
-    })
-    // token invalide/expiré → on le supprime
-    if (r.status === 404 || r.status === 403 || r.status === 410) {
-      await admin.from('push_tokens').delete().eq('device_id', t.device_id)
-    }
-  }))
+  // Par lots, et non tous d'un coup : un camping de plusieurs centaines de
+  // vacanciers ouvrirait autant de requêtes simultanées, ce que la fonction
+  // ne tient pas. Les lots partent l'un après l'autre, chacun en parallèle.
+  for (let i = 0; i < tokens.length; i += LOT) {
+    await Promise.all(tokens.slice(i, i + LOT).map(async (t) => {
+      const message = {
+        message: {
+          token: t.token,
+          notification: { title: notif.title, body: notif.body },
+          data,
+          android: { priority: 'HIGH', notification: { sound: 'default' } },
+          apns: { payload: { aps: { sound: 'default', badge: 1 } } },
+        },
+      }
+      const r = await fetch(url, {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${access}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify(message),
+      })
+      if (r.ok) return
+
+      // Seul 404 (UNREGISTERED) dit que le token est mort. 403 signale une
+      // erreur de configuration Firebase — projet mal apparié, compte de
+      // service d'un autre projet — et 400 peut venir d'un message mal formé,
+      // donc de nous. Purger sur ces codes-là viderait la table entière au
+      // premier déploiement de travers, et tous les appareils cesseraient de
+      // recevoir quoi que ce soit sans que rien ne le signale.
+      if (r.status === 404) { morts.push(t.device_id); return }
+      console.error('FCM', r.status, (await r.text()).slice(0, 200))
+    }))
+  }
+
+  if (morts.length) await admin.from('push_tokens').delete().in('device_id', morts)
 }
 
 async function tokensForVacanciers(vacIds: string[], excludeVacId?: string): Promise<Tok[]> {
@@ -111,7 +136,11 @@ const ok = () => new Response(JSON.stringify({ ok: true }), { headers: { 'Conten
 // ── Point d'entrée ───────────────────────────────────────────────────────────
 Deno.serve(async (req) => {
   try {
-    if (WEBHOOK_SECRET && req.headers.get('x-webhook-secret') !== WEBHOOK_SECRET) {
+    if (!WEBHOOK_SECRET) {
+      console.error('PUSH_WEBHOOK_SECRET absent : la fonction refuse de servir.')
+      return new Response('misconfigured', { status: 500 })
+    }
+    if (req.headers.get('x-webhook-secret') !== WEBHOOK_SECRET) {
       return new Response('unauthorized', { status: 401 })
     }
     const payload = await req.json()

@@ -95,6 +95,14 @@ supabase functions deploy send-push --no-verify-jwt
 L'URL de la fonction sera :
 `https://tswpintevokeasteyjno.supabase.co/functions/v1/send-push`
 
+> ⚠️ `--no-verify-jwt` rend la fonction joignable sans jeton : **`PUSH_WEBHOOK_SECRET`
+> est sa seule protection**, et n'est donc pas optionnel. La clé anonyme de
+> Supabase est publique — elle voyage dans le bundle de l'app — elle ne
+> protégerait rien. Sans ce secret, quiconque lit le bundle peut appeler la
+> fonction avec `{ table: 'animations', record: { publiee: true, camping_id } }`
+> et faire sonner tous les téléphones d'un camping. La fonction refuse
+> désormais de servir tant qu'il n'est pas posé.
+
 ### 3d. Database Webhooks (déclencheurs)
 Supabase Dashboard → **Database → Webhooks** → **Create a new hook**, en créer **deux** :
 
