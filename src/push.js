@@ -25,12 +25,16 @@ let _ctx = {}
 export async function registerPush({ camping, vacancier } = {}) {
   if (!isNative) return
 
-  // Firebase non configuré → on n'appelle SURTOUT pas register() : côté Android
-  // cela lève « Default FirebaseApp is not initialized » et tue l'application.
-  // __PUSH_READY__ est calculé au build (voir vite.config.js) : il passe à true
-  // dès que google-services.json / GoogleService-Info.plist est déposé.
-  if (typeof __PUSH_READY__ !== 'undefined' && !__PUSH_READY__) {
-    console.info('Notifications push désactivées : Firebase non configuré.')
+  // Android sans google-services.json → on n'appelle SURTOUT pas register() :
+  // cela lève « Default FirebaseApp is not initialized », une exception fatale
+  // côté Java qu'aucun try/catch JavaScript ne rattrape.
+  //
+  // iOS n'est pas concerné : le greffon y renvoie le jeton APNs sans jamais
+  // toucher à Firebase, et l'envoi passe directement par APNs côté serveur.
+  // Le bloquer sur un fichier Firebase le privait de notifications pour rien.
+  if (Capacitor.getPlatform() === 'android'
+      && typeof __FIREBASE_ANDROID_PRET__ !== 'undefined' && !__FIREBASE_ANDROID_PRET__) {
+    console.info('Notifications push Android désactivées : google-services.json absent.')
     return
   }
 

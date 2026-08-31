@@ -1,13 +1,31 @@
 // ─────────────────────────────────────────────────────────────────────────────
-// Edge Function : envoi des notifications push (FCM HTTP v1 — Android + iOS)
+// Edge Function : envoi des notifications push
+//
+// Deux transports, et ce n'est pas un choix esthétique.
+//
+// @capacitor/push-notifications ne passe pas par Firebase sur iOS : son code
+// natif renvoie le deviceToken brut d'APNs, encodé en hexadécimal, sans jamais
+// toucher au SDK Firebase. FCM, lui, n'accepte que ses propres jetons
+// d'enregistrement. Envoyer un jeton APNs à FCM le fait rejeter — les push
+// Android auraient marché, les push iOS jamais, et sans erreur visible dans
+// l'application.
+//
+//   Android → FCM HTTP v1   (jeton FCM, via google-services.json)
+//   iOS     → APNs          (jeton APNs, via la clé .p8)
+//
+// Le routage se fait sur push_tokens.platform, que le client renseigne déjà.
 //
 // Déclenchée par un Database Webhook Supabase sur INSERT de :
 //   • messages    → notifie les membres présents du groupe (sauf l'auteur)
 //   • animations  → notifie tous les vacanciers présents du camping (si publiée)
 //
 // Secrets requis (supabase secrets set ...) :
-//   FCM_SERVICE_ACCOUNT   = contenu JSON du compte de service Firebase
+//   FCM_SERVICE_ACCOUNT   = contenu JSON du compte de service Firebase (Android)
 //   PUSH_WEBHOOK_SECRET   = secret partagé avec le webhook (OBLIGATOIRE)
+//   APNS_KEY_P8           = contenu de la clé .p8 Apple            (iOS)
+//   APNS_KEY_ID           = identifiant de cette clé, 10 caractères
+//   APNS_TEAM_ID          = identifiant d'équipe Apple, 10 caractères
+//   APNS_BUNDLE_ID        = défaut com.campconnect.app
 //   SUPABASE_URL / SUPABASE_SERVICE_ROLE_KEY = injectés automatiquement
 // ─────────────────────────────────────────────────────────────────────────────
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
@@ -15,6 +33,10 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!
 const SERVICE_ROLE = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
 const FCM_SA        = Deno.env.get('FCM_SERVICE_ACCOUNT')!
+const APNS_P8       = Deno.env.get('APNS_KEY_P8')
+const APNS_KEY_ID   = Deno.env.get('APNS_KEY_ID')
+const APNS_TEAM_ID  = Deno.env.get('APNS_TEAM_ID')
+const APNS_BUNDLE   = Deno.env.get('APNS_BUNDLE_ID') || 'com.campconnect.app'
 // Le secret n'est pas optionnel.
 //
 // Cette fonction est joignable depuis l'extérieur, et la clé anonyme de
@@ -79,11 +101,11 @@ async function importKey(pem: string): Promise<CryptoKey> {
 }
 
 // ── Envoi FCM v1 (un message par token, purge des tokens morts) ──────────────
-type Tok = { token: string; device_id: string }
+type Tok = { token: string; device_id: string; platform: string | null }
 
 const LOT = 100
 
-async function sendToTokens(tokens: Tok[], notif: { title: string; body: string }, data: Record<string, string>) {
+async function sendFcm(tokens: Tok[], notif: { title: string; body: string }, data: Record<string, string>) {
   if (!tokens.length) return
   const { token: access, projectId } = await getAccessToken()
   const url = `https://fcm.googleapis.com/v1/projects/${projectId}/messages:send`
@@ -100,7 +122,6 @@ async function sendToTokens(tokens: Tok[], notif: { title: string; body: string 
           notification: { title: notif.title, body: notif.body },
           data,
           android: { priority: 'HIGH', notification: { sound: 'default' } },
-          apns: { payload: { aps: { sound: 'default', badge: 1 } } },
         },
       }
       const r = await fetch(url, {
@@ -124,10 +145,113 @@ async function sendToTokens(tokens: Tok[], notif: { title: string; body: string 
   if (morts.length) await admin.from('push_tokens').delete().in('device_id', morts)
 }
 
+// ── APNs (iOS) ───────────────────────────────────────────────────────────────
+//
+// Le jeton d'autorisation est un JWT ES256 signé par la clé .p8. Apple impose
+// de le renouveler au moins toutes les heures et refuse qu'on en génère plus
+// d'un toutes les vingt minutes : on le garde donc cinquante minutes.
+let _apns: { jwt: string; exp: number } | null = null
+
+async function apnsJwt(): Promise<string> {
+  if (_apns && _apns.exp > Date.now()) return _apns.jwt
+
+  const now = Math.floor(Date.now() / 1000)
+  const header = { alg: 'ES256', kid: APNS_KEY_ID, typ: 'JWT' }
+  const claim = { iss: APNS_TEAM_ID, iat: now }
+  const enc = (o: unknown) => b64url(new TextEncoder().encode(JSON.stringify(o)))
+  const unsigned = `${enc(header)}.${enc(claim)}`
+
+  const body = APNS_P8!
+    .replace(/-----BEGIN PRIVATE KEY-----/, '')
+    .replace(/-----END PRIVATE KEY-----/, '')
+    .replace(/\s+/g, '')
+  const der = Uint8Array.from(atob(body), (c) => c.charCodeAt(0))
+  const key = await crypto.subtle.importKey(
+    'pkcs8', der, { name: 'ECDSA', namedCurve: 'P-256' }, false, ['sign'],
+  )
+  // WebCrypto rend déjà la signature au format brut r||s attendu par APNs :
+  // aucune conversion depuis DER n'est nécessaire, contrairement à OpenSSL.
+  const sig = await crypto.subtle.sign(
+    { name: 'ECDSA', hash: 'SHA-256' }, key, new TextEncoder().encode(unsigned),
+  )
+  const jwt = `${unsigned}.${b64url(new Uint8Array(sig))}`
+  _apns = { jwt, exp: Date.now() + 50 * 60_000 }
+  return jwt
+}
+
+const APNS_PROD = 'https://api.push.apple.com'
+const APNS_DEV  = 'https://api.sandbox.push.apple.com'
+
+async function sendApns(tokens: Tok[], notif: { title: string; body: string }, data: Record<string, string>) {
+  if (!tokens.length) return
+  if (!APNS_P8 || !APNS_KEY_ID || !APNS_TEAM_ID) {
+    console.error(`APNs non configuré : ${tokens.length} appareil(s) iOS ignoré(s).`)
+    return
+  }
+  const jwt = await apnsJwt()
+  const charge = JSON.stringify({
+    aps: { alert: { title: notif.title, body: notif.body }, sound: 'default', badge: 1 },
+    ...data,
+  })
+  const morts: string[] = []
+
+  const envoyer = (hote: string, t: Tok) => fetch(`${hote}/3/device/${t.token}`, {
+    method: 'POST',
+    headers: {
+      authorization: `bearer ${jwt}`,
+      'apns-topic': APNS_BUNDLE,
+      'apns-push-type': 'alert',
+      'apns-priority': '10',
+    },
+    body: charge,
+  })
+
+  for (let i = 0; i < tokens.length; i += LOT) {
+    await Promise.all(tokens.slice(i, i + LOT).map(async (t) => {
+      let r = await envoyer(APNS_PROD, t)
+
+      // BadDeviceToken ne veut pas dire « jeton mort » : il veut presque
+      // toujours dire « mauvais environnement ». Un appareil qui installe
+      // l'app depuis Xcode reçoit un jeton de bac à sable, que la passerelle
+      // de production refuse — et inversement pour TestFlight. On retente
+      // donc l'autre passerelle avant de conclure quoi que ce soit.
+      if (r.status === 400) {
+        const raison = await r.clone().json().catch(() => ({}))
+        if (raison?.reason === 'BadDeviceToken') r = await envoyer(APNS_DEV, t)
+      }
+      if (r.ok) return
+
+      // 410 Unregistered est le seul verdict sans appel : l'appareil a
+      // desinstallé l'app. Le reste est journalisé, jamais purgé — un 403
+      // signale une clé mal configurée, et purger dessus viderait la table.
+      if (r.status === 410) { morts.push(t.device_id); return }
+      console.error('APNs', r.status, (await r.text()).slice(0, 200))
+    }))
+  }
+
+  if (morts.length) await admin.from('push_tokens').delete().in('device_id', morts)
+}
+
+// ── Aiguillage ───────────────────────────────────────────────────────────────
+//
+// La plateforme fait foi. À défaut — lignes antérieures à la colonne —, la
+// forme tranche : un jeton APNs est exactement 64 caractères hexadécimaux,
+// là où un jeton FCM est bien plus long et contient « : », « _ » ou « - ».
+const estIos = (t: Tok) =>
+  t.platform === 'ios' || (!t.platform && /^[0-9a-fA-F]{64}$/.test(t.token))
+
+async function sendToTokens(tokens: Tok[], notif: { title: string; body: string }, data: Record<string, string>) {
+  if (!tokens.length) return
+  await Promise.all([
+    sendFcm(tokens.filter((t) => !estIos(t)), notif, data),
+    sendApns(tokens.filter(estIos), notif, data),
+  ])
+}
+
 async function tokensForVacanciers(vacIds: string[], excludeVacId?: string): Promise<Tok[]> {
   const ids = vacIds.filter((id) => id && id !== excludeVacId)
   if (!ids.length) return []
-  const { data } = await admin.from('push_tokens').select('token, device_id').in('vacancier_id', ids)
+  const { data } = await admin.from('push_tokens').select('token, device_id, platform').in('vacancier_id', ids)
   return data || []
 }
 
