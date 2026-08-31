@@ -242,10 +242,18 @@ const estIos = (t: Tok) =>
 
 async function sendToTokens(tokens: Tok[], notif: { title: string; body: string }, data: Record<string, string>) {
   if (!tokens.length) return
-  await Promise.all([
+
+  // allSettled, et non all : les deux transports sont indépendants et doivent
+  // le rester. Avec all, une clé Firebase mal collée ferait rejeter l'ensemble,
+  // la fonction renverrait 500, le webhook Supabase réessaierait — et les
+  // iPhone, eux, auraient déjà reçu la notification. Une panne d'un côté
+  // provoquerait des doublons de l'autre.
+  const [android, ios] = await Promise.allSettled([
     sendFcm(tokens.filter((t) => !estIos(t)), notif, data),
     sendApns(tokens.filter(estIos), notif, data),
   ])
+  if (android.status === 'rejected') console.error('FCM (Android) :', android.reason)
+  if (ios.status === 'rejected') console.error('APNs (iOS) :', ios.reason)
 }
 
 async function tokensForVacanciers(vacIds: string[], excludeVacId?: string): Promise<Tok[]> {
