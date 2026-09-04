@@ -2,6 +2,7 @@ import { Outlet, NavLink, useLocation, Link } from 'react-router-dom'
 import { t, useLangue } from '../i18n'
 import Icon from './Icon'
 import SwipeBack from './SwipeBack'
+import { toucher } from '../haptique'
 
 const NAV = [
   { to: '/', key: 'nav.accueil', icon: 'accueil' },
@@ -92,7 +93,12 @@ export default function Layout({ camping }) {
             fait exception : elle doit occuper tout l'espace disponible. */}
         <div style={isMap ? undefined : { width: '100%', maxWidth: 'var(--cc-colonne)', margin: '0 auto' }}>
           <SwipeBack>
-            <Outlet />
+            {/* La clé sur le chemin remonte le composant à chaque changement
+                d'onglet : c'est ce remontage qui rejoue l'animation d'entrée.
+                Sans elle, React réutiliserait le nœud et rien ne bougerait. */}
+            <div key={location.pathname} className="cc-ecran">
+              <Outlet />
+            </div>
           </SwipeBack>
         </div>
       </main>
@@ -121,6 +127,7 @@ export default function Layout({ camping }) {
               key={item.to}
               to={item.to}
               end={item.to === '/'}
+              onClick={toucher}
               style={({ isActive }) => ({
                 flex: 1,
                 display: 'flex',
