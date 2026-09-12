@@ -1,6 +1,7 @@
 import { Capacitor } from '@capacitor/core'
 import { isNative } from './native'
 import { supabase } from './supabase'
+import { toast } from './toast'
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Notifications push (FCM Android / APNs iOS via @capacitor/push-notifications)
@@ -54,6 +55,20 @@ export async function registerPush({ camping, vacancier } = {}) {
     PushNotifications.addListener('registration', (token) => saveToken(token.value))
     PushNotifications.addListener('registrationError', (err) =>
       console.error('Push registration error:', err))
+
+    // Notification reçue alors que l'application est au premier plan.
+    //
+    // Android ne la montre alors pas dans la barre de statut : le greffon la
+    // remet ici, et sans écouteur elle est purement perdue — Logcat le dit sans
+    // détour, « No listeners found for event pushNotificationReceived ».
+    // Un toast est d'ailleurs plus juste qu'une notification système, que
+    // l'utilisateur ne verrait pas puisqu'il a déjà l'application sous les yeux.
+    PushNotifications.addListener('pushNotificationReceived', ({ title, body, data }) => {
+      // Sauf pour le fil qu'il est en train de lire : le temps réel y a déjà
+      // fait apparaître le message, l'annoncer une seconde fois serait du bruit.
+      if (data?.groupe_id && window.location.pathname === `/chat/${data.groupe_id}`) return
+      toast([title, body].filter(Boolean).join(' — '))
+    })
 
     // Tap sur une notification → navigation contextuelle
     PushNotifications.addListener('pushNotificationActionPerformed', ({ notification }) => {
