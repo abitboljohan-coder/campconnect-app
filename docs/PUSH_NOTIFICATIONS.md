@@ -1,11 +1,25 @@
 # Notifications push — mise en place (Android + iOS)
 
-Architecture :
+Architecture — **deux transports, et ce n'est pas un choix esthétique** :
 
 ```
-App native ──(token FCM/APNs)──▶ table push_tokens (Supabase)
-Nouveau message / animation ──▶ Database Webhook ──▶ Edge Function send-push ──▶ FCM ──▶ appareils
+Android ──(jeton FCM)───▶ push_tokens ──▶ send-push ──▶ FCM  ──▶ appareils
+iOS     ──(jeton APNs)──▶ push_tokens ──▶ send-push ──▶ APNs ──▶ appareils
 ```
+
+`@capacitor/push-notifications` ne passe pas par Firebase sur iOS : son code
+natif renvoie le `deviceToken` brut d'APNs en hexadécimal, sans jamais toucher
+au SDK Firebase (`PushNotificationsPlugin.swift`, aucune référence à Firebase).
+Or FCM n'accepte que ses propres jetons d'enregistrement. Router iOS vers FCM
+faisait rejeter chaque envoi — **les push Android auraient marché, les push iOS
+jamais, et sans la moindre erreur visible dans l'application.**
+
+L'Edge Function aiguille donc sur `push_tokens.platform`, que le client
+renseigne déjà.
+
+**Conséquence pratique : iOS n'a besoin ni de Firebase, ni de
+`GoogleService-Info.plist`.** La clé `.p8` va dans les secrets Supabase, pas
+dans Firebase.
 
 Le code est déjà en place :
 - `src/push.js` — enregistrement de l'appareil + gestion des taps
@@ -21,22 +35,19 @@ Il reste la **configuration des consoles** (Firebase, Apple, Supabase), à faire
 
 ## ⚠️ Activation automatique (sécurité anti-crash)
 
-Les push sont **désactivées tant que Firebase n'est pas configuré**.
+Les push **Android** sont désactivées tant que `google-services.json` est absent.
 
-Raison : sur Android, appeler `PushNotifications.register()` sans
-`google-services.json` provoque un crash natif de l'application —
-« Default FirebaseApp is not initialized in this process ».
-C'est une exception fatale côté Java, qu'aucun `try/catch` JavaScript ne peut
-rattraper.
+Raison : sur Android, appeler `PushNotifications.register()` sans ce fichier
+provoque un crash natif — « Default FirebaseApp is not initialized in this
+process ». C'est une exception fatale côté Java, qu'aucun `try/catch`
+JavaScript ne rattrape.
 
-Le build détecte donc la présence des fichiers Firebase
-(`android/app/google-services.json` ou `ios/App/App/GoogleService-Info.plist`)
-et n'active l'enregistrement que s'ils existent — voir `PUSH_READY` dans
-`vite.config.js`.
+Le build détecte sa présence — voir `FIREBASE_ANDROID_PRET` dans
+`vite.config.js` — et `src/push.js` ne bloque **que la plateforme Android**.
+iOS n'est pas concerné : il ne touche jamais à Firebase.
 
-**Concrètement** : dépose les fichiers Firebase (étape 1 ci-dessous), relance
-`npm run build:mobile`, et les push s'activent toutes seules. Sans eux, l'app
-fonctionne normalement, simplement sans notifications.
+**Concrètement** : dépose `google-services.json` (étape 1), relance
+`npm run build:mobile`, et les push Android s'activent seules.
 
 
 ---
@@ -48,9 +59,7 @@ fonctionne normalement, simplement sans notifications.
    - Nom du package : `com.campconnect.app`
    - Télécharger **`google-services.json`** → le placer dans **`android/app/google-services.json`**
    - (le `build.gradle` applique déjà le plugin Google Services automatiquement si le fichier est présent)
-3. **Ajouter une app iOS** :
-   - Bundle ID : `com.campconnect.app`
-   - Télécharger **`GoogleService-Info.plist`** → l'ajouter dans **Xcode** au dossier `App/App` (glisser-déposer, cocher « Copy items if needed »)
+3. **Ajouter une app iOS** : *inutile.* iOS ne passe pas par Firebase.
 4. **Activer l'API** : Firebase → ⚙️ Paramètres du projet → **Cloud Messaging** → vérifier que « Firebase Cloud Messaging API (V1) » est **activée**.
 
 > `google-services.json` et `GoogleService-Info.plist` sont dans `.gitignore` — ne pas les committer.
@@ -60,7 +69,12 @@ fonctionne normalement, simplement sans notifications.
 ## 2. iOS — APNs (obligatoire pour les push iOS)
 
 1. [developer.apple.com](https://developer.apple.com) → Certificates, Identifiers & Profiles → **Keys** → créer une **APNs Auth Key** (`.p8`). Noter le **Key ID** et ton **Team ID**.
-2. Firebase → Paramètres → Cloud Messaging → section **Apple app configuration** → **APNs Authentication Key** → uploader le `.p8` + Key ID + Team ID.
+2. La clé ne va **pas** dans Firebase : elle ira dans les secrets Supabase
+   (étape 3c), puisque l'envoi iOS part directement vers APNs.
+
+   ⚠️ À la création, régler **Environment** sur **Sandbox & Production** — le
+   choix est irréversible, et « Sandbox » seul ne notifie jamais les
+   installations venues de TestFlight ou de l'App Store.
 3. Dans **Xcode** (`ios/App/App.xcodeproj` — Capacitor 8 utilise Swift Package
    Manager, il n'y a plus de `.xcworkspace` ni de CocoaPods) → cible **App** →
    onglet **Signing & Capabilities** :
@@ -88,12 +102,25 @@ supabase link --project-ref tswpintevokeasteyjno
 supabase secrets set FCM_SERVICE_ACCOUNT="$(cat fcm-service-account.json)"
 supabase secrets set PUSH_WEBHOOK_SECRET="un-secret-long-au-hasard"
 
+# iOS — la clé .p8 Apple, son identifiant, et l'identifiant d'équipe
+supabase secrets set APNS_KEY_P8="$(cat AuthKey_XXXXXXXXXX.p8)"
+supabase secrets set APNS_KEY_ID="XXXXXXXXXX"
+supabase secrets set APNS_TEAM_ID="CR82S4H52A"
+
 # déployer
 supabase functions deploy send-push --no-verify-jwt
 ```
 
 L'URL de la fonction sera :
 `https://tswpintevokeasteyjno.supabase.co/functions/v1/send-push`
+
+> ⚠️ `--no-verify-jwt` rend la fonction joignable sans jeton : **`PUSH_WEBHOOK_SECRET`
+> est sa seule protection**, et n'est donc pas optionnel. La clé anonyme de
+> Supabase est publique — elle voyage dans le bundle de l'app — elle ne
+> protégerait rien. Sans ce secret, quiconque lit le bundle peut appeler la
+> fonction avec `{ table: 'animations', record: { publiee: true, camping_id } }`
+> et faire sonner tous les téléphones d'un camping. La fonction refuse
+> désormais de servir tant qu'il n'est pas posé.
 
 ### 3d. Database Webhooks (déclencheurs)
 Supabase Dashboard → **Database → Webhooks** → **Create a new hook**, en créer **deux** :

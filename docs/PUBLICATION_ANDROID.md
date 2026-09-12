@@ -149,10 +149,65 @@ ou via un groupe Google — proches, collègues, futurs campings pilotes.
 > pas** pour ces 14 jours. Utiles pour vérifier que l'AAB s'installe, pas pour
 > avancer vers la production.
 
+### Recruter les 12 testeurs
+
+C'est le seul chantier qu'aucune diligence ne raccourcit, et le seul qui ne
+dépende pas de vous seul. À lancer **avant** de peaufiner quoi que ce soit
+d'autre.
+
+**Ce qu'il faut savoir avant de demander :**
+
+- Il faut **12 comptes Google distincts**, pas 12 personnes différentes en
+  théorie — mais Play regarde les comptes, alors visez large : **15**, pour
+  absorber ceux qui ne feront jamais la manipulation.
+- Le compteur des 14 jours **ne démarre qu'une fois les 12 inscrits**. Un
+  testeur qui s'inscrit au bout d'une semaine remet le compteur à zéro pour
+  tout le monde. D'où les 15.
+- Le testeur doit **accepter l'invitation puis installer l'app**. Une adresse
+  ajoutée sans installation ne compte pas.
+- Ce qu'on vous demande, c'est leur **adresse Gmail**, pas leur numéro ni quoi
+  que ce soit d'autre.
+
+**Comment ça se passe côté Play Console :**
+
+1. Test fermé → onglet **Testeurs** → créer une liste d'adresses e-mail.
+2. Coller les adresses Gmail, une par ligne.
+3. Copier le **lien d'inscription** que Play génère (`play.google.com/apps/
+   testing/com.campconnect.app`) et l'envoyer aux testeurs.
+4. Chacun ouvre le lien, accepte, puis installe depuis le Play Store.
+
+**Message à envoyer** — court, sans jargon, avec la seule chose qu'on leur
+demande mise en évidence :
+
+```
+Salut,
+
+J'ai développé une app pour les campings et je dois la faire tester par
+12 personnes avant que Google accepte de la publier.
+
+Ça te prend 2 minutes, une seule fois :
+1. Tu m'envoies l'adresse Gmail de ton téléphone Android
+2. Je t'envoie un lien, tu cliques sur « Devenir testeur »
+3. Tu installes l'app depuis le Play Store
+
+C'est tout. Tu n'as rien à tester, rien à me dire, rien à payer. Il faut juste
+que l'app reste installée 15 jours — Google vérifie.
+
+Merci beaucoup, ça me débloque vraiment.
+```
+
+**Où les trouver :** famille, amis, collègues, anciens collègues, groupes de
+promo, vos trois campings pilotes et leurs équipes. Un seul critère : un
+téléphone **Android** (les utilisateurs iPhone ne peuvent pas aider ici).
+
+> Ne demandez pas « est-ce que tu veux bien tester mon app ? » — c'est vague et
+> ça engage. Demandez leur adresse Gmail : c'est une question fermée à laquelle
+> on répond en dix secondes.
+
 ## 6. Notifications push — ce qui ne marchera pas en 1.0
 
 `android/app/build.gradle` n'applique le plugin Google Services que si
-`google-services.json` est présent (lignes 70-75). Le fichier étant gitignoré et
+`google-services.json` est présent (bloc `servicesJSON`, vers la ligne 109). Le fichier étant gitignoré et
 absent, le build réussit mais **les notifications push ne fonctionnent pas**.
 
 Ce n'est pas un blocage pour publier : ni la description ni les captures ne les
