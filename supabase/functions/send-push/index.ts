@@ -25,7 +25,7 @@
 //   APNS_KEY_P8           = contenu de la clé .p8 Apple            (iOS)
 //   APNS_KEY_ID           = identifiant de cette clé, 10 caractères
 //   APNS_TEAM_ID          = identifiant d'équipe Apple, 10 caractères
-//   APNS_BUNDLE_ID        = défaut com.campconnect.app
+//   APNS_BUNDLE_ID        = défaut com.campconnect.ios (voir plus bas)
 //   SUPABASE_URL / SUPABASE_SERVICE_ROLE_KEY = injectés automatiquement
 // ─────────────────────────────────────────────────────────────────────────────
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
@@ -36,7 +36,13 @@ const FCM_SA        = Deno.env.get('FCM_SERVICE_ACCOUNT')!
 const APNS_P8       = Deno.env.get('APNS_KEY_P8')
 const APNS_KEY_ID   = Deno.env.get('APNS_KEY_ID')
 const APNS_TEAM_ID  = Deno.env.get('APNS_TEAM_ID')
-const APNS_BUNDLE   = Deno.env.get('APNS_BUNDLE_ID') || 'com.campconnect.app'
+// Et non com.campconnect.app, qui est le package Android. Les deux plateformes
+// ne portent pas le même identifiant ici : PRODUCT_BUNDLE_IDENTIFIER vaut
+// com.campconnect.ios dans le projet Xcode. Or APNs exige que l'en-tête
+// apns-topic corresponde exactement au bundle de l'application — le package
+// Android y aurait fait rejeter chaque notification par un 400 BadTopic,
+// après que tout le reste de la chaîne eut été correctement configuré.
+const APNS_BUNDLE   = Deno.env.get('APNS_BUNDLE_ID') || 'com.campconnect.ios'
 // Le secret n'est pas optionnel.
 //
 // Cette fonction est joignable depuis l'extérieur, et la clé anonyme de

@@ -40,6 +40,10 @@
 	</array>
 	<key>UIViewControllerBasedStatusBarAppearance</key>
 	<true/>
+	<key>UIBackgroundModes</key>
+	<array>
+		<string>remote-notification</string>
+	</array>
 	<key>NSLocationWhenInUseUsageDescription</key>
 	<string>Votre position sert uniquement à vérifier que vous êtes bien dans le camping lors de l'inscription.</string>
 	<key>ITSAppUsesNonExemptEncryption</key>
