@@ -1,7 +1,6 @@
 import { Capacitor } from '@capacitor/core'
 import { isNative } from './native'
 import { supabase } from './supabase'
-import { toast } from './toast'
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Notifications push (FCM Android / APNs iOS via @capacitor/push-notifications)
@@ -49,6 +48,17 @@ export async function registerPush({ camping, vacancier } = {}) {
     return
   }
 
+  // Greffon distinct, chargé à part : son absence n'est pas fatale. Sans lui on
+  // ne perd que l'affichage des notifications reçues application ouverte, pas
+  // les notifications elles-mêmes. Le charger dans le try précédent aurait fait
+  // renoncer aux push entières pour un greffon d'appoint manquant.
+  let LocalNotifications
+  try {
+    ({ LocalNotifications } = await import('@capacitor/local-notifications'))
+  } catch (e) {
+    console.warn('Notifications locales indisponibles', e)
+  }
+
   if (!_listenersReady) {
     _listenersReady = true
 
@@ -58,24 +68,25 @@ export async function registerPush({ camping, vacancier } = {}) {
 
     // Notification reçue alors que l'application est au premier plan.
     //
-    // Android ne la montre alors pas dans la barre de statut : le greffon la
-    // remet ici, et sans écouteur elle est purement perdue — Logcat le dit sans
-    // détour, « No listeners found for event pushNotificationReceived ».
-    // Un toast est d'ailleurs plus juste qu'une notification système, que
-    // l'utilisateur ne verrait pas puisqu'il a déjà l'application sous les yeux.
+    // Android ne la met alors pas dans la barre de statut : il la remet au
+    // greffon, et sans écouteur elle est purement perdue — Logcat le disait
+    // sans détour, « No listeners found for event pushNotificationReceived ».
+    // On la redessine donc soi-même, pour qu'elle s'affiche aussi bien
+    // application ouverte que téléphone verrouillé.
     PushNotifications.addListener('pushNotificationReceived', ({ title, body, data }) => {
       // Sauf pour le fil qu'il est en train de lire : le temps réel y a déjà
       // fait apparaître le message, l'annoncer une seconde fois serait du bruit.
       if (data?.groupe_id && window.location.pathname === `/chat/${data.groupe_id}`) return
-      toast([title, body].filter(Boolean).join(' — '))
+      afficher(LocalNotifications, { title, body, data })
     })
 
-    // Tap sur une notification → navigation contextuelle
-    PushNotifications.addListener('pushNotificationActionPerformed', ({ notification }) => {
-      const data = notification?.data || {}
-      if (data.groupe_id)            window.location.href = `/chat/${data.groupe_id}`
-      else if (data.type === 'animation') window.location.href = '/agenda'
-    })
+    // Tap → navigation contextuelle, que la notification vienne du système ou
+    // qu'on l'ait redessinée nous-mêmes. Les deux portent la même charge utile,
+    // sous deux noms de champ différents selon le greffon d'origine.
+    PushNotifications.addListener('pushNotificationActionPerformed', ({ notification }) =>
+      ouvrir(notification?.data))
+    LocalNotifications?.addListener('localNotificationActionPerformed', ({ notification }) =>
+      ouvrir(notification?.extra))
   }
 
   // Permission (Android 13+ / iOS)
@@ -86,6 +97,32 @@ export async function registerPush({ camping, vacancier } = {}) {
   if (perm.receive !== 'granted') return
 
   await PushNotifications.register()
+}
+
+function ouvrir(data) {
+  if (data?.groupe_id)                 window.location.href = `/chat/${data.groupe_id}`
+  else if (data?.type === 'animation') window.location.href = '/agenda'
+}
+
+let _idNotif = 0
+
+/** Redessine dans la barre de statut une notification arrivée application ouverte. */
+async function afficher(LocalNotifications, { title, body, data }) {
+  if (!LocalNotifications) return
+  try {
+    await LocalNotifications.schedule({
+      notifications: [{
+        // Android veut un entier 32 bits. Un compteur plutôt qu'un identifiant
+        // fixe : deux notifications rapprochées se remplaceraient l'une l'autre.
+        id: (_idNotif = (_idNotif + 1) % 2147483647),
+        title: title || 'CampConnect',
+        body:  body || '',
+        extra: data || {},
+      }],
+    })
+  } catch (e) {
+    console.error('Affichage de la notification impossible', e)
+  }
 }
 
 async function saveToken(token) {
