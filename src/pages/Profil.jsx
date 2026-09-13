@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { toast } from '../toast'
 import { supabase } from '../supabase'
 import Sheet from '../components/Sheet'
+import { isNative, setAppMode } from '../native'
 import { t, useLangue, locale, LANGUES, setLangue } from '../i18n'
 import {
   Bouton, Carte, Champ, Texte, Pile, Puce,
@@ -294,6 +295,19 @@ export default function Profil({ camping, vacancier, onLogout }) {
                   style={{ color: couleur.danger }}>
             {t('profil.suppr_compte')}
           </Bouton>
+
+          {/* L'entrée gérant n'existait que sur l'écran de recherche : une fois
+              le camping rejoint, Onboarding ne s'affiche plus et la console
+              devenait injoignable sans supprimer son compte. Un gérant est
+              d'abord un vacancier de son propre camping — il lui faut une
+              porte depuis l'intérieur. */}
+          {isNative && (
+            <Bouton variante="discret" pleineLargeur
+                    onClick={() => setAppMode('gerant')}
+                    style={{ textDecoration: 'underline' }}>
+              {t('profil.espace_gerant')}
+            </Bouton>
+          )}
         </Pile>
 
         <Texte variante="micro" style={{ textAlign: 'center' }}>

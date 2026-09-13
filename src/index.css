@@ -261,3 +261,25 @@ input, textarea, select {
   white-space: nowrap;
   border: 0;
 }
+
+/* Entrée d'écran.
+   
+   Les onglets s'affichaient d'un coup, sans que rien ne relie l'écran quitté
+   au suivant. Un fondu très court avec une montée de six pixels suffit à
+   donner cette continuité — au-delà, l'attente se sent.
+
+   Pas de fill-mode : la transformation ne survit pas à l'animation. C'est
+   volontaire. Une transformation persistante créerait un contexte
+   d'empilement sur le conteneur du contenu, et enfermerait le z-index des
+   modales ouvertes depuis les pages — exactement le piège documenté dans
+   Layout.jsx à propos de -webkit-overflow-scrolling.
+
+   Le réglage système « Réduire les animations » la neutralise déjà, par la
+   règle globale plus haut dans ce fichier. */
+@keyframes ccEntreeEcran {
+  from { opacity: 0; transform: translateY(6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.cc-ecran {
+  animation: ccEntreeEcran 0.18s ease-out;
+}

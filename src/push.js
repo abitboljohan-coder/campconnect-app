@@ -25,12 +25,16 @@ let _ctx = {}
 export async function registerPush({ camping, vacancier } = {}) {
   if (!isNative) return
 
-  // Firebase non configuré → on n'appelle SURTOUT pas register() : côté Android
-  // cela lève « Default FirebaseApp is not initialized » et tue l'application.
-  // __PUSH_READY__ est calculé au build (voir vite.config.js) : il passe à true
-  // dès que google-services.json / GoogleService-Info.plist est déposé.
-  if (typeof __PUSH_READY__ !== 'undefined' && !__PUSH_READY__) {
-    console.info('Notifications push désactivées : Firebase non configuré.')
+  // Android sans google-services.json → on n'appelle SURTOUT pas register() :
+  // cela lève « Default FirebaseApp is not initialized », une exception fatale
+  // côté Java qu'aucun try/catch JavaScript ne rattrape.
+  //
+  // iOS n'est pas concerné : le greffon y renvoie le jeton APNs sans jamais
+  // toucher à Firebase, et l'envoi passe directement par APNs côté serveur.
+  // Le bloquer sur un fichier Firebase le privait de notifications pour rien.
+  if (Capacitor.getPlatform() === 'android'
+      && typeof __FIREBASE_ANDROID_PRET__ !== 'undefined' && !__FIREBASE_ANDROID_PRET__) {
+    console.info('Notifications push Android désactivées : google-services.json absent.')
     return
   }
 
@@ -44,6 +48,17 @@ export async function registerPush({ camping, vacancier } = {}) {
     return
   }
 
+  // Greffon distinct, chargé à part : son absence n'est pas fatale. Sans lui on
+  // ne perd que l'affichage des notifications reçues application ouverte, pas
+  // les notifications elles-mêmes. Le charger dans le try précédent aurait fait
+  // renoncer aux push entières pour un greffon d'appoint manquant.
+  let LocalNotifications
+  try {
+    ({ LocalNotifications } = await import('@capacitor/local-notifications'))
+  } catch (e) {
+    console.warn('Notifications locales indisponibles', e)
+  }
+
   if (!_listenersReady) {
     _listenersReady = true
 
@@ -51,12 +66,27 @@ export async function registerPush({ camping, vacancier } = {}) {
     PushNotifications.addListener('registrationError', (err) =>
       console.error('Push registration error:', err))
 
-    // Tap sur une notification → navigation contextuelle
-    PushNotifications.addListener('pushNotificationActionPerformed', ({ notification }) => {
-      const data = notification?.data || {}
-      if (data.groupe_id)            window.location.href = `/chat/${data.groupe_id}`
-      else if (data.type === 'animation') window.location.href = '/agenda'
+    // Notification reçue alors que l'application est au premier plan.
+    //
+    // Android ne la met alors pas dans la barre de statut : il la remet au
+    // greffon, et sans écouteur elle est purement perdue — Logcat le disait
+    // sans détour, « No listeners found for event pushNotificationReceived ».
+    // On la redessine donc soi-même, pour qu'elle s'affiche aussi bien
+    // application ouverte que téléphone verrouillé.
+    PushNotifications.addListener('pushNotificationReceived', ({ title, body, data }) => {
+      // Sauf pour le fil qu'il est en train de lire : le temps réel y a déjà
+      // fait apparaître le message, l'annoncer une seconde fois serait du bruit.
+      if (data?.groupe_id && window.location.pathname === `/chat/${data.groupe_id}`) return
+      afficher(LocalNotifications, { title, body, data })
     })
+
+    // Tap → navigation contextuelle, que la notification vienne du système ou
+    // qu'on l'ait redessinée nous-mêmes. Les deux portent la même charge utile,
+    // sous deux noms de champ différents selon le greffon d'origine.
+    PushNotifications.addListener('pushNotificationActionPerformed', ({ notification }) =>
+      ouvrir(notification?.data))
+    LocalNotifications?.addListener('localNotificationActionPerformed', ({ notification }) =>
+      ouvrir(notification?.extra))
   }
 
   // Permission (Android 13+ / iOS)
@@ -67,6 +97,32 @@ export async function registerPush({ camping, vacancier } = {}) {
   if (perm.receive !== 'granted') return
 
   await PushNotifications.register()
+}
+
+function ouvrir(data) {
+  if (data?.groupe_id)                 window.location.href = `/chat/${data.groupe_id}`
+  else if (data?.type === 'animation') window.location.href = '/agenda'
+}
+
+let _idNotif = 0
+
+/** Redessine dans la barre de statut une notification arrivée application ouverte. */
+async function afficher(LocalNotifications, { title, body, data }) {
+  if (!LocalNotifications) return
+  try {
+    await LocalNotifications.schedule({
+      notifications: [{
+        // Android veut un entier 32 bits. Un compteur plutôt qu'un identifiant
+        // fixe : deux notifications rapprochées se remplaceraient l'une l'autre.
+        id: (_idNotif = (_idNotif + 1) % 2147483647),
+        title: title || 'CampConnect',
+        body:  body || '',
+        extra: data || {},
+      }],
+    })
+  } catch (e) {
+    console.error('Affichage de la notification impossible', e)
+  }
 }
 
 async function saveToken(token) {

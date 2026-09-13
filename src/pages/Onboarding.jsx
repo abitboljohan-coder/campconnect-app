@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { supabase, ensureAnonSession } from '../supabase'
 import { isNative, setAppMode } from '../native'
+import { estAccesLibre, estJoignable } from '../lib/acces'
 import { t, useLangue } from '../i18n'
 import {
   Bouton, Carte, Champ, Texte, Pile, appliquerTheme,
@@ -41,18 +42,16 @@ function haversine(lat1, lng1, lat2, lng2) {
 const fromQR = !!window.location.pathname.match(/^\/join\/([^/?#]+)/)
              || localStorage.getItem('arriveeParQR') === '1'
 
-// Camping en accès libre : contrôle de présence désactivé pour ce camping-là.
-// Réservé au camping de démonstration, qui doit rester ouvrable depuis
-// n'importe où — par un prospect à qui l'on fait la démonstration, et surtout
-// par les testeurs d'Apple et de Google, à des milliers de kilomètres du site.
-// Les campings réels n'ont pas ce drapeau et gardent leur vérification GPS.
-const estAccesLibre = c => c?.carte_config?.acces_libre === true
-
 export default function Onboarding({ initialCamping, onDone }) {
   useLangue()
+  // L'arrivée par QR vaut preuve de présence : elle passe devant tout le
+  // reste, y compris devant un camping que la réception n'a pas fini de
+  // configurer — c'est justement elle qui a affiché ce QR.
   const initialStep = !initialCamping
     ? 'search'
-    : (fromQR || estAccesLibre(initialCamping) ? 'form' : 'verify')
+    : fromQR || estAccesLibre(initialCamping) ? 'form'
+    : !estJoignable(initialCamping) ? 'pas_pret'
+    : 'verify'
   const [step, setStep] = useState(initialStep)
   const [camping, setCamping] = useState(initialCamping)
 
@@ -196,7 +195,13 @@ export default function Onboarding({ initialCamping, onDone }) {
     const complet = data || c
     setCamping(complet)
     setGpsStatus('idle')
-    setStep(estAccesLibre(complet) ? 'form' : 'verify')
+
+    if (estAccesLibre(complet)) { setStep('form'); return }
+    // La relecture doit avoir abouti pour conclure qu'un camping n'est pas
+    // prêt : sur une lecture ratée, `complet` n'a pas de carte_config du tout
+    // et tout camping paraîtrait fermé.
+    if (data && !estJoignable(complet)) { setStep('pas_pret'); return }
+    setStep('verify')
   }
 
   // Reset complet : oublie le camping mémorisé pour repartir du choix (change de camping)
@@ -335,6 +340,29 @@ export default function Onboarding({ initialCamping, onDone }) {
               {t('onb.gerant')}
             </Bouton>
           )}
+        </Pile>
+      </Card>
+    </Screen>
+  )
+
+  // ─── CAMPING PAS ENCORE OUVERT ────────────────────────────────────────────
+  if (step === 'pas_pret') return (
+    <Screen clair>
+      <div style={{ textAlign: 'center', marginBottom: 26 }}>
+        {camping.logo_url
+          ? <img src={camping.logo_url} alt="" style={{ width: 68, height: 68, objectFit: 'contain', borderRadius: 16, marginBottom: 12 }} />
+          : <img src="/logo-mark.png" alt="" width={72} height={77} style={{ display: 'block', margin: '0 auto 12px' }} />
+        }
+        <Texte variante="titre" style={{ fontSize: 23, color: TITRE }}>{camping.nom}</Texte>
+      </div>
+
+      <Card>
+        <Pile espace="lg">
+          <Pile espace="sm" role="status">
+            <Texte variante="sousTitre" as="h2">{t('onb.pas_pret_titre')}</Texte>
+            <Texte variante="corps">{t('onb.pas_pret_detail')}</Texte>
+          </Pile>
+          <Bouton pleineLargeur onClick={changerCamping}>{t('onb.changer')}</Bouton>
         </Pile>
       </Card>
     </Screen>

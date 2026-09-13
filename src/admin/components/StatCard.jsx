@@ -1,25 +1,35 @@
-import { Carte, Texte, Pile, couleur as jetons, espace, rayon } from '../../design'
+import { Carte, Texte, Pile, Icone, couleur as jetons, graisse, rayon } from '../../design'
 
-// La couleur reste une propriété : les statistiques de l'administration se
-// distinguent entre elles par la teinte (vert pour les vacanciers, orange pour
-// les signalements…), ce que l'accent unique du camping ne peut pas exprimer.
-export default function StatCard({ icon, value, label, sub, color = jetons.marque }) {
+/**
+ * Une mesure, dans une tuile.
+ *
+ * La teinte reste une propriété — les chiffres se distinguent entre eux, ce
+ * que l'accent unique du camping ne peut pas exprimer. Mais elle ne porte plus
+ * qu'un aplat discret derrière l'icône : cinq tuiles à cinq couleurs pleines
+ * faisaient un arc-en-ciel où rien ne ressortait. Le chiffre, lui, garde
+ * toujours la couleur du texte.
+ */
+export default function StatCard({ icone, valeur, libelle, sous, couleur = jetons.marqueTexte }) {
   return (
-    <Carte hauteur="posee" padding={20} style={{ borderRadius: 14 }}>
-      <Pile direction="ligne" justifier="space-between" aligner="flex-start">
-        <div>
-          <Texte variante="titre" style={{ fontSize: 28, lineHeight: 1 }}>{value}</Texte>
-          <Texte variante="doux" style={{ marginTop: 6 }}>{label}</Texte>
-          {sub && <Texte variante="doux" style={{ color, marginTop: espace.xs }}>{sub}</Texte>}
-        </div>
+    <Carte hauteur="posee" padding={18} style={{ borderRadius: 14 }}>
+      {/* L'icône s'aligne sur le chiffre, pas sur le milieu du bloc :
+          centrée, elle se retrouvait à hauteur du libellé et semblait lui
+          appartenir. */}
+      <Pile direction="ligne" espace="md" aligner="flex-start">
         <span aria-hidden="true" style={{
-          width: 44, height: 44, borderRadius: rayon.md,
-          background: `${color}18`,
-          display: 'flex', alignItems: 'center', justifyContent: 'center',
-          fontSize: 22, flexShrink: 0,
+          width: 38, height: 38, borderRadius: rayon.md,
+          background: `${couleur}14`, color: couleur,
+          display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
         }}>
-          {icon}
+          <Icone nom={icone} taille={20} />
         </span>
+        <div style={{ minWidth: 0 }}>
+          <Texte variante="titre" style={{ fontSize: 26, lineHeight: '38px' }}>{valeur}</Texte>
+          <Texte variante="doux" style={{ marginTop: 4, fontWeight: graisse.fort, color: jetons.texte }}>
+            {libelle}
+          </Texte>
+          {sous && <Texte variante="micro" style={{ marginTop: 2 }}>{sous}</Texte>}
+        </div>
       </Pile>
     </Carte>
   )

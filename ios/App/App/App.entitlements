@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<!-- Sans cette clé, iOS refuse d'émettre un jeton : registerForRemoteNotifications()
+	     échoue en silence et push_tokens ne reçoit jamais de ligne iOS.
+	     « development » est la bonne valeur à écrire ici même pour la production :
+	     Xcode la remplace par « production » au moment de l'archivage pour
+	     distribution. La fonction send-push tolère de toute façon les deux, en
+	     retentant la passerelle de bac à sable sur BadDeviceToken. -->
+	<key>aps-environment</key>
+	<string>development</string>
+</dict>
+</plist>

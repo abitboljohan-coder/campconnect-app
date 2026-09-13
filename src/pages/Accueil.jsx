@@ -120,7 +120,16 @@ export default function Accueil({ camping, vacancier }) {
         {loading ? (
           <Squelette lignes={3} hauteur={74} libelle={t('commun.chargement')} />
         ) : groupes.length === 0 ? (
-          <Vide emoji="👥" texte={`${t('accueil.aucun_groupe')} ${t('accueil.premier_creer')}`} />
+          /* L'écran d'accueil d'un camping qui démarre n'affichait qu'une
+             phrase grise : le vacancier comprenait qu'il n'y avait rien, mais
+             pas qu'il pouvait y remédier lui-même. Le bouton mène là où le
+             groupe se crée. */
+          <Vide
+            emoji="👥"
+            titre={t('accueil.aucun_groupe')}
+            texte={t('accueil.premier_creer')}
+            action={<Bouton onClick={() => navigate('/groupes')}>{t('groupes.creer')}</Bouton>}
+          />
         ) : (
           <Pile espace="sm">
             {groupes.map(g => (

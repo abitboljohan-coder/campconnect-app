@@ -12,9 +12,11 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url))
 //   « Default FirebaseApp is not initialized in this process »
 // Ce drapeau est calculé au build : dès que tu déposes le fichier Firebase et
 // relances `npm run build:mobile`, les push s'activent toutes seules.
-const PUSH_READY =
-  fs.existsSync(path.resolve(__dirname, 'android/app/google-services.json')) ||
-  fs.existsSync(path.resolve(__dirname, 'ios/App/App/GoogleService-Info.plist'))
+// Firebase n'est requis que sur Android : c'est là que l'absence de
+// google-services.json fait planter l'application au premier register(). Sur
+// iOS, le greffon parle directement à APNs et n'a jamais besoin de Firebase.
+const FIREBASE_ANDROID_PRET =
+  fs.existsSync(path.resolve(__dirname, 'android/app/google-services.json'))
 
 // En mode "demo", on remplace le client Supabase par un mock à données réalistes
 // pour capturer les vrais composants de l'app sans backend (screenshots du site).
@@ -38,6 +40,6 @@ export default defineConfig(({ mode }) => ({
   // sans qu'il faille le simuler à la main dans chaque fichier.
   test: { environment: 'jsdom' },
   define: {
-    __PUSH_READY__: JSON.stringify(PUSH_READY),
+    __FIREBASE_ANDROID_PRET__: JSON.stringify(FIREBASE_ANDROID_PRET),
   },
 }))

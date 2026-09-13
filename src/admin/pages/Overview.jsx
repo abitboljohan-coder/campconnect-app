@@ -4,89 +4,86 @@ import { supabase, presentFilter, todayISO } from '../../supabase'
 import StatCard from '../components/StatCard'
 import { getHourlyCode } from '../../pages/Onboarding'
 import { Bloc, EnTete } from '../components/Bloc'
-import { Bouton, Texte, Pile, Squelette, Vide, couleur as jetons, espace, graisse, rayon, texte as tailles } from '../../design'
+import { Bouton, Texte, Pile, Squelette, Vide, Icone, couleur as jetons, espace, graisse, rayon, texte as tailles } from '../../design'
 
-function OnboardingChecklist({ camping, stats }) {
-  const hasLogo      = !!camping?.logo_url
-  const hasColor     = !!camping?.couleur_principale && camping.couleur_principale !== jetons.marque
-  const perimeter    = camping?.carte_config?.perimeter || []
-  const pins         = camping?.carte_config?.pins || []
-  const hasContour   = perimeter.length >= 3
-  const hasPois      = pins.length > 0
+/**
+ * Guide de démarrage.
+ *
+ * Il occupait tout le premier écran même à trois étapes sur quatre : les
+ * étapes finies restaient affichées en pleine hauteur, barrées, poussant hors
+ * de vue les chiffres du jour. Ce qui reste à faire mérite de la place ; ce
+ * qui est fait mérite une ligne.
+ */
+function GuideDemarrage({ camping, stats }) {
+  const perimetre = camping?.carte_config?.perimeter || []
+  const pins      = camping?.carte_config?.pins || []
 
-  const steps = [
-    { done: hasLogo || hasColor, label: 'Personnalisez l\'apparence (logo, couleurs)', to: '/admin/apparence', icon: '🎨' },
-    { done: hasContour,          label: 'Tracez le contour de votre camping',          to: '/admin/carte',     icon: '🗺️' },
-    { done: hasPois,             label: 'Ajoutez vos points d\'intérêt (piscine, sanitaires…)', to: '/admin/carte', icon: '📍' },
-    { done: stats.animations > 0, label: 'Créez votre première animation',             to: '/admin/animations', icon: '🎉' },
+  const etapes = [
+    { fait: !!camping?.logo_url || (!!camping?.couleur_principale && camping.couleur_principale !== jetons.marque),
+      label: "Personnalisez l'apparence", detail: 'Logo et couleurs de votre camping', vers: '/admin/apparence', icone: 'apparence' },
+    { fait: perimetre.length >= 3,
+      label: 'Tracez le contour du camping', detail: 'Le périmètre sert à situer les vacanciers', vers: '/admin/carte', icone: 'carte' },
+    { fait: pins.length > 0,
+      label: "Ajoutez vos points d'intérêt", detail: 'Piscine, sanitaires, réception…', vers: '/admin/carte', icone: 'carte' },
+    { fait: stats.animations > 0,
+      label: 'Créez votre première animation', detail: "Elle apparaîtra dans l'agenda des vacanciers", vers: '/admin/animations', icone: 'agenda' },
   ]
-  const doneCount = steps.filter(s => s.done).length
-  if (doneCount === steps.length) return null // tout est fait → on masque
+
+  const faites  = etapes.filter(e => e.fait).length
+  const restent = etapes.filter(e => !e.fait)
+  if (restent.length === 0) return null
 
   return (
-    <Bloc style={{
-      background: 'linear-gradient(135deg, #f0fdf4, #ecfccb)',
-      border: '1px solid #bbf7d0',
-      borderRadius: rayon.lg,
-    }}>
+    <Bloc style={{ border: `1px solid ${jetons.bordure}`, borderRadius: rayon.lg }}>
       <Pile direction="ligne" espace="md" justifier="space-between" aligner="center">
-        <div>
-          <Texte variante="sousTitre" as="h2" style={{ fontSize: 16, color: '#1a4d1a' }}>
-            🚀 Bienvenue ! Configurez votre camping en 4 étapes
-          </Texte>
-          <Texte variante="doux" style={{ color: jetons.succes, marginTop: 2 }}>
-            {doneCount}/{steps.length} étapes complétées
-          </Texte>
-        </div>
-        {/* La progression est aussi une valeur : annoncée, elle ne dépend plus
-            du seul repérage visuel du grand pourcentage. */}
-        <div
-          role="progressbar"
-          aria-valuenow={doneCount}
-          aria-valuemin={0}
-          aria-valuemax={steps.length}
-          aria-label="Configuration du camping"
-          style={{ fontSize: 26, fontWeight: graisse.affiche, color: jetons.succes, flexShrink: 0 }}
-        >
-          {Math.round((doneCount / steps.length) * 100)}%
-        </div>
+        <Texte variante="sousTitre" as="h2" style={{ fontSize: 16 }}>
+          Configurer votre camping
+        </Texte>
+        <Texte variante="doux" as="span"
+               role="progressbar" aria-valuenow={faites} aria-valuemin={0} aria-valuemax={etapes.length}
+               aria-label="Configuration du camping"
+               style={{ flexShrink: 0, fontWeight: graisse.fort, color: jetons.marqueTexte }}>
+          {faites} sur {etapes.length}
+        </Texte>
       </Pile>
 
+      {/* Une barre plutôt qu'un grand pourcentage : la progression se lit d'un
+          coup d'œil sans occuper le tiers du bloc. */}
+      <div aria-hidden="true" style={{
+        height: 4, borderRadius: 999, background: jetons.fond, overflow: 'hidden',
+      }}>
+        <div style={{
+          width: `${(faites / etapes.length) * 100}%`, height: '100%',
+          background: jetons.marque, borderRadius: 999, transition: 'width 0.3s',
+        }} />
+      </div>
+
       <Pile espace="sm">
-        {steps.map((s, i) => (
-          <Link key={i} to={s.to} style={{
+        {restent.map((e, i) => (
+          <Link key={i} to={e.vers} style={{
             display: 'flex', alignItems: 'center', gap: espace.md,
-            padding: `10px ${espace.lg}px`,
-            background: s.done ? 'rgba(22,101,52,0.08)' : jetons.surface,
-            borderRadius: rayon.md, textDecoration: 'none',
-            border: `1px solid ${s.done ? 'transparent' : jetons.bordure}`,
-            opacity: s.done ? 0.7 : 1,
+            padding: `12px ${espace.md}px`, minHeight: 56,
+            background: jetons.surface, borderRadius: rayon.md,
+            border: `1px solid ${jetons.bordure}`, textDecoration: 'none',
           }}>
-            <span aria-hidden="true" style={{
-              width: 26, height: 26, borderRadius: rayon.rond,
-              background: s.done ? jetons.marque : jetons.surface,
-              border: `2px solid ${s.done ? jetons.marque : jetons.bordure}`,
-              color: '#fff', fontSize: 14, fontWeight: graisse.affiche,
-              display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
-            }}>
-              {s.done ? '✓' : ''}
-            </span>
-            <span aria-hidden="true" style={{ fontSize: 20 }}>{s.icon}</span>
-            <Texte variante="corps" as="span" style={{
-              flex: 1, fontWeight: graisse.fort,
-              color: s.done ? jetons.texteDoux : jetons.texte,
-              textDecoration: s.done ? 'line-through' : 'none',
-            }}>
-              {s.label}
-            </Texte>
-            {!s.done && (
-              <Texte variante="doux" as="span" style={{ color: jetons.marqueTexte, fontWeight: graisse.titre }}>
-                Commencer →
+            <Icone nom={e.icone} taille={20} style={{ color: jetons.marqueTexte }} />
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <Texte variante="corps" as="span" style={{ fontWeight: graisse.fort, color: jetons.texte }}>
+                {e.label}
               </Texte>
-            )}
+              <Texte variante="micro" style={{ marginTop: 1 }}>{e.detail}</Texte>
+            </div>
+            <Icone nom="chevron" taille={17} style={{ color: jetons.texteDoux }} />
           </Link>
         ))}
       </Pile>
+
+      {faites > 0 && (
+        <Texte variante="micro" style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+          <Icone nom="coche" taille={14} style={{ color: jetons.succes }} />
+          {faites === 1 ? '1 étape déjà faite' : `${faites} étapes déjà faites`}
+        </Texte>
+      )}
     </Bloc>
   )
 }
@@ -173,18 +170,20 @@ export default function Overview({ camping }) {
         sous={new Date().toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}
       />
 
-      {/* Guide de démarrage — masqué quand tout est configuré */}
-      <OnboardingChecklist camping={camping} stats={stats} />
+      {/* Masqué dès que les quatre étapes sont faites. */}
+      <GuideDemarrage camping={camping} stats={stats} />
 
       {/* Code d'accès + QR */}
       <AccessCodeCard camping={camping} />
 
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(200px, 100%), 1fr))', gap: 14 }}>
-        <StatCard icon="🏕️" value={stats.vacanciers} label="Vacanciers présents" sub="Actuellement au camping" />
-        <StatCard icon="👋" value={departs.semaine} label="Départs sous 7 jours" sub={departs.aujourdhui.length ? `dont ${departs.aujourdhui.length} aujourd'hui` : 'Aucun aujourd\'hui'} color="#0ea5e9" />
-        <StatCard icon="👥" value={stats.groupes} label="Groupes actifs" sub="En ce moment" color="#f59e0b" />
-        <StatCard icon="📅" value={stats.inscriptions} label="Inscriptions aujourd'hui" sub="Nouvelles inscriptions" color="#8b5cf6" />
-        <StatCard icon="📈" value={`${stats.taux}%`} label="Taux de remplissage" sub="Animations publiées" color="#ef4444" />
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(224px, 100%), 1fr))', gap: 14 }}>
+        <StatCard icone="tente"     valeur={stats.vacanciers}   libelle="Vacanciers présents" sous="Actuellement au camping" />
+        <StatCard icone="sortie"    valeur={departs.semaine}    libelle="Départs sous 7 jours"
+                  sous={departs.aujourdhui.length ? `dont ${departs.aujourdhui.length} aujourd'hui` : "Aucun aujourd'hui"}
+                  couleur="#0284c7" />
+        <StatCard icone="personnes" valeur={stats.groupes}      libelle="Groupes actifs" sous="En ce moment" couleur="#b45309" />
+        <StatCard icone="agenda"    valeur={stats.inscriptions} libelle="Inscriptions aujourd'hui" sous="Depuis minuit" couleur="#6d28d9" />
+        <StatCard icone="tendance"  valeur={`${stats.taux}%`}   libelle="Taux de remplissage" sous="Animations publiées" couleur="#be123c" />
       </div>
 
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(300px, 100%), 1fr))', gap: espace.xl }}>
@@ -333,7 +332,12 @@ function AccessCodeCard({ camping }) {
           </Texte>
         </div>
         <div style={{ textAlign: 'center' }}>
-          <div aria-hidden="true" style={{ fontSize: 28, marginBottom: espace.xs }}>🔑</div>
+          {/* Sur le bloc sombre, l'icône hérite d'une couleur de texte presque
+              noire et disparaît : la teinte est posée explicitement. */}
+          <Icone nom="cle" taille={26} style={{
+            marginBottom: espace.xs, marginLeft: 'auto', marginRight: 'auto',
+            color: 'rgba(151,196,89,0.85)',
+          }} />
           <Texte variante="micro" style={{ fontSize: 10, color: 'rgba(255,255,255,0.45)' }}>
             Affiché à<br/>la réception
           </Texte>
@@ -358,7 +362,7 @@ function AccessCodeCard({ camping }) {
           onClick={() => navigator.clipboard?.writeText(joinUrl)}
           style={{ alignSelf: 'flex-start', borderRadius: rayon.sm, border: 'none', background: jetons.fond, color: jetons.marqueTexte }}
         >
-          📋 Copier le lien
+          Copier le lien
         </Bouton>
       </Bloc>
     </div>

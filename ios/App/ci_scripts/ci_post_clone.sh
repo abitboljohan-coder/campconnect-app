@@ -71,8 +71,11 @@ if [ ! -f "ios/App/App/public/index.html" ]; then
 fi
 echo "──▶ Bundle web en place ($(find ios/App/App/public -type f | wc -l | tr -d ' ') fichiers)"
 
-# Rappel : GoogleService-Info.plist est gitignoré, donc absent du clone.
-# __PUSH_READY__ vaut false et l'enregistrement push est désactivé — c'est
-# volontaire tant que la voie APNs iOS n'est pas implémentée.
+# Rien à faire ici pour les notifications : iOS ne passe pas par Firebase.
+# Le greffon Capacitor renvoie le jeton APNs brut, et send-push parle
+# directement à APNs avec la clé .p8 rangée dans les secrets Supabase.
+# GoogleService-Info.plist est donc inutile, et son absence du clone sans
+# conséquence. Le drapeau de build ne concerne qu'Android, où l'absence de
+# google-services.json ferait planter register() au niveau natif.
 
 echo "──▶ ci_post_clone terminé"
