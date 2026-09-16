@@ -133,8 +133,9 @@ Le « même si c'est non » désamorce tout. Il accepte parce qu'il ne s'engage
 à rien, et vous avez votre rappel dans l'agenda.
 
 **Quel lien envoyer.** Le QR code de son espace, s'il est déjà créé : il entre
-sans rien installer, et il voit son camping. À défaut, la fiche App Store,
-`apps.apple.com/fr/app/id6796962438`. Envoyez-le pendant l'appel, pas après —
+sans rien installer, et il voit son camping. À défaut, la fiche du store qui
+correspond à son téléphone — demandez-lui, ça évite de lui envoyer un lien
+qu'il ne peut pas ouvrir. Envoyez-le pendant l'appel, pas après —
 un lien reçu une heure plus tard ne s'ouvre plus.
 
 ---
@@ -165,16 +166,19 @@ sérieusement de dire oui. Mieux vaut y répondre du tac au tac que promettre de
 se renseigner — un « je vous recontacte » sur une question simple coûte
 l'élan de la conversation.
 
-> **État au 16 septembre 2026 :** l'app est publiée sur l'App Store
-> (`apps.apple.com/fr/app/id6796962438`). La version Android est en cours
-> d'examen chez Google. Vérifiez avant de l'affirmer.
+> **Publiée sur les deux stores** depuis le 16 septembre 2026 :
+> `apps.apple.com/fr/app/id6796962438` et
+> `play.google.com/store/apps/details?id=com.campconnect.app`.
+> Vous pouvez l'affirmer sans réserve, et envoyer l'un ou l'autre lien selon
+> le téléphone de votre interlocuteur.
 
 ### Sur vous
 
 **« Vous êtes qui ? Vous existez depuis quand ? »**
 
 Entreprise immatriculée au RCS d'Évry, SIREN 109 189 803, depuis septembre 2026.
-L'app est publiée sur l'App Store, donc validée par la revue d'Apple. Dites-le
+L'app est publiée sur l'App Store et sur Google Play, donc passée par les deux
+revues — celle d'Apple étant la plus exigeante des deux. Dites-le
 simplement : vous êtes jeune, vous ne le cachez pas, et vous êtes une vraie
 entreprise déclarée. Un gérant préfère un fournisseur petit et franc à un
 fournisseur flou.
