@@ -108,41 +108,51 @@ Supprime les lignes sans email → crée liste de 50-100 contacts.
 
 ### 3. Email template
 
-```
-Subject: CampConnect — Votre camping mérite une app mobile 📱
+> ⚠️ La version précédente de ce modèle listait six fonctionnalités à la
+> suite. C'est exactement ce que `PITCH_COMMERCIAL.md` interdit : **un gérant
+> n'achète pas un logiciel, il achète moins de problèmes.** Une liste de
+> fonctionnalités oblige le lecteur à faire lui-même le travail de traduction
+> vers sa propre situation — et il ne le fait pas, il archive le message.
 
-Body:
----
+```
+Objet : une question sur votre camping
 
 Bonjour [Nom],
 
-En camping, les vraies connexions se font entre vacanciers.
+Je me demandais si vous observez la même chose que les gérants à qui
+je parle : les vacanciers ont envie de se rencontrer, mais personne
+n'ose. Il manque un quatrième à la pétanque, les parents espèrent que
+les enfants vont se trouver, et tout le monde reste sur son
+emplacement.
 
-Découvrez comment CampConnect transforme l'expérience de vos
-vacanciers en 48h :
+On a créé CampConnect pour ça. Chaque camping a son espace privé : les
+vacanciers y entrent par QR code, sans compte ni mot de passe, créent
+leurs groupes et s'organisent entre eux. De votre côté, vous publiez
+une animation et vous voyez qui s'inscrit — plus besoin de deviner si
+vous sortez douze chaises ou quarante.
 
-🗺️  Carte GPS interactive
-👥 Groupes spontanés
-💬 Chat temps réel
-📅 Agenda animations
-📖 Livret d'accueil numérique
-📊 Dashboard gérant complet
+Je cherche trois campings pilotes pour la saison 2026. C'est gratuit,
+et je ne demande qu'un retour honnête en échange.
 
-→ Tout white-label à vos couleurs (logo + palette)
-→ Opérationnel en 48h
-→ À partir de 490 €/an
+Est-ce que ça vous dirait d'en parler dix minutes ?
 
-Voir la démo en pièce jointe.
-
-Parlons-en ? Je peux vous montrer en 15 min comment ça fonctionne.
-
+Johan Abitbol — CampConnect
 contact@campconnect.fr
-+336 XX XX XX XX
-
----
 ```
 
-**Attache:** `campconnect-prospection.pdf`
+Ce qui fait tenir ce message : il ouvre sur **sa** réalité, pas sur le
+produit ; il ne cite qu'un seul bénéfice chiffrable, les inscriptions ; et il
+demande une conversation, pas une décision.
+
+**Attache :** `campconnect-prospection.pdf`
+
+**Si vous ajoutez un numéro de téléphone**, mettez-le à la main. Il n'est
+volontairement pas dans ce dépôt, qui est public.
+
+**Avant d'envoyer**, relisez `PITCH_COMMERCIAL.md` — la section « Les
+questions qu'on va vous poser » couvre ce qu'un gérant intéressé demandera en
+réponse : RGPD, modération, langues, hébergement, ce qui se passe si vous
+arrêtez.
 
 ### 4. Fréquence de suivi
 
