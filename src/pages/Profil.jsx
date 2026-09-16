@@ -3,6 +3,7 @@ import { toast } from '../toast'
 import { supabase } from '../supabase'
 import Sheet from '../components/Sheet'
 import { isNative, setAppMode } from '../native'
+import { unregisterPush } from '../push'
 import { t, useLangue, locale, LANGUES, setLangue } from '../i18n'
 import {
   Bouton, Carte, Champ, Texte, Pile, Puce,
@@ -99,6 +100,15 @@ export default function Profil({ camping, vacancier, onLogout }) {
   async function supprimerCompte() {
     if (suppression) return
     setSuppression(true)
+
+    // Avant la suppression, et surtout avant signOut() : la règle d'accès
+    // pt_delete_own exige le rôle « authenticated » et user_id = auth.uid().
+    // Une fois la session fermée, la requête part en anonyme, ne correspond à
+    // aucune règle, et n'efface rien — sans lever la moindre erreur, puisqu'un
+    // DELETE qui ne touche aucune ligne n'en est pas une. Le jeton restait donc
+    // dans la base après que la personne ait demandé la suppression de tout.
+    await unregisterPush()
+
     const { error } = await supabase.from('vacanciers').delete().eq('id', vacancier.id)
     if (error) {
       console.error('Suppression du compte échouée :', error)
