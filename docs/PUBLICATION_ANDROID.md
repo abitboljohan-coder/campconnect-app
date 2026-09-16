@@ -131,89 +131,65 @@ Le fichier à uploader est :
 4. Textes, questionnaires de classification, sécurité des données, instructions
    d'accès pour le testeur : tout est prêt dans `docs/FICHE_PLAY_STORE.md`.
 
-## 5. Le test fermé, obligatoire avant la production
+## 5. Le test fermé, avant la production
 
-Un compte développeur **personnel** créé après novembre 2023 ne peut pas
-publier directement en production. Il faut d'abord :
+**Le compte est passé en Organisation**, ce qui change tout ici.
 
-1. **Tests fermés** → créer une release → uploader l'AAB ;
-2. réunir **au moins 12 testeurs** et les maintenir inscrits **14 jours
-   consécutifs** ;
-3. seulement ensuite, demander l'accès à la production.
+La règle des **12 testeurs pendant 14 jours** ne vise que les comptes
+**personnels** créés après novembre 2023. Un compte organisation, validé par un
+numéro D-U-N-S, en est exempté : les seuils affichés par Play Console sont
+tombés à **0 testeur** et **0 jour**.
 
-C'est le seul délai qu'aucune diligence ne raccourcit : **commencer par là**,
-avant même de peaufiner la fiche. Les testeurs se recrutent par adresses Gmail
-ou via un groupe Google — proches, collègues, futurs campings pilotes.
+Il reste néanmoins une condition, et une seule :
 
-> Les « Tests internes » sont plus rapides à mettre en place mais **ne comptent
-> pas** pour ces 14 jours. Utiles pour vérifier que l'AAB s'installe, pas pour
-> avancer vers la production.
+> **Publier au moins une version sur le canal de test fermé.**
 
-### Recruter les 12 testeurs
+Tant qu'aucune release n'y a été publiée, le bouton « Demander à publier en
+production » reste grisé. Une fois la release en ligne, les trois puces se
+cochent d'elles-mêmes et l'accès à la production s'ouvre immédiatement.
 
-C'est le seul chantier qu'aucune diligence ne raccourcit, et le seul qui ne
-dépende pas de vous seul. À lancer **avant** de peaufiner quoi que ce soit
-d'autre.
+### La marche à suivre
 
-**Ce qu'il faut savoir avant de demander :**
+1. **Tests → Tests fermés** → ton canal → **Créer une release**
+2. Téléverser `app-release.aab` (étape 3)
+3. Publier — inutile d'inscrire le moindre testeur
+4. **Demander à publier en production** : quelques questions sur le test, puis
+   l'accès est accordé
+5. **Production → Créer une release** → le même AAB
 
-- Il faut **12 comptes Google distincts**, pas 12 personnes différentes en
-  théorie — mais Play regarde les comptes, alors visez large : **15**, pour
-  absorber ceux qui ne feront jamais la manipulation.
-- Le compteur des 14 jours **ne démarre qu'une fois les 12 inscrits**. Un
-  testeur qui s'inscrit au bout d'une semaine remet le compteur à zéro pour
-  tout le monde. D'où les 15.
-- Le testeur doit **accepter l'invitation puis installer l'app**. Une adresse
-  ajoutée sans installation ne compte pas.
-- Ce qu'on vous demande, c'est leur **adresse Gmail**, pas leur numéro ni quoi
-  que ce soit d'autre.
+> Historique, pour mémoire : avant la bascule en organisation, ce projet était
+> soumis aux 12 testeurs et aux 14 jours. La conversion du compte a supprimé
+> cette contrainte d'un coup, et c'est de loin le chemin le plus court — la
+> validation d'identité prend quelques jours là où le recrutement de douze
+> personnes en prend plusieurs semaines.
 
-**Comment ça se passe côté Play Console :**
+## 6. Notifications push
 
-1. Test fermé → onglet **Testeurs** → créer une liste d'adresses e-mail.
-2. Coller les adresses Gmail, une par ligne.
-3. Copier le **lien d'inscription** que Play génère (`play.google.com/apps/
-   testing/com.campconnect.app`) et l'envoyer aux testeurs.
-4. Chacun ouvre le lien, accepte, puis installe depuis le Play Store.
+Elles fonctionnent, et sont vérifiées de bout en bout sur les deux plateformes.
+Voir `docs/PUSH_NOTIFICATIONS.md` pour l'architecture et le dépannage.
 
-**Message à envoyer** — court, sans jargon, avec la seule chose qu'on leur
-demande mise en évidence :
+⚠️ **Le seul piège de publication** : `android/app/build.gradle` n'applique le
+plugin Google Services que si `google-services.json` est présent. Ce fichier
+est **gitignoré** — il ne voyage donc pas avec le dépôt.
+
+Conséquence : un build lancé depuis une machine neuve, un clone frais ou un
+runner d'intégration continue produit une application **aux notifications
+muettes**, sans que rien n'échoue. Le build réussit, l'app s'installe, et Logcat
+se contente d'une ligne discrète :
 
 ```
-Salut,
-
-J'ai développé une app pour les campings et je dois la faire tester par
-12 personnes avant que Google accepte de la publier.
-
-Ça te prend 2 minutes, une seule fois :
-1. Tu m'envoies l'adresse Gmail de ton téléphone Android
-2. Je t'envoie un lien, tu cliques sur « Devenir testeur »
-3. Tu installes l'app depuis le Play Store
-
-C'est tout. Tu n'as rien à tester, rien à me dire, rien à payer. Il faut juste
-que l'app reste installée 15 jours — Google vérifie.
-
-Merci beaucoup, ça me débloque vraiment.
+google-services.json not found, google-services plugin not applied.
+Push Notifications won't work
 ```
 
-**Où les trouver :** famille, amis, collègues, anciens collègues, groupes de
-promo, vos trois campings pilotes et leurs équipes. Un seul critère : un
-téléphone **Android** (les utilisateurs iPhone ne peuvent pas aider ici).
+**Avant chaque `bundleRelease`, vérifier que le fichier est là :**
 
-> Ne demandez pas « est-ce que tu veux bien tester mon app ? » — c'est vague et
-> ça engage. Demandez leur adresse Gmail : c'est une question fermée à laquelle
-> on répond en dix secondes.
+```powershell
+Test-Path android\app\google-services.json   # doit renvoyer True
+```
 
-## 6. Notifications push — ce qui ne marchera pas en 1.0
-
-`android/app/build.gradle` n'applique le plugin Google Services que si
-`google-services.json` est présent (bloc `servicesJSON`, vers la ligne 109). Le fichier étant gitignoré et
-absent, le build réussit mais **les notifications push ne fonctionnent pas**.
-
-Ce n'est pas un blocage pour publier : ni la description ni les captures ne les
-annoncent. Pour les activer plus tard, il suffit de créer le projet Firebase,
-déposer `google-services.json` dans `android/app/`, et refaire un build — sans
-rien changer au code.
+Et le sauvegarder ailleurs que sur cette seule machine, au même titre que le
+keystore.
 
 ## 7. Mises à jour suivantes
 
