@@ -131,7 +131,7 @@ leurs groupes et s'organisent entre eux. De votre côté, vous publiez
 une animation et vous voyez qui s'inscrit — plus besoin de deviner si
 vous sortez douze chaises ou quarante.
 
-Je cherche trois campings pilotes pour la saison 2026. C'est gratuit,
+Je cherche trois à cinq campings pilotes pour la saison 2027. C'est gratuit,
 et je ne demande qu'un retour honnête en échange.
 
 Est-ce que ça vous dirait d'en parler dix minutes ?
