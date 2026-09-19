@@ -258,9 +258,9 @@ Plus de 200 emplacements.
 
 # Offre pilote
 
-Saison 2026 :
+Saison 2027 :
 
-3 campings sélectionnés gratuitement.
+3 à 5 campings sélectionnés gratuitement.
 
 Objectif :
 

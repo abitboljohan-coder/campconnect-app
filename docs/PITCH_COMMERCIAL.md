@@ -142,14 +142,14 @@ un lien reçu une heure plus tard ne s'ouvre plus.
 
 ## L'offre pilote — à ne sortir qu'au bon moment
 
-Trois campings gratuits pour la saison 2026.
+Trois à cinq campings gratuits pour la saison 2027.
 
 **Ne l'annoncez pas d'entrée.** Gratuit d'emblée, ça dévalorise, et le gérant
 se demande où est le piège. Sortez-la quand il est intéressé mais hésitant :
 
-> « Écoutez, je vais être direct : l'app est neuve, et j'ai besoin de trois
+> « Écoutez, je vais être direct : l'app est neuve, et j'ai besoin de quelques
 > campings qui l'utilisent vraiment pour qu'elle progresse. Je vous l'offre
-> pour la saison 2026. En échange je veux juste votre retour, honnêtement —
+> pour la saison 2027. En échange je veux juste votre retour, honnêtement —
 > ce qui marche et ce qui ne marche pas. Si à la fin de la saison ça vous a
 > servi, on parle de la suite. Sinon vous m'aurez rendu service. »
 
