@@ -38,4 +38,8 @@ fcm-service-account*.json
 *.njsproj
 *.sln
 *.sw?
-.claude/
+# Config Claude Code : local ignoré, commandes partagées versionnées.
+# « .claude/* » et non « .claude/ » : avec la barre finale, git n'entre pas
+# dans le dossier et les exceptions ci-dessous ne peuvent pas s'appliquer.
+.claude/*
+!.claude/skills/

@@ -258,14 +258,36 @@ Consulter cette documentation lorsqu'un besoin concerne :
 
 ---
 
+# État du projet
+
+Publiée sur l'App Store et sur Google Play depuis septembre 2026.
+Entreprise immatriculée au RCS d'Évry, SIREN 109 189 803.
+Aucun camping client à ce jour : l'enjeu est commercial, pas technique.
+
+Les notifications push fonctionnent sur les deux plateformes — voir
+`docs/PUSH_NOTIFICATIONS.md`, dont la section dépannage recense des pannes
+qui ne produisent aucune erreur visible.
+
+Pour démarcher un camping, invoquer la commande `/commercial`.
+
+---
+
 # Fonctionnalités en cours de priorité
 
 - onboarding gérant self-service
-- push notifications
 - export CSV
-- sécurisation RLS Supabase
 - amélioration des statistiques
 - pilotes saison 2026
+
+Dette technique connue, volontairement reportée :
+
+- `minifyEnabled false` — R8 désactivé. L'activer demande des règles `-keep`
+  pour la découverte par réflexion des greffons Capacitor, et une campagne
+  de test sur appareil réel.
+- Pas de canal de notification par défaut déclaré dans le manifeste Android ;
+  le système en fabrique un de repli.
+- `google-services.json` est gitignoré. Un build depuis un clone neuf produit
+  une application aux notifications muettes **sans qu'aucune étape échoue**.
 
 ---
 
