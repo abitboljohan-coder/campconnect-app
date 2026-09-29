@@ -76,6 +76,8 @@ const STRINGS = {
   'commun.places':      { fr: '{n} places',   en: '{n} spots',  es: '{n} plazas', nl: '{n} plaatsen' },
   'commun.membres':     { fr: '{n} membres',  en: '{n} members', es: '{n} miembros', nl: '{n} leden' },
   'commun.membre':      { fr: '{n} membre',   en: '{n} member', es: '{n} miembro', nl: '{n} lid' },
+  // 42501 : la base refuse la publication (vacancier banni par le gérant).
+  'commun.banni':      { fr: "Votre compte ne peut plus publier dans ce camping. Adressez-vous à la réception.", en: "Your account can no longer post at this campsite. Please contact reception.", es: 'Tu cuenta ya no puede publicar en este camping. Dirígete a recepción.', nl: 'Je account kan op deze camping niet meer posten. Neem contact op met de receptie.' },
   'commun.complet':     { fr: 'Complet',      en: 'Full',       es: 'Completo',  nl: 'Vol' },
   'commun.maintenant':  { fr: "à l'instant",  en: 'just now',   es: 'ahora mismo', nl: 'zojuist' },
   'commun.ilya_min':    { fr: 'il y a {n} min', en: '{n} min ago', es: 'hace {n} min', nl: '{n} min geleden' },

@@ -158,3 +158,77 @@ Classé par impact pour le vacancier. Rien de bloquant pour un pilote.
     groupes périmés** (même cause que côté vacancier). Chiffre flatteur mais
     faux, à aligner sur la règle de `lib/groupes.js` avant de montrer les
     statistiques à un gérant.
+
+---
+
+# Audit de l'espace gérant — 29 septembre 2026
+
+Point de départ : un signalement envoyé depuis l'app, introuvable côté gérant.
+
+## Corrigé
+
+### Le signalement invisible — et tous les autres
+
+- **La page Signalements était vide depuis des semaines.** Deux clés
+  étrangères mènent de `signalements` à `vacanciers` (l'auteur du signalement,
+  la personne signalée). La requête ne précisait pas laquelle : Supabase
+  répondait `300` (jointure ambiguë) à chaque ouverture, et la page affichait
+  « Aucun nouveau signalement ». Les journaux montrent l'erreur à chaque visite.
+  Corrigé en nommant les contraintes. Un échec de chargement s'affiche
+  désormais comme tel, au lieu de passer pour une liste vide.
+- **Un signalement ne se voyait qu'en allant le chercher.** Pastille rouge
+  sur « Signalements » dans le menu (temps réel), et bandeau « N nouveaux
+  signalements à traiter » en tête de la vue d'ensemble.
+- **On ne pouvait pas agir depuis un signalement.** Boutons « Supprimer le
+  message / le statut / l'annonce » et « Bannir l'auteur » dans la carte.
+
+### Sécurité (migrations appliquées et vérifiées)
+
+| Faille | Gravité | Correction |
+|---|---|---|
+| **N'importe quel utilisateur connecté — même la session anonyme d'un vacancier — pouvait se déclarer gérant de n'importe quel camping**, et lire, modifier, supprimer toutes ses données | critique | On ne devient gérant que du camping qu'on vient de créer soi-même (`gerant_seulement_du_camping_quon_a_cree`) |
+| Une session anonyme pouvait créer des campings | moyenne | Réservé aux comptes réels |
+| **« Bannir » ne bloquait rien** : aucune règle ne lisait la colonne `banni` | haute | Un banni ne peut plus publier message, statut, annonce ni groupe (`bannir_bloque_vraiment`) |
+| Un vacancier pouvait se débannir lui-même en modifiant son profil via l'API | haute | Seul un gérant du camping change ce drapeau |
+
+Chaque règle a été testée en simulant un vacancier anonyme, un vrai compte et
+un gérant, dans des transactions annulées : l'inscription self-service d'un
+nouveau camping fonctionne toujours.
+
+### Application
+
+- **Sur le téléphone, passer en mode gérant effaçait l'identité du
+  vacancier** : les deux sessions partageaient le même stockage. Il fallait
+  recréer son profil en revenant. Sessions désormais rangées séparément.
+  Conséquence unique : chaque gérant se reconnecte une fois après la mise à jour.
+- Retour à l'espace vacancier sans se déconnecter (Réglages → « Espace
+  vacancier », sur téléphone).
+- **QR code des Paramètres cassé** : il encodait l'adresse de la page —
+  `capacitor://localhost` depuis l'iPhone — et `?camping=` au lieu de
+  `/join/`, qui ne dispense pas du contrôle GPS. Un seul lien, public, partout.
+- **Animations** : un « 0 » s'affichait à côté des animations sans limite de
+  places ; une animation modifiée après minuit était décalée d'un jour (date
+  en temps universel) ; un enregistrement raté fermait le formulaire comme
+  s'il avait réussi ; la liste commençait par la fin de saison — désormais
+  « À venir » puis « Passées ». Formulaire dans la feuille partagée (clavier
+  géré), sélecteur d'emojis complet, interrupteur accessible.
+- **Modération** : suppression d'un seul appui, sans confirmation ni contrôle
+  d'erreur ; ni les annonces (photos comprises) ni les groupes n'étaient
+  modérables. Onglets Annonces et Groupes ajoutés.
+- « Groupes actifs » comptait les groupes périmés ; « Copier le lien » ne
+  disait rien ; le nouveau nom du camping n'apparaissait qu'au rechargement ;
+  mot de passe : 6 caractères ici, 8 à l'inscription.
+- Vue d'ensemble réorganisée : ce qui est à traiter, puis les chiffres du jour
+  (deux colonnes sur téléphone, une ligne à l'écran), puis le code d'accès.
+
+## Restant — espace gérant
+
+1. **Pas de « mot de passe oublié »** à l'écran de connexion. En attendant :
+   Supabase → Authentication → Users → *Send password recovery*.
+2. **Export CSV et téléchargement du QR ne marchent pas dans l'app iPhone**
+   (le téléchargement de fichier n'existe pas dans la vue web embarquée). Ils
+   marchent depuis un navigateur : app.campconnect.fr/admin.
+3. Le gérant ne reçoit **pas de notification** à l'arrivée d'un signalement.
+4. Un compte = un camping (contrainte `gerants_user_unique`) : un groupe de
+   campings devra utiliser un email par établissement.
+5. La réinitialisation de saison ne vérifie pas le succès de chaque étape.

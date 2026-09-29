@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react'
 import { supabase } from '../../supabase'
+import { toast } from '../../toast'
 import { Bloc, EnTete } from '../components/Bloc'
-import { Texte, Pile, Squelette, Vide, couleur as jetons, espace, graisse, rayon } from '../../design'
+import { Bouton, Texte, Pile, Squelette, Vide, couleur as jetons, espace, graisse, rayon } from '../../design'
 
 const CAT_LABELS = {
   proprete: { emoji: '🧹', label: 'Propreté' },
@@ -14,6 +15,13 @@ const CAT_LABELS = {
 }
 const cat = (id) => CAT_LABELS[id] || CAT_LABELS.autre
 
+// Où vit le contenu visé par un signalement, et comment le nommer.
+const CIBLES = {
+  message: { table: 'messages', nom: 'le message' },
+  statut:  { table: 'statuts',  nom: 'le statut' },
+  annonce: { table: 'annonces', nom: "l'annonce" },
+}
+
 const STATUTS = [
   { id: 'nouveau',  label: 'Nouveaux',  couleur: jetons.danger, bg: jetons.dangerFond },
   { id: 'en_cours', label: 'En cours',  couleur: '#d97706', bg: '#fffbeb' },
@@ -23,16 +31,28 @@ const STATUTS = [
 export default function Signalements({ camping }) {
   const [items, setItems]     = useState([])
   const [loading, setLoading] = useState(true)
+  const [erreur, setErreur]   = useState(false)
   const [filtre, setFiltre]   = useState('nouveau')
   const [photo, setPhoto]     = useState(null) // URL en plein écran
+  const [retires, setRetires] = useState(() => new Set()) // contenus supprimés depuis cette page
 
   async function charger() {
-    const { data } = await supabase
+    // Deux clés étrangères mènent de signalements à vacanciers : l'auteur du
+    // signalement et la personne signalée. Sans le nom de la contrainte, la
+    // jointure est ambiguë, Supabase répond 300 et ne renvoie rien — la page
+    // a ainsi affiché « Aucun nouveau signalement » pendant des semaines alors
+    // que les signalements arrivaient bien en base.
+    const { data, error } = await supabase
       .from('signalements')
-      .select('*, vacanciers(pseudo, avatar_emoji, emplacement), auteur:auteur_signale_id(pseudo, avatar_emoji, banni)')
+      .select(`*,
+        vacanciers!signalements_vacancier_id_fkey(pseudo, avatar_emoji, emplacement),
+        auteur:vacanciers!signalements_auteur_signale_id_fkey(pseudo, avatar_emoji, banni)`)
       .eq('camping_id', camping.id)
       .order('created_at', { ascending: false })
-    setItems(data || [])
+    // Un échec ne doit jamais se lire comme « rien à traiter ».
+    if (error) console.error('Chargement des signalements échoué :', error)
+    setErreur(!!error)
+    if (!error) setItems(data || [])
     setLoading(false)
   }
 
@@ -61,8 +81,30 @@ export default function Signalements({ camping }) {
     if (error) {
       console.error('Changement de statut échoué :', error)
       setItems(avant)
-      alert("Impossible de changer le statut pour le moment.")
+      toast('Impossible de changer le statut pour le moment.', 'erreur')
     }
+  }
+
+  // Le signalement disait quoi, sans permettre d'agir : il fallait retrouver
+  // le message dans la page Modération, parmi cent autres. On agit d'ici.
+  async function supprimerContenu(item) {
+    const cible = CIBLES[item.cible_type]
+    if (!cible || !confirm(`Supprimer ${cible.nom} signalé ? Il disparaîtra pour tous les vacanciers.`)) return
+    const { error } = await supabase.from(cible.table).delete().eq('id', item.cible_id)
+    if (error) { console.error('Suppression échouée :', error); toast('Suppression impossible pour le moment.', 'erreur'); return }
+    setRetires(prev => new Set(prev).add(item.cible_id))
+    toast('Contenu supprimé', 'succes')
+    if (item.statut !== 'resolu') changerStatut(item, 'resolu')
+  }
+
+  async function bannirAuteur(item) {
+    const pseudo = item.auteur?.pseudo || 'ce vacancier'
+    if (!confirm(`Bannir ${pseudo} ? Il ne pourra plus rien publier dans votre camping.`)) return
+    const { error } = await supabase.from('vacanciers').update({ banni: true }).eq('id', item.auteur_signale_id)
+    if (error) { console.error('Bannissement échoué :', error); toast('Bannissement impossible pour le moment.', 'erreur'); return }
+    setItems(prev => prev.map(i => i.auteur_signale_id === item.auteur_signale_id
+      ? { ...i, auteur: { ...i.auteur, banni: true } } : i))
+    toast(`${pseudo} est banni`, 'succes')
   }
 
   const compte = (id) => items.filter(i => i.statut === id).length
@@ -101,6 +143,10 @@ export default function Signalements({ camping }) {
 
       {loading ? (
         <Squelette lignes={3} hauteur={92} libelle="Chargement…" />
+      ) : erreur ? (
+        <Bloc>
+          <Vide emoji="⚠️" texte="Impossible de charger les signalements. Vérifiez la connexion puis rechargez la page." />
+        </Bloc>
       ) : affiches.length === 0 ? (
         <Bloc>
           <Vide
@@ -154,6 +200,21 @@ export default function Signalements({ camping }) {
                       <div style={{ fontSize: 14, color: jetons.texte, lineHeight: 1.5, whiteSpace: 'pre-wrap' }}>
                         {item.cible_texte}
                       </div>
+                      <Pile direction="ligne" espace="sm" retour style={{ marginTop: espace.sm }}>
+                        {CIBLES[item.cible_type] && item.cible_id && (
+                          retires.has(item.cible_id)
+                            ? <Texte variante="micro" style={{ color: jetons.succes, fontWeight: graisse.fort }}>✓ Contenu supprimé</Texte>
+                            : <Bouton variante="danger" taille="sm" onClick={() => supprimerContenu(item)}>
+                                Supprimer {CIBLES[item.cible_type].nom}
+                              </Bouton>
+                        )}
+                        {item.auteur_signale_id && !item.auteur?.banni && (
+                          <Bouton variante="secondaire" taille="sm" onClick={() => bannirAuteur(item)}
+                                  style={{ color: jetons.danger, borderColor: '#fecaca' }}>
+                            Bannir {item.auteur?.pseudo || "l'auteur"}
+                          </Bouton>
+                        )}
+                      </Pile>
                     </div>
                   )}
 

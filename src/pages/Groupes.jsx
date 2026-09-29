@@ -95,7 +95,7 @@ export default function Groupes({ camping, vacancier }) {
 
     if (error || !data) {
       console.error('Création groupe échouée :', error)
-      setErreur(t('groupes.err_creation'))
+      setErreur(error?.code === '42501' ? t('commun.banni') : t('groupes.err_creation'))
       setSaving(false)
       return
     }

@@ -1,5 +1,7 @@
 import { useEffect, useState } from 'react'
 import { supabase } from '../../supabase'
+import { toast } from '../../toast'
+import Sheet from '../../components/Sheet'
 import AnimationForm from '../components/AnimationForm'
 import { Bloc, EnTete } from '../components/Bloc'
 import { Bouton, Texte, Pile, Badge, Squelette, Vide, couleur as jetons, espace, graisse, rayon, texte as tailles } from '../../design'
@@ -39,43 +41,53 @@ export default function Animations({ camping }) {
 
   useEffect(() => { load() }, [camping.id])
 
+  // Aucune de ces trois actions ne vérifiait son résultat : un échec (réseau,
+  // session expirée) fermait le formulaire comme si tout était enregistré, et
+  // le gérant découvrait plus tard une animation jamais créée.
   async function togglePublie(anim) {
-    const { data } = await supabase
+    const { data, error } = await supabase
       .from('animations')
       .update({ publiee: !anim.publiee })
       .eq('id', anim.id)
       .select().single()
-    if (data) setAnimations(prev => prev.map(a => a.id === data.id ? data : a))
+    if (error || !data) { console.error('Publication échouée :', error); toast('Impossible de changer la publication.', 'erreur'); return }
+    setAnimations(prev => prev.map(a => a.id === data.id ? data : a))
+    toast(data.publiee ? 'Animation publiée : les vacanciers sont prévenus' : 'Animation repassée en brouillon', 'succes')
   }
 
   async function supprimer(animId) {
     if (!confirm('Supprimer cette animation ? Les inscriptions seront aussi supprimées.')) return
-    await supabase.from('inscriptions').delete().eq('animation_id', animId)
-    await supabase.from('animations').delete().eq('id', animId)
+    const { error } = await supabase.from('animations').delete().eq('id', animId)   // inscriptions : en cascade
+    if (error) { console.error('Suppression échouée :', error); toast('Suppression impossible pour le moment.', 'erreur'); return }
     setAnimations(prev => prev.filter(a => a.id !== animId))
     setCounts(prev => { const c = { ...prev }; delete c[animId]; return c })
   }
 
   async function sauvegarder(formData) {
     setSaving(true)
-    if (editAnim) {
-      const { data } = await supabase
-        .from('animations')
-        .update(formData)
-        .eq('id', editAnim.id)
-        .select().single()
-      if (data) setAnimations(prev => prev.map(a => a.id === data.id ? data : a))
-    } else {
-      const { data } = await supabase
-        .from('animations')
-        .insert({ ...formData, camping_id: camping.id })
-        .select().single()
-      if (data) setAnimations(prev => [data, ...prev])
+    const { data, error } = editAnim
+      ? await supabase.from('animations').update(formData).eq('id', editAnim.id).select().single()
+      : await supabase.from('animations').insert({ ...formData, camping_id: camping.id }).select().single()
+    setSaving(false)
+    if (error || !data) {
+      console.error('Enregistrement échoué :', error)
+      toast("L'animation n'a pas pu être enregistrée. Réessayez.", 'erreur')
+      return   // le formulaire reste ouvert : rien n'est perdu
     }
+    setAnimations(prev => editAnim ? prev.map(a => a.id === data.id ? data : a) : [data, ...prev])
+    toast(editAnim ? 'Animation modifiée' : 'Animation créée', 'succes')
     setShowForm(false)
     setEditAnim(null)
-    setSaving(false)
   }
+
+  // À venir d'abord, dans l'ordre du calendrier ; les passées ensuite, en
+  // retrait. Triée du plus lointain au plus ancien, la liste commençait par
+  // la fin de saison et noyait la soirée du jour au milieu.
+  const [seuil] = useState(() => Date.now() - 2 * 3600 * 1000)   // figé à l'ouverture de la page
+  const aVenir = animations.filter(a => !a.debut || new Date(a.debut).getTime() >= seuil)
+    .sort((a, b) => new Date(a.debut || 0) - new Date(b.debut || 0))
+  const passees = animations.filter(a => a.debut && new Date(a.debut).getTime() < seuil)
+    .sort((a, b) => new Date(b.debut) - new Date(a.debut))
 
   async function voirInscrits(anim) {
     const { data } = await supabase
@@ -114,16 +126,21 @@ export default function Animations({ camping }) {
           />
         </Bloc>
       ) : (
-        <Pile espace="sm">
-          {animations.map(anim => {
+        <Pile espace="lg">
+          {[['À venir', aVenir], ['Passées', passees]].filter(([, liste]) => liste.length).map(([titreListe, liste]) => (
+          <Pile key={titreListe} espace="sm" style={titreListe === 'Passées' ? { opacity: 0.72 } : undefined}>
+          <Texte variante="libelle" as="h2">{titreListe} · {liste.length}</Texte>
+          {liste.map(anim => {
             const nb = counts[anim.id] || 0
             const debut = anim.debut ? new Date(anim.debut) : null
-            const complet = anim.places_max && nb >= anim.places_max
+            // Comparaison explicite : « places_max && … » valait 0 pour une
+            // animation sans limite, et React affichait ce 0 à côté du titre.
+            const complet = anim.places_max > 0 && nb >= anim.places_max
             return (
-              <Bloc key={anim.id} padding="16px 20px" style={{
+              <Bloc key={anim.id} padding="16px 18px" style={{
                 borderLeft: `4px solid ${anim.publiee ? jetons.marque : jetons.bordure}`,
-                display: 'flex', alignItems: 'center', gap: 14,
               }}>
+                <div style={{ display: 'flex', alignItems: 'flex-start', gap: 14 }}>
                 <span aria-hidden="true" style={{
                   width: 44, height: 44, borderRadius: rayon.md,
                   background: jetons.fond, fontSize: 22, flexShrink: 0,
@@ -155,13 +172,15 @@ export default function Animations({ camping }) {
                         fontSize: tailles.petit, textDecoration: 'underline',
                       }}
                     >
-                      👥 {nb}{anim.places_max ? `/${anim.places_max}` : ''} inscrits
+                      👥 {nb}{anim.places_max > 0 ? `/${anim.places_max}` : ''} inscrit{nb > 1 ? 's' : ''}
                     </button>
                   </div>
                 </div>
+                </div>
 
-                {/* Actions */}
-                <Pile direction="ligne" espace="sm" retour style={{ flexShrink: 0 }}>
+                {/* Actions, sur leur propre ligne : à côté du titre, elles
+                    l'écrasaient sur trois lignes dès que l'écran rétrécissait. */}
+                <Pile direction="ligne" espace="sm" retour justifier="flex-end">
                   <Bouton
                     variante="secondaire" taille="sm"
                     onClick={() => togglePublie(anim)}
@@ -186,12 +205,14 @@ export default function Animations({ camping }) {
               </Bloc>
             )
           })}
+          </Pile>
+          ))}
         </Pile>
       )}
 
       {/* Modal formulaire */}
       {showForm && (
-        <Modal onClose={() => { setShowForm(false); setEditAnim(null) }}>
+        <Sheet onClose={() => { setShowForm(false); setEditAnim(null) }}>
           <Texte variante="section" as="h2" style={{ marginBottom: espace.xl }}>
             {editAnim ? 'Modifier l’animation' : 'Nouvelle animation'}
           </Texte>
@@ -201,12 +222,12 @@ export default function Animations({ camping }) {
             onCancel={() => { setShowForm(false); setEditAnim(null) }}
             saving={saving}
           />
-        </Modal>
+        </Sheet>
       )}
 
       {/* Modal inscrits */}
       {inscritsModal && (
-        <Modal onClose={() => setInscritsModal(null)}>
+        <Sheet onClose={() => setInscritsModal(null)}>
           <Pile espace="xs" style={{ marginBottom: espace.xl }}>
             <Texte variante="section" as="h2">
               {inscritsModal.anim.emoji} {inscritsModal.anim.titre}
@@ -244,38 +265,8 @@ export default function Animations({ camping }) {
                   onClick={() => setInscritsModal(null)} style={{ marginTop: espace.xl }}>
             Fermer
           </Bouton>
-        </Modal>
+        </Sheet>
       )}
     </Pile>
-  )
-}
-
-function Modal({ children, onClose }) {
-  return (
-    <div
-      role="dialog"
-      aria-modal="true"
-      style={{
-        position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.55)',
-        display: 'flex', alignItems: 'flex-end', justifyContent: 'center', zIndex: 200,
-      }}
-      onClick={onClose}
-    >
-      <div
-        style={{
-          background: jetons.surface, borderRadius: `${rayon.xl}px ${rayon.xl}px 0 0`,
-          padding: '24px 22px 40px', width: '100%', maxWidth: 560,
-          maxHeight: '90vh', overflowY: 'auto',
-          animation: 'fadeIn 0.2s ease',
-        }}
-        onClick={e => e.stopPropagation()}
-      >
-        <div aria-hidden="true" style={{
-          width: 40, height: 4, background: jetons.bordure,
-          borderRadius: 2, margin: `0 auto ${espace.xl}px`,
-        }} />
-        {children}
-      </div>
-    </div>
   )
 }

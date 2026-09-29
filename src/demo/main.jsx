@@ -12,6 +12,11 @@ import Chat from '../pages/Chat'
 import Infos from '../pages/Infos'
 import Profil from '../pages/Profil'
 import Overview from '../admin/pages/Overview'
+import AnimationsAdmin from '../admin/pages/Animations'
+import Signalements from '../admin/pages/Signalements'
+import Moderation from '../admin/pages/Moderation'
+import Parametres from '../admin/pages/Parametres'
+import Stats from '../admin/pages/Stats'
 import Onboarding from '../pages/Onboarding'
 import { DEMO_CAMPING, DEMO_VACANCIER } from './mockSupabase'
 import { ToastHost } from '../components/Toast'
@@ -20,7 +25,9 @@ import { appliquerTheme } from '../design'
 const c = DEMO_CAMPING, v = DEMO_VACANCIER
 appliquerTheme(c)
 const s = new URLSearchParams(location.search).get('s') || 'accueil'
-const routeFor = { accueil: '/', groupes: '/groupes', map: '/map', agenda: '/agenda', infos: '/infos', profil: '/profil', chat: '/chat/g1', admin: '/admin/overview', onboarding: '/onboarding' }
+const routeFor = { accueil: '/', groupes: '/groupes', map: '/map', agenda: '/agenda', infos: '/infos', profil: '/profil', chat: '/chat/g1', admin: '/admin/overview', onboarding: '/onboarding',
+  'admin-animations': '/admin/animations', 'admin-signalements': '/admin/signalements',
+  'admin-moderation': '/admin/moderation', 'admin-parametres': '/admin/parametres', 'admin-stats': '/admin/stats' }
 const entry = routeFor[s] || '/'
 
 function DemoApp() {
@@ -38,6 +45,11 @@ function DemoApp() {
       <Route path="/onboarding" element={<Onboarding initialCamping={c} onDone={() => {}} />} />
       <Route element={<AdminLayout gerant={{ nom: 'Gérant démo' }} camping={c} onLogout={() => {}} />}>
         <Route path="/admin/overview" element={<Overview camping={c} />} />
+        <Route path="/admin/animations" element={<AnimationsAdmin camping={c} />} />
+        <Route path="/admin/signalements" element={<Signalements camping={c} />} />
+        <Route path="/admin/moderation" element={<Moderation camping={c} />} />
+        <Route path="/admin/parametres" element={<Parametres camping={c} session={{ user: { email: 'gerant@flotsbleus.fr' } }} />} />
+        <Route path="/admin/stats" element={<Stats camping={c} />} />
       </Route>
     </Routes>
   )

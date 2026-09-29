@@ -1,8 +1,11 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { supabase, presentFilter, todayISO } from '../../supabase'
+import { toast } from '../../toast'
 import StatCard from '../components/StatCard'
 import { getHourlyCode } from '../../pages/Onboarding'
+import { estActuel } from '../../lib/groupes'
+import { lienRejoindre } from '../lib/liens'
 import { Bloc, EnTete } from '../components/Bloc'
 import { Bouton, Texte, Pile, Squelette, Vide, Icone, couleur as jetons, espace, graisse, rayon, texte as tailles } from '../../design'
 
@@ -89,7 +92,7 @@ function GuideDemarrage({ camping, stats }) {
 }
 
 export default function Overview({ camping }) {
-  const [stats, setStats]           = useState({ vacanciers: 0, groupes: 0, inscriptions: 0, taux: 0, animations: 0 })
+  const [stats, setStats]           = useState({ vacanciers: 0, groupes: 0, inscriptions: 0, taux: 0, animations: 0, signalements: 0 })
   const [departs, setDeparts]       = useState({ aujourdhui: [], semaine: 0 })
   const [recentGroupes, setRecentGroupes]       = useState([])
   const [recentInscriptions, setRecentInscriptions] = useState([])
@@ -112,21 +115,26 @@ export default function Overview({ camping }) {
 
     const [
       { count: vacCount },
-      { count: grpCount },
+      { data: grpActifs },
       { data: anims },
       { data: grps },
       { data: departsAuj },
       { count: departsSem },
       { count: animTotal },
+      { count: sigCount },
     ] = await Promise.all([
       supabase.from('vacanciers').select('*', { count: 'exact', head: true }).eq('camping_id', camping.id).or(presentFilter()),
-      supabase.from('groupes').select('*', { count: 'exact', head: true }).eq('camping_id', camping.id).eq('actif', true),
+      // Personne ne ferme un groupe : compter la colonne « actif » additionnait
+      // les apéros de la semaine dernière. Même règle que côté vacancier.
+      supabase.from('groupes').select('heure, created_at').eq('camping_id', camping.id).eq('actif', true),
       supabase.from('animations').select('id, titre, places_max').eq('camping_id', camping.id).eq('publiee', true),
       supabase.from('groupes').select('*').eq('camping_id', camping.id).order('created_at', { ascending: false }).limit(5),
       supabase.from('vacanciers').select('pseudo, avatar_emoji, emplacement').eq('camping_id', camping.id).eq('date_depart', today).order('pseudo'),
       supabase.from('vacanciers').select('*', { count: 'exact', head: true }).eq('camping_id', camping.id).gte('date_depart', today).lte('date_depart', in7j),
       supabase.from('animations').select('*', { count: 'exact', head: true }).eq('camping_id', camping.id),
+      supabase.from('signalements').select('id', { count: 'exact', head: true }).eq('camping_id', camping.id).eq('statut', 'nouveau'),
     ])
+    const grpCount = (grpActifs || []).filter(g => estActuel(g)).length
 
     const animIds = (anims || []).map(a => a.id)
 
@@ -156,7 +164,7 @@ export default function Overview({ camping }) {
       taux = totalPlaces > 0 ? Math.round((totalInscrits / totalPlaces) * 100) : 0
     }
 
-    setStats({ vacanciers: vacCount || 0, groupes: grpCount || 0, inscriptions: inscCount, taux, animations: animTotal || 0 })
+    setStats({ vacanciers: vacCount || 0, groupes: grpCount, inscriptions: inscCount, taux, animations: animTotal || 0, signalements: sigCount || 0 })
     setDeparts({ aujourdhui: departsAuj || [], semaine: departsSem || 0 })
     setRecentGroupes(grps || [])
     setRecentInscriptions(recentInscs)
@@ -170,13 +178,30 @@ export default function Overview({ camping }) {
         sous={new Date().toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}
       />
 
+      {/* Ce qui attend le gérant passe avant tout le reste : un signalement ne
+          se voyait qu'en allant le chercher dans sa page. */}
+      {stats.signalements > 0 && (
+        <Link to="/admin/signalements" style={{
+          display: 'flex', alignItems: 'center', gap: espace.md,
+          padding: `14px ${espace.lg}px`, borderRadius: rayon.lg, textDecoration: 'none',
+          background: jetons.dangerFond, border: '1px solid #fecaca',
+        }}>
+          <span aria-hidden="true" style={{ fontSize: 22 }}>🚩</span>
+          <Texte variante="corps" as="span" style={{ flex: 1, fontWeight: graisse.fort, color: jetons.danger }}>
+            {stats.signalements === 1
+              ? '1 nouveau signalement à traiter'
+              : `${stats.signalements} nouveaux signalements à traiter`}
+          </Texte>
+          <Icone nom="chevron" taille={17} style={{ color: jetons.danger }} />
+        </Link>
+      )}
+
       {/* Masqué dès que les quatre étapes sont faites. */}
       <GuideDemarrage camping={camping} stats={stats} />
 
-      {/* Code d'accès + QR */}
-      <AccessCodeCard camping={camping} />
-
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(224px, 100%), 1fr))', gap: 14 }}>
+      {/* Les chiffres du jour avant le reste : c'est ce qu'on vient voir. Deux
+          colonnes sur téléphone, les cinq tuiles sur une ligne à l'écran. */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(172px, 100%), 1fr))', gap: 12 }}>
         <StatCard icone="tente"     valeur={stats.vacanciers}   libelle="Vacanciers présents" sous="Actuellement au camping" />
         <StatCard icone="sortie"    valeur={departs.semaine}    libelle="Départs sous 7 jours"
                   sous={departs.aujourdhui.length ? `dont ${departs.aujourdhui.length} aujourd'hui` : "Aucun aujourd'hui"}
@@ -185,6 +210,9 @@ export default function Overview({ camping }) {
         <StatCard icone="agenda"    valeur={stats.inscriptions} libelle="Inscriptions aujourd'hui" sous="Depuis minuit" couleur="#6d28d9" />
         <StatCard icone="tendance"  valeur={`${stats.taux}%`}   libelle="Taux de remplissage" sous="Animations publiées" couleur="#be123c" />
       </div>
+
+      {/* Code d'accès + QR */}
+      <AccessCodeCard camping={camping} />
 
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(300px, 100%), 1fr))', gap: espace.xl }}>
 
@@ -297,18 +325,24 @@ function AccessCodeCard({ camping }) {
     return () => clearInterval(iv)
   }, [camping.id])
 
-  // Toujours le domaine public : ce lien devient un QR imprimé et affiché à la
-  // réception. Un gérant qui consulte son admin depuis un poste local ou une
-  // URL de test imprimerait sinon un QR en localhost, illisible pour les
-  // vacanciers.
-  const estLocal = /^(localhost|127\.|192\.168\.|10\.)/.test(window.location.hostname)
-  const joinUrl = `${estLocal ? 'https://app.campconnect.fr' : window.location.origin}/join/${camping.slug}`
+  const joinUrl = lienRejoindre(camping.slug)
+
+  // « Copier » ne disait rien, et ne faisait rien là où le presse-papiers est
+  // refusé : le gérant ne savait pas s'il pouvait coller.
+  async function copier() {
+    try {
+      await navigator.clipboard.writeText(joinUrl)
+      toast('Lien copié', 'succes')
+    } catch {
+      toast('Copie impossible ici : sélectionnez le lien à la main.', 'erreur')
+    }
+  }
 
   return (
     <div style={{
       display: 'grid',
       gridTemplateColumns: 'repeat(auto-fit, minmax(min(260px, 100%), 1fr))',
-      gap: 14, marginBottom: 24,
+      gap: 14,
     }}>
       {/* Code tournant */}
       <div className="cc-sombre" style={{
@@ -359,7 +393,7 @@ function AccessCodeCard({ camping }) {
         </Texte>
         <Bouton
           variante="secondaire" taille="sm"
-          onClick={() => navigator.clipboard?.writeText(joinUrl)}
+          onClick={copier}
           style={{ alignSelf: 'flex-start', borderRadius: rayon.sm, border: 'none', background: jetons.fond, color: jetons.marqueTexte }}
         >
           Copier le lien
