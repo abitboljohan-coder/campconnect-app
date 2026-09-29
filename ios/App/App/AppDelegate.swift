@@ -56,3 +56,60 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
     }
 
 }
+
+// ─── Cycle de vie par scènes (UIScene) ─────────────────────────────────────
+//
+// Obligatoire depuis le SDK iOS 27 : une app compilée avec Xcode 27 qui ne
+// l'adopte pas est tuée au lancement, avant d'afficher quoi que ce soit
+// (_UIApplicationEvaluateRuntimeIssueForNoSceneLifecycleAdoption). C'est ce qui
+// a fait planter le build 120, le premier compilé par Xcode Cloud avec Xcode 27.
+//
+// La scène est déclarée dans Info.plist (UIApplicationSceneManifest). La fenêtre
+// et CAPBridgeViewController viennent toujours de Main.storyboard, comme avant :
+// cette classe se contente de relayer à Capacitor les liens campconnect://,
+// qu'iOS adresse désormais à la scène et non plus à l'AppDelegate.
+//
+// Même logique que le SceneDelegateProxy de Capacitor 8.5, écrite avec l'API de
+// la version installée (8.4.2) pour ne pas changer de dépendances.
+class SceneDelegate: UIResponder, UIWindowSceneDelegate {
+
+    var window: UIWindow?
+
+    // Liens reçus au lancement à froid, en attente du pont Capacitor.
+    private var liensEnAttente: Set<UIOpenURLContext> = []
+    private var activitesEnAttente: Set<NSUserActivity> = []
+
+    func scene(_ scene: UIScene, willConnectTo session: UISceneSession, options connectionOptions: UIScene.ConnectionOptions) {
+        // Lancement à froid par un lien (QR code du camping) : les greffons ne
+        // sont pas encore chargés, un lien relayé maintenant serait perdu. On le
+        // relaie à la première apparition du pont Capacitor.
+        if connectionOptions.urlContexts.isEmpty && connectionOptions.userActivities.isEmpty { return }
+        liensEnAttente = connectionOptions.urlContexts
+        activitesEnAttente = connectionOptions.userActivities
+        NotificationCenter.default.addObserver(self, selector: #selector(pontAffiche), name: .capacitorViewDidAppear, object: nil)
+    }
+
+    @objc private func pontAffiche() {
+        NotificationCenter.default.removeObserver(self, name: .capacitorViewDidAppear, object: nil)
+        for context in liensEnAttente { ouvrir(context.url) }
+        for activite in activitesEnAttente { continuer(activite) }
+        liensEnAttente = []
+        activitesEnAttente = []
+    }
+
+    func scene(_ scene: UIScene, openURLContexts URLContexts: Set<UIOpenURLContext>) {
+        for context in URLContexts { ouvrir(context.url) }
+    }
+
+    func scene(_ scene: UIScene, continue userActivity: NSUserActivity) {
+        continuer(userActivity)
+    }
+
+    private func ouvrir(_ url: URL) {
+        _ = ApplicationDelegateProxy.shared.application(UIApplication.shared, open: url, options: [:])
+    }
+
+    private func continuer(_ activite: NSUserActivity) {
+        _ = ApplicationDelegateProxy.shared.application(UIApplication.shared, continue: activite, restorationHandler: { _ in })
+    }
+}
