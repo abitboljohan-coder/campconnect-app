@@ -151,6 +151,22 @@ input, textarea, select {
   font-size: inherit;
 }
 
+/* Sur iOS, les champs date et heure imposent leur propre largeur minimale et
+   ignorent width: 100%. Placés côte à côte avec un autre champ, ils débordaient
+   de leur colonne — le formulaire de création de groupe défilait alors de
+   côté et sautait à chaque frappe. */
+input[type="date"], input[type="time"] {
+  min-width: 0;
+  max-width: 100%;
+  -webkit-appearance: none;
+  appearance: none;
+  text-align: left;
+}
+input[type="date"]::-webkit-date-and-time-value,
+input[type="time"]::-webkit-date-and-time-value {
+  text-align: left;
+}
+
 @keyframes pulse {
   0%, 100% { opacity: 1; }
   50% { opacity: 0.4; }

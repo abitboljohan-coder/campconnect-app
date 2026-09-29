@@ -18,20 +18,27 @@ import { couleur, rayon } from '../design'
  * propres boutons de validation.
  */
 export default function Sheet({ onClose, children }) {
-  // Hauteur du clavier logiciel.
+  // Zone réellement visible, clavier déduit.
   //
   // Une feuille en position fixed s'ancre au viewport de mise en page, que le
   // clavier ne réduit pas : à l'ouverture du clavier, la feuille reste collée
   // en bas et se retrouve entièrement masquée derrière lui. visualViewport,
-  // lui, reflète la zone réellement visible ; l'écart entre les deux donne la
-  // hauteur du clavier, dont on remonte la feuille.
-  const [clavier, setClavier] = useState(0)
+  // lui, reflète la zone réellement visible.
+  //
+  // Le calque épouse donc exactement cette zone — sa position ET sa hauteur.
+  // Une première version se contentait de remonter la feuille de la hauteur
+  // du clavier et de la plafonner à « 85 % de l'écran moins le clavier » : sur
+  // un iPhone, cela laissait à peine un tiers de l'écran au formulaire, alors
+  // que tout l'espace au-dessus restait libre. Créer un groupe se faisait dans
+  // une lucarne où l'on devait défiler à l'aveugle.
+  const [zone, setZone] = useState(null)   // { haut, hauteur } quand le clavier est ouvert
   useEffect(() => {
     const vv = window.visualViewport
     if (!vv) return
     const suivre = () => {
       const cache = window.innerHeight - vv.height - vv.offsetTop
-      setClavier(cache > 60 ? Math.round(cache) : 0)   // 60px : ignore les micro-écarts
+      // 60px : ignore les micro-écarts (barre d'adresse qui se replie, etc.)
+      setZone(cache > 60 ? { haut: Math.round(vv.offsetTop), hauteur: Math.round(vv.height) } : null)
     }
     suivre()
     vv.addEventListener('resize', suivre)
@@ -104,11 +111,11 @@ export default function Sheet({ onClose, children }) {
       aria-modal="true"
       onClick={onClose}
       style={{
-        position: 'fixed', inset: 0,
+        position: 'fixed', left: 0, right: 0,
+        top: zone ? zone.haut : 0,
+        height: zone ? zone.hauteur : '100%',
         background: 'rgba(0,0,0,0.55)',
         display: 'flex', alignItems: 'flex-end',
-        paddingBottom: clavier,
-        transition: 'padding-bottom 0.2s ease-out',
         zIndex: 1000,
         animation: 'ccFade 0.18s ease-out',
       }}
@@ -124,9 +131,14 @@ export default function Sheet({ onClose, children }) {
           background: couleur.surface,
           borderRadius: `${rayon.xl}px ${rayon.xl}px 0 0`,
           padding: '22px 20px 36px',
-          paddingBottom: clavier ? 36 : 'calc(36px + var(--cc-safe-bottom))',
+          paddingBottom: zone ? 20 : 'calc(36px + var(--cc-safe-bottom))',
           width: '100%', maxWidth: 600, margin: '0 auto',
-          maxHeight: clavier ? `calc(85dvh - ${clavier}px)` : '85dvh', overflowY: 'auto',
+          // Clavier ouvert : toute la hauteur visible, moins la barre d'état.
+          maxHeight: zone ? 'calc(100% - var(--cc-safe-top) - 8px)' : '85%',
+          overflowY: 'auto',
+          // Un champ trop large ne doit jamais rendre la feuille défilable de
+          // côté : c'est ce qui la faisait « sauter » à gauche à chaque saisie.
+          overflowX: 'hidden',
           overscrollBehavior: 'contain',
           animation: 'slideUp 0.22s cubic-bezier(0.32, 0.72, 0, 1)',
         }}

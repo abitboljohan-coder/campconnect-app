@@ -147,7 +147,7 @@ export default function Signalements({ camping }) {
                     }}>
                       <Texte variante="doux" style={{ fontWeight: graisse.titre, color: jetons.danger, marginBottom: 4 }}>
                         {item.categorie === 'blocage' ? 'Auteur bloqué : ' : ''}
-                        {item.cible_type === 'statut' ? 'Statut' : 'Message'} de{' '}
+                        {{ statut: 'Statut', annonce: 'Annonce' }[item.cible_type] || 'Message'} de{' '}
                         {item.auteur?.avatar_emoji} {item.auteur?.pseudo || 'un vacancier parti'}
                         {item.auteur?.banni && ' · déjà banni'}
                       </Texte>

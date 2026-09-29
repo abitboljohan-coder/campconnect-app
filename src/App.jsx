@@ -136,10 +136,12 @@ function App() {
   // connaître le camping pour s'afficher à ses couleurs.
   useEffect(() => { appliquerTheme(camping) }, [camping])
 
-  // Notifications push : enregistrer l'appareil dès que le vacancier est identifié
+  // Notifications push : enregistrer l'appareil dès que le vacancier est identifié.
+  // Suivre les identifiants, pas les objets : une simple modification du profil
+  // ou un rafraîchissement du camping ne doit pas réenregistrer l'appareil.
   useEffect(() => {
     if (camping && vacancier) registerPush({ camping, vacancier })
-  }, [camping, vacancier])
+  }, [camping?.id, vacancier?.id]) // eslint-disable-line react-hooks/exhaustive-deps
 
   // Rien n'est rendu pendant le chargement : le calque de démarrage d'index.html
   // est encore à l'écran et sera retiré en fondu ci-dessus. Rendre ici un second
@@ -180,7 +182,7 @@ function App() {
             <Route path="/signaler" element={<Signaler camping={camping} vacancier={vacancier} />} />
             <Route path="/annonces" element={<Annonces camping={camping} vacancier={vacancier} />} />
             <Route path="/profil" element={
-              <Profil camping={camping} vacancier={vacancier} onLogout={() => {
+              <Profil camping={camping} vacancier={vacancier} onUpdate={setVacancier} onLogout={() => {
                 unregisterPush()
                 localStorage.removeItem('vacancier')
                 localStorage.removeItem('campingSlug')

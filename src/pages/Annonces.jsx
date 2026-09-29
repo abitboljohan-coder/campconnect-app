@@ -1,6 +1,9 @@
 import { useEffect, useState } from 'react'
 import Sheet from '../components/Sheet'
+import MenuModeration from '../components/MenuModeration'
+import { chargerBlocages, estBloque } from '../lib/moderation'
 import { supabase } from '../supabase'
+import { toast } from '../toast'
 import { t, useLangue, locale } from '../i18n'
 import {
   Bouton, Carte, Champ, Texte, Pile, Puce, Badge, Squelette, Vide, Fab,
@@ -38,6 +41,8 @@ export default function Annonces({ camping, vacancier }) {
   const [saving, setSaving]     = useState(false)
   const [erreur, setErreur]     = useState('')
   const [indispo, setIndispo]   = useState(false)
+  const [moderation, setModeration] = useState(null)
+  const [, setBloquesVersion]   = useState(0)
 
   async function charger() {
     const { data, error } = await supabase
@@ -58,6 +63,7 @@ export default function Annonces({ camping, vacancier }) {
   useEffect(() => {
     async function init() { await charger() }
     init()
+    chargerBlocages(vacancier.id).then(() => setBloquesVersion(v => v + 1))
   }, [camping.id]) // eslint-disable-line react-hooks/exhaustive-deps
 
   async function choisirPhoto(e) {
@@ -79,7 +85,12 @@ export default function Annonces({ camping, vacancier }) {
       const { error: upErr } = await supabase.storage
         .from('camping-assets').upload(chemin, photo, { contentType: 'image/jpeg' })
       if (!upErr) photo_url = supabase.storage.from('camping-assets').getPublicUrl(chemin).data.publicUrl
-      else console.error('Upload photo échoué :', upErr)
+      else {
+        // L'annonce part quand même, mais on le dit : elle paraissait publiée
+        // avec sa photo, qu'on découvrait absente une fois en ligne.
+        console.error('Upload photo échoué :', upErr)
+        toast(t('annonces.photo_non_envoyee'), 'erreur')
+      }
     }
 
     const { data, error } = await supabase.from('annonces').insert({
@@ -110,7 +121,8 @@ export default function Annonces({ camping, vacancier }) {
     if (error) { console.error(error); charger() } // rollback : on recharge
   }
 
-  const affichees = filtre === 'tous' ? annonces : annonces.filter(a => a.type === filtre)
+  const visibles = annonces.filter(a => !estBloque(vacancier.id, a.vacancier_id))
+  const affichees = filtre === 'tous' ? visibles : visibles.filter(a => a.type === filtre)
 
   return (
     <Pile espace="lg" style={{ padding: `${espace.xl}px ${espace.lg}px 100px`, maxWidth: 600, margin: '0 auto' }}>
@@ -168,10 +180,24 @@ export default function Annonces({ camping, vacancier }) {
                   <Pile direction="ligne" espace="xs" aligner="center">
                     <span aria-hidden="true" style={{ fontSize: tailles.moyen }}>{a.vacanciers?.avatar_emoji || '🙂'}</span>
                     <Texte variante="doux" as="span">{a.vacanciers?.pseudo || '—'}</Texte>
-                    {mien && (
+                    {mien ? (
                       <Bouton variante="discret" taille="sm" onClick={() => marquerResolu(a)}
                               style={{ marginLeft: 'auto', color: 'var(--cc-accent)' }}>
                         ✓ {t('annonces.marquer_resolu')}
+                      </Bouton>
+                    ) : (
+                      /* Les annonces — photo comprise — sont du contenu publié
+                         par les vacanciers, comme les messages : elles doivent
+                         pouvoir être signalées et leur auteur bloqué. Seuls
+                         le chat et les statuts le permettaient. */
+                      <Bouton variante="discret" taille="sm" aria-label={t('moderation.signaler')}
+                              onClick={() => setModeration({
+                                type: 'annonce', id: a.id, auteurId: a.vacancier_id,
+                                pseudo: a.vacanciers?.pseudo,
+                                texte: [a.titre, a.description, a.photo_url].filter(Boolean).join('\n'),
+                              })}
+                              style={{ marginLeft: 'auto', color: couleur.texteDoux }}>
+                        ⋯
                       </Bouton>
                     )}
                   </Pile>
@@ -183,6 +209,16 @@ export default function Annonces({ camping, vacancier }) {
       )}
 
       {!indispo && <Fab label={t('annonces.nouvelle')} onClick={() => { setErreur(''); setModal(true) }} />}
+
+      {moderation && (
+        <MenuModeration
+          cible={moderation}
+          camping={camping}
+          vacancier={vacancier}
+          onClose={() => setModeration(null)}
+          onBloque={() => setBloquesVersion(v => v + 1)}
+        />
+      )}
 
       {/* Publication */}
       {modal && (
@@ -213,7 +249,7 @@ export default function Annonces({ camping, vacancier }) {
               value={form.titre}
               onChange={e => setForm(f => ({ ...f, titre: e.target.value }))}
               placeholder={t('annonces.titre_ph')}
-              autoFocus
+              maxLength={80}
             />
 
             <Champ

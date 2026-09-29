@@ -5,6 +5,7 @@ import { supabase } from '../supabase'
 import { esc } from '../utils/esc'
 import { t, useLangue, locale } from '../i18n'
 import { desencombrer } from '../lib/poiCategories'
+import { estActuel } from '../lib/groupes'
 import { couleur as jetons, espace, graisse, ombre, rayon, texte as tailles } from '../design'
 
 let L = null
@@ -174,8 +175,11 @@ export default function Map({ camping: campingProp, vacancier }) {
         chargerPins(freshCamping?.carte_config?.pins)
       }
 
+      // Comme l'agenda : ni les animations finies, ni les groupes d'il y a
+      // huit jours ne doivent encombrer la carte.
+      const depuis = new Date(Date.now() - 2 * 3600 * 1000).toISOString()
       const [{ data: anims }, { data: grps }, { data: inscs }, { data: membres }] = await Promise.all([
-        supabase.from('animations').select('*').eq('camping_id', campingProp.id).eq('publiee', true),
+        supabase.from('animations').select('*').eq('camping_id', campingProp.id).eq('publiee', true).gte('debut', depuis),
         supabase.from('groupes').select('*').eq('camping_id', campingProp.id).eq('actif', true),
         supabase.from('inscriptions').select('animation_id').eq('vacancier_id', vacancier.id),
         supabase.from('membres_groupes').select('groupe_id').eq('vacancier_id', vacancier.id),
@@ -183,7 +187,7 @@ export default function Map({ camping: campingProp, vacancier }) {
 
       const animsList = anims || []
       setAnimations(animsList)
-      setGroupes(grps || [])
+      setGroupes((grps || []).filter(g => estActuel(g)))
       setInscriptions((inscs || []).map(i => i.animation_id))
       setMesGroupes((membres || []).map(m => m.groupe_id))
 
