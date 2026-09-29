@@ -136,6 +136,18 @@ Studio. Voir `docs/PUBLICATION_ANDROID.md`.
 
 ## Notes
 
+- **Xcode 27 exige le cycle de vie par scènes.** Xcode Cloud compile avec la
+  dernière version d'Xcode : le build 120, premier compilé avec Xcode 27,
+  plantait au lancement sur iOS 27
+  (`_UIApplicationEvaluateRuntimeIssueForNoSceneLifecycleAdoption`), alors que
+  le code de l'app n'y était pour rien. L'app déclare désormais sa scène
+  (`UIApplicationSceneManifest` dans `Info.plist`, classe `SceneDelegate` dans
+  `AppDelegate.swift`). Les liens `campconnect://` arrivent maintenant à la
+  scène : c'est `SceneDelegate` qui les relaie à Capacitor. Ne pas retirer.
+- Un crash au lancement se diagnostique avec le rapport TestFlight : dans
+  l'app TestFlight, partager le retour de crash, puis le récupérer en zip
+  depuis App Store Connect. La première ligne de la pile nommée suffit souvent.
+
 - Le numéro de build (`CURRENT_PROJECT_VERSION`) est fixé automatiquement par
   `ci_scripts/ci_pre_xcodebuild.sh` à `$CI_BUILD_NUMBER`. Ne pas le modifier à
   la main dans le projet : Xcode Cloud l'écrase de toute façon.
