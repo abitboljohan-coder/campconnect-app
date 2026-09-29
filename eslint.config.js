@@ -15,7 +15,7 @@ export default defineConfig([
     ],
     languageOptions: {
       ecmaVersion: 2020,
-      globals: { ...globals.browser, __FIREBASE_ANDROID_PRET__: 'readonly' },
+      globals: { ...globals.browser, __FIREBASE_ANDROID_PRET__: 'readonly', __BUILD_INFO__: 'readonly' },
       parserOptions: {
         ecmaVersion: 'latest',
         ecmaFeatures: { jsx: true },

@@ -16,6 +16,10 @@ const TRANCHES = ['18-25', '26-35', '36-45', '46-60', '60+']
 const AVEC_OPTIONS = ['Solo', 'En couple', 'Entre amis', 'En famille']
 const INTERETS = ['Sport', 'Musique', 'Nature', 'Cuisine', 'Jeux', 'Lecture', 'Randonnée', 'Piscine', 'Soirées', 'Enfants']
 
+// « build 119 · main · 1a2b3c4 » : quelle version tourne sur ce téléphone.
+const INFO = typeof __BUILD_INFO__ !== 'undefined' ? __BUILD_INFO__ : {}
+const VERSION = [INFO.numero && `build ${INFO.numero}`, INFO.branche, INFO.commit].filter(Boolean).join(' · ')
+
 const vide = v => ({
   avatar_emoji: v.avatar_emoji || '🏕️',
   pseudo: v.pseudo || '',
@@ -341,6 +345,11 @@ export default function Profil({ camping, vacancier, onLogout, onUpdate }) {
         <Texte variante="micro" style={{ textAlign: 'center' }}>
           CampConnect — {camping?.nom}
         </Texte>
+        {VERSION && (
+          <Texte variante="micro" style={{ textAlign: 'center', opacity: 0.6, marginTop: -espace.md }}>
+            {VERSION}
+          </Texte>
+        )}
       </Pile>
 
       {confirmerSuppression && (
