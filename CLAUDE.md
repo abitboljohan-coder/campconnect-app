@@ -270,6 +270,13 @@ qui ne produisent aucune erreur visible.
 
 Pour démarcher un camping, invoquer la commande `/commercial`.
 
+Livrer une version iOS à tester : **fusionner dans `main`**. Xcode Cloud
+(workflow « Default ») compile `main` et dépose sur TestFlight. Les builds des
+branches `claude/…` (workflow « CampConnect ») ne sont pas à installer, même
+avec un numéro plus grand. Le numéro de build est automatique — ne pas le
+modifier à la main. La version qui tourne s'affiche en bas du Profil. Détail :
+`docs/XCODE_CLOUD.md` §4.
+
 ---
 
 # Fonctionnalités en cours de priorité

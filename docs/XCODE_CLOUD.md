@@ -22,7 +22,7 @@ revue — se pilote depuis App Store Connect, dans un navigateur.
    Éviter de déclencher sur toutes les branches — le quota de 25 h/mois inclus
    dans l'adhésion développeur se consomme vite.
 5. Action : **Archive**, une seule. Destination *TestFlight (Internal Testing
-   Only)* pour valider la chaîne sans engager la distribution — voir §5 pour
+   Only)* pour valider la chaîne sans engager la distribution — voir §6 pour
    basculer ensuite, ce qui se fait depuis le navigateur.
 
 N'ajouter **ni action Ad Hoc ni action Development** : leur export exige au
@@ -69,9 +69,40 @@ un build « réussi » et inutilisable. Le script se termine par une vérificati
 de la présence de `ios/App/App/public/index.html` pour transformer cette panne
 silencieuse en échec visible.
 
-## 4. Ensuite, depuis Windows
+## 4. Livrer une version à tester — la seule voie
 
-- Pousser sur la branche surveillée déclenche le build.
+**Seuls les builds de `main` sont à installer.** Deux workflows existent dans
+Xcode Cloud, et les confondre a déjà coûté une soirée :
+
+| Workflow | Branche | Rôle |
+|---|---|---|
+| **Default** | `main` | La version à tester. C'est elle qui compte. |
+| **CampConnect** | les autres (`claude/…`) | Vérifie que la branche compile. **Ne pas installer.** |
+
+Le numéro de build est commun aux deux workflows : un build de branche peut
+donc porter un numéro *plus grand* que le dernier build de `main` tout en
+contenant du code plus ancien, ou pas encore fusionné. « Le plus grand numéro
+dans TestFlight » n'est pas un critère.
+
+Pour livrer :
+
+1. Fusionner dans `main` (pull request). C'est ce qui déclenche **Default**.
+2. Attendre l'email Xcode Cloud dont les lignes disent **Branch : main** et
+   **Workflow : Default**. Un email « Branch : claude/… » ne livre rien à tester.
+3. Compter encore 10 à 30 minutes de traitement par Apple avant que le build
+   apparaisse dans TestFlight.
+4. Sur le téléphone, **Profil → tout en bas** : la ligne
+   `build 119 · main · 1a2b3c4` dit quelle version tourne. Si elle n'indique
+   pas `main`, ou pas le dernier commit de `main`, ce n'est pas la bonne.
+   Absente, c'est un build antérieur au 29 septembre 2026.
+
+Conseil : le workflow **CampConnect** consomme le quota de 25 h/mois pour des
+builds qu'on n'installe pas. Le restreindre, ou le désactiver (App Store
+Connect → Xcode Cloud → Gérer les workflows), supprime la confusion à la source.
+
+## 5. Ensuite, depuis Windows
+
+- Pousser sur `main` déclenche le build à tester (voir §4).
 - Suivi, logs, relance manuelle : App Store Connect → **Xcode Cloud**.
 - Distribution TestFlight et soumission à la revue : App Store Connect, toujours
   dans le navigateur.
@@ -82,7 +113,7 @@ silencieuse en échec visible.
 Depuis un iPhone, l'app **App Store Connect** permet de suivre les builds, les
 retours TestFlight et l'état de la revue — mais pas de construire.
 
-## 5. Passer de « TestFlight seulement » à l'App Store — sans Mac
+## 6. Passer de « TestFlight seulement » à l'App Store — sans Mac
 
 Un build archivé en *TestFlight (Internal Testing Only)* ne peut pas être
 rattaché à une version App Store : il n'apparaît pas comme sélectionnable dans
@@ -96,7 +127,7 @@ Le changement ne vaut que pour les builds **suivants** : les builds déjà envoy
 en interne ne se promeuvent pas. Il faut donc relancer un build — « Start Build »
 sur la même page — et c'est celui-là qui sera sélectionnable.
 
-## 6. Ce qui reste à faire côté Android
+## 7. Ce qui reste à faire côté Android
 
 Rien de commun : Android se construit très bien sous Windows avec Android
 Studio. Voir `docs/PUBLICATION_ANDROID.md`.
@@ -105,10 +136,11 @@ Studio. Voir `docs/PUBLICATION_ANDROID.md`.
 
 ## Notes
 
-- Le numéro de build (`CURRENT_PROJECT_VERSION`) doit être incrémenté à chaque
-  envoi vers TestFlight, sinon App Store Connect refuse le binaire. Xcode Cloud
-  expose `$CI_BUILD_NUMBER` : on pourra automatiser via un script
-  `ci_post_xcodebuild.sh` si l'incrément manuel devient pénible.
-- Les push restent désactivées tant que `GoogleService-Info.plist` est absent du
-  clone (il est gitignoré). C'est volontaire : la voie APNs iOS n'est pas encore
-  implémentée côté Edge Function — voir `docs/PUSH_NOTIFICATIONS.md`.
+- Le numéro de build (`CURRENT_PROJECT_VERSION`) est fixé automatiquement par
+  `ci_scripts/ci_pre_xcodebuild.sh` à `$CI_BUILD_NUMBER`. Ne pas le modifier à
+  la main dans le projet : Xcode Cloud l'écrase de toute façon.
+- La version affichée aux utilisateurs (`MARKETING_VERSION`, 1.0.1) se change à
+  la main, au moment d'une vraie livraison App Store.
+- Notifications : iOS ne passe pas par Firebase. Le jeton APNs brut est envoyé
+  directement par `send-push` ; `GoogleService-Info.plist` est inutile. Voir
+  `docs/PUSH_NOTIFICATIONS.md`.

@@ -1,4 +1,5 @@
 import { defineConfig } from 'vite'
+import process from 'node:process'
 import react from '@vitejs/plugin-react'
 import path from 'path'
 import fs from 'fs'
@@ -41,5 +42,14 @@ export default defineConfig(({ mode }) => ({
   test: { environment: 'jsdom' },
   define: {
     __FIREBASE_ANDROID_PRET__: JSON.stringify(FIREBASE_ANDROID_PRET),
+    // Identité du build, affichée en bas du profil. Sans elle, impossible de
+    // savoir, téléphone en main, quelle version on teste : un build TestFlight
+    // venu d'une autre branche que main a déjà été pris pour la nouvelle
+    // version. Variables fournies par Xcode Cloud (CI_*) ou par Vercel.
+    __BUILD_INFO__: JSON.stringify({
+      numero: process.env.CI_BUILD_NUMBER || '',
+      branche: process.env.CI_BRANCH || process.env.VERCEL_GIT_COMMIT_REF || '',
+      commit: (process.env.CI_COMMIT || process.env.VERCEL_GIT_COMMIT_SHA || '').slice(0, 7),
+    }),
   },
 }))
