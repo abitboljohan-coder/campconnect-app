@@ -2,6 +2,8 @@ import { useEffect, useState } from 'react'
 import { toast } from '../toast'
 import { supabase } from '../supabase'
 import Sheet from '../components/Sheet'
+import ChoixEmoji from '../components/ChoixEmoji'
+import { SUGGESTIONS_AVATARS } from '../lib/emojis'
 import { isNative, setAppMode } from '../native'
 import { unregisterPush } from '../push'
 import { t, useLangue, locale, LANGUES, setLangue } from '../i18n'
@@ -15,6 +17,7 @@ const AVEC_OPTIONS = ['Solo', 'En couple', 'Entre amis', 'En famille']
 const INTERETS = ['Sport', 'Musique', 'Nature', 'Cuisine', 'Jeux', 'Lecture', 'Randonnée', 'Piscine', 'Soirées', 'Enfants']
 
 const vide = v => ({
+  avatar_emoji: v.avatar_emoji || '🏕️',
   pseudo: v.pseudo || '',
   emplacement: v.emplacement || '',
   tranche_age: v.tranche_age || '',
@@ -23,7 +26,7 @@ const vide = v => ({
   date_depart: v.date_depart || '',
 })
 
-export default function Profil({ camping, vacancier, onLogout }) {
+export default function Profil({ camping, vacancier, onLogout, onUpdate }) {
   const langue = useLangue()
   const [editing, setEditing] = useState(false)
   const [form, setForm] = useState(() => vide(vacancier))
@@ -52,15 +55,17 @@ export default function Profil({ camping, vacancier, onLogout }) {
   }
 
   async function sauvegarder() {
+    if (!form.pseudo.trim() || saving) return   // un pseudo vide rendait l'auteur anonyme partout
     setSaving(true)
-    const { error } = await supabase.from('vacanciers').update({
+    const { data, error } = await supabase.from('vacanciers').update({
+      avatar_emoji: form.avatar_emoji,
       pseudo:      form.pseudo.trim(),
       emplacement: form.emplacement.trim() || null,
       tranche_age: form.tranche_age || null,
       avec:        form.avec || null,
       interests:   form.interests.length > 0 ? form.interests : null,
       date_depart: form.date_depart || null,
-    }).eq('id', vacancier.id)
+    }).eq('id', vacancier.id).select().single()
 
     if (error) {
       console.error('Sauvegarde profil échouée :', error)
@@ -68,8 +73,13 @@ export default function Profil({ camping, vacancier, onLogout }) {
       toast(t('profil.err_save'), 'erreur')
       return
     }
-    const updated = { ...vacancier, ...form }
+    // Le profil enregistré remonte jusqu'à l'application. Il n'était écrit
+    // qu'en base et dans le stockage local : l'écran continuait d'afficher
+    // l'ancien pseudo — « Enregistré », mais rien n'avait changé à l'œil —,
+    // et l'accueil comme le chat le gardaient jusqu'au redémarrage.
+    const updated = data || { ...vacancier, ...form }
     localStorage.setItem('vacancier', JSON.stringify(updated))
+    onUpdate?.(updated)
     setEditing(false)
     setSuccess(true)
     setTimeout(() => setSuccess(false), 3000)
@@ -211,9 +221,17 @@ export default function Profil({ camping, vacancier, onLogout }) {
 
             {editing ? (
               <Pile espace="lg">
+                {/* L'avatar se choisissait à l'inscription, puis plus jamais. */}
+                <ChoixEmoji
+                  libelle={t('onb.avatar')}
+                  valeur={form.avatar_emoji}
+                  suggestions={SUGGESTIONS_AVATARS}
+                  onChange={avatar_emoji => setForm(f => ({ ...f, avatar_emoji }))}
+                />
                 <Champ
                   libelle={t('profil.pseudo')}
                   value={form.pseudo}
+                  maxLength={40}
                   onChange={e => setForm(f => ({ ...f, pseudo: e.target.value }))}
                 />
                 <Champ
@@ -256,7 +274,7 @@ export default function Profil({ camping, vacancier, onLogout }) {
                           onClick={() => { setEditing(false); setForm(vide(vacancier)) }}>
                     {t('commun.annuler')}
                   </Bouton>
-                  <Bouton charge={saving} onClick={sauvegarder} style={{ flex: 2 }}>
+                  <Bouton charge={saving} disabled={!form.pseudo.trim()} onClick={sauvegarder} style={{ flex: 2 }}>
                     {saving ? t('commun.enregistrement') : t('commun.enregistrer')}
                   </Bouton>
                 </Pile>

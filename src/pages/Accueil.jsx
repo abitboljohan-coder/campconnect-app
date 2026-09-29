@@ -9,6 +9,9 @@ import { usePresence } from '../usePresence'
 import MenuModeration from '../components/MenuModeration'
 import { chargerBlocages, estBloque } from '../lib/moderation'
 import CarteGroupe from '../components/CarteGroupe'
+import ChoixEmoji from '../components/ChoixEmoji'
+import { SUGGESTIONS_STATUTS } from '../lib/emojis'
+import { estActuel } from '../lib/groupes'
 import {
   Bouton, Carte, Champ, Texte, Pile, Squelette, Vide,
   couleur, espace, graisse, ombre, rayon, texte as tailles,
@@ -17,7 +20,8 @@ import {
 export default function Accueil({ camping, vacancier }) {
   useLangue()
   const [groupes, setGroupes]           = useState([])
-  const [animations, setAnimations]     = useState([])
+  const [nbGroupes, setNbGroupes]       = useState(0)
+  const [nbAnimations, setNbAnimations] = useState(0)
   const [vacancierCount, setVacancierCount] = useState(0)
   const [mesGroupes, setMesGroupes]     = useState([])
   const [membresMap, setMembresMap]     = useState({})
@@ -29,23 +33,30 @@ export default function Accueil({ camping, vacancier }) {
     async function load() {
       const now = new Date().toISOString()
       const [
-        { data: grps },
-        { data: anims },
+        { data: grpsBruts },
+        { count: aCount },
         { count: vCount },
         { data: membres },
       ] = await Promise.all([
-        supabase.from('groupes').select('*').eq('camping_id', camping.id).eq('actif', true).order('created_at', { ascending: false }).limit(5),
-        supabase.from('animations').select('*').eq('camping_id', camping.id).eq('publiee', true).gte('debut', now).order('debut').limit(4),
+        supabase.from('groupes').select('*').eq('camping_id', camping.id).eq('actif', true).order('created_at', { ascending: false }).limit(30),
+        supabase.from('animations').select('*', { count: 'exact', head: true }).eq('camping_id', camping.id).eq('publiee', true).gte('debut', now),
         supabase.from('vacanciers').select('*', { count: 'exact', head: true }).eq('camping_id', camping.id).or(presentFilter()),
         supabase.from('membres_groupes').select('groupe_id').eq('vacancier_id', vacancier.id),
       ])
-      setGroupes(grps || [])
-      setAnimations(anims || [])
+      // Les compteurs du bandeau lisaient la longueur de listes tronquées à 5
+      // groupes et 4 animations : un camping animé annonçait « 4 animations »
+      // quel que soit leur nombre réel. Et les groupes d'il y a une semaine,
+      // que personne ne ferme, comptaient encore.
+      const actuels = (grpsBruts || []).filter(g => estActuel(g))
+      const grps = actuels.slice(0, 5)
+      setGroupes(grps)
+      setNbGroupes(actuels.length)
+      setNbAnimations(aCount || 0)
       setVacancierCount(vCount || 0)
       setMesGroupes((membres || []).map(m => m.groupe_id))
       setLoading(false)
 
-      const ids = (grps || []).map(g => g.id)
+      const ids = grps.map(g => g.id)
       if (ids.length) {
         const { data: allMembres } = await supabase
           .from('membres_groupes').select('groupe_id, vacanciers!inner(avatar_emoji)').in('groupe_id', ids)
@@ -80,8 +91,8 @@ export default function Accueil({ camping, vacancier }) {
           vacancier={vacancier}
           enLigne={enLigne}
           vacancierCount={vacancierCount}
-          groupesCount={groupes.length}
-          animationsCount={animations.length}
+          groupesCount={nbGroupes}
+          animationsCount={nbAnimations}
           onMap={() => navigate('/map')}
           onAgenda={() => navigate('/agenda')}
         />
@@ -180,7 +191,6 @@ function AccesRapide({ emoji, fond, libelle, onClick }) {
 }
 
 /* ─── Statuts éphémères 24h ─── */
-const STATUT_EMOJIS = ['🔥', '🍻', '🎳', '🏊', '🎉', '🍖', '🎾', '📣']
 
 function StatutsStrip({ camping, vacancier }) {
   const [statuts, setStatuts] = useState([])
@@ -223,9 +233,14 @@ function StatutsStrip({ camping, vacancier }) {
       .channel(`statuts_${camping.id}`)
       .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'statuts', filter: `camping_id=eq.${camping.id}` },
         async (payload) => {
+          // Son propre statut est déjà affiché dès la publication : ne pas
+          // le doubler quand l'événement temps réel arrive.
+          if (payload.new.vacancier_id === vacancier.id) return
           const { data: vac } = await supabase
             .from('vacanciers').select('pseudo, avatar_emoji').eq('id', payload.new.vacancier_id).single()
-          setStatuts(prev => [{ ...payload.new, vacanciers: vac }, ...prev])
+          setStatuts(prev => prev.some(s => s.id === payload.new.id)
+            ? prev
+            : [{ ...payload.new, vacanciers: vac }, ...prev])
         })
       .subscribe()
     return () => supabase.removeChannel(channel)
@@ -234,16 +249,20 @@ function StatutsStrip({ camping, vacancier }) {
   async function poster() {
     if (!texte.trim() || saving) return
     setSaving(true)
-    const { error } = await supabase.from('statuts').insert({
+    const { data, error } = await supabase.from('statuts').insert({
       camping_id: camping.id, vacancier_id: vacancier.id,
       emoji, texte: texte.trim(),
-    })
+    }).select('*, vacanciers(pseudo, avatar_emoji)').single()
     setSaving(false)
     if (error) {
       console.error('Publication statut échouée :', error)
       toast(t('accueil.err_statut'), 'erreur')
       return
     }
+    // Le statut n'apparaissait qu'au retour de l'événement temps réel. Si la
+    // connexion temps réel était tombée — téléphone mis en veille, réseau du
+    // camping —, rien ne s'affichait : on croyait l'envoi raté et on republiait.
+    if (data) setStatuts(prev => prev.some(s => s.id === data.id) ? prev : [data, ...prev])
     setTexte(''); setShowModal(false)
   }
 
@@ -331,17 +350,13 @@ function StatutsStrip({ camping, vacancier }) {
               <Texte variante="doux">{t('accueil.visible24')}</Texte>
             </Pile>
 
-            <Pile direction="ligne" espace="xs" retour role="group" aria-label={t('groupes.emoji')}>
-              {STATUT_EMOJIS.map(e => (
-                <button key={e} onClick={() => setEmoji(e)}
-                  aria-label={e} aria-pressed={emoji === e}
-                  style={{
-                    width: 40, height: 40, fontSize: tailles.titre, borderRadius: rayon.md, cursor: 'pointer',
-                    border: `2px solid ${emoji === e ? 'var(--cc-accent)' : couleur.bordure}`,
-                    background: emoji === e ? 'var(--cc-accent-voile)' : couleur.surface,
-                  }}>{e}</button>
-              ))}
-            </Pile>
+            <ChoixEmoji
+              libelle={t('groupes.emoji')}
+              valeur={emoji}
+              suggestions={SUGGESTIONS_STATUTS}
+              onChange={setEmoji}
+              taille={40}
+            />
 
             <Champ
               libelle={t('accueil.quoi_de_neuf')}

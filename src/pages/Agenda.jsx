@@ -50,8 +50,14 @@ export default function Agenda({ camping, vacancier }) {
   const [filter, setFilter]             = useState('all')
 
   async function load() {
+    // Les animations passées restaient au programme toute la saison, en tête
+    // de liste puisque triées par date : au bout d'une semaine, il fallait
+    // faire défiler les jours écoulés pour trouver celles de ce soir — et l'on
+    // pouvait encore s'inscrire à celle de mardi dernier. Celles qui ont
+    // commencé depuis moins de deux heures restent : elles sont en cours.
+    const depuis = new Date(Date.now() - 2 * 3600 * 1000).toISOString()
     const [{ data: anims }, { data: inscs }] = await Promise.all([
-      supabase.from('animations').select('*').eq('camping_id', camping.id).eq('publiee', true).order('debut'),
+      supabase.from('animations').select('*').eq('camping_id', camping.id).eq('publiee', true).gte('debut', depuis).order('debut'),
       supabase.from('inscriptions').select('animation_id').eq('vacancier_id', vacancier.id),
     ])
     const animsList = anims || []
@@ -96,7 +102,7 @@ export default function Agenda({ camping, vacancier }) {
       const { error } = await supabase.from('inscriptions').insert({ animation_id: anim.id, vacancier_id: vacancier.id })
       // Une action réussie doit se voir. Sans confirmation, l'utilisateur
       // reclique par doute — le réflexe que toute app sociale évite.
-      if (!error || error.code === '23505') toast(`${anim.emoji || '🎉'} Inscrit à « ${anim.titre} »`, 'succes')
+      if (!error || error.code === '23505') toast(`${anim.emoji || '🎉'} ${t('agenda.inscrit_a', { titre: anim.titre })}`, 'succes')
       if (error && error.code !== '23505') {
         console.error('Inscription échouée :', error)
         setInscriptions(prev => prev.filter(id => id !== anim.id))

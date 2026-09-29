@@ -2,15 +2,16 @@ import { useEffect, useState } from 'react'
 import { toast } from '../toast'
 import Sheet from '../components/Sheet'
 import CarteGroupe from '../components/CarteGroupe'
+import ChoixEmoji from '../components/ChoixEmoji'
+import { SUGGESTIONS_GROUPES } from '../lib/emojis'
+import { estActuel, heurePrevue } from '../lib/groupes'
 import { useNavigate } from 'react-router-dom'
 import { supabase, presentFilter } from '../supabase'
 import { t, useLangue } from '../i18n'
 import {
   Bouton, Carte, Champ, Texte, Pile, Puce, Squelette, Vide, Fab,
-  couleur, espace, graisse, rayon,
+  couleur, espace, graisse,
 } from '../design'
-
-const EMOJIS = ['🏐', '🔥', '🚶', '🎮', '🎤', '🏊', '🚴', '🎯', '♟️', '🧘', '🎸', '🍕']
 
 const TEMPLATES = [
   { emoji: '🎳', titre: 'Pétanque',        lieu: 'Terrain de pétanque' },
@@ -76,14 +77,10 @@ export default function Groupes({ camping, vacancier }) {
     setSaving(true)
     setErreur('')
 
-    // Construire le timestamp heure
-    let heure = null
-    if (form.heure) {
-      const today = new Date()
-      const [h, m] = form.heure.split(':')
-      today.setHours(parseInt(h), parseInt(m), 0, 0)
-      heure = today.toISOString()
-    }
+    const heure = heurePrevue(form.heure)?.toISOString() ?? null
+    // Un maximum hors bornes (0, 1, 500…) rendait le groupe complet d'emblée
+    // ou ne limitait rien : on le ramène entre 2 et 50, comme l'annonce le champ.
+    const max = parseInt(form.max_membres, 10)
 
     const { data, error } = await supabase.from('groupes').insert({
       camping_id: camping.id,
@@ -92,7 +89,7 @@ export default function Groupes({ camping, vacancier }) {
       emoji: form.emoji,
       lieu: form.lieu.trim() || null,
       heure,
-      max_membres: form.max_membres ? parseInt(form.max_membres) : null,
+      max_membres: Number.isNaN(max) ? null : Math.min(50, Math.max(2, max)),
       actif: true,
     }).select().single()
 
@@ -111,7 +108,8 @@ export default function Groupes({ camping, vacancier }) {
   }
 
   const mesGrps    = groupes.filter(g => mesGroupes.includes(g.id))
-  const autresGrps = groupes.filter(g => !mesGroupes.includes(g.id))
+  // Seuls les groupes encore d'actualité sont proposés à ceux qui n'y sont pas.
+  const autresGrps = groupes.filter(g => !mesGroupes.includes(g.id) && estActuel(g))
 
   return (
     <Pile espace="xl" style={{ padding: `${espace.xl}px ${espace.lg}px`, maxWidth: 600, margin: '0 auto' }}>
@@ -171,43 +169,34 @@ export default function Groupes({ camping, vacancier }) {
               ))}
             </div>
 
-            <Pile espace="sm" role="group" aria-label={t('groupes.emoji')}>
-              <Texte variante="libelle" as="span">{t('groupes.emoji')}</Texte>
-              <Pile direction="ligne" espace="sm" retour>
-                {EMOJIS.map(e => (
-                  <button
-                    key={e}
-                    type="button"
-                    aria-label={e}
-                    aria-pressed={form.emoji === e}
-                    onClick={() => setForm(f => ({ ...f, emoji: e }))}
-                    style={{
-                      width: 44, height: 44, fontSize: 22, borderRadius: rayon.md, cursor: 'pointer',
-                      border: `2px solid ${form.emoji === e ? 'var(--cc-accent)' : couleur.bordure}`,
-                      background: form.emoji === e ? 'var(--cc-accent-voile)' : couleur.surface,
-                      transition: 'all 0.1s',
-                    }}
-                  >
-                    {e}
-                  </button>
-                ))}
-              </Pile>
-            </Pile>
+            <ChoixEmoji
+              libelle={t('groupes.emoji')}
+              valeur={form.emoji}
+              suggestions={SUGGESTIONS_GROUPES}
+              onChange={emoji => setForm(f => ({ ...f, emoji }))}
+            />
 
+            {/* Pas d'autoFocus sur le titre : le clavier s'ouvrait avant même
+                qu'on ait vu le formulaire et en cachait les deux tiers, alors
+                qu'un modèle en un appui suffit le plus souvent. */}
             <Champ
               libelle={t('groupes.titre')}
               value={form.titre}
               onChange={e => setForm(f => ({ ...f, titre: e.target.value }))}
               placeholder={t('groupes.titre_place')}
-              autoFocus
+              maxLength={60}
             />
 
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: espace.md }}>
+            {/* minmax(0, 1fr) et non 1fr : une colonne 1fr ne descend pas sous
+                la largeur de son contenu, et le champ heure d'iOS la faisait
+                déborder de l'écran. */}
+            <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1fr) minmax(0, 1fr)', gap: espace.md }}>
               <Champ
                 libelle={t('groupes.lieu')}
                 value={form.lieu}
                 onChange={e => setForm(f => ({ ...f, lieu: e.target.value }))}
                 placeholder={t('groupes.lieu_place')}
+                maxLength={60}
               />
               <Champ
                 libelle={t('groupes.heure')}
@@ -219,7 +208,7 @@ export default function Groupes({ camping, vacancier }) {
 
             <Champ
               libelle={t('groupes.max')}
-              type="number" min="2" max="50"
+              type="number" min="2" max="50" inputMode="numeric"
               value={form.max_membres}
               onChange={e => setForm(f => ({ ...f, max_membres: e.target.value }))}
               placeholder="ex : 10"

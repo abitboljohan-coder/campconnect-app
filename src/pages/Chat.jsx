@@ -57,10 +57,18 @@ export default function Chat({ camping, vacancier }) {
       ])
       setGroupe(grp)
       setNbMembres(count || 0)
-      setMessages(msgs || [])
+      if (msgs) setMessages(msgs)
       chargerBlocages(vacancier.id).then(() => setBloquesVersion(v => v + 1))
     }
     init()
+
+    // Le temps réel ne rattrape rien : les messages arrivés pendant que le
+    // téléphone était en veille, ou que le réseau du camping avait décroché,
+    // n'arrivaient jamais. On revenait dans la conversation, elle paraissait
+    // calme, alors qu'on y parlait. Au retour au premier plan, on relit tout.
+    const auRetour = () => { if (document.visibilityState === 'visible') init() }
+    document.addEventListener('visibilitychange', auRetour)
+    return () => document.removeEventListener('visibilitychange', auRetour)
   }, [groupeId, vacancier.id])
 
   // Realtime
@@ -73,7 +81,7 @@ export default function Chat({ camping, vacancier }) {
       }, async (payload) => {
         const { data: vac } = await supabase
           .from('vacanciers').select('pseudo, avatar_emoji').eq('id', payload.new.auteur_id).single()
-        setMessages(prev => [...prev, { ...payload.new, vacanciers: vac }])
+        setMessages(prev => ajouter(prev, { ...payload.new, vacanciers: vac }))
       })
       .on('postgres_changes', {
         event: 'UPDATE', schema: 'public', table: 'messages',
@@ -87,10 +95,15 @@ export default function Chat({ camping, vacancier }) {
     return () => supabase.removeChannel(channel)
   }, [groupeId])
 
-  // Scroll bas
+  // Descendre en bas à l'arrivée d'un message — et seulement là. Réagir d'un
+  // cœur à un vieux message ramenait tout en bas, loin de ce qu'on lisait.
+  const nbMessages = messages.length
+  const dejaAffiche = useRef(false)
   useEffect(() => {
-    bottomRef.current?.scrollIntoView({ behavior: 'smooth' })
-  }, [messages])
+    if (!nbMessages) return
+    bottomRef.current?.scrollIntoView({ behavior: dejaAffiche.current ? 'smooth' : 'auto' })
+    dejaAffiche.current = true
+  }, [nbMessages])
 
   async function envoyer(e) {
     e.preventDefault()
@@ -99,11 +112,17 @@ export default function Chat({ camping, vacancier }) {
     setErreur('')
     const contenu = texte.trim()
     setTexte('')
-    const { error } = await supabase.from('messages').insert({ groupe_id: groupeId, auteur_id: vacancier.id, contenu })
+    const { data, error } = await supabase.from('messages')
+      .insert({ groupe_id: groupeId, auteur_id: vacancier.id, contenu })
+      .select('*, vacanciers(pseudo, avatar_emoji)').single()
     if (error) {
       console.error('Envoi message échoué :', error)
       setTexte(contenu) // on rend le message pour ne pas le perdre
       setErreur(t('chat.non_envoye'))
+    } else if (data) {
+      // Affiché tout de suite, sans attendre l'événement temps réel : s'il ne
+      // venait pas, on croyait le message perdu et on le renvoyait.
+      setMessages(prev => ajouter(prev, data))
     }
     setSending(false)
     inputRef.current?.focus()
@@ -138,10 +157,16 @@ export default function Chat({ camping, vacancier }) {
         flexShrink: 0,
         boxShadow: '0 2px 8px rgba(26, 26, 26, 0.2)',
       }}>
+        {/* 44 × 44 : la flèche seule faisait une cible d'une douzaine de
+            pixels, qu'on manquait une fois sur deux. */}
         <button
           onClick={() => navigate('/groupes')}
           aria-label={t('commun.retour')}
-          style={{ color: '#fff', fontSize: 24, lineHeight: 1, padding: '0 4px', flexShrink: 0, background: 'none', border: 'none', cursor: 'pointer' }}
+          style={{
+            color: '#fff', fontSize: 30, lineHeight: 1, width: 44, height: 44, margin: '-6px -8px -6px -10px',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            flexShrink: 0, background: 'none', border: 'none', cursor: 'pointer',
+          }}
         >
           ‹
         </button>
@@ -344,6 +369,7 @@ export default function Chat({ camping, vacancier }) {
           aria-label={t('chat.ecrire')}
           placeholder={t('chat.ecrire')}
           value={texte}
+          maxLength={1000}
           onChange={e => { setTexte(e.target.value); if (erreur) setErreur('') }}
           style={{
             flex: 1, padding: `11px ${espace.lg}px`,
@@ -383,6 +409,11 @@ export default function Chat({ camping, vacancier }) {
       )}
     </div>
   )
+}
+
+/** Ajoute un message s'il n'est pas déjà là : l'envoi et le temps réel le livrent tous deux. */
+function ajouter(liste, msg) {
+  return liste.some(m => m.id === msg.id) ? liste : [...liste, msg]
 }
 
 function groupByDate(messages) {

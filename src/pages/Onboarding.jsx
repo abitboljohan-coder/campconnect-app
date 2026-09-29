@@ -2,6 +2,8 @@ import { useState, useEffect, useRef } from 'react'
 import { supabase, ensureAnonSession } from '../supabase'
 import { isNative, setAppMode } from '../native'
 import { estAccesLibre, estJoignable } from '../lib/acces'
+import { SUGGESTIONS_AVATARS } from '../lib/emojis'
+import ChoixEmoji from '../components/ChoixEmoji'
 import { t, useLangue } from '../i18n'
 import {
   Bouton, Carte, Champ, Texte, Pile, appliquerTheme,
@@ -13,12 +15,10 @@ import {
 const TITRE = '#2f4a26'
 const SOUS_TITRE = '#6d7964'
 
-const AVATARS = ['🏕️', '🌲', '⛺', '🎯', '🚴', '🏊', '🎣', '🌻', '🦜', '🌈']
-
 // Code tournant : 4 chiffres, change toutes les heures, unique par camping
 // Fonctionne avec UUID (string) ou number
-export function getHourlyCode(campingId) {
-  const h = Math.floor(Date.now() / 3_600_000)
+export function getHourlyCode(campingId, instant = Date.now()) {
+  const h = Math.floor(instant / 3_600_000)
   const str = String(campingId) + String(h)
   let hash = 0
   for (let i = 0; i < str.length; i++) {
@@ -156,7 +156,11 @@ export default function Onboarding({ initialCamping, onDone }) {
       if (q.length >= 2) {
         // Insensible aux accents : on cherche sur nom ET slug (slug = nom sans accents)
         const slugQ = q.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^a-z0-9]+/g, '-')
-        req = req.or(`nom.ilike.%${q}%,slug.ilike.%${slugQ}%`)
+        // Virgules, parenthèses et guillemets ont un sens dans le filtre de
+        // Supabase : « Les Pins, Var » cassait la requête, qui ne renvoyait
+        // rien, et l'écran affichait « aucun camping » pour un camping existant.
+        const nomQ = q.replace(/[,()"\\]/g, ' ').trim()
+        req = req.or(`nom.ilike.%${nomQ}%,slug.ilike.%${slugQ}%`)
       }
       const { data } = await req
       setResults(data || [])
@@ -215,7 +219,14 @@ export default function Onboarding({ initialCamping, onDone }) {
   }
 
   function checkCode() {
-    if (code.trim() === getHourlyCode(camping.id)) {
+    // Le code lu à la réception à 10 h 58 était refusé s'il était tapé à
+    // 11 h 01 : on accepte encore le précédent pendant les dix premières
+    // minutes de l'heure, le temps de rejoindre son emplacement.
+    const saisi = code.trim()
+    const maintenant = Date.now()
+    const debutHeure = maintenant % 3_600_000 < 10 * 60_000
+    if (saisi === getHourlyCode(camping.id, maintenant)
+        || (debutHeure && saisi === getHourlyCode(camping.id, maintenant - 3_600_000))) {
       setStep('form')
     } else {
       setCodeError(t('onb.code_erreur'))
@@ -422,11 +433,16 @@ export default function Onboarding({ initialCamping, onDone }) {
                     enveloppe extensible, il se dimensionne sur son contenu et
                     le bouton OK part à l'autre bout de la carte. */}
                 <div style={{ flex: 1 }}>
+                {/* type="text" + inputMode : un champ number ignore maxLength
+                    et, sur iOS, n'affiche pas le pavé numérique simple. */}
                 <Champ
-                  type="number"
+                  type="text"
+                  inputMode="numeric"
+                  pattern="[0-9]*"
+                  autoComplete="off"
                   libelle={t('onb.code_titre')}
                   value={code}
-                  onChange={e => { setCode(e.target.value); setCodeError('') }}
+                  onChange={e => { setCode(e.target.value.replace(/\D/g, '').slice(0, 4)); setCodeError('') }}
                   onKeyDown={e => e.key === 'Enter' && checkCode()}
                   placeholder="_ _ _ _"
                   maxLength={4}
@@ -461,33 +477,19 @@ export default function Onboarding({ initialCamping, onDone }) {
 
       <Card>
         <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
-          <Pile espace="sm" role="group" aria-label={t('onb.avatar')}>
-            <Texte variante="libelle" as="span">{t('onb.avatar')}</Texte>
-            <Pile direction="ligne" espace="sm" retour>
-              {AVATARS.map(emoji => (
-                <button
-                  key={emoji} type="button"
-                  aria-label={emoji}
-                  aria-pressed={form.avatar_emoji === emoji}
-                  onClick={() => setForm(f => ({ ...f, avatar_emoji: emoji }))}
-                  style={{
-                    width: 44, height: 44, fontSize: 24, borderRadius: rayon.md,
-                    border: `2px solid ${form.avatar_emoji === emoji ? 'var(--cc-accent)' : jetons.bordure}`,
-                    background: form.avatar_emoji === emoji ? 'var(--cc-accent-voile)' : jetons.surface,
-                    cursor: 'pointer',
-                  }}
-                >
-                  {emoji}
-                </button>
-              ))}
-            </Pile>
-          </Pile>
+          <ChoixEmoji
+            libelle={t('onb.avatar')}
+            valeur={form.avatar_emoji}
+            suggestions={SUGGESTIONS_AVATARS}
+            onChange={avatar_emoji => setForm(f => ({ ...f, avatar_emoji }))}
+          />
 
           <Champ
             libelle={`${t('profil.pseudo')} *`}
             value={form.pseudo}
             onChange={e => setForm(f => ({ ...f, pseudo: e.target.value }))}
             placeholder={t('onb.pseudo_place')}
+            maxLength={40}
             autoFocus
           />
 

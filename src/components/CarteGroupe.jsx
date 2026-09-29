@@ -1,4 +1,5 @@
 import { t, locale } from '../i18n'
+import { estComplet } from '../lib/groupes'
 import { Bouton, Carte, Texte, Pile, couleur, espace, graisse, rayon, texte as tailles } from '../design'
 
 // La ligne d'un groupe existait en deux exemplaires — accueil et liste des
@@ -36,6 +37,9 @@ function PileAvatars({ avatars }) {
 const tronque = { overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }
 
 export default function CarteGroupe({ groupe, membre, avatars, onAction }) {
+  // Le maximum fixé par le créateur n'était qu'affiché : on rejoignait un
+  // groupe « 4 places » à dix. Les membres, eux, gardent toujours l'accès.
+  const complet = !membre && estComplet(groupe, avatars?.length || 0)
   const heure = groupe.heure
     ? new Date(groupe.heure).toLocaleTimeString(locale(), { hour: '2-digit', minute: '2-digit' })
     : null
@@ -67,12 +71,13 @@ export default function CarteGroupe({ groupe, membre, avatars, onAction }) {
           variante={membre ? 'primaire' : 'secondaire'}
           taille="sm"
           onClick={onAction}
+          disabled={complet}
           style={{
             flexShrink: 0, borderRadius: rayon.rond,
-            ...(membre ? null : { color: 'var(--cc-accent)', border: '1.5px solid var(--cc-accent)', background: 'transparent' }),
+            ...(membre || complet ? null : { color: 'var(--cc-accent)', border: '1.5px solid var(--cc-accent)', background: 'transparent' }),
           }}
         >
-          {membre ? t('groupes.ouvrir') : t('groupes.rejoindre')}
+          {membre ? t('groupes.ouvrir') : complet ? t('commun.complet') : t('groupes.rejoindre')}
         </Bouton>
       </Pile>
     </Carte>

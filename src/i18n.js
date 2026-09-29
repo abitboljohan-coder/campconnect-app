@@ -155,6 +155,22 @@ const STRINGS = {
   'agenda.aucune':      { fr: 'Aucune animation prévue pour le moment.', en: 'No events scheduled yet.', es: 'No hay actividades programadas.', nl: 'Nog geen activiteiten gepland.' },
   'agenda.err_inscr':   { fr: 'Impossible de vous inscrire pour le moment.', en: "Can't sign you up right now.", es: 'No se puede inscribir en este momento.', nl: 'Inschrijven lukt nu niet.' },
   'agenda.err_desinscr':{ fr: 'Impossible de vous désinscrire pour le moment.', en: "Can't cancel right now.", es: 'No se puede cancelar en este momento.', nl: 'Afmelden lukt nu niet.' },
+  'agenda.inscrit_a':   { fr: 'Inscrit à « {titre} »', en: 'Booked: “{titre}”', es: 'Apuntado a «{titre}»', nl: 'Ingeschreven voor ‘{titre}’' },
+
+  // ── Choix d'emoji ───────────────────────────────────────────────────────
+  'emoji.plus':        { fr: "➕ Plus d'emojis", en: '➕ More emojis', es: '➕ Más emojis', nl: '➕ Meer emoji' },
+  'emoji.moins':       { fr: 'Réduire', en: 'Less', es: 'Menos', nl: 'Minder' },
+  'emoji.autre':       { fr: "Ou tapez n'importe quel emoji 😀", en: 'Or type any emoji 😀', es: 'O escribe cualquier emoji 😀', nl: 'Of typ een willekeurige emoji 😀' },
+  'emoji.seulement':   { fr: 'Tapez un emoji, pas du texte.', en: 'Type an emoji, not text.', es: 'Escribe un emoji, no texto.', nl: 'Typ een emoji, geen tekst.' },
+  'emoji.refuse':      { fr: "Cet emoji n'est pas disponible sur CampConnect.", en: "This emoji isn't available on CampConnect.", es: 'Este emoji no está disponible en CampConnect.', nl: 'Deze emoji is niet beschikbaar op CampConnect.' },
+  'emoji.cat_visages': { fr: 'Visages', en: 'Faces', es: 'Caras', nl: 'Gezichten' },
+  'emoji.cat_sport':   { fr: 'Sport', en: 'Sport', es: 'Deporte', nl: 'Sport' },
+  'emoji.cat_manger':  { fr: 'À manger', en: 'Food', es: 'Comida', nl: 'Eten' },
+  'emoji.cat_boire':   { fr: 'À boire', en: 'Drinks', es: 'Bebidas', nl: 'Drinken' },
+  'emoji.cat_nature':  { fr: 'Nature', en: 'Nature', es: 'Naturaleza', nl: 'Natuur' },
+  'emoji.cat_animaux': { fr: 'Animaux', en: 'Animals', es: 'Animales', nl: 'Dieren' },
+  'emoji.cat_fete':    { fr: 'Fête et loisirs', en: 'Fun', es: 'Fiesta y ocio', nl: 'Feest en vrije tijd' },
+  'emoji.cat_voyage':  { fr: 'Balade et objets', en: 'Travel and objects', es: 'Paseos y objetos', nl: 'Onderweg en spullen' },
 
   'agenda.aucune_mine': { fr: "Vous n'êtes inscrit à aucune animation.", en: "You haven't signed up for any event.", es: 'No estás apuntado a ninguna actividad.', nl: 'Je bent voor geen enkele activiteit ingeschreven.' },
   'agenda.places_mot':  { fr: 'places', en: 'spots', es: 'plazas', nl: 'plaatsen' },
@@ -319,6 +335,7 @@ const STRINGS = {
   'annonces.marquer_resolu': { fr: 'Terminé', en: 'Done', es: 'Resuelto', nl: 'Klaar' },
   'annonces.confirm_resolu': { fr: 'Marquer cette annonce comme terminée ?', en: 'Mark this notice as done?', es: '¿Marcar este anuncio como resuelto?', nl: 'Deze advertentie als klaar markeren?' },
   'annonces.err_publier': { fr: 'La publication a échoué. Réessayez.', en: 'Posting failed. Please try again.', es: 'La publicación falló. Inténtalo de nuevo.', nl: 'Plaatsen mislukt. Probeer opnieuw.' },
+  'annonces.photo_non_envoyee': { fr: "La photo n'a pas pu être envoyée : l'annonce est publiée sans elle.", en: "The photo couldn't be uploaded: the post was published without it.", es: 'No se pudo subir la foto: el anuncio se publicó sin ella.', nl: 'De foto kon niet worden geüpload: de aankondiging is zonder foto geplaatst.' },
 
   'annonces.indispo': { fr: "Les annonces ne sont pas encore disponibles sur ce camping.", en: 'Notices are not available yet at this campsite.', es: 'Los anuncios aún no están disponibles en este camping.', nl: 'Advertenties zijn nog niet beschikbaar op deze camping.' },
 
