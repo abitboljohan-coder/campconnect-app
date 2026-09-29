@@ -17,6 +17,11 @@ import Signalements from '../admin/pages/Signalements'
 import Moderation from '../admin/pages/Moderation'
 import Parametres from '../admin/pages/Parametres'
 import Stats from '../admin/pages/Stats'
+import Apparence from '../admin/pages/Apparence'
+import InfosAdmin from '../admin/pages/Infos'
+import CarteAdmin from '../admin/pages/Carte'
+import Annonces from '../pages/Annonces'
+import Signaler from '../pages/Signaler'
 import Onboarding from '../pages/Onboarding'
 import { DEMO_CAMPING, DEMO_VACANCIER } from './mockSupabase'
 import { ToastHost } from '../components/Toast'
@@ -27,7 +32,9 @@ appliquerTheme(c)
 const s = new URLSearchParams(location.search).get('s') || 'accueil'
 const routeFor = { accueil: '/', groupes: '/groupes', map: '/map', agenda: '/agenda', infos: '/infos', profil: '/profil', chat: '/chat/g1', admin: '/admin/overview', onboarding: '/onboarding',
   'admin-animations': '/admin/animations', 'admin-signalements': '/admin/signalements',
-  'admin-moderation': '/admin/moderation', 'admin-parametres': '/admin/parametres', 'admin-stats': '/admin/stats' }
+  'admin-moderation': '/admin/moderation', 'admin-parametres': '/admin/parametres', 'admin-stats': '/admin/stats',
+  'admin-apparence': '/admin/apparence', 'admin-infos': '/admin/infos', 'admin-carte': '/admin/carte',
+  annonces: '/annonces', signaler: '/signaler' }
 const entry = routeFor[s] || '/'
 
 function DemoApp() {
@@ -39,6 +46,8 @@ function DemoApp() {
         <Route path="/map" element={<MapPage camping={c} vacancier={v} />} />
         <Route path="/agenda" element={<Agenda camping={c} vacancier={v} />} />
         <Route path="/infos" element={<Infos camping={c} />} />
+        <Route path="/annonces" element={<Annonces camping={c} vacancier={v} />} />
+        <Route path="/signaler" element={<Signaler camping={c} vacancier={v} />} />
         <Route path="/profil" element={<Profil camping={c} vacancier={v} onLogout={() => {}} />} />
       </Route>
       <Route path="/chat/:groupeId" element={<Chat camping={c} vacancier={v} />} />
@@ -50,6 +59,9 @@ function DemoApp() {
         <Route path="/admin/moderation" element={<Moderation camping={c} />} />
         <Route path="/admin/parametres" element={<Parametres camping={c} session={{ user: { email: 'gerant@flotsbleus.fr' } }} />} />
         <Route path="/admin/stats" element={<Stats camping={c} />} />
+        <Route path="/admin/apparence" element={<Apparence camping={c} setCamping={() => {}} />} />
+        <Route path="/admin/infos" element={<InfosAdmin camping={c} setCamping={() => {}} />} />
+        <Route path="/admin/carte" element={<CarteAdmin camping={c} setCamping={() => {}} />} />
       </Route>
     </Routes>
   )

@@ -79,14 +79,10 @@ export default function Infos({ camping, setCamping }) {
                 onChange={e => update(idx, { titre: e.target.value })}
                 placeholder="Titre de la rubrique"
                 aria-label={`Titre de la rubrique ${idx + 1}`}
-                style={{ ...saisie, flex: 1, fontWeight: graisse.fort }}
+                // minWidth 0 : sans lui, un champ ne rétrécit pas sous sa
+                // largeur par défaut et poussait les boutons hors de l'écran.
+                style={{ ...saisie, flex: 1, minWidth: 0, fontWeight: graisse.fort }}
               />
-              {/* Les trois commandes n'avaient qu'une flèche pour contenu : un
-                  `title` s'affiche à la souris mais reste muet au toucher et
-                  n'est pas garanti aux lecteurs d'écran. */}
-              <IconeBouton libelle="Monter" onClick={() => move(idx, -1)} disabled={idx === 0}>↑</IconeBouton>
-              <IconeBouton libelle="Descendre" onClick={() => move(idx, 1)} disabled={idx === items.length - 1}>↓</IconeBouton>
-              <IconeBouton libelle="Supprimer" onClick={() => remove(idx)} danger>✕</IconeBouton>
             </Pile>
             <textarea
               value={it.contenu}
@@ -96,6 +92,16 @@ export default function Infos({ camping, setCamping }) {
               rows={3}
               style={{ ...saisie, width: '100%', resize: 'vertical', fontFamily: 'inherit', lineHeight: 1.5 }}
             />
+            {/* Les commandes ont leur propre ligne : sur la ligne du titre, elles
+                sortaient de l'écran d'un téléphone de 87 à 157 px.
+                Les trois n'avaient qu'une flèche pour contenu : un `title`
+                s'affiche à la souris mais reste muet au toucher et n'est pas
+                garanti aux lecteurs d'écran. */}
+            <Pile direction="ligne" espace="sm" justifier="flex-end">
+              <IconeBouton libelle="Monter" onClick={() => move(idx, -1)} disabled={idx === 0}>↑</IconeBouton>
+              <IconeBouton libelle="Descendre" onClick={() => move(idx, 1)} disabled={idx === items.length - 1}>↓</IconeBouton>
+              <IconeBouton libelle="Supprimer" onClick={() => remove(idx)} danger>✕</IconeBouton>
+            </Pile>
           </Bloc>
         ))}
 

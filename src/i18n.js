@@ -102,6 +102,10 @@ const STRINGS = {
   'accueil.mot_vacanciers': { fr: 'vacanciers ici', en: 'campers here', es: 'campistas aquí', nl: 'kampeerders hier' },
   'accueil.mot_groupes':    { fr: 'groupes actifs', en: 'active groups', es: 'grupos activos', nl: 'actieve groepen' },
   'accueil.mot_animations': { fr: 'animations à venir', en: 'upcoming events', es: 'próximas actividades', nl: 'komende activiteiten' },
+  // Singuliers : « 1 groupes actifs » s'affichait tel quel.
+  'accueil.mot_vacancier':  { fr: 'vacancier ici', en: 'camper here', es: 'campista aquí', nl: 'kampeerder hier' },
+  'accueil.mot_groupe':     { fr: 'groupe actif', en: 'active group', es: 'grupo activo', nl: 'actieve groep' },
+  'accueil.mot_animation':  { fr: 'animation à venir', en: 'upcoming event', es: 'próxima actividad', nl: 'komende activiteit' },
 
   'accueil.aucun_groupe':  { fr: "Aucun groupe actif pour l'instant.", en: 'No active groups right now.', es: 'No hay grupos activos ahora.', nl: 'Nu geen actieve groepen.' },
   'accueil.premier_creer': { fr: 'Soyez le premier à en créer un !', en: 'Be the first to create one!', es: '¡Sé el primero en crear uno!', nl: 'Wees de eerste die er een aanmaakt!' },

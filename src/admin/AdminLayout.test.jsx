@@ -46,7 +46,12 @@ describe('navigation de l’administration', () => {
 
   it('donne un libellé lisible à chaque cible', () => {
     const barre = rendre(390).match(/<nav[^>]*data-barre="bas"[\s\S]*?<\/nav>/)?.[0]
+    // Nom complet pour les lecteurs d'écran (aria-label)…
     for (const mot of ['Accueil', 'Animations', 'Signalements', 'Modération', 'Réglages']) {
+      expect(barre).toContain(mot)
+    }
+    // … et un libellé visible qui tient dans 64 px, sur un téléphone de 320.
+    for (const mot of ['>Agenda<', '>Alertes<', '>Modérer<']) {
       expect(barre).toContain(mot)
     }
   })
