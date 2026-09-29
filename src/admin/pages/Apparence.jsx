@@ -135,13 +135,15 @@ export default function Apparence({ camping, setCamping }) {
               borderRadius: rayon.md, border: `1px solid ${jetons.bordure}`, background: jetons.fond,
             }} />
           )}
-          <Pile espace="sm" style={{ flex: 1 }}>
+          {/* minWidth 0 + largeur bornée : le champ fichier impose sinon sa
+              largeur native et sortait de l'écran d'un petit téléphone. */}
+          <Pile espace="sm" style={{ flex: 1, minWidth: 0 }}>
             <Texte variante="libelle" as="span">Fichier (PNG/JPG/SVG, max 2 Mo)</Texte>
             <input
               type="file" accept="image/png,image/jpeg,image/svg+xml"
               aria-label="Logo du camping"
               onChange={e => handleImageUpload(e.target.files[0], 'logo_url', 2, setUploadingLogo, setLogoPreview)}
-              style={{ display: 'block', fontSize: 14, color: jetons.texteMoyen }}
+              style={{ display: 'block', width: '100%', maxWidth: '100%', fontSize: 14, color: jetons.texteMoyen }}
             />
             {uploadingLogo && <UploadProgress label="Compression et enregistrement…" />}
           </Pile>

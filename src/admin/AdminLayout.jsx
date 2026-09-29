@@ -19,9 +19,11 @@ import {
  */
 const QUOTIDIEN = [
   { path: '/admin/overview',     icone: 'accueil',    label: 'Accueil' },
-  { path: '/admin/animations',   icone: 'agenda',     label: 'Animations' },
-  { path: '/admin/signalements', icone: 'outil',      label: 'Signalements' },
-  { path: '/admin/moderation',   icone: 'bouclier',   label: 'Modération' },
+  { path: '/admin/animations',   icone: 'agenda',     label: 'Animations', court: 'Agenda' },
+  // « court » : le libellé de la barre du bas, où « Signalements » ne tenait
+  // pas dans ses 64 px sur un petit téléphone et mordait sur ses voisins.
+  { path: '/admin/signalements', icone: 'outil',      label: 'Signalements', court: 'Alertes' },
+  { path: '/admin/moderation',   icone: 'bouclier',   label: 'Modération', court: 'Modérer' },
 ]
 
 const CONFIGURATION = [
@@ -279,7 +281,7 @@ export default function AdminLayout({ gerant, camping, onLogout }) {
           paddingBottom: 'var(--cc-safe-bottom, 0px)',
         }}>
           {QUOTIDIEN.map(item => (
-            <NavLink key={item.path} to={item.path} style={({ isActive }) => ({
+            <NavLink key={item.path} to={item.path} aria-label={item.label} style={({ isActive }) => ({
               ...styleOnglet, color: isActive ? VERT_CLAIR : VERT_ETEINT,
               fontWeight: isActive ? graisse.fort : graisse.normal,
             })}>
@@ -287,7 +289,9 @@ export default function AdminLayout({ gerant, camping, onLogout }) {
                 <Icone nom={item.icone} taille={22} />
                 <Pastille n={badgeDe(item.path)} style={{ position: 'absolute', top: -6, left: 14 }} />
               </span>
-              <span>{item.label}</span>
+              <span style={{ maxWidth: '100%', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                {item.court || item.label}
+              </span>
             </NavLink>
           ))}
 

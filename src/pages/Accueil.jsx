@@ -420,9 +420,9 @@ function Hero({ vacancier, vacancierCount, groupesCount, animationsCount, onMap,
           </Jeton>
         )}
         {[
-          [vacancierCount, t('accueil.mot_vacanciers')],
-          [groupesCount, t('accueil.mot_groupes')],
-          [animationsCount, t('accueil.mot_animations')],
+          [vacancierCount, t(vacancierCount === 1 ? 'accueil.mot_vacancier' : 'accueil.mot_vacanciers')],
+          [groupesCount, t(groupesCount === 1 ? 'accueil.mot_groupe' : 'accueil.mot_groupes')],
+          [animationsCount, t(animationsCount === 1 ? 'accueil.mot_animation' : 'accueil.mot_animations')],
         ].map(([n, l]) => (
           <Jeton key={l}>
             <span><strong style={{ fontWeight: graisse.affiche, fontSize: tailles.base }}>{n}</strong> {l}</span>

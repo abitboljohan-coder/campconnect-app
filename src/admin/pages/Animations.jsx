@@ -100,7 +100,9 @@ export default function Animations({ camping }) {
 
   return (
     <Pile espace="lg">
-      <Pile direction="ligne" espace="md" justifier="space-between" aligner="flex-start">
+      {/* retour : sur un petit téléphone, le bouton passe sous le titre au lieu
+          de sortir de l'écran. */}
+      <Pile direction="ligne" espace="md" justifier="space-between" aligner="flex-start" retour>
         <EnTete
           titre="Animations"
           sous={`${animations.length} animation${animations.length !== 1 ? 's' : ''} au total`}

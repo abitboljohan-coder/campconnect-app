@@ -51,17 +51,21 @@ export default function Layout({ camping }) {
                 display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18,
               }}>⛺</div>
           }
+          {/* Deux lignes au plus : un nom de camping long prenait trois
+              lignes et le quart de l'écran d'un petit téléphone. */}
           <div style={{
             fontWeight: 800,
             fontSize: 17,
             color: '#1a1a1a',
             lineHeight: 1.2,
             letterSpacing: '-0.3px',
+            flex: 1, minWidth: 0,
+            display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden',
           }}>
             {camping?.nom || 'CampConnect'}
           </div>
           <Link to="/profil" style={{
-            marginLeft: 'auto', textDecoration: 'none',
+            marginLeft: 'auto', textDecoration: 'none', flexShrink: 0,
             width: 40, height: 40, borderRadius: '50%',
             background: `${couleur}18`, border: `2px solid ${couleur}40`,
             display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18,

@@ -61,8 +61,13 @@ export default function CarteGroupe({ groupe, membre, avatars, onAction }) {
           {groupe.emoji || '👥'}
         </span>
 
-        <div style={{ flex: 1, overflow: 'hidden' }}>
-          <Texte variante="sousTitre" style={{ fontSize: tailles.moyen, ...tronque }}>{groupe.titre}</Texte>
+        <div style={{ flex: 1, minWidth: 0, overflow: 'hidden' }}>
+          {/* Deux lignes pour le titre : sur une seule, à côté du bouton, un
+              petit téléphone n'en montrait que huit lettres. */}
+          <Texte variante="sousTitre" style={{
+            fontSize: tailles.moyen, overflowWrap: 'anywhere',
+            display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden',
+          }}>{groupe.titre}</Texte>
           {meta && <Texte variante="micro" style={{ marginTop: 2, ...tronque }}>{meta}</Texte>}
           <PileAvatars avatars={avatars} />
         </div>
