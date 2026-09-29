@@ -1,14 +1,21 @@
 import { useState } from 'react'
+import ChoixEmoji from '../../components/ChoixEmoji'
 import { couleur as jetons } from '../../design'
 
 const EMOJIS = ['🎉', '🏊', '🎸', '⚽', '🎯', '🎤', '🧘', '🚴', '🎮', '🍕', '🎨', '🏐', '🌅', '🔥', '🎭']
+
+// Date au format du champ, en heure LOCALE. toISOString() donnait la date en
+// temps universel : une animation de 0 h 30 s'ouvrait en modification sur la
+// veille, et l'enregistrer la décalait réellement d'un jour.
+const pad = n => String(n).padStart(2, '0')
+const dateLocale = d => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`
 
 export default function AnimationForm({ initial, onSave, onCancel, saving }) {
   const [form, setForm] = useState({
     titre:       initial?.titre || '',
     emoji:       initial?.emoji || '🎉',
     lieu:        initial?.lieu || '',
-    dateStr:     initial?.debut ? new Date(initial.debut).toISOString().split('T')[0] : new Date().toISOString().split('T')[0],
+    dateStr:     dateLocale(initial?.debut ? new Date(initial.debut) : new Date()),
     heureStr:    initial?.debut ? new Date(initial.debut).toTimeString().slice(0, 5) : '14:00',
     places_max:  initial?.places_max?.toString() || '',
     description: initial?.description || '',
@@ -28,7 +35,7 @@ export default function AnimationForm({ initial, onSave, onCancel, saving }) {
       emoji:       form.emoji,
       lieu:        form.lieu.trim() || null,
       debut,
-      places_max:  form.places_max ? parseInt(form.places_max) : null,
+      places_max:  parseInt(form.places_max, 10) > 0 ? parseInt(form.places_max, 10) : null,
       description: form.description.trim() || null,
       publiee:     form.publiee,
     })
@@ -36,23 +43,15 @@ export default function AnimationForm({ initial, onSave, onCancel, saving }) {
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-      {/* Emoji */}
-      <div>
-        <label style={labelStyle}>EMOJI</label>
-        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginTop: 6 }}>
-          {EMOJIS.map(e => (
-            <button
-              key={e} type="button"
-              onClick={() => setForm(f => ({ ...f, emoji: e }))}
-              style={{
-                width: 40, height: 40, fontSize: 20, borderRadius: 8,
-                border: form.emoji === e ? '2px solid #639922' : '2px solid #e5e7eb',
-                background: form.emoji === e ? '#63992215' : '#f9f9f7',
-              }}
-            >{e}</button>
-          ))}
-        </div>
-      </div>
+      {/* Emoji : le même sélecteur que côté vacancier — suggestions, catégories
+          et n'importe quel emoji du clavier, sans les emojis refusés. */}
+      <ChoixEmoji
+        libelle="EMOJI"
+        valeur={form.emoji}
+        suggestions={EMOJIS}
+        onChange={emoji => setForm(f => ({ ...f, emoji }))}
+        taille={40}
+      />
 
       {/* Titre */}
       <div>
@@ -62,8 +61,8 @@ export default function AnimationForm({ initial, onSave, onCancel, saving }) {
           value={form.titre}
           onChange={e => setForm(f => ({ ...f, titre: e.target.value }))}
           placeholder="ex: Cours de yoga matinal"
+          maxLength={80}
           style={inputStyle}
-          autoFocus
         />
       </div>
 
@@ -80,7 +79,7 @@ export default function AnimationForm({ initial, onSave, onCancel, saving }) {
       </div>
 
       {/* Date + Heure */}
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1fr) minmax(0, 1fr)', gap: 12 }}>
         <div>
           <label style={labelStyle}>DATE</label>
           <input type="date" value={form.dateStr} onChange={e => setForm(f => ({ ...f, dateStr: e.target.value }))} style={inputStyle} />
@@ -95,7 +94,7 @@ export default function AnimationForm({ initial, onSave, onCancel, saving }) {
       <div>
         <label style={labelStyle}>PLACES MAX</label>
         <input
-          type="number" min="1" max="999"
+          type="number" min="1" max="999" inputMode="numeric"
           value={form.places_max}
           onChange={e => setForm(f => ({ ...f, places_max: e.target.value }))}
           placeholder="Laisser vide = illimité"
@@ -117,9 +116,14 @@ export default function AnimationForm({ initial, onSave, onCancel, saving }) {
 
       {/* Publier */}
       <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-        <div
+        <button
+          type="button"
+          role="switch"
+          aria-checked={form.publiee}
+          aria-label="Publier immédiatement"
           onClick={() => setForm(f => ({ ...f, publiee: !f.publiee }))}
           style={{
+            padding: 0, border: 'none',
             width: 44, height: 24, borderRadius: 12,
             background: form.publiee ? jetons.marque : '#d1d5db',
             position: 'relative', cursor: 'pointer', transition: 'background 0.2s',
@@ -133,7 +137,7 @@ export default function AnimationForm({ initial, onSave, onCancel, saving }) {
             background: '#fff', boxShadow: '0 1px 3px rgba(0,0,0,0.2)',
             transition: 'left 0.2s',
           }} />
-        </div>
+        </button>
         <span style={{ fontSize: 14, color: jetons.texteMoyen }}>
           {form.publiee ? 'Publier immédiatement' : 'Enregistrer en brouillon'}
         </span>

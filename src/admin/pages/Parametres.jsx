@@ -1,10 +1,11 @@
 import { useState } from 'react'
 import { supabase } from '../../supabase'
 import QRCodeGenerator from '../components/QRCodeGenerator'
+import { lienRejoindre } from '../lib/liens'
 import { Bloc, Alerte, EnTete } from '../components/Bloc'
 import { Bouton, Texte, Pile, couleur as jetons, espace, graisse, rayon } from '../../design'
 
-export default function Parametres({ gerant, camping, session }) {
+export default function Parametres({ camping, session, setCamping }) {
   const [email, setEmail]       = useState(session?.user?.email || '')
   const [newPwd, setNewPwd]     = useState('')
   const [confirmPwd, setConfirmPwd] = useState('')
@@ -34,7 +35,8 @@ export default function Parametres({ gerant, camping, session }) {
   async function updatePassword(e) {
     e.preventDefault()
     if (newPwd !== confirmPwd) { flash('error', 'Les mots de passe ne correspondent pas.'); return }
-    if (newPwd.length < 6) { flash('error', 'Mot de passe trop court (6 caractères minimum).'); return }
+    // Même exigence qu'à la création du compte : 6 ici, 8 là-bas.
+    if (newPwd.length < 8) { flash('error', 'Mot de passe trop court (8 caractères minimum).'); return }
     setSavingPwd(true)
     const { error: err } = await supabase.auth.updateUser({ password: newPwd })
     if (err) flash('error', err.message)
@@ -45,9 +47,14 @@ export default function Parametres({ gerant, camping, session }) {
   async function updateCamping(e) {
     e.preventDefault()
     setSavingCamping(true)
+    if (!campingNom.trim()) { flash('error', 'Le nom du camping ne peut pas être vide.'); setSavingCamping(false); return }
     const { error: err } = await supabase.from('campings').update({ nom: campingNom.trim() }).eq('id', camping.id)
     if (err) flash('error', err.message)
-    else flash('success', 'Camping mis à jour.')
+    else {
+      // Le nouveau nom s'affiche tout de suite dans l'en-tête, pas au prochain rechargement.
+      setCamping?.(c => ({ ...c, nom: campingNom.trim() }))
+      flash('success', 'Camping mis à jour.')
+    }
     setSavingCamping(false)
   }
 
@@ -88,7 +95,7 @@ export default function Parametres({ gerant, camping, session }) {
     setResetting(false)
   }
 
-  const appUrl = `${window.location.origin}?camping=${camping?.slug || 'demo'}`
+  const appUrl = lienRejoindre(camping?.slug)
 
   return (
     <Pile espace="xl">
@@ -157,7 +164,7 @@ export default function Parametres({ gerant, camping, session }) {
         {/* QR Code */}
         <Bloc titre="QR Code de l'application">
           <p style={{ fontSize: 14, color: jetons.texteDoux, marginBottom: 16 }}>
-            Partagez ce QR code avec vos vacanciers pour qu'ils accèdent à l'application.
+            Affichez ce QR code à la réception : en le scannant, vos vacanciers entrent directement dans votre camping, sans code.
           </p>
           <QRCodeGenerator url={appUrl} campingNom={camping?.nom} />
         </Bloc>

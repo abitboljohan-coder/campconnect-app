@@ -11,21 +11,23 @@ import { Carte, Texte, Pile, Icone, couleur as jetons, graisse, rayon } from '..
  */
 export default function StatCard({ icone, valeur, libelle, sous, couleur = jetons.marqueTexte }) {
   return (
-    <Carte hauteur="posee" padding={18} style={{ borderRadius: 14 }}>
-      {/* L'icône s'aligne sur le chiffre, pas sur le milieu du bloc :
-          centrée, elle se retrouvait à hauteur du libellé et semblait lui
-          appartenir. */}
-      <Pile direction="ligne" espace="md" aligner="flex-start">
-        <span aria-hidden="true" style={{
-          width: 38, height: 38, borderRadius: rayon.md,
-          background: `${couleur}14`, color: couleur,
-          display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
-        }}>
-          <Icone nom={icone} taille={20} />
-        </span>
+    <Carte hauteur="posee" padding={16} style={{ borderRadius: 14 }}>
+      {/* L'icône s'aligne sur le chiffre, et le libellé passe dessous, sur toute
+          la largeur : à côté de l'icône, deux tuiles par ligne sur un téléphone
+          lui laissaient 70 px, et « remplissage » se coupait en deux. */}
+      <Pile espace="sm">
+        <Pile direction="ligne" espace="md" aligner="center">
+          <span aria-hidden="true" style={{
+            width: 36, height: 36, borderRadius: rayon.md,
+            background: `${couleur}14`, color: couleur,
+            display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
+          }}>
+            <Icone nom={icone} taille={19} />
+          </span>
+          <Texte variante="titre" style={{ fontSize: 26, lineHeight: 1 }}>{valeur}</Texte>
+        </Pile>
         <div style={{ minWidth: 0 }}>
-          <Texte variante="titre" style={{ fontSize: 26, lineHeight: '38px' }}>{valeur}</Texte>
-          <Texte variante="doux" style={{ marginTop: 4, fontWeight: graisse.fort, color: jetons.texte }}>
+          <Texte variante="doux" style={{ fontWeight: graisse.fort, color: jetons.texte, lineHeight: 1.3 }}>
             {libelle}
           </Texte>
           {sous && <Texte variante="micro" style={{ marginTop: 2 }}>{sous}</Texte>}

@@ -1,6 +1,8 @@
-import { useCallback, useState, useSyncExternalStore } from 'react'
+import { useCallback, useEffect, useState, useSyncExternalStore } from 'react'
 import { Outlet, NavLink, useLocation } from 'react-router-dom'
 import Sheet from '../components/Sheet'
+import { supabase } from '../supabase'
+import { isNative, setAppMode } from '../native'
 import {
   Bouton, Texte, Pile, Icone,
   couleur as jetons, espace, graisse, rayon, texte as tailles,
@@ -86,8 +88,51 @@ function Marque({ taille = 26, texte: tailleTexte = 18 }) {
   )
 }
 
+/**
+ * Nombre de signalements encore « nouveaux ».
+ *
+ * Un signalement ne se voyait qu'en ouvrant la page Signalements : rien, dans
+ * le reste de la console, ne disait qu'un vacancier attendait une réponse. Le
+ * compte s'affiche désormais sur l'entrée du menu, et se met à jour en temps
+ * réel et à chaque changement de page — donc aussi après un traitement.
+ */
+function useSignalementsNouveaux(campingId, pathname) {
+  const [n, setN] = useState(0)
+  useEffect(() => {
+    if (!campingId) return
+    let actif = true
+    const compter = () => supabase.from('signalements')
+      .select('id', { count: 'exact', head: true })
+      .eq('camping_id', campingId).eq('statut', 'nouveau')
+      .then(({ count }) => { if (actif) setN(count || 0) })
+    compter()
+    const canal = supabase.channel(`badge_signalements_${campingId}`)
+      .on('postgres_changes',
+        { event: '*', schema: 'public', table: 'signalements', filter: `camping_id=eq.${campingId}` },
+        compter)
+      .subscribe()
+    return () => { actif = false; supabase.removeChannel(canal) }
+  }, [campingId, pathname])
+  return n
+}
+
+/** Pastille rouge d'un compte à traiter. */
+function Pastille({ n, style }) {
+  if (!n) return null
+  return (
+    <span aria-label={`${n} à traiter`} style={{
+      minWidth: 18, height: 18, padding: '0 5px', borderRadius: 9,
+      background: jetons.danger, color: '#fff',
+      fontSize: 11, fontWeight: graisse.affiche, lineHeight: '18px', textAlign: 'center',
+      ...style,
+    }}>
+      {n > 99 ? '99+' : n}
+    </span>
+  )
+}
+
 /** Une entrée du menu latéral. */
-function LienMenu({ item }) {
+function LienMenu({ item, badge }) {
   return (
     <NavLink
       to={item.path}
@@ -102,7 +147,8 @@ function LienMenu({ item }) {
       })}
     >
       <Icone nom={item.icone} taille={19} />
-      {item.label}
+      <span style={{ flex: 1 }}>{item.label}</span>
+      <Pastille n={badge} />
     </NavLink>
   )
 }
@@ -129,6 +175,8 @@ export default function AdminLayout({ gerant, camping, onLogout }) {
   const fermerReglages = useCallback(() => setReglagesOuverts(false), [])
 
   const dansConfiguration = CONFIGURATION.some(i => pathname.startsWith(i.path))
+  const nouveaux = useSignalementsNouveaux(camping?.id, pathname)
+  const badgeDe = path => (path === '/admin/signalements' ? nouveaux : 0)
 
   return (
     <div style={{ minHeight: '100dvh', background: jetons.fond, display: 'flex' }}>
@@ -151,7 +199,7 @@ export default function AdminLayout({ gerant, camping, onLogout }) {
           <nav style={{ flex: 1, padding: `0 ${espace.md}px ${espace.lg}px` }}
                aria-label="Menu de l'administration">
             <TitreGroupe>Au quotidien</TitreGroupe>
-            {QUOTIDIEN.map(item => <LienMenu key={item.path} item={item} />)}
+            {QUOTIDIEN.map(item => <LienMenu key={item.path} item={item} badge={badgeDe(item.path)} />)}
 
             <TitreGroupe>Configuration</TitreGroupe>
             {CONFIGURATION.map(item => <LienMenu key={item.path} item={item} />)}
@@ -235,7 +283,10 @@ export default function AdminLayout({ gerant, camping, onLogout }) {
               ...styleOnglet, color: isActive ? VERT_CLAIR : VERT_ETEINT,
               fontWeight: isActive ? graisse.fort : graisse.normal,
             })}>
-              <Icone nom={item.icone} taille={22} />
+              <span style={{ position: 'relative', display: 'inline-flex' }}>
+                <Icone nom={item.icone} taille={22} />
+                <Pastille n={badgeDe(item.path)} style={{ position: 'absolute', top: -6, left: 14 }} />
+              </span>
               <span>{item.label}</span>
             </NavLink>
           ))}
@@ -281,6 +332,14 @@ export default function AdminLayout({ gerant, camping, onLogout }) {
                 </NavLink>
               ))}
             </Pile>
+            {/* Sur le téléphone, revenir côté vacancier sans se déconnecter :
+                la seule porte de sortie était « Quitter », qui fermait la
+                session gérant à chaque aller-retour. */}
+            {isNative && (
+              <Bouton variante="secondaire" pleineLargeur onClick={() => setAppMode('vacancier')}>
+                ← Espace vacancier
+              </Bouton>
+            )}
           </Pile>
         </Sheet>
       )}

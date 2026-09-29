@@ -132,7 +132,7 @@ export default function AdminApp() {
             <Route path="/admin/signalements" element={<Signalements camping={camping} />} />
             <Route path="/admin/moderation" element={<Moderation camping={camping} />} />
             <Route path="/admin/parametres" element={
-              <Parametres gerant={gerant} camping={camping} session={session} />
+              <Parametres camping={camping} session={session} setCamping={setCamping} />
             } />
             <Route path="*" element={<Navigate to="/admin/overview" replace />} />
           </Route>

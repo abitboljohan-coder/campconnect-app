@@ -85,7 +85,20 @@ const MEMBRES = [
   { id: 'mb3', groupe_id: 'g1', vacancier_id: 'vac-5', vacanciers: { pseudo: 'Léa', avatar_emoji: '🏊‍♀️' } },
 ]
 
+const SIGNALEMENTS = [
+  { id: 'sg1', camping_id: 'camp-demo', vacancier_id: 'vac-3', categorie: 'bruit', statut: 'nouveau', lieu: 'Sanitaires allée C',
+    description: 'Musique forte après minuit près des sanitaires, trois soirs de suite.', created_at: ago(35),
+    vacanciers: { pseudo: 'Sophie', avatar_emoji: '🧘‍♀️', emplacement: 'C21' } },
+  { id: 'sg2', camping_id: 'camp-demo', vacancier_id: 'vac-2', categorie: 'contenu', statut: 'nouveau', cible_type: 'message', cible_id: 'm9',
+    description: 'Harcèlement', cible_texte: 'Message insultant envoyé dans le groupe Apéro pétanque', auteur_signale_id: 'vac-4', created_at: ago(90),
+    vacanciers: { pseudo: 'Marc', avatar_emoji: '🚴', emplacement: 'A04' }, auteur: { pseudo: 'Tom', avatar_emoji: '🎸', banni: false } },
+  { id: 'sg3', camping_id: 'camp-demo', vacancier_id: 'vac-5', categorie: 'panne', statut: 'en_cours', lieu: 'Douche n°4',
+    description: 'Plus d’eau chaude depuis ce matin.', created_at: ago(300),
+    vacanciers: { pseudo: 'Léa', avatar_emoji: '🏊‍♀️', emplacement: 'B15' } },
+]
+
 const SEED = {
+  signalements: SIGNALEMENTS,
   campings: [DEMO_CAMPING],
   vacanciers: VACS,
   groupes: GROUPES,

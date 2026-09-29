@@ -256,7 +256,7 @@ function StatutsStrip({ camping, vacancier }) {
     setSaving(false)
     if (error) {
       console.error('Publication statut échouée :', error)
-      toast(t('accueil.err_statut'), 'erreur')
+      toast(error.code === '42501' ? t('commun.banni') : t('accueil.err_statut'), 'erreur')
       return
     }
     // Le statut n'apparaissait qu'au retour de l'événement temps réel. Si la

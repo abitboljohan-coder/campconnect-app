@@ -1,4 +1,5 @@
 import { createClient } from '@supabase/supabase-js'
+import { getAppMode } from './native'
 
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL
 const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY
@@ -21,8 +22,18 @@ if (!supabaseUrl || !supabaseKey) {
 
 // Valeurs de repli : createClient lève si l'URL est vide. Avec ce repli, l'app
 // affiche le message ci-dessus au lieu d'un écran blanc.
+// Deux sessions, rangées séparément : celle du vacancier (anonyme) et celle du
+// gérant (email et mot de passe). Elles partageaient la même clé de stockage.
+// Sur le téléphone d'un gérant qui est aussi vacancier de son camping, se
+// connecter à l'espace gérant remplaçait la session anonyme — introuvable
+// ensuite — et le retour côté vacancier redemandait de recréer son profil.
+// Les deux applications ne sont jamais chargées ensemble : la clé se choisit
+// une fois, au démarrage.
+const auth = { persistSession: true, autoRefreshToken: true }
+if (getAppMode() === 'gerant') auth.storageKey = 'campconnect-auth-gerant'
+
 export const supabase = createClient(supabaseUrl || 'https://placeholder.supabase.co', supabaseKey || 'placeholder', {
-  auth: { persistSession: true, autoRefreshToken: true },
+  auth,
   realtime: { params: { eventsPerSecond: 10 } },
 })
 

@@ -105,7 +105,7 @@ export default function Annonces({ camping, vacancier }) {
     setSaving(false)
     if (error || !data) {
       console.error('Publication annonce échouée :', error)
-      setErreur(t('annonces.err_publier'))
+      setErreur(error?.code === '42501' ? t('commun.banni') : t('annonces.err_publier'))
       return
     }
     setAnnonces(prev => [data, ...prev])

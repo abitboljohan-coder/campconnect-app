@@ -118,7 +118,7 @@ export default function Chat({ camping, vacancier }) {
     if (error) {
       console.error('Envoi message échoué :', error)
       setTexte(contenu) // on rend le message pour ne pas le perdre
-      setErreur(t('chat.non_envoye'))
+      setErreur(error.code === '42501' ? t('commun.banni') : t('chat.non_envoye'))
     } else if (data) {
       // Affiché tout de suite, sans attendre l'événement temps réel : s'il ne
       // venait pas, on croyait le message perdu et on le renvoyait.
