@@ -173,7 +173,10 @@ export default function MapEditor({ camping, setCamping }) {
       )}
 
       {/* Carte pleine largeur avec panel flottant */}
-      <div style={{ position: 'relative', height: 560, borderRadius: 14, overflow: 'hidden', border: selected ? '2px solid #639922' : '2px solid #e5e7eb', cursor: selected ? 'crosshair' : 'grab', boxShadow: '0 4px 20px rgba(0,0,0,0.1)' }}>
+      {/* isolation : les bandeaux posés sur la carte (z-index 1000) restent
+          dans son cadre. Sans elle, ils passaient devant la barre de
+          navigation et l'en-tête de la console dès qu'on faisait défiler. */}
+      <div style={{ position: 'relative', isolation: 'isolate', height: 560, borderRadius: 14, overflow: 'hidden', border: selected ? '2px solid #639922' : '2px solid #e5e7eb', cursor: selected ? 'crosshair' : 'grab', boxShadow: '0 4px 20px rgba(0,0,0,0.1)' }}>
 
         {/* Panel flottant gauche */}
         <div style={{

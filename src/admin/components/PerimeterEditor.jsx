@@ -296,7 +296,7 @@ export default function PerimeterEditor({ camping, onClose, onSaved }) {
         e.originalEvent.preventDefault()
         setPoints(prev => prev.filter((_, j) => j !== i))
       })
-      m.bindTooltip(`Point ${i + 1} — clic droit pour retirer`, { direction: 'top', offset: [0, -8] })
+      m.bindTooltip(`Point ${i + 1} — clic droit ou appui long pour retirer`, { direction: 'top', offset: [0, -8] })
       markersRef.current.push(m)
     })
   }, [points, ready, couleur])
@@ -426,25 +426,29 @@ export default function PerimeterEditor({ camping, onClose, onSaved }) {
       display: 'flex', flexDirection: 'column',
     }}>
       {/* Barre du haut */}
+      {/* L'éditeur couvre tout l'écran : sans la marge de sécurité, sa barre
+          passait sous l'heure et l'encoche de l'iPhone. */}
       <div style={{
         padding: '10px 16px', background: '#fff',
+        paddingTop: 'calc(10px + var(--cc-safe-top, 0px))',
         display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap',
         borderBottom: '1px solid #e5e7eb',
         position: 'relative', zIndex: 30,
       }}>
-        <div style={{ minWidth: 180 }}>
+        <div style={{ minWidth: 0, flexBasis: '100%' }}>
           <div style={{ fontWeight: 700, fontSize: 15 }}>Tracer le contour</div>
           <div style={{ fontSize: 11, color: jetons.texteDoux }}>
-            {points.length} pt · {mode === 'rect' ? 'Drag pour dessiner un rectangle' : 'Clic pour ajouter · drag pour bouger · clic droit pour retirer'}
+            {points.length} pt · {mode === 'rect' ? 'Glissez pour dessiner un rectangle' : 'Touchez pour ajouter un point · glissez-le pour le déplacer · appui long pour le retirer'}
           </div>
         </div>
 
         {/* Recherche */}
-        <div ref={searchWrapRef} style={{ display: 'flex', gap: 4, position: 'relative' }}>
+        <div ref={searchWrapRef} style={{ display: 'flex', gap: 4, position: 'relative', flex: '1 1 220px', minWidth: 0 }}>
           <input value={search} onChange={e => { setSearch(e.target.value); setSearchTouched(true) }}
             onKeyDown={e => e.key === 'Enter' && runSearch()}
             placeholder="Ex : Camping du Lac, 12345 Villeneuve"
-            style={{ padding: '7px 10px', border: '1px solid #d1d5db', borderRadius: 8, fontSize: 13, width: 220 }} />
+            // 16 px : en deçà, iOS zoome sur le champ à la saisie et décale l'écran.
+            style={{ padding: '7px 10px', border: '1px solid #d1d5db', borderRadius: 8, fontSize: 16, flex: 1, minWidth: 0 }} />
           <button onClick={runSearch}
             style={{ padding: '7px 12px', background: jetons.surfaceDouce, border: '1px solid #d1d5db', borderRadius: 8, cursor: 'pointer', fontSize: 13 }} aria-label="Rechercher">
             🔍
@@ -507,7 +511,7 @@ export default function PerimeterEditor({ camping, onClose, onSaved }) {
         </div>
       )}
 
-      <div ref={mapRef} style={{ flex: 1, background: '#000', cursor: mode === 'rect' ? 'crosshair' : 'crosshair' }} />
+      <div ref={mapRef} style={{ flex: 1, background: '#000', cursor: 'crosshair', marginBottom: 'var(--cc-safe-bottom, 0px)' }} />
     </div>
   )
 }

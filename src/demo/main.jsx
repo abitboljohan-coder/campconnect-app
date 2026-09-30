@@ -22,6 +22,7 @@ import InfosAdmin from '../admin/pages/Infos'
 import CarteAdmin from '../admin/pages/Carte'
 import Annonces from '../pages/Annonces'
 import Signaler from '../pages/Signaler'
+import AdminLogin from '../admin/AdminLogin'
 import Onboarding from '../pages/Onboarding'
 import { DEMO_CAMPING, DEMO_VACANCIER } from './mockSupabase'
 import { ToastHost } from '../components/Toast'
@@ -34,7 +35,7 @@ const routeFor = { accueil: '/', groupes: '/groupes', map: '/map', agenda: '/age
   'admin-animations': '/admin/animations', 'admin-signalements': '/admin/signalements',
   'admin-moderation': '/admin/moderation', 'admin-parametres': '/admin/parametres', 'admin-stats': '/admin/stats',
   'admin-apparence': '/admin/apparence', 'admin-infos': '/admin/infos', 'admin-carte': '/admin/carte',
-  annonces: '/annonces', signaler: '/signaler' }
+  annonces: '/annonces', signaler: '/signaler', 'admin-login': '/admin-login' }
 const entry = routeFor[s] || '/'
 
 function DemoApp() {
@@ -51,6 +52,7 @@ function DemoApp() {
         <Route path="/profil" element={<Profil camping={c} vacancier={v} onLogout={() => {}} />} />
       </Route>
       <Route path="/chat/:groupeId" element={<Chat camping={c} vacancier={v} />} />
+      <Route path="/admin-login" element={<AdminLogin onLogin={() => {}} />} />
       <Route path="/onboarding" element={<Onboarding initialCamping={c} onDone={() => {}} />} />
       <Route element={<AdminLayout gerant={{ nom: 'Gérant démo' }} camping={c} onLogout={() => {}} />}>
         <Route path="/admin/overview" element={<Overview camping={c} />} />
