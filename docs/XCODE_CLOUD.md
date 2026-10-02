@@ -151,7 +151,7 @@ Studio. Voir `docs/PUBLICATION_ANDROID.md`.
 - Le numéro de build (`CURRENT_PROJECT_VERSION`) est fixé automatiquement par
   `ci_scripts/ci_pre_xcodebuild.sh` à `$CI_BUILD_NUMBER`. Ne pas le modifier à
   la main dans le projet : Xcode Cloud l'écrase de toute façon.
-- La version affichée aux utilisateurs (`MARKETING_VERSION`, 1.0.1) se change à
+- La version affichée aux utilisateurs (`MARKETING_VERSION`, 1.0.2) se change à
   la main, au moment d'une vraie livraison App Store.
 - Notifications : iOS ne passe pas par Firebase. Le jeton APNs brut est envoyé
   directement par `send-push` ; `GoogleService-Info.plist` est inutile. Voir
