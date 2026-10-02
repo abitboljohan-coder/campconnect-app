@@ -143,6 +143,11 @@ const STRINGS = {
 
   // ── Chat ────────────────────────────────────────────────────────────────
   'chat.ecrire':      { fr: 'Écrire un message…', en: 'Write a message…', es: 'Escribe un mensaje…', nl: 'Schrijf een bericht…' },
+  'chat.quitter':       { fr: 'Quitter', en: 'Leave', es: 'Salir', nl: 'Verlaten' },
+  'chat.quitter_titre': { fr: 'Quitter « {titre} » ?', en: 'Leave “{titre}”?', es: '¿Salir de «{titre}»?', nl: '“{titre}” verlaten?' },
+  'chat.quitter_texte': { fr: "Vous ne recevrez plus ses messages ni ses notifications. Vous pourrez le rejoindre à nouveau tant qu'il est proposé.", en: 'You will no longer get its messages or notifications. You can join again as long as it is listed.', es: 'Ya no recibirás sus mensajes ni sus notificaciones. Podrás volver a unirte mientras siga disponible.', nl: 'Je ontvangt geen berichten of meldingen meer van deze groep. Je kunt weer meedoen zolang de groep zichtbaar is.' },
+  'chat.quitte':        { fr: 'Vous avez quitté « {titre} »', en: 'You left “{titre}”', es: 'Has salido de «{titre}»', nl: 'Je hebt “{titre}” verlaten' },
+  'chat.err_quitter':   { fr: 'Impossible de quitter le groupe. Vérifiez votre connexion.', en: 'Could not leave the group. Check your connection.', es: 'No se pudo salir del grupo. Comprueba tu conexión.', nl: 'Kon de groep niet verlaten. Controleer je verbinding.' },
   'chat.non_envoye':  { fr: 'Message non envoyé. Vérifiez votre connexion.', en: 'Message not sent. Check your connection.', es: 'Mensaje no enviado. Comprueba tu conexión.', nl: 'Bericht niet verzonden. Controleer je verbinding.' },
   'chat.aujourdhui':  { fr: "Aujourd'hui", en: 'Today', es: 'Hoy', nl: 'Vandaag' },
   'chat.hier':        { fr: 'Hier', en: 'Yesterday', es: 'Ayer', nl: 'Gisteren' },

@@ -3,8 +3,10 @@ import { useParams, useNavigate } from 'react-router-dom'
 import { supabase, presentFilter } from '../supabase'
 import { t, useLangue, locale } from '../i18n'
 import MenuModeration from '../components/MenuModeration'
+import Sheet from '../components/Sheet'
+import { toast } from '../toast'
 import { chargerBlocages, estBloque } from '../lib/moderation'
-import { Texte, Pile, Vide, couleur, espace, graisse, ombre, rayon, texte as tailles } from '../design'
+import { Texte, Pile, Vide, Bouton, couleur, espace, graisse, ombre, rayon, texte as tailles } from '../design'
 
 const REACTIONS = ['❤️', '😂', '👍', '🔥', '🎉']
 
@@ -27,6 +29,8 @@ export default function Chat({ camping, vacancier }) {
   const appuiLong                   = useRef(null)
 
   const [erreur, setErreur]         = useState('')
+  const [quitter, setQuitter]       = useState(false)
+  const [quittant, setQuittant]     = useState(false)
   const bottomRef = useRef(null)
   const inputRef  = useRef(null)
 
@@ -128,6 +132,19 @@ export default function Chat({ camping, vacancier }) {
     inputRef.current?.focus()
   }
 
+  async function quitterGroupe() {
+    setQuittant(true)
+    const { error } = await supabase.from('membres_groupes')
+      .delete().eq('groupe_id', groupeId).eq('vacancier_id', vacancier.id)
+    setQuittant(false)
+    if (error) {
+      toast(t('chat.err_quitter'), 'erreur')
+      return
+    }
+    toast(t('chat.quitte', { titre: groupe?.titre || '' }), 'succes')
+    navigate('/groupes')
+  }
+
   async function toggleReaction(msg, emoji) {
     setPickerFor(null)
     const reactions = { ...(msg.reactions || {}) }
@@ -184,12 +201,44 @@ export default function Chat({ camping, vacancier }) {
           }}>
             {groupe?.titre || '…'}
           </Texte>
-          <Texte variante="doux" style={{ color: 'rgba(255,255,255,0.72)' }}>
+          <Texte variante="doux" style={{
+            color: 'rgba(255,255,255,0.72)',
+            overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+          }}>
             {nbMembres > 1 ? t('chat.participants', { n: nbMembres }) : t('chat.participant', { n: nbMembres })}
             {groupe?.lieu && ` · 📍 ${groupe.lieu}`}
           </Texte>
         </div>
+        {/* Rien ne permettait de quitter un groupe : on restait membre, et
+            notifié, d'un apéro d'il y a trois jours jusqu'à la fin du séjour. */}
+        <button
+          onClick={() => setQuitter(true)}
+          style={{
+            color: '#fff', background: 'rgba(255,255,255,0.14)', border: 'none',
+            borderRadius: rayon.rond, padding: `0 ${espace.md}px`, minHeight: 36,
+            fontSize: tailles.petit, fontWeight: graisse.fort, flexShrink: 0, cursor: 'pointer',
+          }}
+        >
+          {t('chat.quitter')}
+        </button>
       </div>
+
+      {quitter && (
+        <Sheet onClose={() => setQuitter(false)}>
+          <Pile espace="lg">
+            <Texte variante="section" as="h2">{t('chat.quitter_titre', { titre: groupe?.titre || '' })}</Texte>
+            <Texte variante="doux">{t('chat.quitter_texte')}</Texte>
+            <Pile espace="sm">
+              <Bouton variante="danger" pleineLargeur charge={quittant} onClick={quitterGroupe}>
+                {t('chat.quitter')}
+              </Bouton>
+              <Bouton variante="secondaire" pleineLargeur onClick={() => setQuitter(false)}>
+                {t('commun.annuler')}
+              </Bouton>
+            </Pile>
+          </Pile>
+        </Sheet>
+      )}
 
       {/* Messages */}
       <div style={{ flex: 1, overflowY: 'auto', padding: `${espace.lg}px ${espace.md}px`, display: 'flex', flexDirection: 'column', gap: 4 }}>
