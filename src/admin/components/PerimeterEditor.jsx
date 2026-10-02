@@ -2,6 +2,8 @@ import { useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { searchCampsiteByName } from '../lib/osmPois'
 import { fusionnerCarteConfig } from '../lib/carteConfig'
+import { barycentre } from '../lib/geo'
+import { traduireErreur } from '../lib/erreurs'
 import { couleur as jetons } from '../../design'
 
 let LPromise = null
@@ -413,9 +415,13 @@ export default function PerimeterEditor({ camping, onClose, onSaved }) {
 
   async function save() {
     setSaving(true)
-    const { config, error } = await fusionnerCarteConfig(camping.id, { perimeter: points })
+    // Le centre accompagne le contour : c'est lui que le contrôle GPS de
+    // l'inscription compare à la position du vacancier. Sans lui, tout
+    // vacancier arrivé sans le QR devait taper le code horaire.
+    // fusionnerCarteConfig conserve le reste de carte_config (lieux, plan…).
+    const { config, error } = await fusionnerCarteConfig(camping.id, { perimeter: points, center: barycentre(points) })
     setSaving(false)
-    if (error) { alert('Erreur : ' + error.message); return }
+    if (error) { alert(traduireErreur(error)); return }
     onSaved?.(config)
     onClose?.()
   }

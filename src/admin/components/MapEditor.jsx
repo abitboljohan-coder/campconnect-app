@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useRef, useState, useSyncExternalStore } from 'react'
 import { supabase } from '../../supabase'
 import { CAMPING_LIEUX } from '../utils/analyzeMap'
 import { esc } from '../../utils/esc'
@@ -17,6 +17,19 @@ const PIN_COLORS = {
   animation: '#f472b6',
   groupe:    '#fb923c',
   lieu:      '#60a5fa',
+}
+
+// Au téléphone, le panneau flottant (210 px) couvrait presque toute la carte :
+// il restait 18 px à toucher à 320 px de large. Sous 600 px, on le sort de la
+// carte, au-dessus d'elle.
+const REQUETE_ETROIT = '(max-width: 599px)'
+function abonnerEtroit(rappel) {
+  const mq = window.matchMedia(REQUETE_ETROIT)
+  mq.addEventListener('change', rappel)
+  return () => mq.removeEventListener('change', rappel)
+}
+function useEtroit() {
+  return useSyncExternalStore(abonnerEtroit, () => window.matchMedia(REQUETE_ETROIT).matches, () => false)
 }
 
 function localKey(id) { return `carte_config_${id}` }
@@ -39,6 +52,7 @@ export default function MapEditor({ camping, setCamping }) {
   const [saving, setSaving]         = useState(false)
   const [selected, setSelected]     = useState(null)
   const [dbSupport, setDbSupport]   = useState(true)
+  const etroit = useEtroit()
 
   useEffect(() => { selectedRef.current = selected }, [selected])
   useEffect(() => { pinsRef.current = pins }, [pins])
@@ -133,6 +147,10 @@ export default function MapEditor({ camping, setCamping }) {
     return () => { isMounted = false; if (lf) { lf.remove(); lfRef.current = null } }
   }, []) // eslint-disable-line
 
+  // La carte change de hauteur au passage téléphone ↔ ordinateur : Leaflet
+  // doit recalculer ses tuiles, sinon une bande grise reste affichée.
+  useEffect(() => { lfRef.current?.invalidateSize() }, [etroit])
+
   // Rafraîchir les markers quand les pins changent
   useEffect(() => {
     const lf = lfRef.current
@@ -161,77 +179,86 @@ export default function MapEditor({ camping, setCamping }) {
 
   const pinnedIds = new Set(pins.map(p => p.ref_id))
 
+  const panneau = (
+    <div style={etroit ? {
+      // Téléphone : au-dessus de la carte, pleine largeur.
+      maxHeight: 300, overflowY: 'auto', marginBottom: 10,
+      background: '#fff', border: '1px solid #e5e7eb', borderRadius: 12,
+      display: 'flex', flexDirection: 'column', gap: 4, padding: 10,
+    } : {
+      position: 'absolute', top: 10, left: 10, zIndex: 1000,
+      width: 230, maxHeight: 'calc(100% - 20px)', overflowY: 'auto',
+      background: 'rgba(255,255,255,0.97)', backdropFilter: 'blur(10px)',
+      borderRadius: 12, boxShadow: '0 4px 24px rgba(0,0,0,0.15)',
+      display: 'flex', flexDirection: 'column', gap: 4, padding: '10px 10px',
+    }}>
+      <div style={{ fontSize: 12, color: selected ? jetons.marque : jetons.texteDoux, fontWeight: 600, marginBottom: 4, lineHeight: 1.3 }}>
+        {selected ? `🎯 Touchez la carte pour placer « ${selected.label} »` : '💡 Choisissez un lieu, puis touchez la carte'}
+      </div>
+
+      {animations.length > 0 && (
+        <>
+          <SectionLabel>Animations</SectionLabel>
+          {animations.map(a => (
+            <ListItem key={a.id} emoji={a.emoji || '🎉'} label={a.titre}
+              pinned={pinnedIds.has(a.id)} selected={selected?.ref_id === a.id} color={PIN_COLORS.animation}
+              onClick={() => setSelected(selected?.ref_id === a.id ? null : { ref_id: a.id, ref_type: 'animation', label: a.titre, emoji: a.emoji || '🎉', color: PIN_COLORS.animation })}
+              onRemove={pinnedIds.has(a.id) ? () => removePin(a.id) : null} />
+          ))}
+        </>
+      )}
+      {groupes.length > 0 && (
+        <>
+          <SectionLabel style={{ marginTop: 6 }}>Groupes</SectionLabel>
+          {groupes.map(g => (
+            <ListItem key={g.id} emoji={g.emoji || '👥'} label={g.titre}
+              pinned={pinnedIds.has(g.id)} selected={selected?.ref_id === g.id} color={PIN_COLORS.groupe}
+              onClick={() => setSelected(selected?.ref_id === g.id ? null : { ref_id: g.id, ref_type: 'groupe', label: g.titre, emoji: g.emoji || '👥', color: PIN_COLORS.groupe })}
+              onRemove={pinnedIds.has(g.id) ? () => removePin(g.id) : null} />
+          ))}
+        </>
+      )}
+      {pins.filter(p => p.ref_type === 'lieu').length > 0 && (
+        <>
+          <SectionLabel style={{ marginTop: 6 }}>Lieux placés</SectionLabel>
+          {pins.filter(p => p.ref_type === 'lieu').map(p => (
+            <ListItem key={p.ref_id} emoji={p.emoji} label={p.label}
+              pinned selected={selected?.ref_id === p.ref_id} color={PIN_COLORS.lieu}
+              onClick={() => setSelected(selected?.ref_id === p.ref_id ? null : p)}
+              onRemove={() => removePin(p.ref_id)} />
+          ))}
+        </>
+      )}
+      <SectionLabel style={{ marginTop: 6 }}>+ Ajouter un lieu</SectionLabel>
+      <LieuPicker
+        onAdd={lieu => {
+          const newPin = { ref_id: `lieu_${Date.now()}`, ref_type: 'lieu', label: lieu.label, emoji: lieu.emoji, color: lieu.color }
+          setSelected(newPin)
+        }}
+        existingLabels={pins.filter(p => p.ref_type === 'lieu').map(p => p.label)}
+      />
+    </div>
+  )
+
   return (
     <div>
       {!dbSupport && (
         <div style={{ marginBottom: 10, padding: '8px 12px', background: '#fffbeb', border: '1px solid #fcd34d', borderRadius: 8, fontSize: 12, color: jetons.alerte }}>
-          ⚠️ Pins sauvegardés localement. Exécutez dans Supabase SQL Editor :&nbsp;
-          <code style={{ background: jetons.alerteFond, padding: '2px 6px', borderRadius: 4, fontSize: 11 }}>
-            ALTER TABLE campings ADD COLUMN IF NOT EXISTS carte_config jsonb DEFAULT {'{}'}::jsonb;
-          </code>
+          {/* Un gérant n'a pas à lire une commande SQL : la cause courante est
+              le réseau. Les lieux restent gardés sur cet appareil en attendant. */}
+          ⚠️ Enregistrement impossible, vérifiez la connexion et réessayez.
         </div>
       )}
+
+      {etroit && panneau}
 
       {/* Carte pleine largeur avec panel flottant */}
       {/* isolation : les bandeaux posés sur la carte (z-index 1000) restent
           dans son cadre. Sans elle, ils passaient devant la barre de
           navigation et l'en-tête de la console dès qu'on faisait défiler. */}
-      <div style={{ position: 'relative', isolation: 'isolate', height: 560, borderRadius: 14, overflow: 'hidden', border: selected ? '2px solid #639922' : '2px solid #e5e7eb', cursor: selected ? 'crosshair' : 'grab', boxShadow: '0 4px 20px rgba(0,0,0,0.1)' }}>
+      <div style={{ position: 'relative', isolation: 'isolate', height: etroit ? 420 : 560, borderRadius: 14, overflow: 'hidden', border: selected ? '2px solid #639922' : '2px solid #e5e7eb', cursor: selected ? 'crosshair' : 'grab', boxShadow: '0 4px 20px rgba(0,0,0,0.1)' }}>
 
-        {/* Panel flottant gauche */}
-        <div style={{
-          position: 'absolute', top: 10, left: 10, zIndex: 1000,
-          width: 210, maxHeight: 'calc(100% - 20px)', overflowY: 'auto',
-          background: 'rgba(255,255,255,0.97)', backdropFilter: 'blur(10px)',
-          borderRadius: 12, boxShadow: '0 4px 24px rgba(0,0,0,0.15)',
-          display: 'flex', flexDirection: 'column', gap: 4, padding: '10px 10px',
-        }}>
-          <div style={{ fontSize: 12, color: selected ? jetons.marque : jetons.texteDoux, fontWeight: 600, marginBottom: 4, lineHeight: 1.3 }}>
-            {selected ? `🎯 Cliquez sur la carte pour placer « ${selected.label} »` : '💡 Sélectionnez puis cliquez sur la carte'}
-          </div>
-
-          {animations.length > 0 && (
-            <>
-              <SectionLabel>Animations</SectionLabel>
-              {animations.map(a => (
-                <ListItem key={a.id} emoji={a.emoji || '🎉'} label={a.titre}
-                  pinned={pinnedIds.has(a.id)} selected={selected?.ref_id === a.id} color={PIN_COLORS.animation}
-                  onClick={() => setSelected(selected?.ref_id === a.id ? null : { ref_id: a.id, ref_type: 'animation', label: a.titre, emoji: a.emoji || '🎉', color: PIN_COLORS.animation })}
-                  onRemove={pinnedIds.has(a.id) ? () => removePin(a.id) : null} />
-              ))}
-            </>
-          )}
-          {groupes.length > 0 && (
-            <>
-              <SectionLabel style={{ marginTop: 6 }}>Groupes</SectionLabel>
-              {groupes.map(g => (
-                <ListItem key={g.id} emoji={g.emoji || '👥'} label={g.titre}
-                  pinned={pinnedIds.has(g.id)} selected={selected?.ref_id === g.id} color={PIN_COLORS.groupe}
-                  onClick={() => setSelected(selected?.ref_id === g.id ? null : { ref_id: g.id, ref_type: 'groupe', label: g.titre, emoji: g.emoji || '👥', color: PIN_COLORS.groupe })}
-                  onRemove={pinnedIds.has(g.id) ? () => removePin(g.id) : null} />
-              ))}
-            </>
-          )}
-          {pins.filter(p => p.ref_type === 'lieu').length > 0 && (
-            <>
-              <SectionLabel style={{ marginTop: 6 }}>Lieux placés</SectionLabel>
-              {pins.filter(p => p.ref_type === 'lieu').map(p => (
-                <ListItem key={p.ref_id} emoji={p.emoji} label={p.label}
-                  pinned selected={selected?.ref_id === p.ref_id} color={PIN_COLORS.lieu}
-                  onClick={() => setSelected(selected?.ref_id === p.ref_id ? null : p)}
-                  onRemove={() => removePin(p.ref_id)} />
-              ))}
-            </>
-          )}
-          <SectionLabel style={{ marginTop: 6 }}>+ Ajouter un lieu</SectionLabel>
-          <LieuPicker
-            onAdd={lieu => {
-              const newPin = { ref_id: `lieu_${Date.now()}`, ref_type: 'lieu', label: lieu.label, emoji: lieu.emoji, color: lieu.color }
-              setSelected(newPin)
-            }}
-            existingLabels={pins.filter(p => p.ref_type === 'lieu').map(p => p.label)}
-          />
-        </div>
+        {!etroit && panneau}
 
         {/* Carte Leaflet */}
         <div ref={mapDivRef} style={{ position: 'absolute', inset: 0 }} />
@@ -242,9 +269,16 @@ export default function MapEditor({ camping, setCamping }) {
             💾 Sauvegarde...
           </div>
         )}
-        {!saving && pins.length > 0 && (
+        {/* La consigne du panneau sort vite de la vue (liste défilée, panneau
+            au-dessus de la carte au téléphone) : on la rappelle sur la carte. */}
+        {!saving && selected && (
+          <div style={{ position: 'absolute', bottom: 24, left: etroit ? 10 : 250, right: 10, zIndex: 1000, background: jetons.marque, color: '#fff', borderRadius: 12, padding: '8px 12px', fontSize: 13, fontWeight: 600, textAlign: 'center', boxShadow: '0 2px 8px rgba(0,0,0,0.2)', pointerEvents: 'none' }}>
+            🎯 Touchez la carte pour placer « {selected.label} »
+          </div>
+        )}
+        {!saving && !selected && pins.length > 0 && (
           <div style={{ position: 'absolute', top: 10, right: 10, zIndex: 1000, background: 'rgba(255,255,255,0.95)', borderRadius: 20, padding: '4px 12px', fontSize: 12, color: jetons.texteDoux, boxShadow: '0 2px 8px rgba(0,0,0,0.1)' }}>
-            ✓ {pins.length} pin{pins.length > 1 ? 's' : ''}
+            ✓ {pins.length} lieu{pins.length > 1 ? 'x' : ''} placé{pins.length > 1 ? 's' : ''}
           </div>
         )}
       </div>
@@ -276,12 +310,13 @@ function LieuPicker({ onAdd, existingLabels }) {
   return (
     <div style={{ marginTop: 4 }}>
       <input value={search} onChange={e => { setSearch(e.target.value); setGroupe(null) }} placeholder="Rechercher un lieu..."
-        style={{ width: '100%', padding: '7px 10px', borderRadius: 8, border: '1px solid #e5e7eb', fontSize: 12, outline: 'none', marginBottom: 6, boxSizing: 'border-box' }} />
+        // 44 px de haut et 16 px de texte : cible tactile, et pas de zoom iOS à la saisie.
+        style={{ width: '100%', minHeight: 44, padding: '8px 10px', borderRadius: 8, border: '1px solid #e5e7eb', fontSize: 16, outline: 'none', marginBottom: 6, boxSizing: 'border-box' }} />
       {!search && (
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4, marginBottom: 6 }}>
           {GROUPES_LIEUX.map(g => (
             <button key={g.label} onClick={() => setGroupe(groupe === g.label ? null : g.label)}
-              style={{ padding: '4px 8px', borderRadius: 14, fontSize: 11, fontWeight: 600, border: '1px solid #e5e7eb', background: groupe === g.label ? '#63992218' : '#f9fafb', color: groupe === g.label ? jetons.marque : jetons.texteDoux, cursor: 'pointer' }}>
+              style={{ minHeight: 44, padding: '4px 10px', borderRadius: 22, fontSize: 12, fontWeight: 600, border: '1px solid #e5e7eb', background: groupe === g.label ? '#63992218' : '#f9fafb', color: groupe === g.label ? jetons.marque : jetons.texteDoux, cursor: 'pointer' }}>
               {g.label}
             </button>
           ))}
@@ -293,7 +328,7 @@ function LieuPicker({ onAdd, existingLabels }) {
             const already = existingLabels.includes(lieu.label)
             return (
               <button key={lieu.id} onClick={() => !already && onAdd(lieu)} disabled={already}
-                style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '6px 8px', borderRadius: 7, background: already ? jetons.surfaceDouce : '#fff', border: '1px solid #e5e7eb', opacity: already ? 0.5 : 1, cursor: already ? 'default' : 'pointer', textAlign: 'left' }}>
+                style={{ display: 'flex', alignItems: 'center', gap: 8, minHeight: 44, padding: '6px 8px', borderRadius: 7, background: already ? jetons.surfaceDouce : '#fff', border: '1px solid #e5e7eb', opacity: already ? 0.5 : 1, cursor: already ? 'default' : 'pointer', textAlign: 'left' }}>
                 <span style={{ fontSize: 18, flexShrink: 0 }}>{lieu.emoji}</span>
                 <span style={{ fontSize: 12, fontWeight: 500, color: jetons.texteMoyen, flex: 1 }}>{lieu.label}</span>
                 <div style={{ width: 8, height: 8, borderRadius: '50%', background: lieu.color, flexShrink: 0 }} />
@@ -318,9 +353,10 @@ function ListItem({ emoji, label, pinned, selected, color, onClick, onRemove }) 
       <span style={{ flex: 1, fontSize: 12, fontWeight: 500, color: jetons.texteMoyen, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{label}</span>
       {pinned && <div style={{ width: 8, height: 8, borderRadius: '50%', background: color, flexShrink: 0 }} />}
       {onRemove && (
-        <button type="button" onClick={e => { e.stopPropagation(); onRemove() }}
-          style={{ width: 18, height: 18, borderRadius: '50%', background: jetons.dangerFond, color: jetons.danger, fontSize: 11, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, border: 'none', cursor: 'pointer' }}>
-          ×
+        // Zone de 44 px (cible tactile) autour d'une pastille visible de 24 px.
+        <button type="button" aria-label={`Retirer « ${label} » de la carte`} onClick={e => { e.stopPropagation(); onRemove() }}
+          style={{ width: 44, height: 44, margin: '-8px -8px -8px 0', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}>
+          <span aria-hidden="true" style={{ width: 24, height: 24, borderRadius: '50%', background: jetons.dangerFond, color: jetons.danger, fontSize: 14, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>×</span>
         </button>
       )}
     </div>

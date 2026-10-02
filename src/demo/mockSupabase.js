@@ -156,6 +156,9 @@ export const supabase = {
     signInWithPassword: async () => ({ data: { session: {} }, error: null }),
     signUp: async () => ({ data: { session: {} }, error: null }),
     signOut: async () => {},
+    // Paramètres (email, mot de passe) et « Mot de passe oublié ? » de la connexion gérant.
+    updateUser: async () => ({ data: { user: { id: 'demo-uid' } }, error: null }),
+    resetPasswordForEmail: async () => ({ data: {}, error: null }),
     onAuthStateChange: () => ({ data: { subscription: { unsubscribe() {} } } }),
   },
   storage: {

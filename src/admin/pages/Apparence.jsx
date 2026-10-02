@@ -1,21 +1,30 @@
 import { useState } from 'react'
 import { supabase } from '../../supabase'
 import ColorPicker from '../components/ColorPicker'
-import { Bloc, Alerte, EnTete } from '../components/Bloc'
+import { Bloc, EnTete } from '../components/Bloc'
+import { traduireErreur } from '../lib/erreurs'
+import { toast } from '../../toast'
 import { Bouton, Champ, Texte, Pile, couleur as jetons, espace, graisse, rayon } from '../../design'
 
 function compressImage(file, maxWidth = 800, quality = 0.75) {
+  // Un PNG ou un SVG détouré devenait un JPEG, qui n'a pas de transparence :
+  // le logo apparaissait sur un carré noir. On garde du PNG pour ces formats,
+  // limité à 512 px de côté pour que le poids reste raisonnable.
+  const transparent = file.type === 'image/png' || file.type === 'image/svg+xml'
   return new Promise((resolve, reject) => {
     const img = new Image()
     const url = URL.createObjectURL(file)
     img.onload = () => {
       URL.revokeObjectURL(url)
       let { width, height } = img
-      if (width > maxWidth) { height = Math.round((height / width) * maxWidth); width = maxWidth }
+      if (transparent) {
+        const echelle = Math.min(1, 512 / Math.max(width, height))
+        width = Math.round(width * echelle); height = Math.round(height * echelle)
+      } else if (width > maxWidth) { height = Math.round((height / width) * maxWidth); width = maxWidth }
       const canvas = document.createElement('canvas')
       canvas.width = width; canvas.height = height
       canvas.getContext('2d').drawImage(img, 0, 0, width, height)
-      resolve(canvas.toDataURL('image/jpeg', quality))
+      resolve(transparent ? canvas.toDataURL('image/png') : canvas.toDataURL('image/jpeg', quality))
     }
     img.onerror = reject
     img.src = url
@@ -27,50 +36,60 @@ export default function Apparence({ camping, setCamping }) {
   const [couleur1, setCouleur1] = useState(camping?.couleur_principale || jetons.marque)
   const [couleur2, setCouleur2] = useState(camping?.couleur_secondaire || jetons.marqueSombre)
   const [saving, setSaving]     = useState(false)
-  const [success, setSuccess]   = useState('')
-  const [error, setError]       = useState('')
   const [uploadingLogo, setUploadingLogo] = useState(false)
   const [logoPreview, setLogoPreview] = useState(camping?.logo_url || null)
 
+  // toast() : l'alerte en tête de page n'était pas visible depuis le bouton
+  // « Enregistrer », en bas de l'écran.
   function flash(type, msg) {
-    if (type === 'success') { setSuccess(msg); setError('') }
-    else { setError(msg); setSuccess('') }
+    toast(msg, type === 'success' ? 'succes' : 'erreur')
   }
 
   async function handleImageUpload(file, field, maxMB, setUploading, setPreview) {
     if (!file) return
-    if (file.size > maxMB * 1024 * 1024) { flash('error', `Fichier trop lourd (max ${maxMB}MB).`); return }
-    setUploading(true); setError('')
+    if (file.size > maxMB * 1024 * 1024) { flash('error', `Fichier trop lourd (${maxMB} Mo maximum).`); return }
+    setUploading(true)
     try {
       const dataUrl = await compressImage(file)
       const sizeKB  = Math.round(dataUrl.length * 0.75 / 1024)
-      if (sizeKB > 900) { flash('error', `Image trop lourde (${sizeKB}KB). Réduisez la résolution.`); setUploading(false); return }
+      if (sizeKB > 900) { flash('error', `Image trop lourde (${sizeKB} Ko). Réduisez sa taille.`); setUploading(false); return }
       const { error: dbErr } = await supabase.from('campings').update({ [field]: dataUrl }).eq('id', camping.id)
-      if (dbErr) { flash('error', `Erreur DB : ${dbErr.message}`) }
+      if (dbErr) { flash('error', traduireErreur(dbErr)) }
       else {
         setPreview(dataUrl)
         setCamping(c => ({ ...c, [field]: dataUrl }))
-        flash('success', 'Image mise à jour !')
-        setTimeout(() => setSuccess(''), 3000)
+        flash('success', 'Logo enregistré.')
       }
-    } catch (err) { flash('error', `Erreur : ${err.message}`) }
+    } catch { flash('error', "Cette image n'a pas pu être lue. Essayez un fichier PNG ou JPG.") }
     setUploading(false)
   }
 
+  async function retirerLogo() {
+    if (!confirm('Retirer le logo ? Vos vacanciers ne le verront plus.')) return
+    setUploadingLogo(true)
+    const { error: dbErr } = await supabase.from('campings').update({ logo_url: null }).eq('id', camping.id)
+    setUploadingLogo(false)
+    if (dbErr) { flash('error', traduireErreur(dbErr)); return }
+    setLogoPreview(null)
+    setCamping(c => ({ ...c, logo_url: null }))
+    flash('success', 'Logo retiré.')
+  }
+
   async function sauvegarder() {
+    // Même contrôle que dans Paramètres : un nom vide effaçait le camping de
+    // l'app et de la recherche des vacanciers.
+    if (!nom.trim()) { flash('error', 'Le nom du camping ne peut pas être vide.'); return }
     setSaving(true)
-    setError('')
     const { error: dbErr } = await supabase.from('campings').update({
       nom: nom.trim(),
       couleur_principale: couleur1,
       couleur_secondaire: couleur2,
     }).eq('id', camping.id)
 
-    if (dbErr) { flash('error', dbErr.message) }
+    if (dbErr) { flash('error', traduireErreur(dbErr)) }
     else {
       setCamping(c => ({ ...c, nom: nom.trim(), couleur_principale: couleur1, couleur_secondaire: couleur2 }))
       flash('success', 'Modifications enregistrées !')
-      setTimeout(() => setSuccess(''), 3000)
     }
     setSaving(false)
   }
@@ -79,9 +98,6 @@ export default function Apparence({ camping, setCamping }) {
     <Pile espace="xl">
       <EnTete titre="Apparence" sous="Nom, couleurs et logo de votre camping dans l'app." />
 
-      {success && <Alerte type="succes">{success}</Alerte>}
-      {error   && <Alerte type="erreur">{error}</Alerte>}
-
       <Bloc titre="Nom du camping">
         <Champ libelle="Nom" value={nom} onChange={e => setNom(e.target.value)}
                placeholder="ex : Camping Les Pins" />
@@ -89,7 +105,7 @@ export default function Apparence({ camping, setCamping }) {
 
       <Bloc titre="Couleurs">
         <ColorPicker label="Couleur principale (boutons, accents)" value={couleur1} onChange={setCouleur1} />
-        <ColorPicker label="Couleur secondaire (fond header)" value={couleur2} onChange={setCouleur2} />
+        <ColorPicker label="Couleur secondaire (bandeau du haut)" value={couleur2} onChange={setCouleur2} />
 
         <Pile espace="sm">
           <Texte variante="libelle" as="span">Aperçu de l’app</Texte>
@@ -145,7 +161,12 @@ export default function Apparence({ camping, setCamping }) {
               onChange={e => handleImageUpload(e.target.files[0], 'logo_url', 2, setUploadingLogo, setLogoPreview)}
               style={{ display: 'block', width: '100%', maxWidth: '100%', fontSize: 14, color: jetons.texteMoyen }}
             />
-            {uploadingLogo && <UploadProgress label="Compression et enregistrement…" />}
+            {uploadingLogo && <UploadProgress label="Enregistrement…" />}
+            {logoPreview && !uploadingLogo && (
+              <Bouton variante="secondaire" onClick={retirerLogo} style={{ alignSelf: 'flex-start' }}>
+                Retirer le logo
+              </Bouton>
+            )}
           </Pile>
         </Pile>
       </Bloc>
