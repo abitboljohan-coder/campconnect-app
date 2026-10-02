@@ -5,8 +5,10 @@
 // faisait que monter au fil de la saison. Sans date de départ, on le compte
 // donc présent pendant DUREE_SANS_DEPART jours après son arrivée (created_at).
 //
-// Même règle dans supabase/functions/send-push/index.ts (recopiée : Deno ne
-// lit pas ce fichier).
+// Cette règle ne vaut que pour les compteurs et les listes. Les notifications
+// (supabase/functions/send-push) ne l'appliquent pas, volontairement : la date
+// étant facultative, un vacancier qui ne l'a pas donnée ne doit pas cesser
+// d'être prévenu au bout d'une semaine (décision du 3 octobre 2026).
 
 export const DUREE_SANS_DEPART = 7   // jours
 

@@ -36,11 +36,11 @@ détaillés : rédigés par les agents, non versionnés.
 
 ## Restant
 
-- **Décision en attente** : un vacancier sans date de départ n'est plus
-  « présent » 7 jours après son arrivée (`src/lib/presence.js`). La même règle
-  est écrite dans `send-push`, **non redéployée** : tant qu'elle ne l'est pas,
-  les notifications suivent l'ancienne règle. Option recommandée : rendre la
-  date de départ obligatoire à l'arrivée, puis redéployer `send-push`.
+- **Décidé (Johan, 3 octobre)** : la date de départ reste **facultative**.
+  Sans date, un vacancier ne compte plus dans « vacanciers présents » et les
+  compteurs 7 jours après son arrivée (`src/lib/presence.js`), mais il reçoit
+  **toujours** les notifications : `send-push` garde l'ancienne règle (sans
+  date = présent), volontairement. Ne pas y reporter la règle des 7 jours.
 - Annuler une animation en prévenant les inscrits (colonne + notification).
 - Prévenir le vacancier quand son signalement est résolu.
 - Carte : une animation seule sur un lieu masque le point du lieu
