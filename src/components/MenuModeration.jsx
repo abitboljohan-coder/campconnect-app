@@ -3,7 +3,7 @@ import Sheet from './Sheet'
 import { toast } from '../toast'
 import { bloquer, signalerContenu } from '../lib/moderation'
 import { t } from '../i18n'
-import { Texte, Pile, couleur, espace, graisse, rayon, texte as tailles } from '../design'
+import { Bouton, Texte, Pile, couleur, espace, graisse, rayon, texte as tailles } from '../design'
 
 const MOTIFS = ['harcelement', 'haine', 'sexuel', 'arnaque', 'autre']
 
@@ -16,7 +16,7 @@ const MOTIFS = ['harcelement', 'haine', 'sexuel', 'arnaque', 'autre']
  * quelqu'un pour avoir la paix.
  */
 export default function MenuModeration({ cible, camping, vacancier, onClose, onBloque }) {
-  const [etape, setEtape] = useState('menu')   // menu | motif
+  const [etape, setEtape] = useState('menu')   // menu | motif | bloquer
   const [envoi, setEnvoi] = useState(false)
   if (!cible) return null
 
@@ -69,7 +69,26 @@ export default function MenuModeration({ cible, camping, vacancier, onClose, onB
                       onClick={() => setEtape('motif')} />
               <Action emoji="🚫" libelle={t('moderation.bloquer', { pseudo })}
                       detail={t('moderation.bloquer_detail')}
-                      danger onClick={confirmerBlocage} disabled={envoi} />
+                      danger onClick={() => setEtape('bloquer')} />
+            </Pile>
+          </>
+        ) : etape === 'bloquer' ? (
+          // Bloquer masque tous les messages de la personne, jusque dans les
+          // groupes qu'elle organise : un appui de travers ne doit pas suffire.
+          <>
+            <Pile espace="xs">
+              <Texte variante="sousTitre" as="h2">{t('moderation.bloquer_titre', { pseudo })}</Texte>
+              <Texte variante="doux">{t('moderation.bloquer_texte')}</Texte>
+            </Pile>
+            <Pile direction="ligne" espace="sm">
+              <Bouton variante="secondaire" taille="lg" style={{ flex: 1 }}
+                      disabled={envoi} onClick={() => setEtape('menu')}>
+                {t('commun.annuler')}
+              </Bouton>
+              <Bouton variante="danger" taille="lg" style={{ flex: 1 }}
+                      charge={envoi} onClick={confirmerBlocage}>
+                {t('moderation.bloquer_confirmer')}
+              </Bouton>
             </Pile>
           </>
         ) : (

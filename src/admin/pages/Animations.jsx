@@ -4,6 +4,7 @@ import { toast } from '../../toast'
 import Sheet from '../../components/Sheet'
 import AnimationForm from '../components/AnimationForm'
 import { Bloc, EnTete } from '../components/Bloc'
+import { libelleAvecFr } from '../../lib/profil'
 import { Bouton, Texte, Pile, Badge, Squelette, Vide, couleur as jetons, espace, graisse, rayon, texte as tailles } from '../../design'
 
 export default function Animations({ camping }) {
@@ -256,7 +257,7 @@ export default function Animations({ camping }) {
                   <div>
                     <Texte variante="corps" style={{ fontWeight: graisse.fort, color: jetons.texte }}>{v?.pseudo}</Texte>
                     <Texte variante="doux">
-                      {[v?.emplacement && `Empl. ${v.emplacement}`, v?.tranche_age, v?.avec].filter(Boolean).join(' · ')}
+                      {[v?.emplacement && `Empl. ${v.emplacement}`, v?.tranche_age, libelleAvecFr(v?.avec)].filter(Boolean).join(' · ')}
                     </Texte>
                   </div>
                 </Pile>

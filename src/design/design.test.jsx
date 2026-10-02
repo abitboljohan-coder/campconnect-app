@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest'
 import { renderToStaticMarkup } from 'react-dom/server'
-import { Bouton, Champ, Texte, Badge, Carte } from './index'
+import { Bouton, Champ, Texte, Badge, Carte, Puce } from './index'
 
 // Le système de conception porte les garanties d'accessibilité de toute
 // l'application : si Champ lie correctement son libellé, tous les formulaires
@@ -58,6 +58,17 @@ describe('Bouton', () => {
 
   it('propose une variante par intention, pas par apparence', () => {
     expect(html(<Bouton variante="danger">Supprimer</Bouton>)).toMatch(/#dc2626/i)
+  })
+
+  it('garde une cible tactile d’au moins 40 px, même en petite taille', () => {
+    expect(html(<Bouton taille="sm">Rejoindre</Bouton>)).toMatch(/min-height:40px/)
+  })
+})
+
+describe('Puce', () => {
+  it('garde une cible tactile d’au moins 40 px, même compacte', () => {
+    expect(html(<Puce taille="sm">Sport</Puce>)).toMatch(/min-height:40px/)
+    expect(html(<Puce>Sport</Puce>)).toMatch(/min-height:40px/)
   })
 })
 

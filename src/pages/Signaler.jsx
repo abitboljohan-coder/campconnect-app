@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { supabase } from '../supabase'
+import { toast } from '../toast'
 import { t, useLangue } from '../i18n'
 import { Bouton, Carte, Champ, Texte, Pile, couleur as jetonsCouleur, espace, graisse, rayon, texte as jetonsTexte } from '../design'
 
@@ -56,6 +57,7 @@ export default function Signaler({ camping, vacancier }) {
     setErreur('')
 
     let photo_url = null
+    let photoPerdue = false
     if (photo) {
       const chemin = `signalements/${camping.id}/${Date.now()}.jpg`
       const { error: upErr } = await supabase.storage
@@ -63,6 +65,7 @@ export default function Signaler({ camping, vacancier }) {
       if (upErr) {
         // La photo est un bonus : on continue sans elle plutôt que de tout perdre
         console.error('Upload photo échoué :', upErr)
+        photoPerdue = true
       } else {
         photo_url = supabase.storage.from('camping-assets').getPublicUrl(chemin).data.publicUrl
       }
@@ -83,6 +86,8 @@ export default function Signaler({ camping, vacancier }) {
       setErreur(t('signaler.err_envoi'))
       return
     }
+    // Le vacancier croyait la photo jointe : on lui dit qu'elle ne l'est pas.
+    if (photoPerdue) toast(t('signaler.photo_non_envoyee'), 'erreur')
     setEnvoye(true)
   }
 
@@ -167,7 +172,9 @@ export default function Signaler({ camping, vacancier }) {
           }}>
             <span aria-hidden="true" style={{ fontSize: 26 }}>📷</span>
             <Texte variante="doux" as="span" style={{ fontWeight: graisse.fort }}>{t('signaler.ajouter_photo')}</Texte>
-            <input type="file" accept="image/*" capture="environment" onChange={choisirPhoto} style={{ display: 'none' }} />
+            {/* Sans « capture » : le téléphone propose l'appareil photo ET la
+                galerie, pour joindre une photo prise un peu plus tôt. */}
+            <input type="file" accept="image/*" onChange={choisirPhoto} style={{ display: 'none' }} />
           </label>
         )}
       </Pile>

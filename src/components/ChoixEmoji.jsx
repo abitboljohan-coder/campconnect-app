@@ -15,7 +15,7 @@ import { Texte, Pile, couleur, espace, graisse, rayon } from '../design'
  * Les emojis refusés (voir lib/emojis) ne sont proposés nulle part, et un
  * emoji refusé tapé au clavier est écarté avec un message plutôt qu'en silence.
  */
-export default function ChoixEmoji({ valeur, onChange, suggestions, libelle, taille = 44 }) {
+export default function ChoixEmoji({ valeur, onChange, suggestions, libelle, taille = 44, uneLigne = false }) {
   const [ouvert, setOuvert] = useState(false)
   const [categorie, setCategorie] = useState(CATEGORIES_EMOJIS[0].id)
   const [saisie, setSaisie] = useState('')
@@ -62,7 +62,10 @@ export default function ChoixEmoji({ valeur, onChange, suggestions, libelle, tai
     <Pile espace="sm" role="group" aria-label={libelle}>
       {libelle && <Texte variante="libelle" as="span">{libelle}</Texte>}
 
-      <Pile direction="ligne" espace="sm" retour>
+      {/* uneLigne : les suggestions défilent sur une seule ligne au lieu de
+          s'empiler, pour les écrans où chaque ligne compte (l'inscription). */}
+      <Pile direction="ligne" espace="sm" retour={!uneLigne}
+            style={uneLigne ? { overflowX: 'auto', paddingBottom: 2 } : undefined}>
         {visibles.map(e => bouton(e, valeur === e, () => onChange(e)))}
         <button
           type="button"
