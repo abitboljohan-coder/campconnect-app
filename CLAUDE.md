@@ -269,6 +269,8 @@ Les notifications push fonctionnent sur les deux plateformes — voir
 qui ne produisent aucune erreur visible.
 
 Pour démarcher un camping, invoquer la commande `/commercial`.
+Pour sortir une version sur les stores, invoquer `/livraison`. Le workflow
+complet (fichier de prospects, routines, semaine type) : `docs/WORKFLOW.md`.
 
 Camping de démo (`les-flots-bleus`, « Camping démo Les Flots Bleus ») : ses
 groupes, messages, animations, statuts et annonces vivent dans Supabase, pas
