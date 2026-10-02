@@ -49,3 +49,24 @@ export function heurePrevue(hhmm, maintenant = new Date()) {
 /** Le groupe a-t-il atteint le nombre de membres fixé par son créateur ? */
 export const estComplet = (groupe, nbMembres) =>
   !!groupe.max_membres && nbMembres >= groupe.max_membres
+
+/**
+ * Heure d'un rendez-vous de groupe, précédée du jour : « Aujourd'hui 18:30 »,
+ * « Demain 08:00 », sinon la date courte (« sam. 12 sept. 18:30 »).
+ *
+ * L'heure seule ne disait pas quel jour : une « Rando demain matin » créée la
+ * veille s'affichait « 08:00 », sans qu'on sache si c'était passé ou à venir.
+ * Les libellés viennent de l'appelant : la règle se teste sans i18n.
+ * Renvoie null sans heure lisible (« 20:00 » laissé par une ancienne version).
+ */
+export function libelleHeure(heure, { aujourdhui, demain, locale = 'fr-FR' } = {}, maintenant = new Date()) {
+  const d = heure ? new Date(heure) : null
+  if (!d || Number.isNaN(d.getTime())) return null
+  const hhmm = d.toLocaleTimeString(locale, { hour: '2-digit', minute: '2-digit' })
+  const ref = new Date(maintenant)
+  const lendemain = new Date(ref); lendemain.setDate(ref.getDate() + 1)
+  if (d.toDateString() === ref.toDateString()) return `${aujourdhui} ${hhmm}`
+  if (d.toDateString() === lendemain.toDateString()) return `${demain} ${hhmm}`
+  const jour = d.toLocaleDateString(locale, { weekday: 'short', day: 'numeric', month: 'short' })
+  return `${jour} ${hhmm}`
+}
