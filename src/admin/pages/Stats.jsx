@@ -4,8 +4,9 @@ import {
   LineChart, Line, BarChart, Bar, PieChart, Pie, Cell,
   XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer,
 } from 'recharts'
-import { Bloc, Alerte, EnTete } from '../components/Bloc'
-import { Pile, Vide, couleur as jetons } from '../../design'
+import { Bloc, EnTete } from '../components/Bloc'
+import StatCard from '../components/StatCard'
+import { Pile, Texte, Vide, couleur as jetons } from '../../design'
 
 const COLORS = [jetons.marque, '#f59e0b', '#8b5cf6', '#ef4444', '#06b6d4', '#f97316', '#ec4899', '#14b8a6']
 
@@ -61,13 +62,15 @@ export default function Stats({ camping }) {
 
     // Inscriptions par animation
     let animStats = []
+    let inscriptions30j = 0
     const animIds = (animations || []).map(a => a.id)
     if (animIds.length > 0) {
       const { data: inscs } = await supabase
         .from('inscriptions')
-        .select('animation_id')
+        .select('animation_id, created_at')
         .in('animation_id', animIds)
 
+      inscriptions30j = (inscs || []).filter(i => i.created_at >= since).length
       const counts = {}
       for (const ins of (inscs || [])) {
         counts[ins.animation_id] = (counts[ins.animation_id] || 0) + 1
@@ -94,6 +97,7 @@ export default function Stats({ camping }) {
       .slice(0, 8)
 
     setData({
+      totaux: { vacanciers: (vacanciers || []).length, inscriptions: inscriptions30j, groupes: (groupes || []).length },
       vacParJour:   groupByDate(vacanciers || [], 'created_at'),
       grpParJour:   groupByDate(groupes || [], 'created_at'),
       trancheAge:   countBy(allVacanciers || [], 'tranche_age'),
@@ -112,10 +116,20 @@ export default function Stats({ camping }) {
 
   return (
     <Pile espace="xl">
-      <EnTete titre="Statistiques" sous="30 derniers jours" />
+      {/* « 30 derniers jours » en tête de page était faux pour la moitié des
+          blocs, calculés sur toute la saison : chaque bloc dit sa période. */}
+      <EnTete titre="Statistiques" sous="La fréquentation de votre camping et le profil de vos vacanciers." />
 
-        {/* Vacanciers par jour */}
-        <ChartCard title="Inscriptions vacanciers par jour">
+      {/* Trois chiffres à présenter à la direction, avant les courbes. */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(130px, 100%), 1fr))', gap: 12 }}>
+        <StatCard icone="tente"     valeur={data.totaux.vacanciers}   libelle="Nouveaux vacanciers" sous={TRENTE_JOURS} />
+        <StatCard icone="agenda"    valeur={data.totaux.inscriptions} libelle="Inscriptions aux animations" sous={TRENTE_JOURS} couleur="#6d28d9" />
+        <StatCard icone="personnes" valeur={data.totaux.groupes}      libelle="Groupes créés" sous={TRENTE_JOURS} couleur="#b45309" />
+      </div>
+
+        {/* Vacanciers par jour. « Inscriptions vacanciers » se confondait avec
+            les inscriptions aux animations de l'accueil. */}
+        <ChartCard title="Nouveaux vacanciers par jour" sous={TRENTE_JOURS}>
           <ResponsiveContainer width="100%" height={220}>
             <LineChart data={data.vacParJour}>
               <CartesianGrid strokeDasharray="3 3" stroke="#f0ede6" />
@@ -129,7 +143,7 @@ export default function Stats({ camping }) {
 
         {/* Top animations */}
         {data.animStats.length > 0 && (
-          <ChartCard title="Top animations — nombre d'inscrits">
+          <ChartCard title="Top animations — nombre d'inscrits" sous={SAISON}>
             <ResponsiveContainer width="100%" height={220}>
               <BarChart data={data.animStats} layout="vertical">
                 <CartesianGrid strokeDasharray="3 3" stroke="#f0ede6" horizontal={false} />
@@ -144,7 +158,7 @@ export default function Stats({ camping }) {
 
         {/* Répartition âge + avec */}
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(280px, 100%), 1fr))', gap: 20 }}>
-          <ChartCard title="Répartition par tranche d'âge">
+          <ChartCard title="Répartition par tranche d'âge" sous={SAISON}>
             {data.trancheAge.length > 0 ? (
               <ResponsiveContainer width="100%" height={200}>
                 <PieChart>
@@ -157,7 +171,7 @@ export default function Stats({ camping }) {
             ) : <Empty />}
           </ChartCard>
 
-          <ChartCard title="Avec qui voyagent-ils ?">
+          <ChartCard title="Avec qui voyagent-ils ?" sous={SAISON}>
             {data.avec.length > 0 ? (
               <ResponsiveContainer width="100%" height={200}>
                 <PieChart>
@@ -173,7 +187,7 @@ export default function Stats({ camping }) {
 
         {/* Top intérêts */}
         {data.topInterets.length > 0 && (
-          <ChartCard title="Top centres d'intérêt">
+          <ChartCard title="Top centres d'intérêt" sous={SAISON}>
             <ResponsiveContainer width="100%" height={200}>
               <BarChart data={data.topInterets}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#f0ede6" />
@@ -187,7 +201,7 @@ export default function Stats({ camping }) {
         )}
 
         {/* Groupes par jour */}
-        <ChartCard title="Groupes créés par jour">
+        <ChartCard title="Groupes créés par jour" sous={TRENTE_JOURS}>
           <ResponsiveContainer width="100%" height={200}>
             <LineChart data={data.grpParJour}>
               <CartesianGrid strokeDasharray="3 3" stroke="#f0ede6" />
@@ -202,8 +216,19 @@ export default function Stats({ camping }) {
   )
 }
 
-function ChartCard({ title, children }) {
-  return <Bloc titre={title}>{children}</Bloc>
+const TRENTE_JOURS = '30 derniers jours'
+const SAISON = 'Depuis le début de la saison'
+
+function ChartCard({ title, sous, children }) {
+  return (
+    <Bloc>
+      <div>
+        <Texte variante="sousTitre" as="h2" style={{ fontSize: 16 }}>{title}</Texte>
+        {sous && <Texte variante="micro" style={{ marginTop: 2 }}>{sous}</Texte>}
+      </div>
+      {children}
+    </Bloc>
+  )
 }
 
 function Empty() {

@@ -6,6 +6,7 @@ import StatCard from '../components/StatCard'
 import { getHourlyCode } from '../../pages/Onboarding'
 import { estActuel } from '../../lib/groupes'
 import { lienRejoindre } from '../lib/liens'
+import { tauxRemplissage } from '../lib/animations'
 import { Bloc, EnTete } from '../components/Bloc'
 import { Bouton, Texte, Pile, Squelette, Vide, Icone, couleur as jetons, espace, graisse, rayon, texte as tailles } from '../../design'
 
@@ -30,6 +31,10 @@ function GuideDemarrage({ camping, stats }) {
       label: "Ajoutez vos points d'intérêt", detail: 'Piscine, sanitaires, réception…', vers: '/admin/carte', icone: 'carte' },
     { fait: stats.animations > 0,
       label: 'Créez votre première animation', detail: "Elle apparaîtra dans l'agenda des vacanciers", vers: '/admin/animations', icone: 'agenda' },
+    // Tant que le livret est vide, les vacanciers lisent des exemples (Wi-Fi,
+    // horaires, numéro de réception) : rien n'invitait à les remplacer.
+    { fait: Array.isArray(camping?.infos) && camping.infos.length > 0,
+      label: 'Remplissez vos infos pratiques', detail: 'Wi-Fi, horaires, numéros utiles…', vers: '/admin/infos', icone: 'infos' },
   ]
 
   const faites  = etapes.filter(e => e.fait).length
@@ -127,7 +132,7 @@ export default function Overview({ camping }) {
       // Personne ne ferme un groupe : compter la colonne « actif » additionnait
       // les apéros de la semaine dernière. Même règle que côté vacancier.
       supabase.from('groupes').select('heure, created_at').eq('camping_id', camping.id).eq('actif', true),
-      supabase.from('animations').select('id, titre, places_max').eq('camping_id', camping.id).eq('publiee', true),
+      supabase.from('animations').select('id, titre, places_max, debut').eq('camping_id', camping.id).eq('publiee', true),
       supabase.from('groupes').select('*').eq('camping_id', camping.id).order('created_at', { ascending: false }).limit(5),
       supabase.from('vacanciers').select('pseudo, avatar_emoji, emplacement').eq('camping_id', camping.id).eq('date_depart', today).order('pseudo'),
       supabase.from('vacanciers').select('*', { count: 'exact', head: true }).eq('camping_id', camping.id).gte('date_depart', today).lte('date_depart', in7j),
@@ -158,10 +163,7 @@ export default function Overview({ camping }) {
       inscCount = iCount || 0
       recentInscs = recentI || []
 
-      // Taux de remplissage global
-      const totalPlaces = (anims || []).reduce((sum, a) => sum + (a.places_max || 0), 0)
-      const totalInscrits = (allInscs || []).length
-      taux = totalPlaces > 0 ? Math.round((totalInscrits / totalPlaces) * 100) : 0
+      taux = tauxRemplissage(anims, allInscs)
     }
 
     setStats({ vacanciers: vacCount || 0, groupes: grpCount, inscriptions: inscCount, taux, animations: animTotal || 0, signalements: sigCount || 0 })
@@ -196,23 +198,24 @@ export default function Overview({ camping }) {
         </Link>
       )}
 
-      {/* Masqué dès que les quatre étapes sont faites. */}
+      {/* Masqué dès que toutes les étapes sont faites. */}
       <GuideDemarrage camping={camping} stats={stats} />
 
-      {/* Les chiffres du jour avant le reste : c'est ce qu'on vient voir. Deux
-          colonnes sur téléphone, les cinq tuiles sur une ligne à l'écran. */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(172px, 100%), 1fr))', gap: 12 }}>
+      {/* Le code d'accès d'abord : c'est ce que la réception demande vingt
+          fois par jour. Il commençait sous la ligne de flottaison du téléphone. */}
+      <AccessCodeCard camping={camping} />
+
+      {/* Deux colonnes dès 320 px (288 px utiles : 2 × 130 + 12), les cinq
+          tuiles sur une ligne à l'écran. Avec 172 px, il fallait 402 px. */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(130px, 100%), 1fr))', gap: 12 }}>
         <StatCard icone="tente"     valeur={stats.vacanciers}   libelle="Vacanciers présents" sous="Actuellement au camping" />
         <StatCard icone="sortie"    valeur={departs.semaine}    libelle="Départs sous 7 jours"
                   sous={departs.aujourdhui.length ? `dont ${departs.aujourdhui.length} aujourd'hui` : "Aucun aujourd'hui"}
                   couleur="#0284c7" />
         <StatCard icone="personnes" valeur={stats.groupes}      libelle="Groupes actifs" sous="En ce moment" couleur="#b45309" />
         <StatCard icone="agenda"    valeur={stats.inscriptions} libelle="Inscriptions aujourd'hui" sous="Depuis minuit" couleur="#6d28d9" />
-        <StatCard icone="tendance"  valeur={`${stats.taux}%`}   libelle="Taux de remplissage" sous="Animations publiées" couleur="#be123c" />
+        <StatCard icone="tendance"  valeur={`${stats.taux}%`}   libelle="Taux de remplissage" sous="Animations à venir, places limitées" couleur="#be123c" />
       </div>
-
-      {/* Code d'accès + QR */}
-      <AccessCodeCard camping={camping} />
 
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(300px, 100%), 1fr))', gap: espace.xl }}>
 
@@ -388,16 +391,27 @@ function AccessCodeCard({ camping }) {
         }}>
           {joinUrl}
         </div>
+        {/* « Générez un QR code » laissait croire qu'il fallait un outil
+            externe : l'application le génère déjà, dans Paramètres. */}
         <Texte variante="doux" style={{ lineHeight: 1.6 }}>
-          Générez un QR code avec ce lien et affichez-le à la réception. Les vacanciers qui scannent ce lien accèdent directement sans code.
+          Votre QR code est prêt dans Paramètres : affichez-le à la réception. Les vacanciers qui le scannent entrent sans code.
         </Texte>
-        <Bouton
-          variante="secondaire" taille="sm"
-          onClick={copier}
-          style={{ alignSelf: 'flex-start', borderRadius: rayon.sm, border: 'none', background: jetons.fond, color: jetons.marqueTexte }}
-        >
-          Copier le lien
-        </Bouton>
+        <Pile direction="ligne" espace="sm" retour>
+          <Link to="/admin/parametres#qr" style={{
+            display: 'inline-flex', alignItems: 'center', gap: 6, minHeight: 44,
+            padding: `0 ${espace.lg}px`, borderRadius: rayon.sm, textDecoration: 'none',
+            background: jetons.marque, color: '#fff', fontWeight: graisse.fort, fontSize: tailles.petit,
+          }}>
+            Voir le QR code <Icone nom="chevron" taille={15} />
+          </Link>
+          <Bouton
+            variante="secondaire" taille="sm"
+            onClick={copier}
+            style={{ minHeight: 44, borderRadius: rayon.sm, border: 'none', background: jetons.fond, color: jetons.marqueTexte }}
+          >
+            Copier le lien
+          </Bouton>
+        </Pile>
       </Bloc>
     </div>
   )

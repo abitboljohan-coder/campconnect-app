@@ -167,21 +167,57 @@ function TitreGroupe({ children }) {
   )
 }
 
+/**
+ * Ancre de page (`/admin/parametres#qr`) : fait défiler jusqu'au bloc visé.
+ *
+ * Le routeur ne le fait pas, et la page charge ses données après le premier
+ * rendu : on réessaie quelques fois le temps que le bloc apparaisse. À défaut
+ * de l'identifiant, un titre qui contient le mot de l'ancre fait l'affaire.
+ */
+function useDefilerVersAncre(hash) {
+  useEffect(() => {
+    const ancre = decodeURIComponent((hash || '').slice(1))
+    if (!ancre) return
+    let essais = 0
+    const iv = setInterval(() => {
+      const cible = document.getElementById(ancre)
+        || [...document.querySelectorAll('main h2')]
+          .find(h => h.textContent.toLowerCase().includes(ancre.toLowerCase()))
+      if (cible || ++essais > 20) clearInterval(iv)
+      if (cible) {
+        cible.style.scrollMarginTop = '96px'   // sous l'en-tête collant du téléphone
+        cible.scrollIntoView({ block: 'start', behavior: 'smooth' })
+      }
+    }, 100)
+    return () => clearInterval(iv)
+  }, [hash])
+}
+
 export default function AdminLayout({ gerant, camping, onLogout }) {
   const etroit = useEtroit()
   const [reglagesOuverts, setReglagesOuverts] = useState(false)
-  const { pathname } = useLocation()
+  const { pathname, hash } = useLocation()
+  useDefilerVersAncre(hash)
 
   // La feuille se referme au clic, là où la navigation est décidée — et non
   // en réaction à l'URL une fois la page déjà rendue dessous.
   const fermerReglages = useCallback(() => setReglagesOuverts(false), [])
+
+  // Se déconnecter oblige à retaper son mot de passe, sans « mot de passe
+  // oublié » : un appui égaré ne doit pas suffire.
+  const seDeconnecter = () => {
+    if (confirm('Se déconnecter de l’espace gérant ? Il faudra retaper votre mot de passe.')) onLogout()
+  }
 
   const dansConfiguration = CONFIGURATION.some(i => pathname.startsWith(i.path))
   const nouveaux = useSignalementsNouveaux(camping?.id, pathname)
   const badgeDe = path => (path === '/admin/signalements' ? nouveaux : 0)
 
   return (
-    <div style={{ minHeight: '100dvh', background: jetons.fond, display: 'flex' }}>
+    // flexShrink 0 : enfant de #root (colonne flex de hauteur fixe), ce bloc
+    // rétrécissait à la hauteur de l'écran ; la marge réservée à la barre du
+    // bas ne s'ajoutait plus après le contenu, dont le bas restait caché.
+    <div style={{ minHeight: '100dvh', background: jetons.fond, display: 'flex', flexShrink: 0 }}>
 
       {/* ─── Menu latéral, écrans larges ─────────────────────────────────── */}
       {!etroit && (
@@ -211,7 +247,7 @@ export default function AdminLayout({ gerant, camping, onLogout }) {
             <Texte variante="doux" style={{ color: VERT_ETEINT, marginBottom: espace.md }}>
               {gerant?.email || 'Gérant'}
             </Texte>
-            <Bouton variante="danger" taille="sm" pleineLargeur onClick={onLogout}
+            <Bouton variante="danger" taille="sm" pleineLargeur onClick={seDeconnecter}
                     style={{ background: 'rgba(220,38,38,0.15)', color: '#fca5a5', border: '1px solid rgba(220,38,38,0.2)' }}>
               Se déconnecter
             </Bouton>
@@ -242,12 +278,20 @@ export default function AdminLayout({ gerant, camping, onLogout }) {
                 {camping?.nom}
               </Texte>
             </div>
-            {/* « Déco. » était une abréviation illisible sur une cible trop
-                petite. Le mot entier tient, et la cible fait 44 pt. */}
-            <Bouton variante="discret" taille="sm" onClick={onLogout}
-                    style={{ color: '#fca5a5', flexShrink: 0, minHeight: 44 }}>
-              Quitter
-            </Bouton>
+            {/* Dans l'app, le gérant qui touchait « Quitter » voulait revenir
+                côté vacancier et se retrouvait déconnecté. Le bouton y mène
+                donc à l'espace vacancier ; la déconnexion passe dans Réglages. */}
+            {isNative ? (
+              <Bouton variante="discret" taille="sm" onClick={() => setAppMode('vacancier')}
+                      style={{ color: VERT_CLAIR, flexShrink: 0, minHeight: 44 }}>
+                Espace vacancier
+              </Bouton>
+            ) : (
+              <Bouton variante="discret" taille="sm" onClick={seDeconnecter}
+                      style={{ color: '#fca5a5', flexShrink: 0, minHeight: 44 }}>
+                Quitter
+              </Bouton>
+            )}
           </header>
         ) : (
           <header style={{
@@ -336,14 +380,12 @@ export default function AdminLayout({ gerant, camping, onLogout }) {
                 </NavLink>
               ))}
             </Pile>
-            {/* Sur le téléphone, revenir côté vacancier sans se déconnecter :
-                la seule porte de sortie était « Quitter », qui fermait la
-                session gérant à chaque aller-retour. */}
-            {isNative && (
-              <Bouton variante="secondaire" pleineLargeur onClick={() => setAppMode('vacancier')}>
-                ← Espace vacancier
-              </Bouton>
-            )}
+            {/* Le retour côté vacancier est dans l'en-tête (app) ; la
+                déconnexion, plus rare et plus coûteuse, est rangée ici. */}
+            <Bouton variante="secondaire" pleineLargeur onClick={seDeconnecter}
+                    style={{ color: jetons.danger }}>
+              Se déconnecter
+            </Bouton>
           </Pile>
         </Sheet>
       )}

@@ -67,6 +67,38 @@ describe('navigation de l’administration', () => {
   })
 })
 
+describe('déconnexion du gérant', () => {
+  // Sur le web au téléphone, « Quitter » fermait la session d'un appui, et
+  // le gérant ne peut pas réinitialiser seul son mot de passe.
+  it('demande confirmation avant de déconnecter', () => {
+    window.matchMedia = () => ({ matches: true, addEventListener() {}, removeEventListener() {} })
+    let deconnecte = 0
+    const hote = document.createElement('div')
+    document.body.appendChild(hote)
+    const racine = createRoot(hote)
+    act(() => {
+      racine.render(
+        <MemoryRouter initialEntries={['/admin/overview']}>
+          <AdminLayout gerant={{ email: 'g@ex.fr' }} camping={{ nom: 'Les Flots Bleus' }} onLogout={() => { deconnecte++ }} />
+        </MemoryRouter>
+      )
+    })
+    const quitter = [...hote.querySelectorAll('header button')].find(b => b.textContent.includes('Quitter'))
+    expect(quitter).toBeTruthy()
+
+    window.confirm = () => false
+    act(() => quitter.click())
+    expect(deconnecte).toBe(0)
+
+    window.confirm = () => true
+    act(() => quitter.click())
+    expect(deconnecte).toBe(1)
+
+    act(() => racine.unmount())
+    hote.remove()
+  })
+})
+
 describe('Icone', () => {
   it('suit la couleur du texte et ne s’annonce pas', () => {
     const m = renderToStaticMarkup(<Icone nom="accueil" />)

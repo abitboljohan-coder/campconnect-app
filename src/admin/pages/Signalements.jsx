@@ -22,10 +22,12 @@ const CIBLES = {
   annonce: { table: 'annonces', nom: "l'annonce" },
 }
 
+// `action` : le libellé du bouton qui y mène. « → Résolus », au pluriel,
+// se lisait comme un onglet plutôt que comme une action sur ce signalement.
 const STATUTS = [
-  { id: 'nouveau',  label: 'Nouveaux',  couleur: jetons.danger, bg: jetons.dangerFond },
-  { id: 'en_cours', label: 'En cours',  couleur: '#d97706', bg: '#fffbeb' },
-  { id: 'resolu',   label: 'Résolus',   couleur: '#16a34a', bg: '#f0fdf4' },
+  { id: 'nouveau',  label: 'Nouveaux',  action: 'Rouvrir',          couleur: jetons.danger, bg: jetons.dangerFond },
+  { id: 'en_cours', label: 'En cours',  action: 'Marquer en cours', couleur: '#d97706', bg: '#fffbeb' },
+  { id: 'resolu',   label: 'Résolus',   action: 'Marquer résolu',   couleur: '#16a34a', bg: '#f0fdf4' },
 ]
 
 export default function Signalements({ camping }) {
@@ -124,7 +126,7 @@ export default function Signalements({ camping }) {
             aria-pressed={filtre === s.id}
             style={{
               display: 'flex', alignItems: 'center', gap: 7,
-              padding: '9px 16px', borderRadius: 10, cursor: 'pointer',
+              padding: '9px 16px', minHeight: 44, borderRadius: 10, cursor: 'pointer',
               fontSize: 14, fontWeight: 600,
               background: filtre === s.id ? s.couleur : '#fff',
               border: `1.5px solid ${filtre === s.id ? s.couleur : jetons.bordure}`,
@@ -204,13 +206,13 @@ export default function Signalements({ camping }) {
                         {CIBLES[item.cible_type] && item.cible_id && (
                           retires.has(item.cible_id)
                             ? <Texte variante="micro" style={{ color: jetons.succes, fontWeight: graisse.fort }}>✓ Contenu supprimé</Texte>
-                            : <Bouton variante="danger" taille="sm" onClick={() => supprimerContenu(item)}>
+                            : <Bouton variante="danger" taille="sm" onClick={() => supprimerContenu(item)} style={{ minHeight: 44 }}>
                                 Supprimer {CIBLES[item.cible_type].nom}
                               </Bouton>
                         )}
                         {item.auteur_signale_id && !item.auteur?.banni && (
                           <Bouton variante="secondaire" taille="sm" onClick={() => bannirAuteur(item)}
-                                  style={{ color: jetons.danger, borderColor: '#fecaca' }}>
+                                  style={{ color: jetons.danger, borderColor: '#fecaca', minHeight: 44 }}>
                             Bannir {item.auteur?.pseudo || "l'auteur"}
                           </Bouton>
                         )}
@@ -223,18 +225,19 @@ export default function Signalements({ camping }) {
                       {item.vacanciers?.avatar_emoji || '🙂'} {item.vacanciers?.pseudo || '—'}
                       {item.vacanciers?.emplacement && ` · empl. ${item.vacanciers.emplacement}`}
                     </span>
-                    <div style={{ display: 'flex', gap: 6, marginLeft: 'auto' }}>
+                    <div style={{ display: 'flex', gap: 6, marginLeft: 'auto', flexWrap: 'wrap', justifyContent: 'flex-end' }}>
                       {STATUTS.filter(s => s.id !== item.statut).map(s => (
                         <button
                           key={s.id}
+                          type="button"
                           onClick={() => changerStatut(item, s.id)}
                           style={{
-                            padding: '6px 12px', borderRadius: 8, cursor: 'pointer',
+                            padding: '6px 12px', minHeight: 44, borderRadius: 8, cursor: 'pointer',
                             fontSize: 12.5, fontWeight: 600,
                             background: s.bg, color: s.couleur, border: `1px solid ${s.couleur}33`,
                           }}
                         >
-                          → {s.label}
+                          {s.action}
                         </button>
                       ))}
                     </div>

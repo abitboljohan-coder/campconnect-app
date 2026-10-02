@@ -1,29 +1,39 @@
 import { useState } from 'react'
 import ChoixEmoji from '../../components/ChoixEmoji'
 import { couleur as jetons } from '../../design'
+import { dateLocale, heureLocale, creneauParDefaut, estPasse } from '../lib/animations'
 
 const EMOJIS = ['🎉', '🏊', '🎸', '⚽', '🎯', '🎤', '🧘', '🚴', '🎮', '🍕', '🎨', '🏐', '🌅', '🔥', '🎭']
 
-// Date au format du champ, en heure LOCALE. toISOString() donnait la date en
-// temps universel : une animation de 0 h 30 s'ouvrait en modification sur la
-// veille, et l'enregistrer la décalait réellement d'un jour.
-const pad = n => String(n).padStart(2, '0')
-const dateLocale = d => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`
-
+// `initial` sans `id` : une copie (« Dupliquer ») à créer, pré-remplie.
 export default function AnimationForm({ initial, onSave, onCancel, saving }) {
+  const [depart] = useState(() => (initial?.debut
+    ? { dateStr: dateLocale(new Date(initial.debut)), heureStr: heureLocale(new Date(initial.debut)) }
+    : creneauParDefaut()))
   const [form, setForm] = useState({
     titre:       initial?.titre || '',
     emoji:       initial?.emoji || '🎉',
     lieu:        initial?.lieu || '',
-    dateStr:     dateLocale(initial?.debut ? new Date(initial.debut) : new Date()),
-    heureStr:    initial?.debut ? new Date(initial.debut).toTimeString().slice(0, 5) : '14:00',
+    dateStr:     depart.dateStr,
+    heureStr:    depart.heureStr,
     places_max:  initial?.places_max?.toString() || '',
     description: initial?.description || '',
     publiee:     initial?.publiee ?? true,
   })
+  const modification = !!initial?.id
+  // Le déclencheur push ne sonne qu'à la création publiée ou au passage
+  // brouillon → publiée : modifier une animation déjà publiée ne notifie pas.
+  const notifiera = form.publiee && !(modification && initial.publiee)
 
   function handleSave() {
     if (!form.titre.trim()) return
+
+    // Une animation passée disparaît de l'agenda des vacanciers, mais sa
+    // création fait quand même sonner tous les téléphones. On ne demande pas
+    // pour corriger une ancienne animation sans toucher à sa date.
+    const dateTouchee = form.dateStr !== depart.dateStr || form.heureStr !== depart.heureStr
+    if ((!modification || dateTouchee) && estPasse(form.dateStr, form.heureStr)
+        && !confirm('Cette date est passée : les vacanciers ne verront pas cette animation dans leur agenda. Enregistrer quand même ?')) return
 
     let debut = null
     if (form.dateStr && form.heureStr) {
@@ -142,6 +152,13 @@ export default function AnimationForm({ initial, onSave, onCancel, saving }) {
           {form.publiee ? 'Publier immédiatement' : 'Enregistrer en brouillon'}
         </span>
       </div>
+      {/* Saisir sa semaine d'animations publiées faisait sonner autant de
+          fois tous les téléphones du camping, sans que rien ne le dise. */}
+      {notifiera && (
+        <p style={{ margin: '-8px 0 0', fontSize: 13, color: jetons.texteDoux, lineHeight: 1.4 }}>
+          🔔 Les vacanciers présents recevront une notification.
+        </p>
+      )}
 
       {/* Boutons */}
       <div style={{ display: 'flex', gap: 10, marginTop: 4 }}>
@@ -160,7 +177,7 @@ export default function AnimationForm({ initial, onSave, onCancel, saving }) {
             color: '#fff', fontWeight: 700,
           }}
         >
-          {saving ? 'Enregistrement...' : (initial ? 'Modifier' : 'Créer')}
+          {saving ? 'Enregistrement...' : (modification ? 'Modifier' : 'Créer')}
         </button>
       </div>
     </div>

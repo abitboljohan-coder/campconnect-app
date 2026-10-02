@@ -1,7 +1,6 @@
 // Supabase MOCK — uniquement pour le build démo (captures d'écran du site).
 // Rend les vrais composants de l'app avec un jeu de données réaliste, sans backend.
-export const todayISO = () => new Date().toISOString().slice(0, 10)
-export const presentFilter = () => `date_depart.is.null,date_depart.gte.${todayISO()}`
+export { todayISO, presentFilter } from '../lib/presence'
 export const ensureAnonSession = async () => ({ user: { id: 'demo-uid' } })
 
 const iso = (h, m = 0) => { const d = new Date(); d.setHours(h, m, 0, 0); return d.toISOString() }

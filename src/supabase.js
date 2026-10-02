@@ -52,7 +52,7 @@ export function ensureAnonSession() {
   return _anonPromise
 }
 
-// Filtre "encore présent au camping" : pas de date de départ, ou départ aujourd'hui/futur.
+// Filtre "encore présent au camping" : départ aujourd'hui ou plus tard, ou, sans
+// date de départ, arrivé depuis moins de 7 jours. Règle et tests : lib/presence.
 // Usage : .or(presentFilter())  ou  .or(presentFilter(), { foreignTable: 'vacanciers' })
-export const todayISO = () => new Date().toISOString().slice(0, 10)
-export const presentFilter = () => `date_depart.is.null,date_depart.gte.${todayISO()}`
+export { todayISO, presentFilter } from './lib/presence'
