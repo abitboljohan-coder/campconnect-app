@@ -43,3 +43,4 @@ fcm-service-account*.json
 # dans le dossier et les exceptions ci-dessous ne peuvent pas s'appliquer.
 .claude/*
 !.claude/skills/
+!.claude/agents/

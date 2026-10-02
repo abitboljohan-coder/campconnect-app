@@ -55,6 +55,29 @@ routine. Sans eux, elle ne peut rien vérifier et le dit.
 | `/commercial` | Préparer un appel, répondre à une objection, qualifier un camping |
 | `/livraison` | Sortir une nouvelle version sur l'App Store et Google Play |
 
+## L'équipe d'agents
+
+Huit agents spécialisés vivent dans `.claude/agents/`. Dans une session Claude
+Code, il suffit de dire par exemple « demande au testeur de vérifier la
+version », « que la sécurité audite les signalements », ou « le support
+regarde ce message de Charline ». Chacun connaît les règles et les pièges du
+projet dans son domaine.
+
+| Agent | Rôle | Peut modifier ? |
+|---|---|---|
+| `developpeur` | Corrige et construit l'app | Oui, jusqu'à `main` |
+| `testeur` | Tests, build, écrans à 320/375/402 px | Non, rapport |
+| `data` | Base Supabase, stats, démo, crons | Par migration testée |
+| `securite` | RLS, cloisonnement, secrets, dépendances | Non, rapport |
+| `commercial` | Prospects, appels, emails, objections | Le fichier de prospects |
+| `marketing` | LinkedIn, stores, site, vidéo | Non, textes à copier |
+| `operations` | Livraison, Xcode Cloud, surveillance | Oui, avec accord pour l'irréversible |
+| `support` | Retours utilisateurs : diagnostic et réponse | Non |
+
+Un enchaînement type pour un bug signalé par un testeur : `support`
+(diagnostic) → `developpeur` (correction) → `testeur` (vérification) →
+`securite` si la correction touche aux données → `operations` (livraison).
+
 ## Le circuit produit
 
 1. Johan décrit le problème dans une session Claude Code (une capture ou une
