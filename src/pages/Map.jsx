@@ -6,7 +6,8 @@ import { esc } from '../utils/esc'
 import { t, useLangue, locale } from '../i18n'
 import { desencombrer } from '../lib/poiCategories'
 import { estActuel, estComplet } from '../lib/groupes'
-import { couleur as jetons, espace, graisse, ombre, rayon, texte as tailles } from '../design'
+import Sheet from '../components/Sheet'
+import { Bouton, Pile, Texte, couleur as jetons, espace, graisse, ombre, rayon, texte as tailles } from '../design'
 
 let L = null
 
@@ -91,6 +92,7 @@ export default function Map({ camping: campingProp, vacancier }) {
   const [counts, setCounts]             = useState({})
   const [nbMembres, setNbMembres]       = useState({}) // groupe_id → membres présents
   const [activePin, setActivePin]       = useState(null)
+  const [aDesinscrire, setADesinscrire] = useState(null)  // animation visée par la confirmation
   const [guideTarget, setGuideTarget]   = useState(null) // POI vers lequel on guide
   const [showDest, setShowDest]         = useState(false) // menu "Où aller ?"
   const [pins, setPins]                 = useState([])
@@ -488,18 +490,31 @@ export default function Map({ camping: campingProp, vacancier }) {
     return () => window.removeEventListener('keydown', onKey)
   }, [simulating, simStep]) // eslint-disable-line
 
+  // Même règle que l'agenda : se désinscrire libère sa place, on confirme
+  // d'abord, puis on le dit.
+  async function desinscrire(anim) {
+    setADesinscrire(null)
+    setActivePin({ ref_type: 'animation', ref_id: anim.id })
+    setInscriptions(p => p.filter(id => id !== anim.id))
+    setCounts(p => ({ ...p, [anim.id]: Math.max(0, (p[anim.id] || 1) - 1) }))
+    const { error } = await supabase.from('inscriptions').delete().eq('animation_id', anim.id).eq('vacancier_id', vacancier.id)
+    if (error) {
+      console.error('Désinscription échouée :', error)
+      setInscriptions(p => [...p, anim.id])
+      setCounts(p => ({ ...p, [anim.id]: (p[anim.id] || 0) + 1 }))
+      toast(t('agenda.err_desinscr'), 'erreur')
+      return
+    }
+    toast(t('agenda.desinscrit_de', { titre: anim.titre }), 'succes')
+  }
+
   async function toggleInscription(anim) {
     const inscrit = inscriptions.includes(anim.id)
     if (inscrit) {
-      setInscriptions(p => p.filter(id => id !== anim.id))
-      setCounts(p => ({ ...p, [anim.id]: Math.max(0, (p[anim.id] || 1) - 1) }))
-      const { error } = await supabase.from('inscriptions').delete().eq('animation_id', anim.id).eq('vacancier_id', vacancier.id)
-      if (error) {
-        console.error('Désinscription échouée :', error)
-        setInscriptions(p => [...p, anim.id])
-        setCounts(p => ({ ...p, [anim.id]: (p[anim.id] || 0) + 1 }))
-        toast(t('agenda.err_desinscr'), 'erreur')
-      }
+      // La fiche (z-index 2000) passerait devant la feuille : on la referme
+      // le temps de confirmer, puis on la rouvre.
+      setActivePin(null)
+      setADesinscrire(anim)
     } else {
       if (anim.places_max > 0 && (counts[anim.id] || 0) >= anim.places_max) return
       setInscriptions(p => [...p, anim.id])
@@ -832,6 +847,26 @@ export default function Map({ camping: campingProp, vacancier }) {
           couleur={couleur}
           onClose={() => setGuideTarget(null)}
         />
+      )}
+
+      {aDesinscrire && (
+        <Sheet onClose={() => setADesinscrire(null)}>
+          <Pile espace="lg">
+            <Texte variante="section" as="h2">{t('agenda.desinscrire_titre', { titre: aDesinscrire.titre })}</Texte>
+            <Texte variante="doux">{t('agenda.desinscrire_texte')}</Texte>
+            <Pile espace="sm">
+              <Bouton variante="danger" pleineLargeur onClick={() => desinscrire(aDesinscrire)}>
+                {t('agenda.se_desinscrire')}
+              </Bouton>
+              <Bouton variante="secondaire" pleineLargeur onClick={() => {
+                setActivePin({ ref_type: 'animation', ref_id: aDesinscrire.id })
+                setADesinscrire(null)
+              }}>
+                {t('commun.annuler')}
+              </Bouton>
+            </Pile>
+          </Pile>
+        </Sheet>
       )}
     </div>
   )

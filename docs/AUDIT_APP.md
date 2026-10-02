@@ -1,3 +1,63 @@
+# Audit d'utilisation — 2 octobre 2026
+
+Deux audits de praticité (vacancier : 22 constats, gérant : 25 constats),
+corrigés par cinq lots puis vérifiés ensemble par le testeur. Rapports
+détaillés : rédigés par les agents, non versionnés.
+
+## Corrigé
+
+- **Carte vacancier** : toucher un point ouvre enfin sa fiche (bloquant) ;
+  sélecteur et zoom sous la barre d'état ; « 0 place » ; groupe complet ;
+  désinscription confirmée depuis la fiche.
+- **Infos pratiques** : plus de fausses données d'exemple ; état vide honnête
+  avec 15, 17, 18, 112 ; numéros appelables ; modèles jamais publiés tels quels.
+- **Erreur réseau** : « Problème de connexion · Réessayer » au lieu de listes
+  vides, sur accueil, groupes, agenda, chat, annonces.
+- **Groupes et chat** : heure avec le jour (« Demain 08:00 ») ; « Créer un
+  groupe » ouvre le formulaire ; bouton Créer toujours visible ; non-membre :
+  « Rejoindre » à la place de la saisie ; réactions plus grandes.
+- **Confirmations** : se désinscrire, bloquer (et débloquer depuis le Profil),
+  se déconnecter, supprimer son statut.
+- **Arrivée et profil** : pseudo d'abord, avatars sur une ligne, case CGU de
+  22 px ; profil pré-rempli au retour ; choix du profil traduits (codes
+  stables, anciennes valeurs relues) ; photo existante pour un signalement.
+- **Espace gérant** : plus rien sous la barre du bas au téléphone (bloquant) ;
+  centre du camping enregistré avec le contour (bloquant) ; dupliquer une
+  animation, heure par défaut à venir, mention de la notification ; inscrits
+  copiables ; bannir depuis un message ; recherche de vacancier ; tuiles en
+  deux colonnes et code d'accès en tête ; taux de remplissage plafonné ;
+  statistiques bien titrées ; toasts au lieu d'alertes hors écran ; affiche QR
+  imprimable ; logo transparent ; mot de passe oublié ; inscription d'un
+  appareil à l'autre ; vocabulaire sans jargon ; export CSV protégé contre
+  les formules.
+- **Base** : écrire dans un groupe exige d'en être membre
+  (`messages_ecriture_reservee_aux_membres`) ; signalements publiés en temps
+  réel (`signalements_en_temps_reel`).
+
+## Restant
+
+- **Décision en attente** : un vacancier sans date de départ n'est plus
+  « présent » 7 jours après son arrivée (`src/lib/presence.js`). La même règle
+  est écrite dans `send-push`, **non redéployée** : tant qu'elle ne l'est pas,
+  les notifications suivent l'ancienne règle. Option recommandée : rendre la
+  date de départ obligatoire à l'arrivée, puis redéployer `send-push`.
+- Annuler une animation en prévenant les inscrits (colonne + notification).
+- Prévenir le vacancier quand son signalement est résolu.
+- Carte : une animation seule sur un lieu masque le point du lieu
+  (`enCouronne` dans `Map.jsx`) ; le toast masque le bouton de la fiche ~3 s.
+- Groupes à 320 px : le lieu est tronqué à côté de « Rejoindre » ; le « + »
+  chevauche légèrement la dernière carte.
+- Signalements gérant : aucun toast au changement de statut.
+- Accueil à 320×568 : la première carte de groupe demande encore un petit
+  défilement.
+- `stat_insert` ne vérifie pas le camping ; `mg_insert` ne vérifie pas
+  `est_banni` (sans fuite constatée).
+- Supabase → Authentication → URL Configuration : ajouter
+  `https://app.campconnect.fr/admin` aux adresses de retour (mot de passe
+  oublié).
+
+---
+
 # Audit de l'application vacancier — 29 septembre 2026
 
 Lecture complète des écrans vacancier (inscription, accueil, groupes, chat,

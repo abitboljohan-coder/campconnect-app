@@ -113,6 +113,7 @@ export default function Accueil({ camping, vacancier }) {
           vacancierCount={vacancierCount}
           groupesCount={nbGroupes}
           animationsCount={nbAnimations}
+          compteursConnus={!erreurReseau}
         />
       </div>
 
@@ -447,7 +448,7 @@ function StatutsStrip({ camping, vacancier }) {
 // Bandeau compact : sur un 320 × 568, ses boutons « Explorer la carte » et
 // « Agenda », qui doublonnaient la barre de navigation, et ses pastilles
 // empilées repoussaient les groupes sous la ligne de flottaison.
-function Hero({ vacancier, vacancierCount, groupesCount, animationsCount, enLigne }) {
+function Hero({ vacancier, vacancierCount, groupesCount, animationsCount, enLigne, compteursConnus }) {
   useLangue()
   const h = new Date().getHours()
   const salut = h < 12 ? t('accueil.bonjour') : h < 18 ? t('accueil.bonapresmidi') : t('accueil.bonsoiree')
@@ -493,7 +494,9 @@ function Hero({ vacancier, vacancierCount, groupesCount, animationsCount, enLign
             <span><strong style={{ fontWeight: graisse.affiche, fontSize: tailles.base }}>{enLigne}</strong> {t('accueil.en_ligne')}</span>
           </Jeton>
         )}
-        {[
+        {/* Réseau en panne : les compteurs, jamais lus, annonçaient « 0
+            vacanciers ici, 0 groupes actifs » au-dessus du message d'erreur. */}
+        {compteursConnus && [
           [vacancierCount, t(vacancierCount === 1 ? 'accueil.mot_vacancier' : 'accueil.mot_vacanciers')],
           [groupesCount, t(groupesCount === 1 ? 'accueil.mot_groupe' : 'accueil.mot_groupes')],
           [animationsCount, t(animationsCount === 1 ? 'accueil.mot_animation' : 'accueil.mot_animations')],
