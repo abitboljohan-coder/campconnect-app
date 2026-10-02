@@ -295,6 +295,16 @@ input[type="time"]::-webkit-date-and-time-value {
   border: 0;
 }
 
+/* Ruban qui défile de côté (centres d'intérêt du profil) : sans barre de
+   défilement, comme les « stories » — le rond coupé au bord suffit à
+   montrer qu'il y en a d'autres. */
+.cc-defile-x {
+  scrollbar-width: none;
+}
+.cc-defile-x::-webkit-scrollbar {
+  display: none;
+}
+
 /* Entrée d'écran.
    
    Les onglets s'affichaient d'un coup, sans que rien ne relie l'écran quitté

@@ -94,6 +94,43 @@ export function emojiInteret(valeur) {
   return EMOJIS_INTERETS[ANCIENS_INTERETS[valeur] || valeur] || ''
 }
 
+/**
+ * Colonnes lues pour la mini-fiche d'un autre vacancier — et rien d'autre.
+ * Ni l'emplacement, ni la tranche d'âge, ni la date de départ : savoir où
+ * dort quelqu'un, son âge et le jour où il part n'aide pas à lier
+ * connaissance, et ne regarde que lui.
+ */
+export const COLONNES_FICHE = 'id, pseudo, avatar_emoji, avec, interests'
+
+/** « En vacances entre amis » : le « Je voyage » dit comme une phrase. */
+export function phraseAvec(valeur) {
+  const code = codeAvec(valeur)
+  return AVEC_FR[code] ? t(`profil.bio_${code}`) : code
+}
+
+/**
+ * Centres d'intérêt partagés avec un autre vacancier, dans l'ordre de ses
+ * choix à lui. Les anciens libellés français sont ramenés à leur code des
+ * deux côtés : « Randonnée » chez l'un et « randonnee » chez l'autre, c'est
+ * bien la même envie.
+ */
+export function pointsCommuns(miens, siens) {
+  const moi = new Set(codesInterets(miens))
+  return codesInterets(siens).filter(c => moi.has(c))
+}
+
+/**
+ * La phrase qui donne une raison de se parler : « Vous aimez tous les deux
+ * le padel » pour un seul point commun, « 3 centres d'intérêt en commun »
+ * au-delà, null sans aucun.
+ */
+export function phraseCommuns(communs) {
+  if (!communs?.length) return null
+  if (communs.length > 1) return t('fiche.communs', { n: communs.length })
+  const code = communs[0]
+  return t('fiche.commun_un', { chose: INTERETS_FR[code] ? t(`profil.objet_${code}`) : code })
+}
+
 /** Date du jour (AAAA-MM-JJ) à l'heure du téléphone, pas en UTC : à 1 h du
  *  matin en France, l'UTC est encore la veille. */
 export function jourLocal(d = new Date()) {

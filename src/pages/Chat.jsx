@@ -3,6 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom'
 import { supabase, presentFilter } from '../supabase'
 import { t, useLangue, locale } from '../i18n'
 import MenuModeration from '../components/MenuModeration'
+import MiniFiche from '../components/MiniFiche'
 import Sheet from '../components/Sheet'
 import { toast } from '../toast'
 import { chargerBlocages, estBloque } from '../lib/moderation'
@@ -29,6 +30,7 @@ export default function Chat({ camping, vacancier }) {
   const [sending, setSending]       = useState(false)
   const [pickerFor, setPickerFor]   = useState(null)
   const [moderation, setModeration] = useState(null)   // contenu visé par le menu
+  const [fiche, setFiche]           = useState(null)   // mini-fiche d'un auteur
   const [, setBloquesVersion]       = useState(0)      // force un rendu après blocage
   const appuiLong                   = useRef(null)
   // Messages supprimés pendant la visite : un INSERT temps réel encore en
@@ -56,6 +58,17 @@ export default function Chat({ camping, vacancier }) {
       clearTimeout(appuiLong.current)
       appuiLong.current = null
     }
+  }
+
+  // Un appui simple sur l'avatar ou le pseudo d'un auteur ouvre sa
+  // mini-fiche. L'appui long, lui, reste sur la bulle : c'est le menu
+  // signaler / bloquer / supprimer, qui ne bouge pas.
+  function ouvrirFiche(msg, auteur) {
+    setPickerFor(null)
+    setFiche({
+      id: msg.auteur_id, apercu: auteur,
+      contexte: { type: 'message', id: msg.id, texte: msg.contenu, auteurId: msg.auteur_id, pseudo: auteur?.pseudo },
+    })
   }
 
   function ouvrirModeration(msg, auteur) {
@@ -388,14 +401,28 @@ export default function Chat({ camping, vacancier }) {
                     marginBottom: 2,
                   }}
                 >
-                  {showAuthor && auteur && (
+                  {/* Le pseudo ouvre la mini-fiche. La zone sensible déborde
+                      de quelques pixels (marges négatives) pour atteindre
+                      44 px sans espacer les messages. Un auteur parti n'a
+                      plus de fiche. */}
+                  {showAuthor && auteur && (msg.vacanciers ? (
+                    <button type="button" onClick={() => ouvrirFiche(msg, auteur)}
+                      style={{
+                        background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'inherit',
+                        padding: '15px 8px', margin: '-15px -8px -12px 38px', maxWidth: 'calc(100% - 38px)',
+                        textAlign: 'left', color: 'var(--cc-accent)', fontWeight: graisse.fort,
+                        fontSize: tailles.micro, lineHeight: 1.4, overflowWrap: 'anywhere',
+                      }}>
+                      {auteur.avatar_emoji} {auteur.pseudo}
+                    </button>
+                  ) : (
                     <Texte variante="micro" style={{
                       color: 'var(--cc-accent)', fontWeight: graisse.fort,
                       marginBottom: 3, marginLeft: 46,
                     }}>
                       {auteur.avatar_emoji} {auteur.pseudo}
                     </Texte>
-                  )}
+                  ))}
                   {/* width 100% indispensable : la bulle porte un maxWidth en
                       pourcentage, qui a besoin d'une largeur de référence
                       définie. Sans lui, cette ligne se dimensionne sur son
@@ -404,7 +431,24 @@ export default function Chat({ camping, vacancier }) {
                       s'affiche alors une lettre par ligne. */}
                   <div style={{ display: 'flex', alignItems: 'flex-end', gap: 6, width: '100%', flexDirection: isMine ? 'row-reverse' : 'row' }}>
                     {/* Avatar auteur (them) */}
-                    {!isMine && (
+                    {!isMine && (showAuthor && msg.vacanciers ? (
+                      // 32 px à l'œil, 44 px au doigt : le rembourrage est
+                      // compensé par des marges négatives.
+                      <button type="button" onClick={() => ouvrirFiche(msg, auteur)}
+                        aria-label={t('fiche.voir', { pseudo: auteur.pseudo })}
+                        style={{
+                          padding: 6, margin: -6, background: 'none', border: 'none', cursor: 'pointer',
+                          flexShrink: 0, borderRadius: rayon.rond,
+                        }}>
+                        <span aria-hidden="true" style={{
+                          width: 32, height: 32, borderRadius: rayon.rond,
+                          background: couleur.bordure,
+                          display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 16,
+                        }}>
+                          {auteur.avatar_emoji || '🏕️'}
+                        </span>
+                      </button>
+                    ) : (
                       <span aria-hidden="true" style={{
                         width: 32, height: 32, borderRadius: rayon.rond,
                         background: couleur.bordure,
@@ -414,7 +458,7 @@ export default function Chat({ camping, vacancier }) {
                       }}>
                         {auteur?.avatar_emoji || '🏕️'}
                       </span>
-                    )}
+                    ))}
                     <div style={{ position: 'relative', maxWidth: '72%' }}>
                       <div
                         onClick={() => {
@@ -584,6 +628,11 @@ export default function Chat({ camping, vacancier }) {
           ↑
         </button>
       </form>
+      )}
+
+      {fiche && (
+        <MiniFiche {...fiche} camping={camping} vacancier={vacancier}
+                   onClose={() => setFiche(null)} onBloque={() => setBloquesVersion(v => v + 1)} />
       )}
 
       {moderation && (

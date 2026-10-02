@@ -64,12 +64,20 @@ export const DEMO_VACANCIER = {
   interests: ['plage', 'paddle', 'apero', 'yoga', 'Randonnée', 'petanque'],
 }
 
+// Les personnages ont eux aussi des centres d'intérêt : leur mini-fiche
+// (appui sur un avatar du chat, d'un statut) montre ce qu'ils partagent avec
+// Julie. Léa en a trois en commun, Marc un seul, Tom aucun ; Sophie garde un
+// ancien libellé français (« Plage ») qui doit compter comme « plage ».
 const VACS = [
   DEMO_VACANCIER,
-  { id: 'vac-2', pseudo: 'Marc',   avatar_emoji: '🚴', emplacement: 'A04', camping_id: 'camp-demo' },
-  { id: 'vac-3', pseudo: 'Sophie', avatar_emoji: '🧘‍♀️', emplacement: 'C21', camping_id: 'camp-demo' },
-  { id: 'vac-4', pseudo: 'Tom',    avatar_emoji: '🎸', emplacement: 'D08', camping_id: 'camp-demo' },
-  { id: 'vac-5', pseudo: 'Léa',    avatar_emoji: '🏊‍♀️', emplacement: 'B15', camping_id: 'camp-demo' },
+  { id: 'vac-2', pseudo: 'Marc',   avatar_emoji: '🚴', emplacement: 'A04', camping_id: 'camp-demo',
+    avec: 'famille', interests: ['velo', 'petanque', 'padel', 'cuisine'] },
+  { id: 'vac-3', pseudo: 'Sophie', avatar_emoji: '🧘‍♀️', emplacement: 'C21', camping_id: 'camp-demo',
+    avec: 'couple', interests: ['Plage', 'lecture', 'nature'] },
+  { id: 'vac-4', pseudo: 'Tom',    avatar_emoji: '🎸', emplacement: 'D08', camping_id: 'camp-demo',
+    avec: 'solo', interests: ['musique', 'soirees', 'jeux'] },
+  { id: 'vac-5', pseudo: 'Léa',    avatar_emoji: '🏊‍♀️', emplacement: 'B15', camping_id: 'camp-demo',
+    avec: 'amis', interests: ['piscine', 'plage', 'apero', 'paddle', 'photo', 'soirees'] },
 ]
 
 const GROUPES = [
@@ -162,7 +170,13 @@ class Query {
     }
     if (this._head || this._count) return { count: rows.length, data: null, error: null }
     if (this._ret) return { data: this._ret, error: null }
-    if (this._single) return { data: rows[0] || null, error: null }
+    // Les filtres .eq() comptent pour une ligne unique : la mini-fiche de Léa
+    // doit ramener Léa, pas la première vacancière de la table. Sans
+    // correspondance, l'ancien comportement (la première ligne) est gardé.
+    if (this._single) {
+      const vise = r => this._eq.every(([c, v]) => !(c in r) || r[c] === v)
+      return { data: rows.find(vise) || rows[0] || null, error: null }
+    }
     return { data: rows, error: null }
   }
 }

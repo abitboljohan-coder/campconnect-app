@@ -19,8 +19,10 @@ const MOTIFS = ['harcelement', 'haine', 'sexuel', 'arnaque', 'autre']
  * (`onSupprimer`, qui renvoie vrai si la base l'a effacé) — et rien d'autre :
  * on ne se signale ni ne se bloque soi-même.
  */
-export default function MenuModeration({ cible, camping, vacancier, onClose, onBloque, onSupprimer }) {
-  const [etape, setEtape] = useState('menu')   // menu | motif | bloquer | supprimer
+export default function MenuModeration({ cible, camping, vacancier, onClose, onBloque, onSupprimer, etapeInitiale = 'menu' }) {
+  // La mini-fiche d'un vacancier a ses propres boutons « Signaler » et
+  // « Bloquer » : elle ouvre directement la bonne étape.
+  const [etape, setEtape] = useState(etapeInitiale)   // menu | motif | bloquer | supprimer
   const [envoi, setEnvoi] = useState(false)
   if (!cible) return null
 

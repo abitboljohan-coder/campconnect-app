@@ -24,14 +24,21 @@ import Annonces from '../pages/Annonces'
 import Signaler from '../pages/Signaler'
 import AdminLogin from '../admin/AdminLogin'
 import Onboarding from '../pages/Onboarding'
+import MiniFiche from '../components/MiniFiche'
 import { DEMO_CAMPING, DEMO_VACANCIER } from './mockSupabase'
 import { ToastHost } from '../components/Toast'
 import { appliquerTheme } from '../design'
 
-const c = DEMO_CAMPING, v = DEMO_VACANCIER
+const params = new URLSearchParams(location.search)
+// ?accent=e8590c : la démo aux couleurs d'un autre camping (profil, paysage).
+const accent = /^[0-9a-f]{6}$/i.test(params.get('accent') || '') ? `#${params.get('accent')}` : null
+const c = accent ? { ...DEMO_CAMPING, couleur_principale: accent } : DEMO_CAMPING
+const v = params.get('profil') === 'vide'
+  ? { ...DEMO_VACANCIER, interests: [], avec: null, tranche_age: null }
+  : DEMO_VACANCIER
 appliquerTheme(c)
-const s = new URLSearchParams(location.search).get('s') || 'accueil'
-const routeFor = { accueil: '/', groupes: '/groupes', map: '/map', agenda: '/agenda', infos: '/infos', profil: '/profil', chat: '/chat/g1', admin: '/admin/overview', onboarding: '/onboarding',
+const s = params.get('s') || 'accueil'
+const routeFor = { minifiche: '/chat/g1', accueil: '/', groupes: '/groupes', map: '/map', agenda: '/agenda', infos: '/infos', profil: '/profil', chat: '/chat/g1', admin: '/admin/overview', onboarding: '/onboarding',
   'admin-animations': '/admin/animations', 'admin-signalements': '/admin/signalements',
   'admin-moderation': '/admin/moderation', 'admin-parametres': '/admin/parametres', 'admin-stats': '/admin/stats',
   'admin-apparence': '/admin/apparence', 'admin-infos': '/admin/infos', 'admin-carte': '/admin/carte',
@@ -71,7 +78,16 @@ function DemoApp() {
 
 createRoot(document.getElementById('root')).render(
   <StrictMode>
-    <MemoryRouter initialEntries={entry === '/' ? ['/'] : ['/', entry]} initialIndex={entry === '/' ? 0 : 1}><DemoApp /></MemoryRouter>
+    <MemoryRouter initialEntries={entry === '/' ? ['/'] : ['/', entry]} initialIndex={entry === '/' ? 0 : 1}>
+      <DemoApp />
+      {/* ?s=minifiche : la mini-fiche de Léa ouverte sur le chat, comme après
+          un appui sur son avatar. */}
+      {s === 'minifiche' && (
+        <MiniFiche id="vac-5" apercu={{ pseudo: 'Léa', avatar_emoji: '🏊‍♀️' }} camping={c} vacancier={v}
+                   contexte={{ type: 'message', id: 'm3', texte: 'Génial, à tout à l’heure !', auteurId: 'vac-5', pseudo: 'Léa' }}
+                   onClose={() => {}} />
+      )}
+    </MemoryRouter>
     <ToastHost />
   </StrictMode>,
 )

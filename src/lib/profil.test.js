@@ -1,8 +1,9 @@
 import { describe, it, expect, afterEach } from 'vitest'
 import { setLangue } from '../i18n'
 import {
-  AVEC, INTERETS, champsArrivee, codeAvec, codesInterets, emojiAvec, emojiInteret,
+  AVEC, COLONNES_FICHE, INTERETS, champsArrivee, codeAvec, codesInterets, emojiAvec, emojiInteret,
   jourLocal, libelleAvec, libelleInteret, libelleAvecFr, libelleInteretFr, nuitsRestantes,
+  phraseAvec, phraseCommuns, pointsCommuns,
 } from './profil'
 import { emojiAutorise } from './emojis'
 
@@ -147,5 +148,55 @@ describe('retour sur un profil existant', () => {
     expect(champsArrivee(vierge, null, '2026-10-02')).toEqual({
       pseudo: 'Julie', avatar_emoji: '🏕️', emplacement: null, date_depart: null,
     })
+  })
+})
+
+describe('mini-fiche d’un autre vacancier', () => {
+  it('trouve les centres d’intérêt partagés, dans l’ordre de l’autre', () => {
+    expect(pointsCommuns(['plage', 'apero', 'yoga'], ['padel', 'yoga', 'plage'])).toEqual(['yoga', 'plage'])
+    expect(pointsCommuns(['plage'], ['padel'])).toEqual([])
+  })
+
+  it('reconnaît un ancien libellé français des deux côtés', () => {
+    expect(pointsCommuns(['Randonnée', 'Sport'], ['randonnee', 'sport', 'jeux'])).toEqual(['randonnee', 'sport'])
+    expect(pointsCommuns(['plage'], ['Plage', 'plage'])).toEqual(['plage'])
+  })
+
+  it('tolère un profil vide de part ou d’autre', () => {
+    expect(pointsCommuns(null, ['plage'])).toEqual([])
+    expect(pointsCommuns(['plage'], undefined)).toEqual([])
+  })
+
+  it('dit un point commun en une phrase, plusieurs en un compte', () => {
+    expect(phraseCommuns(['padel'])).toBe('Vous aimez tous les deux le padel')
+    expect(phraseCommuns(['apero'])).toBe('Vous aimez tous les deux l’apéro')
+    expect(phraseCommuns(['plage', 'apero', 'paddle'])).toBe('3 centres d’intérêt en commun')
+    expect(phraseCommuns([])).toBeNull()
+    expect(phraseCommuns(['Pétanque géante'])).toBe('Vous aimez tous les deux Pétanque géante')
+    setLangue('en')
+    expect(phraseCommuns(['padel'])).toBe('You both love padel')
+    expect(phraseCommuns(['plage', 'yoga'])).toBe('2 interests in common')
+  })
+
+  it('a une phrase traduite pour chaque centre d’intérêt et chaque « Je voyage »', () => {
+    for (const langue of ['fr', 'en', 'es', 'nl']) {
+      setLangue(langue)
+      for (const c of INTERETS) expect(phraseCommuns([c])).not.toMatch(/profil\.|fiche\./)
+      for (const c of AVEC) expect(phraseAvec(c)).not.toMatch(/^profil\./)
+    }
+  })
+
+  it('dit le « Je voyage » en phrase, ancienne valeur comme nouvelle', () => {
+    expect(phraseAvec('amis')).toBe('En vacances entre amis')
+    expect(phraseAvec('Entre amis')).toBe('En vacances entre amis')
+    expect(phraseAvec('Avec mon chien')).toBe('Avec mon chien')
+  })
+
+  it('ne lit ni l’emplacement, ni l’âge, ni la date de départ', () => {
+    const colonnes = COLONNES_FICHE.split(',').map(c => c.trim())
+    expect(colonnes).toEqual(['id', 'pseudo', 'avatar_emoji', 'avec', 'interests'])
+    for (const interdite of ['*', 'emplacement', 'tranche_age', 'date_depart', 'device_id', 'user_id']) {
+      expect(colonnes).not.toContain(interdite)
+    }
   })
 })
