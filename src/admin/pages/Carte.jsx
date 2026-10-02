@@ -5,7 +5,10 @@ import PlanCalibrator from '../components/PlanCalibrator'
 import PerimeterEditor from '../components/PerimeterEditor'
 import { detectPois, geocodeCamping, findCampsitePolygon, searchCampsiteByName } from '../lib/osmPois'
 import { fusionnerCarteConfig } from '../lib/carteConfig'
-import { Bloc, Alerte, EnTete } from '../components/Bloc'
+import { barycentre } from '../lib/geo'
+import { traduireErreur } from '../lib/erreurs'
+import { EnTete } from '../components/Bloc'
+import { toast } from '../../toast'
 import { Texte, Pile, couleur as jetons } from '../../design'
 
 async function compressToBlob(file, maxWidth = 2000, quality = 0.82) {
@@ -20,8 +23,10 @@ async function compressToBlob(file, maxWidth = 2000, quality = 0.82) {
 
 export default function Carte({ camping, setCamping }) {
   const [uploading, setUploading] = useState(false)
-  const [error, setError]         = useState('')
-  const [success, setSuccess]     = useState('')
+  // Les messages passent par toast() : en haut de page, ils apparaissaient
+  // hors de l'écran du gérant, qui ne savait pas si son action avait marché.
+  const setError   = (msg) => msg && toast(msg, 'erreur')
+  const setSuccess = (msg) => msg && toast(msg, 'succes')
   const [showCalibrator, setShowCalibrator] = useState(false)
   const [showPerimeter, setShowPerimeter]   = useState(false)
   const [detecting, setDetecting]           = useState(false)
@@ -35,8 +40,8 @@ export default function Carte({ camping, setCamping }) {
 
   async function handleUpload(file) {
     if (!file) return
-    if (file.size > 10 * 1024 * 1024) { setError('Fichier trop lourd (max 10 MB).'); return }
-    setUploading(true); setError('')
+    if (file.size > 10 * 1024 * 1024) { setError('Fichier trop lourd (10 Mo maximum).'); return }
+    setUploading(true)
     try {
       const blob = await compressToBlob(file, 2000, 0.82)
       const ext  = 'jpg'
@@ -52,15 +57,14 @@ export default function Carte({ camping, setCamping }) {
         .update({ plan_url: publicUrl, plan_bounds: null }).eq('id', camping.id)
       if (dbErr) throw dbErr
       setCamping(c => ({ ...c, plan_url: publicUrl, plan_bounds: null }))
-      setSuccess('Plan uploadé ! Vous pouvez maintenant le caler sur le satellite.')
-      setTimeout(() => setSuccess(''), 4000)
-    } catch (err) { setError(err.message) }
+      setSuccess('Plan envoyé ! Ajustez-le maintenant sur la vue satellite.')
+    } catch (err) { setError(traduireErreur(err, "Le plan n'a pas pu être envoyé. Vérifiez la connexion et réessayez.")) }
     setUploading(false)
   }
 
   async function autoConfigure() {
     if (autoRunning) return
-    setAutoRunning(true); setError(''); setSuccess(''); setAutoLog([])
+    setAutoRunning(true); setAutoLog([])
     const log = (msg) => setAutoLog(prev => [...prev, msg])
     let savedSomething = false
     try {
@@ -127,7 +131,7 @@ export default function Carte({ camping, setCamping }) {
 
       // Sauvegarde intermédiaire : si on a un contour, on l'enregistre TOUT DE SUITE
       if (poly) {
-        const { config, error: dbErr1 } = await fusionnerCarteConfig(camping.id, { perimeter: poly })
+        const { config, error: dbErr1 } = await fusionnerCarteConfig(camping.id, { perimeter: poly, center: barycentre(poly) })
         if (!dbErr1) {
           setCamping(c => ({ ...c, carte_config: config }))
           savedSomething = true
@@ -151,13 +155,11 @@ export default function Carte({ camping, setCamping }) {
       savedSomething = true
       log(`💾 Configuration enregistrée`)
       setSuccess('Auto-configuration terminée !')
-      setTimeout(() => setSuccess(''), 5000)
     } catch (e) {
       log(`❌ ${e.message}`)
       // Si on a déjà sauvé quelque chose (le contour), on ne montre PAS d'erreur globale
       if (savedSomething) {
-        setSuccess('Contour enregistré (POI à ajouter manuellement)')
-        setTimeout(() => setSuccess(''), 5000)
+        setSuccess('Contour enregistré (lieux à ajouter à la main)')
       } else {
         setError('Erreur : ' + e.message)
       }
@@ -167,7 +169,7 @@ export default function Carte({ camping, setCamping }) {
 
   async function autoDetectPois() {
     if (detecting) return
-    setDetecting(true); setError(''); setSuccess('')
+    setDetecting(true)
     try {
       // Le repli n'était calculé que lorsqu'un contour existait, alors qu'il ne
       // sert précisément que dans le cas contraire : sans contour tracé, la
@@ -175,23 +177,18 @@ export default function Carte({ camping, setCamping }) {
       // d'interroger OpenStreetMap. On repart donc du centre connu du camping.
       const cfg = camping?.carte_config || {}
       const centre = perimeter.length >= 3
-        ? {
-            lat: perimeter.reduce((s, p) => s + p[0], 0) / perimeter.length,
-            lng: perimeter.reduce((s, p) => s + p[1], 0) / perimeter.length,
-          }
+        ? barycentre(perimeter)
         : (cfg.center?.lat ? cfg.center
           : (cfg.lat && cfg.lng ? { lat: cfg.lat, lng: cfg.lng } : null))
 
       if (!centre) {
-        setError("Le camping n'est pas encore localisé. Passez d'abord par l'étape 1 pour tracer le contour.")
+        setError("Tracez d'abord le contour du camping (étape 1).")
         setDetecting(false); return
       }
 
       const pois = await detectPois(perimeter.length >= 3 ? perimeter : null, centre)
       if (!pois.length) {
-        setError(perimeter.length >= 3
-          ? "Aucun équipement trouvé dans OpenStreetMap à l'intérieur du contour. Ajoutez-les à la main ci-dessous."
-          : "Aucun équipement trouvé autour de ce point. Tracez d'abord le contour du camping (étape 1) : la recherche sera bien plus précise.")
+        setError('Aucun équipement trouvé dans le contour. Placez-les à la main sur la carte.')
         setDetecting(false); return
       }
       // Remplace tous les POI OSM par la détection fraîche ; garde uniquement les manuels
@@ -199,32 +196,33 @@ export default function Carte({ camping, setCamping }) {
       const { config, error: dbErr } = await fusionnerCarteConfig(camping.id, { pins: [...manuals, ...pois] })
       if (dbErr) throw dbErr
       setCamping(c => ({ ...c, carte_config: config }))
-      setSuccess(`✅ ${pois.length} POI détectés depuis OpenStreetMap`)
-      setTimeout(() => setSuccess(''), 5000)
+      setSuccess(`${pois.length} lieu${pois.length > 1 ? 'x' : ''} détecté${pois.length > 1 ? 's' : ''} et placé${pois.length > 1 ? 's' : ''} sur la carte`)
     } catch (e) {
       // OpenStreetMap est un service public gratuit : il est régulièrement
       // saturé ou en limitation de débit. Dire « réessayez » évite au gérant de
       // croire que son camping est absent de la base.
       console.error('Détection OSM échouée :', e)
-      setError("OpenStreetMap n'a pas répondu (service public souvent saturé). Réessayez dans une minute, ou ajoutez les équipements à la main ci-dessous.")
+      setError("La détection n'a pas répondu (service public saturé). Réessayez dans une minute, ou placez les lieux à la main.")
     }
     setDetecting(false)
   }
 
+  // Ce bouton était un « × » posé sur l'aperçu, annoncé « Fermer » : on croyait
+  // fermer l'image et l'on perdait plan et ajustement, sans confirmation.
   async function supprimerPlan() {
-    await supabase.from('campings').update({ plan_url: null, plan_bounds: null }).eq('id', camping.id)
+    if (!confirm('Supprimer le plan ? Vos vacanciers ne le verront plus, et son ajustement sur la vue satellite sera perdu.')) return
+    const { error: err } = await supabase.from('campings').update({ plan_url: null, plan_bounds: null }).eq('id', camping.id)
+    if (err) { setError(traduireErreur(err)); return }
     setCamping(c => ({ ...c, plan_url: null, plan_bounds: null }))
+    setSuccess('Plan supprimé.')
   }
 
   return (
     <Pile espace="xl">
       <EnTete
         titre="Carte du camping"
-        sous="Plan image (calé sur satellite) et points d'intérêt visibles par vos vacanciers."
+        sous="Contour, lieux et plan du camping, tels que vos vacanciers les verront."
       />
-
-      {success && <Alerte type="succes">{success}</Alerte>}
-      {error   && <Alerte type="erreur">{error}</Alerte>}
 
         {/* ÉTAPE 1 — CONTOUR */}
         <Step n={1} title="Tracer le contour du camping"
@@ -244,22 +242,27 @@ export default function Carte({ camping, setCamping }) {
           </div>
         </Step>
 
-        {/* ÉTAPE 2 — POI AUTO */}
-        <Step n={2} title="Détecter les points d'intérêt"
-              subtitle="Piscine, sanitaires, restaurant, tennis, pétanque, aire de jeux… récupérés automatiquement depuis OpenStreetMap."
-              done={(camping?.carte_config?.pins || []).some(p => p.osm)}
-              disabled={perimeter.length < 3}
-              disabledReason="Terminez l'étape 1 (contour) pour un ciblage précis.">
+        {/* ÉTAPE 2 — LIEUX */}
+        {/* Seule la détection automatique a besoin du contour : placer la
+            réception à la main doit rester possible dès le premier jour. */}
+        <Step n={2} title="Placer les lieux du camping"
+              subtitle="Piscine, sanitaires, restaurant, aire de jeux… Détectez-les automatiquement ou placez-les à la main sur la carte."
+              done={(camping?.carte_config?.pins || []).length > 0}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
-            {(camping?.carte_config?.pins || []).some(p => p.osm)
-              ? <Badge ok>✅ {(camping?.carte_config?.pins || []).filter(p => p.osm).length} POI détectés</Badge>
-              : <Badge>⚠️ Pas encore détectés</Badge>}
+            {(camping?.carte_config?.pins || []).length > 0
+              ? <Badge ok>✅ {(camping?.carte_config?.pins || []).length} lieu{(camping?.carte_config?.pins || []).length > 1 ? 'x' : ''} sur la carte</Badge>
+              : <Badge>⚠️ Aucun lieu placé</Badge>}
             <button onClick={autoDetectPois}
               disabled={detecting || perimeter.length < 3}
               style={perimeter.length < 3 ? btnDisabled : btnPrimary}>
               {detecting ? '⏳ Détection…' : '🎯 Détecter automatiquement'}
             </button>
           </div>
+          {perimeter.length < 3 && (
+            <div style={{ marginTop: 8, fontSize: 12, color: jetons.texteDoux }}>
+              🔒 La détection automatique demande le contour (étape 1). Vous pouvez déjà placer les lieux à la main.
+            </div>
+          )}
           <div style={{ marginTop: 14 }}>
             <MapEditor
               key={`${camping?.id}-${(camping?.carte_config?.pins || []).length}-${(camping?.carte_config?.perimeter || []).length}`}
@@ -271,7 +274,7 @@ export default function Carte({ camping, setCamping }) {
 
         {/* ÉTAPE 3 — PLAN (OPTIONNEL) */}
         <Step n={3} title="Ajouter votre plan (optionnel)"
-              subtitle="Si vous avez un plan illustré du camping, uploadez-le et calez-le sur le satellite."
+              subtitle="Si vous avez un plan illustré du camping, envoyez-le puis ajustez-le sur la vue satellite."
               done={!!planUrl && !!planBounds}
               optional>
           {!planUrl ? (
@@ -282,10 +285,10 @@ export default function Carte({ camping, setCamping }) {
               }}>
                 <div style={{ fontSize: 44, marginBottom: 12 }}>🗺️</div>
                 <div style={{ fontWeight: 700, fontSize: 15, color: jetons.texteMoyen, marginBottom: 6 }}>
-                  Aucun plan téléchargé
+                  Aucun plan pour l'instant
                 </div>
                 <div style={{ fontSize: 13, color: jetons.texteDoux, marginBottom: 20 }}>
-                  Uploadez le plan de votre camping (JPG / PNG, max 10 MB)
+                  Envoyez le plan de votre camping (JPG ou PNG, 10 Mo maximum)
                 </div>
                 <span style={{
                   background: jetons.marque, color: '#fff',
@@ -300,16 +303,10 @@ export default function Carte({ camping, setCamping }) {
             </label>
           ) : (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
-              <div style={{ position: 'relative', display: 'inline-block' }}>
-                <img src={planUrl} alt="Plan"
-                  style={{ width: '100%', maxWidth: 400, maxHeight: 260, objectFit: 'contain',
-                           borderRadius: 12, border: '1px solid #e5e7eb', display: 'block',
-                           background: jetons.surfaceDouce }} />
-                <button onClick={supprimerPlan}
-                  style={{ position: 'absolute', top: 8, right: 8, width: 28, height: 28,
-                           borderRadius: '50%', background: 'rgba(0,0,0,0.6)', color: '#fff',
-                           border: 'none', fontSize: 16, cursor: 'pointer' }} aria-label="Fermer">×</button>
-              </div>
+              <img src={planUrl} alt="Plan du camping"
+                style={{ width: '100%', maxWidth: 400, maxHeight: 260, objectFit: 'contain',
+                         borderRadius: 12, border: '1px solid #e5e7eb', display: 'block',
+                         background: jetons.surfaceDouce }} />
 
               <div style={{
                 padding: '10px 14px', borderRadius: 10, fontSize: 13, fontWeight: 500,
@@ -317,29 +314,32 @@ export default function Carte({ camping, setCamping }) {
                 color:      planBounds ? jetons.succes : jetons.alerte,
               }}>
                 {planBounds
-                  ? '✅ Plan calé sur le satellite — visible pour vos vacanciers'
-                  : '⚠️ Plan non calé — cliquez sur « Caler sur satellite » pour l\'aligner'}
+                  ? '✅ Plan ajusté sur la vue satellite — visible pour vos vacanciers'
+                  : '⚠️ Plan pas encore ajusté — touchez « Ajuster sur la vue satellite » pour l\'aligner'}
               </div>
 
               <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
-                <button onClick={() => setShowCalibrator(true)}
-                  style={{ background: jetons.marque, color: '#fff', padding: '10px 18px',
-                           borderRadius: 8, border: 'none', fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>
-                  🎯 {planBounds ? 'Ajuster le calage' : 'Caler sur satellite'}
+                <button onClick={() => setShowCalibrator(true)} style={btnPrimary}>
+                  🎯 Ajuster sur la vue satellite
                 </button>
                 <label style={{ cursor: 'pointer' }}>
                   <span style={{ background: jetons.surfaceDouce, color: jetons.texteMoyen, padding: '10px 18px',
-                                 borderRadius: 8, fontSize: 13, fontWeight: 600, display: 'inline-block' }}>
+                                 borderRadius: 8, fontSize: 13, fontWeight: 600, display: 'inline-flex',
+                                 alignItems: 'center', minHeight: 44, boxSizing: 'border-box' }}>
                     Remplacer le plan
                   </span>
                   <input type="file" accept="image/png,image/jpeg"
                     onChange={e => handleUpload(e.target.files[0])}
                     style={{ display: 'none' }} />
                 </label>
+                <button onClick={supprimerPlan}
+                  style={{ ...btnPrimary, background: jetons.dangerFond, color: jetons.danger }}>
+                  🗑 Supprimer le plan
+                </button>
               </div>
             </div>
           )}
-          {uploading && <UploadProgress label="Compression et upload…" />}
+          {uploading && <UploadProgress label="Envoi du plan…" />}
         </Step>
 
       {showCalibrator && (
@@ -372,7 +372,7 @@ function UploadProgress({ label }) {
 }
 
 const btnPrimary = {
-  background: jetons.marque, color: '#fff', padding: '10px 18px',
+  background: jetons.marque, color: '#fff', padding: '10px 18px', minHeight: 44,
   borderRadius: 8, border: 'none', fontSize: 13, fontWeight: 600, cursor: 'pointer',
 }
 const btnDisabled = {

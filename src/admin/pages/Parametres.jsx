@@ -1,8 +1,12 @@
 import { useState } from 'react'
 import { supabase } from '../../supabase'
 import QRCodeGenerator from '../components/QRCodeGenerator'
-import { lienRejoindre } from '../lib/liens'
-import { Bloc, Alerte, EnTete } from '../components/Bloc'
+import { lienRejoindre, MESSAGE_ORDINATEUR } from '../lib/liens'
+import { versCsv } from '../lib/csv'
+import { traduireErreur } from '../lib/erreurs'
+import { Bloc, EnTete } from '../components/Bloc'
+import { toast } from '../../toast'
+import { isNative } from '../../native'
 import { libelleAvecFr } from '../../lib/profil'
 import { Bouton, Texte, Pile, couleur as jetons, espace, graisse, rayon } from '../../design'
 
@@ -14,21 +18,20 @@ export default function Parametres({ camping, session, setCamping }) {
   const [savingEmail, setSavingEmail]   = useState(false)
   const [savingPwd, setSavingPwd]       = useState(false)
   const [savingCamping, setSavingCamping] = useState(false)
-  const [success, setSuccess]   = useState('')
-  const [error, setError]       = useState('')
   const [resetting, setResetting] = useState(false)
+  const [exporting, setExporting] = useState(false)
 
+  // toast() plutôt qu'une alerte en tête de page : le gérant appuie sur un
+  // bouton en bas d'écran, le message apparaissait 400 px plus haut, hors de vue.
   function flash(type, msg) {
-    if (type === 'success') { setSuccess(msg); setError('') }
-    else { setError(msg); setSuccess('') }
-    setTimeout(() => { setSuccess(''); setError('') }, 4000)
+    toast(msg, type === 'success' ? 'succes' : 'erreur')
   }
 
   async function updateEmail(e) {
     e.preventDefault()
     setSavingEmail(true)
     const { error: err } = await supabase.auth.updateUser({ email })
-    if (err) flash('error', err.message)
+    if (err) flash('error', traduireErreur(err))
     else flash('success', 'Email mis à jour. Vérifiez votre boîte mail.')
     setSavingEmail(false)
   }
@@ -40,7 +43,7 @@ export default function Parametres({ camping, session, setCamping }) {
     if (newPwd.length < 8) { flash('error', 'Mot de passe trop court (8 caractères minimum).'); return }
     setSavingPwd(true)
     const { error: err } = await supabase.auth.updateUser({ password: newPwd })
-    if (err) flash('error', err.message)
+    if (err) flash('error', traduireErreur(err))
     else { flash('success', 'Mot de passe modifié.'); setNewPwd(''); setConfirmPwd('') }
     setSavingPwd(false)
   }
@@ -50,7 +53,7 @@ export default function Parametres({ camping, session, setCamping }) {
     setSavingCamping(true)
     if (!campingNom.trim()) { flash('error', 'Le nom du camping ne peut pas être vide.'); setSavingCamping(false); return }
     const { error: err } = await supabase.from('campings').update({ nom: campingNom.trim() }).eq('id', camping.id)
-    if (err) flash('error', err.message)
+    if (err) flash('error', traduireErreur(err))
     else {
       // Le nouveau nom s'affiche tout de suite dans l'en-tête, pas au prochain rechargement.
       setCamping?.(c => ({ ...c, nom: campingNom.trim() }))
@@ -91,9 +94,35 @@ export default function Parametres({ camping, session, setCamping }) {
 
       flash('success', 'Toutes les données ont été réinitialisées.')
     } catch (err) {
-      flash('error', `Erreur: ${err.message}`)
+      flash('error', traduireErreur(err))
     }
     setResetting(false)
+  }
+
+  async function exporterCsv() {
+    setExporting(true)
+    const { data, error: err } = await supabase.from('vacanciers')
+      .select('pseudo, emplacement, tranche_age, avec, created_at')
+      .eq('camping_id', camping.id).order('created_at')
+    setExporting(false)
+    if (err) { flash('error', traduireErreur(err)); return }
+    const rows = data || []
+    // versCsv neutralise les formules : les pseudos sont saisis par des
+    // vacanciers anonymes, et « =LIEN_HYPERTEXTE(…) » s'exécutait dans Excel.
+    const csv = versCsv(
+      ['Pseudo', 'Emplacement', "Tranche d'âge", 'Avec', 'Inscrit le'],
+      rows.map(v => [
+        v.pseudo, v.emplacement || '', v.tranche_age || '', libelleAvecFr(v.avec),
+        new Date(v.created_at).toLocaleDateString('fr-FR'),
+      ]),
+    )
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8' })
+    const a = document.createElement('a')
+    a.href = URL.createObjectURL(blob)
+    a.download = `vacanciers-${camping.slug}-${new Date().toISOString().slice(0, 10)}.csv`
+    a.click()
+    URL.revokeObjectURL(a.href)
+    flash('success', `${rows.length} vacancier${rows.length > 1 ? 's' : ''} exporté${rows.length > 1 ? 's' : ''}.`)
   }
 
   const appUrl = lienRejoindre(camping?.slug)
@@ -101,9 +130,6 @@ export default function Parametres({ camping, session, setCamping }) {
   return (
     <Pile espace="xl">
       <EnTete titre="Paramètres" />
-
-      {success && <Alerte type="succes">{success}</Alerte>}
-      {error   && <Alerte type="erreur">{error}</Alerte>}
 
         {/* Email */}
         <Bloc titre="Adresse email">
@@ -152,9 +178,9 @@ export default function Parametres({ camping, session, setCamping }) {
               />
             </div>
             <div>
-              <label style={labelStyle}>SLUG (identifiant URL)</label>
-              <input type="text" value={camping?.slug || ''} disabled style={{ ...inputStyle, background: jetons.surfaceDouce, color: jetons.texteDoux }} />
-              <div style={{ fontSize: 12, color: jetons.texteDoux, marginTop: 4 }}>Le slug ne peut pas être modifié.</div>
+              <label style={labelStyle}>Adresse de votre camping dans l'app</label>
+              <input type="text" value={appUrl.replace('https://', '')} disabled aria-label="Adresse de votre camping dans l'app" style={{ ...inputStyle, background: jetons.surfaceDouce, color: jetons.texteDoux }} />
+              <div style={{ fontSize: 12, color: jetons.texteDoux, marginTop: 4 }}>Cette adresse ne peut pas être modifiée : c'est celle de votre QR code.</div>
             </div>
             <button type="submit" disabled={savingCamping} style={btnStyle(savingCamping)}>
               {savingCamping ? 'Enregistrement...' : 'Enregistrer'}
@@ -163,7 +189,8 @@ export default function Parametres({ camping, session, setCamping }) {
         </Bloc>
 
         {/* QR Code */}
-        <Bloc titre="QR Code de l'application">
+        {/* id : l'accueil gérant renvoie ici par /admin/parametres#qr. */}
+        <Bloc id="qr" titre="QR Code de l'application">
           <p style={{ fontSize: 14, color: jetons.texteDoux, marginBottom: 16 }}>
             Affichez ce QR code à la réception : en le scannant, vos vacanciers entrent directement dans votre camping, sans code.
           </p>
@@ -175,32 +202,14 @@ export default function Parametres({ camping, session, setCamping }) {
           <p style={{ fontSize: 14, color: jetons.texteDoux, marginBottom: 16 }}>
             Téléchargez la liste de vos vacanciers au format CSV (Excel).
           </p>
-          <button
-            onClick={async () => {
-              const { data } = await supabase.from('vacanciers')
-                .select('pseudo, emplacement, tranche_age, avec, created_at')
-                .eq('camping_id', camping.id).order('created_at')
-              const rows = data || []
-              const header = 'Pseudo;Emplacement;Tranche d\'age;Avec;Inscrit le'
-              const lines = rows.map(v => [
-                v.pseudo, v.emplacement || '', v.tranche_age || '', libelleAvecFr(v.avec),
-                new Date(v.created_at).toLocaleDateString('fr-FR'),
-              ].map(x => `"${String(x).replace(/"/g, '""')}"`).join(';'))
-              const csv = '﻿' + [header, ...lines].join('\r\n')
-              const blob = new Blob([csv], { type: 'text/csv;charset=utf-8' })
-              const a = document.createElement('a')
-              a.href = URL.createObjectURL(blob)
-              a.download = `vacanciers-${camping.slug}-${new Date().toISOString().slice(0, 10)}.csv`
-              a.click()
-              URL.revokeObjectURL(a.href)
-            }}
-            style={{
-              background: jetons.marque, color: '#fff', padding: '11px 20px',
-              borderRadius: 10, border: 'none', fontSize: 14, fontWeight: 600, cursor: 'pointer',
-            }}
-          >
-            📥 Exporter les vacanciers (CSV)
-          </button>
+          {/* Dans l'app iPhone et Android, un lien de téléchargement ne fait rien. */}
+          {isNative ? (
+            <p style={{ fontSize: 14, color: jetons.texteMoyen, margin: 0 }}>{MESSAGE_ORDINATEUR}</p>
+          ) : (
+            <button onClick={exporterCsv} disabled={exporting} style={btnStyle(exporting)}>
+              {exporting ? 'Export…' : '📥 Exporter les vacanciers (CSV)'}
+            </button>
+          )}
         </Bloc>
 
       {/* Zone danger */}
@@ -234,7 +243,8 @@ const inputStyle = {
   background: jetons.fondClair, boxSizing: 'border-box',
 }
 const btnStyle = (disabled) => ({
-  padding: '12px', borderRadius: 10,
+  // 44 px : taille minimale d'une cible tactile confortable.
+  minHeight: 44, padding: '12px 18px', borderRadius: 10,
   background: disabled ? '#9ca3af' : jetons.marque,
   color: '#fff', fontWeight: 600, fontSize: 14,
   alignSelf: 'flex-start',

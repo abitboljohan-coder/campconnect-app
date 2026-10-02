@@ -119,8 +119,8 @@ export default function Onboarding({ initialCamping, onDone }) {
         //     le camping à son domicile, et la vérification GPS devenait fausse
         //     pour tous les suivants.
         //
-        // Le centre est une donnée du camping : il se règle depuis
-        // l'administration, à l'étape « Position du camping ». Sans lui, le
+        // Le centre est une donnée du camping : il est enregistré avec le
+        // contour, depuis l'administration (Carte, étape 1). Sans lui, le
         // code affiché à la réception prend le relais — ce qu'il sait déjà faire.
         if (!campingLat || !campingLng) {
           setGpsStatus('fail')
