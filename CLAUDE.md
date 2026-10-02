@@ -272,6 +272,19 @@ Pour démarcher un camping, invoquer la commande `/commercial`.
 Pour sortir une version sur les stores, invoquer `/livraison`. Le workflow
 complet (fichier de prospects, routines, semaine type) : `docs/WORKFLOW.md`.
 
+Équipe d'agents (`.claude/agents/`) : confier chaque tâche au bon métier.
+
+| Agent | Quand |
+|---|---|
+| `developpeur` | bug, fonctionnalité, modification de l'app |
+| `testeur` | vérifier avant de livrer : tests, build, petits écrans |
+| `data` | requête, statistique, migration, démo, crons |
+| `securite` | audit RLS, cloisonnement, secrets ; ne modifie rien |
+| `commercial` | prospects, appels, emails, objections |
+| `marketing` | LinkedIn, fiches des stores, site, vidéo ; aucune dépense sans accord |
+| `operations` | livraison sur les stores, Xcode Cloud, surveillance, routines |
+| `support` | retour d'un testeur ou d'un utilisateur : diagnostic et réponse |
+
 Camping de démo (`les-flots-bleus`, « Camping démo Les Flots Bleus ») : ses
 groupes, messages, animations, statuts et annonces vivent dans Supabase, pas
 dans l'app. Le cron `rafraichir-demo` (3 h UTC) appelle `rafraichir_demo()`, qui
