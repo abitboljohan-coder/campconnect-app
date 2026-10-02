@@ -3,9 +3,10 @@ import { supabase } from '../../supabase'
 import { toast } from '../../toast'
 import Sheet from '../../components/Sheet'
 import AnimationForm from '../components/AnimationForm'
+import { dupliquerAnimation } from '../lib/animations'
 import { Bloc, EnTete } from '../components/Bloc'
 import { libelleAvecFr } from '../../lib/profil'
-import { Bouton, Texte, Pile, Badge, Squelette, Vide, couleur as jetons, espace, graisse, rayon, texte as tailles } from '../../design'
+import { Bouton, Texte, Pile, Badge, Squelette, Vide, Icone, couleur as jetons, espace, graisse, rayon, texte as tailles } from '../../design'
 
 export default function Animations({ camping }) {
   const [animations, setAnimations] = useState([])
@@ -13,8 +14,9 @@ export default function Animations({ camping }) {
   const [loading, setLoading]       = useState(true)
   const [showForm, setShowForm]     = useState(false)
   const [editAnim, setEditAnim]     = useState(null)
+  const [copie, setCopie]           = useState(null) // animation dupliquée, à créer
   const [saving, setSaving]         = useState(false)
-  const [inscritsModal, setInscritsModal] = useState(null) // { anim, vacanciers }
+  const [inscritsModal, setInscritsModal] = useState(null) // { anim, vacanciers, chargement, erreur }
 
   async function load() {
     const { data: anims } = await supabase
@@ -77,8 +79,17 @@ export default function Animations({ camping }) {
     }
     setAnimations(prev => editAnim ? prev.map(a => a.id === data.id ? data : a) : [data, ...prev])
     toast(editAnim ? 'Animation modifiée' : 'Animation créée', 'succes')
-    setShowForm(false)
+    fermerForm()
+  }
+
+  function fermerForm() { setShowForm(false); setEditAnim(null); setCopie(null) }
+
+  // L'aquagym de tous les matins se retapait champ par champ. La copie tombe
+  // une semaine plus tard, à la même heure, et reste modifiable avant création.
+  function dupliquer(anim) {
     setEditAnim(null)
+    setCopie(dupliquerAnimation(anim))
+    setShowForm(true)
   }
 
   // À venir d'abord, dans l'ordre du calendrier ; les passées ensuite, en
@@ -90,13 +101,37 @@ export default function Animations({ camping }) {
   const passees = animations.filter(a => a.debut && new Date(a.debut).getTime() < seuil)
     .sort((a, b) => new Date(b.debut) - new Date(a.debut))
 
+  // La feuille s'ouvre tout de suite, avec un indicateur : le gérant ne
+  // savait pas si son appui avait été pris en compte, ni si la liste vide
+  // venait d'un échec de chargement.
   async function voirInscrits(anim) {
-    const { data } = await supabase
+    setInscritsModal({ anim, vacanciers: [], chargement: true, erreur: false })
+    const { data, error } = await supabase
       .from('inscriptions')
       .select('*, vacanciers(pseudo, emplacement, tranche_age, avec)')
       .eq('animation_id', anim.id)
       .order('created_at')
-    setInscritsModal({ anim, vacanciers: (data || []).map(i => i.vacanciers) })
+    if (error) console.error('Chargement des inscrits échoué :', error)
+    setInscritsModal(m => m?.anim.id === anim.id
+      ? { anim, vacanciers: (data || []).map(i => i.vacanciers), chargement: false, erreur: !!error }
+      : m)
+  }
+
+  // Pour la feuille d'appel au bord de la piscine : un texte à coller dans
+  // un message ou à imprimer.
+  async function copierInscrits({ anim, vacanciers }) {
+    const quand = anim.debut
+      ? ` — ${new Date(anim.debut).toLocaleString('fr-FR', { weekday: 'short', day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}`
+      : ''
+    const lignes = vacanciers.map((v, i) =>
+      `${i + 1}. ${v?.pseudo || '—'}${v?.emplacement ? ` (empl. ${v.emplacement})` : ''}`)
+    const texte = [`${anim.titre}${quand}`, `${vacanciers.length} inscrit${vacanciers.length > 1 ? 's' : ''}`, '', ...lignes].join('\n')
+    try {
+      await navigator.clipboard.writeText(texte)
+      toast('Liste copiée', 'succes')
+    } catch {
+      toast('Copie impossible ici.', 'erreur')
+    }
   }
 
   return (
@@ -164,20 +199,25 @@ export default function Animations({ camping }) {
                   <div style={{ fontSize: 12, color: jetons.texteDoux, marginTop: 4, display: 'flex', gap: 12, flexWrap: 'wrap' }}>
                     {debut && <span>📅 {debut.toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })} à {debut.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}</span>}
                     {anim.lieu && <span>📍 {anim.lieu}</span>}
-                    {/* Une ligne cliquable qui n'etait pas un bouton : rien
-                        n'indiquait qu'elle ouvrait la liste, et le clavier ne
-                        pouvait pas l'atteindre. */}
-                    <button
-                      onClick={() => voirInscrits(anim)}
-                      style={{
-                        color: jetons.marqueTexte, fontWeight: graisse.normal, cursor: 'pointer',
-                        background: 'none', border: 'none', padding: 0, font: 'inherit',
-                        fontSize: tailles.petit, textDecoration: 'underline',
-                      }}
-                    >
-                      👥 {nb}{anim.places_max > 0 ? `/${anim.places_max}` : ''} inscrit{nb > 1 ? 's' : ''}
-                    </button>
                   </div>
+                  {/* Un lien souligné de 19 px de haut : trop petit pour le
+                      doigt. Un vrai bouton, de 44 px. */}
+                  <button
+                    type="button"
+                    onClick={() => voirInscrits(anim)}
+                    aria-label={`Voir les inscrits : ${nb}${anim.places_max > 0 ? ` sur ${anim.places_max}` : ''}`}
+                    style={{
+                      whiteSpace: 'nowrap',
+                      marginTop: espace.sm, minHeight: 44, padding: `0 ${espace.md}px`,
+                      display: 'inline-flex', alignItems: 'center', gap: 6,
+                      color: jetons.marqueTexte, fontWeight: graisse.fort, cursor: 'pointer',
+                      background: jetons.fond, border: `1px solid ${jetons.bordure}`, borderRadius: rayon.sm,
+                      fontFamily: 'inherit', fontSize: tailles.petit,
+                    }}
+                  >
+                    👥 {nb}{anim.places_max > 0 ? `/${anim.places_max}` : ''} inscrit{nb > 1 ? 's' : ''}
+                    <Icone nom="chevron" taille={15} />
+                  </button>
                 </div>
                 </div>
 
@@ -188,7 +228,7 @@ export default function Animations({ camping }) {
                     variante="secondaire" taille="sm"
                     onClick={() => togglePublie(anim)}
                     style={{
-                      borderRadius: rayon.sm, border: 'none',
+                      ...actionStyle, border: 'none',
                       background: anim.publiee ? jetons.alerteFond : '#f0fdf4',
                       color: anim.publiee ? jetons.alerte : jetons.succes,
                     }}
@@ -196,12 +236,16 @@ export default function Animations({ camping }) {
                     {anim.publiee ? 'Dépublier' : 'Publier'}
                   </Bouton>
                   <Bouton variante="secondaire" taille="sm"
-                          onClick={() => { setEditAnim(anim); setShowForm(true) }}
-                          style={{ borderRadius: rayon.sm, border: 'none', background: jetons.surfaceDouce }}>
+                          onClick={() => { setCopie(null); setEditAnim(anim); setShowForm(true) }}
+                          style={{ ...actionStyle, border: 'none', background: jetons.surfaceDouce }}>
                     Modifier
                   </Bouton>
+                  <Bouton variante="secondaire" taille="sm" onClick={() => dupliquer(anim)}
+                          style={{ ...actionStyle, border: 'none', background: jetons.surfaceDouce }}>
+                    Dupliquer
+                  </Bouton>
                   <Bouton variante="danger" taille="sm" onClick={() => supprimer(anim.id)}
-                          style={{ borderRadius: rayon.sm }}>
+                          style={actionStyle}>
                     Supprimer
                   </Bouton>
                 </Pile>
@@ -215,14 +259,14 @@ export default function Animations({ camping }) {
 
       {/* Modal formulaire */}
       {showForm && (
-        <Sheet onClose={() => { setShowForm(false); setEditAnim(null) }}>
+        <Sheet onClose={fermerForm}>
           <Texte variante="section" as="h2" style={{ marginBottom: espace.xl }}>
-            {editAnim ? 'Modifier l’animation' : 'Nouvelle animation'}
+            {editAnim ? 'Modifier l’animation' : copie ? 'Dupliquer l’animation' : 'Nouvelle animation'}
           </Texte>
           <AnimationForm
-            initial={editAnim}
+            initial={editAnim || copie}
             onSave={sauvegarder}
-            onCancel={() => { setShowForm(false); setEditAnim(null) }}
+            onCancel={fermerForm}
             saving={saving}
           />
         </Sheet>
@@ -235,11 +279,17 @@ export default function Animations({ camping }) {
             <Texte variante="section" as="h2">
               {inscritsModal.anim.emoji} {inscritsModal.anim.titre}
             </Texte>
-            <Texte variante="corps">
-              {inscritsModal.vacanciers.length} inscrit{inscritsModal.vacanciers.length !== 1 ? 's' : ''}
-            </Texte>
+            {!inscritsModal.chargement && !inscritsModal.erreur && (
+              <Texte variante="corps">
+                {inscritsModal.vacanciers.length} inscrit{inscritsModal.vacanciers.length !== 1 ? 's' : ''}
+              </Texte>
+            )}
           </Pile>
-          {inscritsModal.vacanciers.length === 0 ? (
+          {inscritsModal.chargement ? (
+            <Squelette lignes={3} hauteur={44} libelle="Chargement des inscrits…" />
+          ) : inscritsModal.erreur ? (
+            <Vide emoji="⚠️" texte="Impossible de charger les inscrits. Vérifiez la connexion et réessayez." />
+          ) : inscritsModal.vacanciers.length === 0 ? (
             <Vide emoji="👥" texte="Aucun inscrit." />
           ) : (
             <Pile espace="sm">
@@ -264,8 +314,14 @@ export default function Animations({ camping }) {
               ))}
             </Pile>
           )}
+          {!inscritsModal.chargement && inscritsModal.vacanciers.length > 0 && (
+            <Bouton taille="lg" pleineLargeur onClick={() => copierInscrits(inscritsModal)}
+                    style={{ marginTop: espace.xl }}>
+              Copier la liste
+            </Bouton>
+          )}
           <Bouton variante="secondaire" taille="lg" pleineLargeur
-                  onClick={() => setInscritsModal(null)} style={{ marginTop: espace.xl }}>
+                  onClick={() => setInscritsModal(null)} style={{ marginTop: espace.md }}>
             Fermer
           </Bouton>
         </Sheet>
@@ -273,3 +329,6 @@ export default function Animations({ camping }) {
     </Pile>
   )
 }
+
+// Boutons d'action d'une animation : 44 px, la cible minimale au doigt.
+const actionStyle = { borderRadius: rayon.sm, minHeight: 44 }
