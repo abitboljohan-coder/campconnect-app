@@ -8,6 +8,45 @@ que l'utilisateur gagne, pas ce que le code fait.
 
 ---
 
+## 1.0.2
+
+### Français
+
+```
+Cette mise à jour rend CampConnect plus agréable au quotidien, pour les
+vacanciers comme pour les gérants.
+
+• Des centaines d'emojis pour vos groupes, vos statuts et votre avatar.
+• Créer un groupe est plus fluide, même clavier ouvert.
+• Les groupes et animations terminés disparaissent d'eux-mêmes.
+• Discussions plus fiables : plus de messages en double, et les messages
+  reçus pendant votre absence s'affichent dès votre retour.
+• Petites annonces : signaler ou bloquer un auteur en un geste.
+• Gérants : les signalements arrivent en direct, signalés par une pastille,
+  et la modération couvre désormais les annonces et les groupes.
+• Compatibilité avec les dernières versions d'iOS, et corrections
+  d'affichage sur les petits écrans.
+```
+
+### English
+
+```
+This update makes CampConnect nicer to use every day, for holidaymakers and
+campsite managers alike.
+
+• Hundreds of emojis for your groups, status and avatar.
+• Creating a group is smoother, even with the keyboard open.
+• Finished groups and events now disappear on their own.
+• More reliable chats: no more duplicate messages, and messages received
+  while you were away show up as soon as you come back.
+• Classifieds: report or block an author in one tap.
+• Managers: issue reports arrive live with a badge, and moderation now
+  covers classifieds and groups.
+• Support for the latest iOS versions, and display fixes on small screens.
+```
+
+---
+
 ## 1.0.1
 
 ### Français
@@ -52,8 +91,8 @@ alike.
 
 | À vérifier | Où |
 |---|---|
-| `MARKETING_VERSION = 1.0.1` | `ios/App/App.xcodeproj/project.pbxproj` |
-| `versionName "1.0.1"` | `android/app/build.gradle` |
+| `MARKETING_VERSION = 1.0.2` | `ios/App/App.xcodeproj/project.pbxproj` |
+| `versionName "1.0.2"` | `android/app/build.gradle` |
 | Numéro de build | s'aligne seul sur `$CI_BUILD_NUMBER` (Xcode Cloud) |
 | `versionCode` Android | automatique, minutes depuis 1970 |
 
