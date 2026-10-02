@@ -1,7 +1,6 @@
 // Supabase MOCK — uniquement pour le build démo (captures d'écran du site).
 // Rend les vrais composants de l'app avec un jeu de données réaliste, sans backend.
-export const todayISO = () => new Date().toISOString().slice(0, 10)
-export const presentFilter = () => `date_depart.is.null,date_depart.gte.${todayISO()}`
+export { todayISO, presentFilter } from '../lib/presence'
 export const ensureAnonSession = async () => ({ user: { id: 'demo-uid' } })
 
 const iso = (h, m = 0) => { const d = new Date(); d.setHours(h, m, 0, 0); return d.toISOString() }
@@ -20,6 +19,24 @@ const PINS = [
   { ref_id: 'l6', ref_type: 'lieu', label: 'Épicerie',     emoji: '🛒', color: '#0ea5e9', lat: 44.2012, lng: 6.2999, osm: true },
 ]
 
+// Livret repris de scripts/sql/seed_flots_bleus.sql. Sans lui, l'onglet Infos
+// de la démo n'afficherait que l'état « demandez à la réception » : les
+// rubriques fictives de repli ont disparu de l'application.
+const DEMO_INFOS = [
+  { id: 'plage',     emoji: '🏖️', titre: 'Accès plage',        contenu: 'Accès direct à la plage de Saint-Pons-les-Mûres, 200 m.\nSurveillée 10h – 19h en juillet-août.\nDouches et rinçage à la sortie du camping.\nTransats et paddles en location sur place.' },
+  { id: 'bateau',    emoji: '⛵', titre: 'Navette Saint-Tropez', contenu: "Départ du port de Port Grimaud, 15 minutes de traversée.\nToutes les heures de 9h à 19h en saison.\n8 € l'aller, 14 € l'aller-retour.\nBien plus agréable que la route en été." },
+  { id: 'piscine',   emoji: '🏊', titre: 'Espace aquatique',   contenu: 'Bassin principal chauffé 9h – 20h.\nPataugeoire 9h – 19h.\nToboggans 11h – 13h et 15h – 18h.\nShort de bain interdit.' },
+  { id: 'reception', emoji: '🏠', titre: 'Réception',          contenu: 'Basse saison : 9h – 12h et 14h – 18h.\nJuillet-août : 8h – 20h en continu.\nUrgence nuit : 06 12 34 56 78.' },
+  { id: 'wifi',      emoji: '📶', titre: 'Wi-Fi',              contenu: 'Réseau : FlotsBleus-Invites\nCode : grimaud2026\nDébit renforcé près de la réception et du snack.' },
+  { id: 'snack',     emoji: '🍺', titre: 'Bar & snack Le Ponton', contenu: "Petit-déjeuner 8h – 10h30.\nRestauration continue 12h – 22h.\nBar jusqu'à minuit, 1h les soirs d'animation.\nPizzas à emporter sur commande." },
+  { id: 'epicerie',  emoji: '🥖', titre: 'Épicerie & dépôt de pain', contenu: 'Ouverte 8h – 12h30 et 16h – 19h30.\nPain et viennoiseries sur réservation la veille avant 19h.' },
+  { id: 'laverie',   emoji: '👕', titre: 'Laverie',            contenu: 'Bloc sanitaire B, 7h – 22h.\nLave-linge 4 € · sèche-linge 3 €.\nJetons à la réception et au bar.' },
+  { id: 'tri',       emoji: '♻️', titre: 'Tri & poubelles',    contenu: "Point tri à l'entrée et près du bloc C.\nVerre : conteneur du parking.\nCollecte tous les matins à 7h30.\nMistral : rentrez vos sacs, ils s'envolent." },
+  { id: 'animaux',   emoji: '🐾', titre: 'Animaux',            contenu: 'Acceptés tenus en laisse, 4 €/nuit.\nInterdits à l\'espace aquatique et au snack.\nSac de ramassage disponible à la réception.' },
+  { id: 'services',  emoji: '🚿', titre: 'Services',           contenu: "Aire de vidange camping-car à l'entrée.\nBornes de recharge électrique sur le parking visiteurs.\nLocation de vélos à la réception, 12 €/jour." },
+  { id: 'urgences',  emoji: '🚨', titre: 'Urgences',           contenu: 'Réception : 04 94 56 00 00\nSAMU 15 · Police 17 · Pompiers 18\nUrgence européenne : 112\nPharmacie la plus proche : 600 m, av. de la Mer.' },
+]
+
 // Même identité que le camping vitrine créé en production par
 // scripts/sql/seed_flots_bleus.sql : les captures des stores, la démo
 // commerciale et le lien de revue montrent ainsi le même camping.
@@ -32,7 +49,7 @@ export const DEMO_CAMPING = {
   logo_url: null,
   plan_url: null,
   carte_config: { center: CENTER, perimeter: PERIMETER, pins: PINS },
-  infos: [],
+  infos: DEMO_INFOS,
 }
 
 export const DEMO_VACANCIER = {
@@ -156,6 +173,9 @@ export const supabase = {
     signInWithPassword: async () => ({ data: { session: {} }, error: null }),
     signUp: async () => ({ data: { session: {} }, error: null }),
     signOut: async () => {},
+    // Paramètres (email, mot de passe) et « Mot de passe oublié ? » de la connexion gérant.
+    updateUser: async () => ({ data: { user: { id: 'demo-uid' } }, error: null }),
+    resetPasswordForEmail: async () => ({ data: {}, error: null }),
     onAuthStateChange: () => ({ data: { subscription: { unsubscribe() {} } } }),
   },
   storage: {

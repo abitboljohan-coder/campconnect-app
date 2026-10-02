@@ -27,6 +27,7 @@ export default function AdminApp() {
   const [gerant, setGerant]   = useState(null)
   const [camping, setCamping] = useState(null)
   const [loading, setLoading] = useState(true)
+  const [erreurCreation, setErreurCreation] = useState('')
 
   // Le calque de démarrage d'index.html couvre les deux applications. Sans ce
   // retrait, l'administration se chargeait normalement mais restait cachée
@@ -66,14 +67,19 @@ export default function AdminApp() {
       return
     }
 
-    // Pas encore de gérant : créer le camping mémorisé au signup (1re connexion confirmée)
-    const pending = localStorage.getItem('pendingCamping')
+    // Pas encore de gérant : créer le camping mémorisé au signup (1re connexion confirmée).
+    // Le nom est relu dans le compte s'il n'est pas sur cet appareil : le
+    // gérant a pu s'inscrire sur son téléphone et se connecter ailleurs.
+    const pending = localStorage.getItem('pendingCamping') || s.user.user_metadata?.nom_camping
     if (pending) {
       const res = await createCamping(s, pending)
       if (res) {
         setGerant(res.gerant)
         setCamping(res.gerant.campings)
         localStorage.removeItem('pendingCamping')
+      } else {
+        // Échec muet auparavant : le gérant revenait à la connexion sans savoir pourquoi.
+        setErreurCreation("Votre espace camping n'a pas pu être créé. Vérifiez la connexion, puis reconnectez-vous pour réessayer.")
       }
     }
     setLoading(false)
@@ -116,7 +122,8 @@ export default function AdminApp() {
       <Routes>
         {!session || !gerant ? (
           <Route path="*" element={
-            <AdminLogin onLogin={(s) => { setSession(s); setLoading(true); loadGerant(s) }} />
+            <AdminLogin erreurInitiale={erreurCreation}
+              onLogin={(s) => { setSession(s); setErreurCreation(''); setLoading(true); loadGerant(s) }} />
           } />
         ) : (
           <Route element={<AdminLayout gerant={gerant} camping={camping} onLogout={logout} />}>

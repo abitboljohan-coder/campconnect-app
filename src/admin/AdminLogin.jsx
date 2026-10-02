@@ -2,25 +2,31 @@ import { useState } from 'react'
 import { supabase } from '../supabase'
 import { isNative, setAppMode } from '../native'
 import { couleur as jetons } from '../design'
+import { traduireErreur } from './lib/erreurs'
 
-export default function AdminLogin({ onLogin }) {
+// Lien du mail « mot de passe oublié ». Dans l'app native, l'origine vaut
+// capacitor://localhost, qu'un navigateur ne sait pas ouvrir : domaine public.
+const URL_ADMIN = isNative ? 'https://app.campconnect.fr/admin' : `${window.location.origin}/admin`
+
+export default function AdminLogin({ onLogin, erreurInitiale = '' }) {
   const [mode, setMode]         = useState('login') // 'login' | 'signup'
   const [email, setEmail]       = useState('')
   const [password, setPassword] = useState('')
   const [nomCamping, setNomCamping] = useState('')
-  const [error, setError]       = useState('')
+  const [error, setError]       = useState(erreurInitiale)
+  // Message de réussite, affiché en vert : « Compte créé » sortait dans
+  // l'encadré rouge des erreurs.
+  const [info, setInfo]         = useState('')
   const [loading, setLoading]   = useState(false)
 
   async function handleSubmit(e) {
     e.preventDefault()
-    setError('')
+    setError(''); setInfo('')
     setLoading(true)
 
     const { data, error: authError } = await supabase.auth.signInWithPassword({ email, password })
     if (authError) {
-      setError(authError.message.toLowerCase().includes('confirm')
-        ? 'Confirmez votre email (lien reçu par mail) avant de vous connecter.'
-        : 'Identifiants incorrects.')
+      setError(traduireErreur(authError, 'Connexion impossible. Vérifiez votre email et votre mot de passe.'))
       setLoading(false)
       return
     }
@@ -32,7 +38,10 @@ export default function AdminLogin({ onLogin }) {
       .eq('email', data.session.user.email)
       .maybeSingle()
 
-    if (!gerant && !localStorage.getItem('pendingCamping')) {
+    // Le nom du camping voyage aussi dans le compte (user_metadata) : un gérant
+    // inscrit sur son téléphone peut se connecter la première fois ailleurs.
+    const enAttente = localStorage.getItem('pendingCamping') || data.session.user.user_metadata?.nom_camping
+    if (!gerant && !enAttente) {
       await supabase.auth.signOut()
       setError("Ce compte n'a pas d'espace gérant. Créez-le via « Créer l'espace de mon camping ».")
       setLoading(false)
@@ -44,7 +53,7 @@ export default function AdminLogin({ onLogin }) {
 
   async function handleSignup(e) {
     e.preventDefault()
-    setError('')
+    setError(''); setInfo('')
     if (!nomCamping.trim()) { setError('Indiquez le nom de votre camping.'); return }
     if (password.length < 8) { setError('Mot de passe : 8 caractères minimum.'); return }
     setLoading(true)
@@ -53,10 +62,14 @@ export default function AdminLogin({ onLogin }) {
     localStorage.setItem('pendingCamping', nomCamping.trim())
 
     // Compte auth (réutilise un compte orphelin, ex: après remise à zéro)
-    const { data, error: signErr } = await supabase.auth.signUp({ email, password })
+    // Le nom est aussi rangé dans le compte : localStorage ne vaut que pour
+    // cet appareil, et la confirmation de l'email se fait souvent sur un autre.
+    const { data, error: signErr } = await supabase.auth.signUp({
+      email, password, options: { data: { nom_camping: nomCamping.trim() } },
+    })
     let session = data?.session
     if (signErr) {
-      if (signErr.message.includes('already')) {
+      if (/already/i.test(signErr.message)) {
         const { data: si, error: siErr } = await supabase.auth.signInWithPassword({ email, password })
         if (siErr) {
           setError(siErr.message.toLowerCase().includes('confirm')
@@ -67,17 +80,29 @@ export default function AdminLogin({ onLogin }) {
         session = si.session
       } else {
         localStorage.removeItem('pendingCamping')
-        setError(signErr.message); setLoading(false); return
+        setError(traduireErreur(signErr, 'Création du compte impossible. Vérifiez la connexion et réessayez.')); setLoading(false); return
       }
     }
 
     // Confirmation email active → pas encore de session : on attend la confirmation
     if (!session) {
-      setError('Compte créé ✅ Confirmez votre email (lien reçu par mail), puis connectez-vous : votre espace camping sera prêt.')
+      setInfo('Compte créé ✅ Confirmez votre email (lien reçu par mail), puis connectez-vous : votre espace camping sera prêt.')
       setLoading(false); setMode('login'); return
     }
 
     onLogin(session) // AdminApp crée le camping depuis pendingCamping
+  }
+
+  async function motDePasseOublie() {
+    setError(''); setInfo('')
+    if (!email.trim()) { setError('Indiquez votre email ci-dessus, puis touchez « Mot de passe oublié ? ».'); return }
+    setLoading(true)
+    const { error: err } = await supabase.auth.resetPasswordForEmail(email.trim(), { redirectTo: URL_ADMIN })
+    setLoading(false)
+    if (err) { setError(traduireErreur(err, "L'email n'a pas pu être envoyé. Vérifiez la connexion et réessayez.")); return }
+    // Même message que le compte existe ou non : ne pas révéler quelles
+    // adresses sont inscrites.
+    setInfo('Si un compte existe pour cette adresse, un email vient de vous être envoyé. Son lien vous connecte directement : choisissez ensuite un nouveau mot de passe dans Paramètres.')
   }
 
   return (
@@ -144,8 +169,13 @@ export default function AdminLogin({ onLogin }) {
           </div>
 
           {error && (
-            <div style={{ background: jetons.dangerFond, color: jetons.danger, padding: '10px 14px', borderRadius: 8, fontSize: 14 }}>
+            <div role="alert" style={{ background: jetons.dangerFond, color: jetons.danger, padding: '10px 14px', borderRadius: 8, fontSize: 14 }}>
               {error}
+            </div>
+          )}
+          {info && (
+            <div role="status" style={{ background: '#f0fdf4', color: jetons.succes, padding: '10px 14px', borderRadius: 8, fontSize: 14 }}>
+              {info}
             </div>
           )}
 
@@ -164,10 +194,21 @@ export default function AdminLogin({ onLogin }) {
               : (mode === 'login' ? 'Se connecter' : '🚀 Créer mon espace camping')}
           </button>
 
+          {mode === 'login' && (
+            <button
+              type="button"
+              onClick={motDePasseOublie}
+              disabled={loading}
+              style={{ background: 'none', border: 'none', color: 'rgba(255,255,255,0.7)', fontSize: 13, cursor: 'pointer', minHeight: 44, textDecoration: 'underline' }}
+            >
+              Mot de passe oublié ?
+            </button>
+          )}
+
           <button
             type="button"
-            onClick={() => { setMode(mode === 'login' ? 'signup' : 'login'); setError('') }}
-            style={{ background: 'none', border: 'none', color: '#C0DD97', fontSize: 13, cursor: 'pointer', marginTop: 6, textDecoration: 'underline' }}
+            onClick={() => { setMode(mode === 'login' ? 'signup' : 'login'); setError(''); setInfo('') }}
+            style={{ background: 'none', border: 'none', color: '#C0DD97', fontSize: 13, cursor: 'pointer', minHeight: 44, textDecoration: 'underline' }}
           >
             {mode === 'login'
               ? "Nouveau ? Créer l'espace de mon camping"

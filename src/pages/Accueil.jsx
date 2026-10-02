@@ -12,6 +12,8 @@ import CarteGroupe from '../components/CarteGroupe'
 import ChoixEmoji from '../components/ChoixEmoji'
 import { SUGGESTIONS_STATUTS } from '../lib/emojis'
 import { estActuel } from '../lib/groupes'
+import { toutCharger } from '../lib/reseau'
+import ErreurReseau from '../components/ErreurReseau'
 import {
   Bouton, Carte, Champ, Texte, Pile, Squelette, Vide,
   couleur, espace, graisse, ombre, rayon, texte as tailles,
@@ -26,51 +28,69 @@ export default function Accueil({ camping, vacancier }) {
   const [mesGroupes, setMesGroupes]     = useState([])
   const [membresMap, setMembresMap]     = useState({})
   const [loading, setLoading]           = useState(true)
+  const [erreurReseau, setErreurReseau] = useState(false)
   const navigate = useNavigate()
   const enLigne = usePresence(camping?.id, vacancier?.id)
 
-  useEffect(() => {
-    async function load() {
-      const now = new Date().toISOString()
-      const [
-        { data: grpsBruts },
-        { count: aCount },
-        { count: vCount },
-        { data: membres },
-      ] = await Promise.all([
-        supabase.from('groupes').select('*').eq('camping_id', camping.id).eq('actif', true).order('created_at', { ascending: false }).limit(30),
-        supabase.from('animations').select('*', { count: 'exact', head: true }).eq('camping_id', camping.id).eq('publiee', true).gte('debut', now),
-        supabase.from('vacanciers').select('*', { count: 'exact', head: true }).eq('camping_id', camping.id).or(presentFilter()),
-        supabase.from('membres_groupes').select('groupe_id').eq('vacancier_id', vacancier.id),
-      ])
-      // Les compteurs du bandeau lisaient la longueur de listes tronquées à 5
-      // groupes et 4 animations : un camping animé annonçait « 4 animations »
-      // quel que soit leur nombre réel. Et les groupes d'il y a une semaine,
-      // que personne ne ferme, comptaient encore.
-      const actuels = (grpsBruts || []).filter(g => estActuel(g))
-      const grps = actuels.slice(0, 5)
-      setGroupes(grps)
-      setNbGroupes(actuels.length)
-      setNbAnimations(aCount || 0)
-      setVacancierCount(vCount || 0)
-      setMesGroupes((membres || []).map(m => m.groupe_id))
+  async function load() {
+    const now = new Date().toISOString()
+    const { resultats: [
+      { data: grpsBruts },
+      { count: aCount },
+      { count: vCount },
+      { data: membres },
+    ], error } = await toutCharger([
+      supabase.from('groupes').select('*').eq('camping_id', camping.id).eq('actif', true).order('created_at', { ascending: false }).limit(30),
+      supabase.from('animations').select('*', { count: 'exact', head: true }).eq('camping_id', camping.id).eq('publiee', true).gte('debut', now),
+      supabase.from('vacanciers').select('*', { count: 'exact', head: true }).eq('camping_id', camping.id).or(presentFilter()),
+      supabase.from('membres_groupes').select('groupe_id').eq('vacancier_id', vacancier.id),
+    ])
+    // Erreur réseau : on ne fait pas croire qu'il n'y a aucun groupe.
+    setErreurReseau(!!error)
+    if (error) {
+      console.error("Chargement de l'accueil échoué :", error)
       setLoading(false)
-
-      const ids = grps.map(g => g.id)
-      if (ids.length) {
-        const { data: allMembres } = await supabase
-          .from('membres_groupes').select('groupe_id, vacanciers!inner(avatar_emoji)').in('groupe_id', ids)
-          .or(presentFilter(), { foreignTable: 'vacanciers' })
-        const map = {}
-        for (const m of allMembres || []) {
-          if (!map[m.groupe_id]) map[m.groupe_id] = []
-          map[m.groupe_id].push(m.vacanciers?.avatar_emoji || '🙂')
-        }
-        setMembresMap(map)
-      }
+      return
     }
+    // Les compteurs du bandeau lisaient la longueur de listes tronquées à 5
+    // groupes et 4 animations : un camping animé annonçait « 4 animations »
+    // quel que soit leur nombre réel. Et les groupes d'il y a une semaine,
+    // que personne ne ferme, comptaient encore.
+    const actuels = (grpsBruts || []).filter(g => estActuel(g))
+    const grps = actuels.slice(0, 5)
+    setGroupes(grps)
+    setNbGroupes(actuels.length)
+    setNbAnimations(aCount || 0)
+    setVacancierCount(vCount || 0)
+    setMesGroupes((membres || []).map(m => m.groupe_id))
+    setLoading(false)
+
+    const ids = grps.map(g => g.id)
+    if (ids.length) {
+      const { data: allMembres } = await supabase
+        .from('membres_groupes').select('groupe_id, vacanciers!inner(avatar_emoji)').in('groupe_id', ids)
+        .or(presentFilter(), { foreignTable: 'vacanciers' })
+      const map = {}
+      for (const m of allMembres || []) {
+        if (!map[m.groupe_id]) map[m.groupe_id] = []
+        map[m.groupe_id].push(m.vacanciers?.avatar_emoji || '🙂')
+      }
+      setMembresMap(map)
+    }
+  }
+
+  useEffect(() => {
+    async function init() { await load() }
+    init()
+  }, [camping.id, vacancier.id]) // eslint-disable-line react-hooks/exhaustive-deps
+
+  function reessayer() {
+    setLoading(true)
+    setErreurReseau(false)
     load()
-  }, [camping.id, vacancier.id])
+  }
+
+  const creerGroupe = () => navigate('/groupes', { state: { creer: true } })
 
   async function rejoindre(groupeId) {
     const { error } = await supabase.from('membres_groupes').insert({ groupe_id: groupeId, vacancier_id: vacancier.id })
@@ -93,8 +113,7 @@ export default function Accueil({ camping, vacancier }) {
           vacancierCount={vacancierCount}
           groupesCount={nbGroupes}
           animationsCount={nbAnimations}
-          onMap={() => navigate('/map')}
-          onAgenda={() => navigate('/agenda')}
+          compteursConnus={!erreurReseau}
         />
       </div>
 
@@ -130,6 +149,8 @@ export default function Accueil({ camping, vacancier }) {
 
         {loading ? (
           <Squelette lignes={3} hauteur={74} libelle={t('commun.chargement')} />
+        ) : erreurReseau ? (
+          <ErreurReseau onReessayer={reessayer} />
         ) : groupes.length === 0 ? (
           /* L'écran d'accueil d'un camping qui démarre n'affichait qu'une
              phrase grise : le vacancier comprenait qu'il n'y avait rien, mais
@@ -139,7 +160,7 @@ export default function Accueil({ camping, vacancier }) {
             emoji="👥"
             titre={t('accueil.aucun_groupe')}
             texte={t('accueil.premier_creer')}
-            action={<Bouton onClick={() => navigate('/groupes')}>{t('groupes.creer')}</Bouton>}
+            action={<Bouton onClick={creerGroupe}>{t('groupes.creer')}</Bouton>}
           />
         ) : (
           <Pile espace="sm">
@@ -158,7 +179,7 @@ export default function Accueil({ camping, vacancier }) {
           </Pile>
         )}
 
-        <Bouton taille="lg" pleineLargeur onClick={() => navigate('/groupes')}>
+        <Bouton taille="lg" pleineLargeur onClick={creerGroupe}>
           {t('accueil.creer_groupe')}
         </Bouton>
       </Pile>
@@ -171,7 +192,7 @@ function AccesRapide({ emoji, fond, libelle, onClick }) {
     <Carte
       as="button"
       hauteur="posee"
-      padding={`13px ${espace.lg}px`}
+      padding={`9px ${espace.md}px`}
       cliquable
       onClick={onClick}
       style={{
@@ -214,6 +235,35 @@ function StatutsStrip({ camping, vacancier }) {
   const [texte, setTexte] = useState('')
   const [emoji, setEmoji] = useState('🔥')
   const [saving, setSaving] = useState(false)
+  const [aSupprimer, setASupprimer] = useState(null)   // son propre statut, visé par l'appui long
+  const [suppression, setSuppression] = useState(false)
+
+  // Appui long : sur son propre statut, le supprimer (une faute de frappe ou
+  // un « BBQ ce soir » annulé restait affiché 24 h) ; sur celui d'un autre,
+  // le menu de modération.
+  function ouvrirMenu(st) {
+    if (st.vacancier_id === vacancier.id) setASupprimer(st)
+    else ouvrirModeration(st)
+  }
+
+  async function supprimerStatut() {
+    if (!aSupprimer || suppression) return
+    setSuppression(true)
+    // .select() : une règle de base qui refuse la suppression ne renvoie pas
+    // d'erreur, seulement zéro ligne. Sans ce contrôle, on annoncerait un
+    // succès alors que le statut reste visible pour tout le camping.
+    const { data, error } = await supabase.from('statuts')
+      .delete().eq('id', aSupprimer.id).eq('vacancier_id', vacancier.id).select('id')
+    setSuppression(false)
+    if (error || !data?.length) {
+      console.error('Suppression statut échouée :', error || 'aucune ligne supprimée')
+      toast(t('accueil.err_statut_suppr'), 'erreur')
+      return
+    }
+    setStatuts(prev => prev.filter(s => s.id !== aSupprimer.id))
+    setASupprimer(null)
+    toast(t('accueil.statut_supprime'), 'succes')
+  }
 
   useEffect(() => {
     async function load() {
@@ -277,7 +327,7 @@ function StatutsStrip({ camping, vacancier }) {
   }
 
   return (
-    <div style={{ padding: '18px 0 0' }}>
+    <div style={{ padding: '14px 0 0' }}>
       <div style={{ display: 'flex', gap: espace.sm, overflowX: 'auto', padding: `0 ${espace.lg}px 4px` }}>
         {/* Poster un statut */}
         <button onClick={() => setShowModal(true)} style={{
@@ -299,16 +349,14 @@ function StatutsStrip({ camping, vacancier }) {
         {statuts.filter(s => !estBloque(vacancier.id, s.vacancier_id)).map(s => (
           <div key={s.id}
             onTouchStart={() => {
-              if (s.vacancier_id === vacancier.id) return
               appuiLong.current = setTimeout(() => {
-                appuiLong.current = 'declenche'; ouvrirModeration(s)
+                appuiLong.current = 'declenche'; ouvrirMenu(s)
               }, 500)
             }}
             onTouchEnd={annulerAppuiLong}
             onTouchMove={annulerAppuiLong}
             onContextMenu={(e) => {
-              if (s.vacancier_id === vacancier.id) return
-              e.preventDefault(); ouvrirModeration(s)
+              e.preventDefault(); ouvrirMenu(s)
             }}
             style={{
               flexShrink: 0, maxWidth: 200, borderRadius: rayon.lg,
@@ -341,6 +389,23 @@ function StatutsStrip({ camping, vacancier }) {
         />
       )}
 
+      {aSupprimer && (
+        <Sheet onClose={() => setASupprimer(null)}>
+          <Pile espace="lg">
+            <Texte variante="section" as="h2">{t('accueil.statut_suppr_titre')}</Texte>
+            <Texte variante="doux">{aSupprimer.emoji} {aSupprimer.texte}</Texte>
+            <Pile espace="sm">
+              <Bouton variante="danger" pleineLargeur charge={suppression} onClick={supprimerStatut}>
+                {t('accueil.statut_suppr')}
+              </Bouton>
+              <Bouton variante="secondaire" pleineLargeur onClick={() => setASupprimer(null)}>
+                {t('commun.annuler')}
+              </Bouton>
+            </Pile>
+          </Pile>
+        </Sheet>
+      )}
+
       {/* Poster un statut */}
       {showModal && (
         <Sheet onClose={() => setShowModal(false)}>
@@ -358,13 +423,14 @@ function StatutsStrip({ camping, vacancier }) {
               taille={40}
             />
 
+            {/* Pas d'autoFocus : le clavier montait avant qu'on ait vu le
+                choix d'emoji, et en cachait la moitié. */}
             <Champ
               libelle={t('accueil.quoi_de_neuf')}
               value={texte}
               onChange={e => setTexte(e.target.value)}
               onKeyDown={e => e.key === 'Enter' && poster()}
               placeholder={t('accueil.statut_ph')}
-              autoFocus
               maxLength={90}
             />
 
@@ -379,7 +445,10 @@ function StatutsStrip({ camping, vacancier }) {
 }
 
 /* ─── Bandeau d'accueil ─── */
-function Hero({ vacancier, vacancierCount, groupesCount, animationsCount, onMap, onAgenda, enLigne }) {
+// Bandeau compact : sur un 320 × 568, ses boutons « Explorer la carte » et
+// « Agenda », qui doublonnaient la barre de navigation, et ses pastilles
+// empilées repoussaient les groupes sous la ligne de flottaison.
+function Hero({ vacancier, vacancierCount, groupesCount, animationsCount, enLigne, compteursConnus }) {
   useLangue()
   const h = new Date().getHours()
   const salut = h < 12 ? t('accueil.bonjour') : h < 18 ? t('accueil.bonapresmidi') : t('accueil.bonsoiree')
@@ -392,7 +461,7 @@ function Hero({ vacancier, vacancierCount, groupesCount, animationsCount, onMap,
       // color-mix évite d'avoir à recomposer l'accent en JavaScript pour en
       // dériver une variante translucide.
       background: 'linear-gradient(135deg, var(--cc-accent) 0%, color-mix(in srgb, var(--cc-accent) 80%, transparent) 60%, #f0b429 140%)',
-      padding: '22px 20px 18px',
+      padding: '18px 18px 16px',
       color: '#fff',
       position: 'relative',
       overflow: 'hidden',
@@ -404,11 +473,17 @@ function Hero({ vacancier, vacancierCount, groupesCount, animationsCount, onMap,
       <Texte variante="corps" style={{ color: '#fff', fontWeight: graisse.fort, opacity: 0.92 }}>
         {salut} {astre}
       </Texte>
-      <Texte variante="titre" as="h1" style={{ color: '#fff', margin: '2px 0 14px' }}>
+      <Texte variante="titre" as="h1" style={{ color: '#fff', margin: '2px 0 10px' }}>
         {vacancier?.avatar_emoji} {vacancier?.pseudo || t('accueil.campeur')}
       </Texte>
 
-      <Pile direction="ligne" espace="sm" retour style={{ marginBottom: espace.lg }}>
+      {/* Les compteurs s'enchaînent comme une phrase, sur une ou deux
+          lignes : trois pastilles séparées s'empilaient à 320 px et prenaient
+          à elles seules un tiers de l'écran. */}
+      <div style={{
+        display: 'flex', flexWrap: 'wrap', alignItems: 'center', columnGap: 10, rowGap: 2,
+        fontSize: tailles.petit, fontWeight: graisse.fort,
+      }}>
         {enLigne > 0 && (
           <Jeton>
             <span aria-hidden="true" style={{
@@ -419,7 +494,9 @@ function Hero({ vacancier, vacancierCount, groupesCount, animationsCount, onMap,
             <span><strong style={{ fontWeight: graisse.affiche, fontSize: tailles.base }}>{enLigne}</strong> {t('accueil.en_ligne')}</span>
           </Jeton>
         )}
-        {[
+        {/* Réseau en panne : les compteurs, jamais lus, annonçaient « 0
+            vacanciers ici, 0 groupes actifs » au-dessus du message d'erreur. */}
+        {compteursConnus && [
           [vacancierCount, t(vacancierCount === 1 ? 'accueil.mot_vacancier' : 'accueil.mot_vacanciers')],
           [groupesCount, t(groupesCount === 1 ? 'accueil.mot_groupe' : 'accueil.mot_groupes')],
           [animationsCount, t(animationsCount === 1 ? 'accueil.mot_animation' : 'accueil.mot_animations')],
@@ -428,37 +505,15 @@ function Hero({ vacancier, vacancierCount, groupesCount, animationsCount, onMap,
             <span><strong style={{ fontWeight: graisse.affiche, fontSize: tailles.base }}>{n}</strong> {l}</span>
           </Jeton>
         ))}
-      </Pile>
-
-      <Pile direction="ligne" espace="sm">
-        <Bouton onClick={onMap} style={{
-          flex: 1, background: '#fff', color: 'var(--cc-accent)',
-          borderRadius: rayon.lg, fontWeight: graisse.affiche, boxShadow: ombre.levee,
-        }}>
-          🗺️ {t('accueil.explorer_carte')}
-        </Bouton>
-        <Bouton onClick={onAgenda} style={{
-          flex: 1, background: 'rgba(255,255,255,0.16)', color: '#fff',
-          borderRadius: rayon.lg, border: '1.5px solid rgba(255,255,255,0.4)',
-        }}>
-          📅 {t('nav.agenda')}
-        </Bouton>
-      </Pile>
+      </div>
     </div>
   )
 }
 
-/** Pastille de statistique du bandeau : verre dépoli sur le dégradé. */
+/** Compteur du bandeau : nombre et libellé, jamais coupés entre deux lignes. */
 function Jeton({ children }) {
   return (
-    <span style={{
-      background: 'rgba(255,255,255,0.18)',
-      backdropFilter: 'blur(6px)',
-      borderRadius: 14, padding: `7px ${espace.md}px`,
-      fontSize: tailles.petit, fontWeight: graisse.fort,
-      border: '1px solid rgba(255,255,255,0.25)',
-      display: 'flex', alignItems: 'center', gap: 6,
-    }}>
+    <span style={{ display: 'flex', alignItems: 'center', gap: 6, whiteSpace: 'nowrap', opacity: 0.95 }}>
       {children}
     </span>
   )

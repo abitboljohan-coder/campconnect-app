@@ -4,6 +4,7 @@ import { isNative, setAppMode } from '../native'
 import { estAccesLibre, estJoignable } from '../lib/acces'
 import { SUGGESTIONS_AVATARS } from '../lib/emojis'
 import ChoixEmoji from '../components/ChoixEmoji'
+import { champsArrivee } from '../lib/profil'
 import { t, useLangue } from '../i18n'
 import {
   Bouton, Carte, Champ, Texte, Pile, appliquerTheme,
@@ -26,6 +27,8 @@ export function getHourlyCode(campingId, instant = Date.now()) {
   }
   return String((Math.abs(hash) % 9000) + 1000)
 }
+
+const aujourdhui = () => new Date().toISOString().slice(0, 10)
 
 function haversine(lat1, lng1, lat2, lng2) {
   const R = 6371000
@@ -71,8 +74,9 @@ export default function Onboarding({ initialCamping, onDone }) {
   const [code, setCode] = useState('')
   const [codeError, setCodeError] = useState('')
 
-  // Formulaire profil
-  const [form, setForm] = useState({ pseudo: '', emplacement: '', avatar_emoji: '🏕️', date_depart: '' })
+  // Formulaire profil. Avatar vide = pas encore choisi : 🏕️ par défaut, ou
+  // celui du profil retrouvé — on ne l'écrase pas avec le choix par défaut.
+  const [form, setForm] = useState({ pseudo: '', emplacement: '', avatar_emoji: '', date_depart: '' })
   const [cguAcceptees, setCguAcceptees] = useState(false)
   const [formError, setFormError] = useState('')
   const [saving, setSaving] = useState(false)
@@ -115,8 +119,8 @@ export default function Onboarding({ initialCamping, onDone }) {
         //     le camping à son domicile, et la vérification GPS devenait fausse
         //     pour tous les suivants.
         //
-        // Le centre est une donnée du camping : il se règle depuis
-        // l'administration, à l'étape « Position du camping ». Sans lui, le
+        // Le centre est une donnée du camping : il est enregistré avec le
+        // contour, depuis l'administration (Carte, étape 1). Sans lui, le
         // code affiché à la réception prend le relais — ce qu'il sait déjà faire.
         if (!campingLat || !campingLng) {
           setGpsStatus('fail')
@@ -135,6 +139,34 @@ export default function Onboarding({ initialCamping, onDone }) {
       { timeout: 8000, maximumAge: 30000 }
     )
   }
+
+  // Retour après « Se déconnecter » : la même identité retrouve son profil sur
+  // ce camping. Le formulaire est pré-rempli plutôt que de repartir à vide,
+  // sans toucher à ce que la personne aurait déjà commencé à saisir.
+  useEffect(() => {
+    if (step !== 'form' || !camping?.id) return
+    let actif = true
+    async function preRemplir() {
+      await ensureAnonSession()
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user?.id) return
+      const { data: v } = await supabase
+        .from('vacanciers').select('pseudo, emplacement, avatar_emoji, date_depart')
+        .eq('user_id', user.id).eq('camping_id', camping.id)
+        .maybeSingle()
+      if (!actif || !v) return
+      setForm(f => ({
+        pseudo: f.pseudo || v.pseudo || '',
+        emplacement: f.emplacement || v.emplacement || '',
+        avatar_emoji: f.avatar_emoji || v.avatar_emoji || '',
+        // Un départ passé (séjour précédent) n'est pas repris : il terminerait
+        // aussitôt le nouveau séjour.
+        date_depart: f.date_depart || (v.date_depart >= aujourdhui() ? v.date_depart : ''),
+      }))
+    }
+    preRemplir()
+    return () => { actif = false }
+  }, [step, camping?.id])
 
   // Liste initiale : tous les campings (affichée avant toute saisie)
   useEffect(() => {
@@ -246,22 +278,22 @@ export default function Onboarding({ initialCamping, onDone }) {
     const { data: { user } } = await supabase.auth.getUser()
     const uid = user?.id
     const deviceId = localStorage.getItem('deviceId')
+    // Re-séjour avec la même identité (ex: retour l'année suivante, ou après
+    // « Se déconnecter ») → réutiliser le profil
+    const { data: existing } = await supabase
+      .from('vacanciers').select('id, avatar_emoji, emplacement, date_depart')
+      .eq('user_id', uid).eq('camping_id', camping.id)
+      .maybeSingle()
+
+    // Un champ laissé vide n'efface pas le profil retrouvé : le formulaire
+    // est vierge si le pré-remplissage n'est pas encore arrivé.
     const profil = {
       camping_id: camping.id,
-      pseudo: form.pseudo.trim(),
-      avatar_emoji: form.avatar_emoji,
-      emplacement: form.emplacement.trim() || null,
-      date_depart: form.date_depart || null,
+      ...champsArrivee(form, existing, aujourdhui()),
       device_id: deviceId,
       user_id: uid,
       cgu_acceptees_at: new Date().toISOString(),
     }
-
-    // Re-séjour avec la même identité (ex: retour l'année suivante) → réutiliser le profil
-    const { data: existing } = await supabase
-      .from('vacanciers').select('id')
-      .eq('user_id', uid).eq('camping_id', camping.id)
-      .maybeSingle()
 
     const { data, error } = existing
       ? await supabase.from('vacanciers').update(profil).eq('id', existing.id).select().single()
@@ -477,20 +509,24 @@ export default function Onboarding({ initialCamping, onDone }) {
 
       <Card>
         <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
-          <ChoixEmoji
-            libelle={t('onb.avatar')}
-            valeur={form.avatar_emoji}
-            suggestions={SUGGESTIONS_AVATARS}
-            onChange={avatar_emoji => setForm(f => ({ ...f, avatar_emoji }))}
-          />
-
+          {/* Pseudo d'abord, sans autoFocus : le clavier ne doit pas cacher
+              l'écran avant même qu'on l'ait lu. L'avatar tient sur une ligne
+              qui défile — la grille de douze faisait déborder le formulaire
+              sur deux écrans d'un petit téléphone. */}
           <Champ
             libelle={`${t('profil.pseudo')} *`}
             value={form.pseudo}
             onChange={e => setForm(f => ({ ...f, pseudo: e.target.value }))}
             placeholder={t('onb.pseudo_place')}
             maxLength={40}
-            autoFocus
+          />
+
+          <ChoixEmoji
+            libelle={t('onb.avatar')}
+            valeur={form.avatar_emoji || '🏕️'}
+            suggestions={SUGGESTIONS_AVATARS}
+            onChange={avatar_emoji => setForm(f => ({ ...f, avatar_emoji }))}
+            uneLigne
           />
 
           <Champ
@@ -527,10 +563,12 @@ export default function Onboarding({ initialCamping, onDone }) {
             </Texte>
           </Carte>
 
-          <label style={{ display: 'flex', alignItems: 'flex-start', gap: espace.sm, cursor: 'pointer' }}>
+          {/* Tout le libellé coche la case, et la case fait 22 px : à 16 px,
+              on la manquait au doigt. */}
+          <label style={{ display: 'flex', alignItems: 'flex-start', gap: espace.md, cursor: 'pointer' }}>
             <input type="checkbox" required checked={cguAcceptees}
                    onChange={e => setCguAcceptees(e.target.checked)}
-                   style={{ marginTop: 2, width: 16, height: 16, flexShrink: 0 }} />
+                   style={{ margin: 0, width: 22, height: 22, flexShrink: 0, accentColor: 'var(--cc-accent)' }} />
             <Texte variante="doux" as="span">
               {t('cgu.accepte')}{' '}
               <a href="https://www.campconnect.fr/cgu.html" target="_blank" rel="noreferrer"

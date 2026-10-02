@@ -57,6 +57,16 @@ const WEBHOOK_SECRET = Deno.env.get('PUSH_WEBHOOK_SECRET')
 const admin = createClient(SUPABASE_URL, SERVICE_ROLE)
 const todayISO = () => new Date().toISOString().slice(0, 10)
 
+// Même règle que src/lib/presence.js : sans date de départ (facultative), un
+// vacancier n'est compté présent que 7 jours après son arrivée. Avant, il
+// recevait les notifications du camping pour toujours, même parti depuis un mois.
+const estPresent = (v: { date_depart?: string | null; created_at?: string | null } | null) => {
+  if (!v) return false
+  if (v.date_depart) return v.date_depart >= todayISO()
+  const limite = new Date(Date.now() - 7 * 86400000).toISOString().slice(0, 10)
+  return !!v.created_at && v.created_at.slice(0, 10) >= limite
+}
+
 // ── OAuth2 : jeton d'accès FCM via le compte de service (JWT RS256) ──────────
 let _cache: { token: string; exp: number } | null = null
 
@@ -296,11 +306,11 @@ Deno.serve(async (req) => {
 
       const { data: membres } = await admin
         .from('membres_groupes')
-        .select('vacancier_id, vacanciers!inner(date_depart)')
+        .select('vacancier_id, vacanciers!inner(date_depart, created_at)')
         .eq('groupe_id', rec.groupe_id)
 
       const present = (membres || [])
-        .filter((m: any) => { const dd = m.vacanciers?.date_depart; return !dd || dd >= todayISO() })
+        .filter((m: any) => estPresent(m.vacanciers))
         .map((m: any) => m.vacancier_id)
 
       const tokens = await tokensForVacanciers(present, rec.auteur_id)
@@ -317,9 +327,9 @@ Deno.serve(async (req) => {
     if (table === 'animations') {
       if (!rec.publiee) return ok()
       const { data: vacs } = await admin
-        .from('vacanciers').select('id, date_depart').eq('camping_id', rec.camping_id)
+        .from('vacanciers').select('id, date_depart, created_at').eq('camping_id', rec.camping_id)
       const present = (vacs || [])
-        .filter((v: any) => !v.date_depart || v.date_depart >= todayISO())
+        .filter((v: any) => estPresent(v))
         .map((v: any) => v.id)
 
       const tokens = await tokensForVacanciers(present)

@@ -5,7 +5,9 @@ import CarteGroupe from '../components/CarteGroupe'
 import ChoixEmoji from '../components/ChoixEmoji'
 import { SUGGESTIONS_GROUPES } from '../lib/emojis'
 import { estActuel, heurePrevue } from '../lib/groupes'
-import { useNavigate } from 'react-router-dom'
+import { toutCharger } from '../lib/reseau'
+import ErreurReseau from '../components/ErreurReseau'
+import { useLocation, useNavigate } from 'react-router-dom'
 import { supabase, presentFilter } from '../supabase'
 import { t, useLangue } from '../i18n'
 import {
@@ -13,33 +15,51 @@ import {
   couleur, espace, graisse,
 } from '../design'
 
+// Titres et lieux passent par l'i18n : un vacancier anglais ou néerlandais
+// créait sinon un groupe au titre français, lu tel quel par tout le camping.
 const TEMPLATES = [
-  { emoji: '🎳', titre: 'Pétanque',        lieu: 'Terrain de pétanque' },
-  { emoji: '🍻', titre: 'Apéro ce soir',   lieu: '' },
-  { emoji: '🥾', titre: 'Rando demain matin', lieu: 'Accueil' },
-  { emoji: '🏐', titre: 'Volley',          lieu: 'Terrain de sport' },
-  { emoji: '🏊', titre: 'Piscine',         lieu: 'Piscine' },
-  { emoji: '🍖', titre: 'BBQ',             lieu: '' },
-  { emoji: '🎮', titre: 'Jeux / soirée',   lieu: '' },
+  { id: 'petanque', emoji: '🎳', lieu: true },
+  { id: 'apero',    emoji: '🍻' },
+  { id: 'rando',    emoji: '🥾', lieu: true },
+  { id: 'volley',   emoji: '🏐', lieu: true },
+  { id: 'piscine',  emoji: '🏊', lieu: true },
+  { id: 'bbq',      emoji: '🍖' },
+  { id: 'jeux',     emoji: '🎮' },
 ]
 
 export default function Groupes({ camping, vacancier }) {
   useLangue()
+  const location = useLocation()
   const [groupes, setGroupes]     = useState([])
   const [membresMap, setMembresMap] = useState({})
   const [mesGroupes, setMesGroupes] = useState([])
   const [loading, setLoading]     = useState(true)
-  const [showModal, setShowModal] = useState(false)
+  const [erreurReseau, setErreurReseau] = useState(false)
+  // « + Créer un groupe » de l'accueil ouvre directement le formulaire : il
+  // menait à la liste, où il fallait encore trouver le « + » flottant.
+  const [showModal, setShowModal] = useState(() => !!location.state?.creer)
   const [form, setForm] = useState({ titre: '', emoji: '🏐', lieu: '', heure: '', max_membres: '' })
   const [saving, setSaving] = useState(false)
   const [erreur, setErreur] = useState('')
   const navigate = useNavigate()
 
+  // L'intention est consommée : sans cela, revenir sur cette page par
+  // l'historique (depuis le chat du groupe créé) rouvrirait le formulaire.
+  useEffect(() => {
+    if (location.state?.creer) navigate(location.pathname, { replace: true, state: null })
+  }, [location.state, location.pathname, navigate])
+
   async function load() {
-    const [{ data: grps }, { data: membres }] = await Promise.all([
+    const { resultats: [{ data: grps }, { data: membres }], error } = await toutCharger([
       supabase.from('groupes').select('*').eq('camping_id', camping.id).eq('actif', true).order('created_at', { ascending: false }),
       supabase.from('membres_groupes').select('groupe_id').eq('vacancier_id', vacancier.id),
     ])
+    setErreurReseau(!!error)
+    if (error) {
+      console.error('Chargement des groupes échoué :', error)
+      setLoading(false)
+      return
+    }
     setGroupes(grps || [])
     setMesGroupes((membres || []).map(m => m.groupe_id))
     setLoading(false)
@@ -60,6 +80,12 @@ export default function Groupes({ camping, vacancier }) {
   }
 
   useEffect(() => { load() }, [camping.id, vacancier.id])
+
+  function reessayer() {
+    setLoading(true)
+    setErreurReseau(false)
+    load()
+  }
 
   async function rejoindre(groupeId) {
     const { error } = await supabase.from('membres_groupes').insert({ groupe_id: groupeId, vacancier_id: vacancier.id })
@@ -116,6 +142,8 @@ export default function Groupes({ camping, vacancier }) {
 
       {loading ? (
         <Squelette lignes={4} hauteur={76} libelle={t('commun.chargement')} />
+      ) : erreurReseau ? (
+        <ErreurReseau onReessayer={reessayer} />
       ) : (
         <>
           {mesGrps.length > 0 && (
@@ -156,17 +184,21 @@ export default function Groupes({ camping, vacancier }) {
 
             {/* Modèles en un appui */}
             <div style={{ display: 'flex', gap: espace.sm, overflowX: 'auto', paddingBottom: espace.sm }}>
-              {TEMPLATES.map(tpl => (
-                <Puce
-                  key={tpl.titre}
-                  taille="sm"
-                  actif={form.titre === tpl.titre}
-                  onClick={() => setForm(f => ({ ...f, titre: tpl.titre, emoji: tpl.emoji, lieu: tpl.lieu }))}
-                  style={{ flexShrink: 0 }}
-                >
-                  {tpl.emoji} {tpl.titre}
-                </Puce>
-              ))}
+              {TEMPLATES.map(tpl => {
+                const titre = t(`groupes.tpl_${tpl.id}`)
+                const lieu = tpl.lieu ? t(`groupes.tpl_lieu_${tpl.id}`) : ''
+                return (
+                  <Puce
+                    key={tpl.id}
+                    taille="sm"
+                    actif={form.titre === titre}
+                    onClick={() => setForm(f => ({ ...f, titre, emoji: tpl.emoji, lieu }))}
+                    style={{ flexShrink: 0 }}
+                  >
+                    {tpl.emoji} {titre}
+                  </Puce>
+                )
+              })}
             </div>
 
             <ChoixEmoji
@@ -211,7 +243,7 @@ export default function Groupes({ camping, vacancier }) {
               type="number" min="2" max="50" inputMode="numeric"
               value={form.max_membres}
               onChange={e => setForm(f => ({ ...f, max_membres: e.target.value }))}
-              placeholder="ex : 10"
+              placeholder={t('groupes.max_place')}
             />
 
             {erreur && (
@@ -221,7 +253,21 @@ export default function Groupes({ camping, vacancier }) {
               </Carte>
             )}
 
-            <Pile direction="ligne" espace="sm">
+            {/* Barre d'actions collée au bas de la feuille : sur un petit
+                écran, « Créer le groupe » était sous la grille d'emojis, à
+                deux défilements du modèle choisi. Elle reste dans le flux de
+                la feuille, qui suit déjà le clavier (visualViewport).
+                Le collage se fait au bord du rembourrage bas de la feuille
+                (36 px + zone sûre) : la barre descend d'autant et le couvre
+                de son fond, sinon le formulaire défilait visible dessous. */}
+            <Pile direction="ligne" espace="sm" style={{
+              position: 'sticky', zIndex: 1,
+              bottom: 'calc(-36px - var(--cc-safe-bottom))',
+              background: couleur.surface,
+              paddingTop: espace.sm,
+              paddingBottom: 'calc(36px + var(--cc-safe-bottom))',
+              marginBottom: 'calc(-36px - var(--cc-safe-bottom))',
+            }}>
               <Bouton variante="secondaire" taille="lg" style={{ flex: 1 }} onClick={() => setShowModal(false)}>
                 {t('commun.annuler')}
               </Bouton>

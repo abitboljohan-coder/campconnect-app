@@ -1,4 +1,4 @@
-import { Outlet, NavLink, useLocation, Link } from 'react-router-dom'
+import { Outlet, NavLink, useLocation, useNavigate, Link } from 'react-router-dom'
 import { t, useLangue } from '../i18n'
 import Icon from './Icon'
 import SwipeBack from './SwipeBack'
@@ -18,6 +18,13 @@ export default function Layout({ camping }) {
   const location = useLocation()
   const hideNav = location.pathname.startsWith('/chat/')
   const isMap   = location.pathname === '/map'
+  const navigate = useNavigate()
+  // Annonces, Signaler, Profil : hors des onglets, rien n'indiquait comment
+  // revenir, sauf un glissement depuis le bord que personne ne devine.
+  const pageSecondaire = !NAV.some(item => item.to === location.pathname)
+  // Arrivé directement sur la page (lien, notification) : pas d'historique
+  // dans l'application, on revient à l'accueil plutôt que d'en sortir.
+  const retour = () => location.key === 'default' ? navigate('/') : navigate(-1)
 
   return (
     <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', background: '#faf7f0', overflow: 'hidden' }}>
@@ -44,7 +51,14 @@ export default function Layout({ camping }) {
           display: 'flex', alignItems: 'center', gap: 10,
           width: '100%', maxWidth: 'var(--cc-colonne)', margin: '0 auto',
         }}>
-          {camping?.logo_url
+          {pageSecondaire
+            ? <button onClick={retour} aria-label={t('commun.retour')} style={{
+                width: 44, height: 44, margin: '-5px 0 -5px -10px', flexShrink: 0,
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                background: 'none', border: 'none', cursor: 'pointer',
+                fontSize: 34, lineHeight: 1, color: couleur, paddingBottom: 4,
+              }}>‹</button>
+            : camping?.logo_url
             ? <img src={camping.logo_url} alt="" style={{ height: 34, width: 34, borderRadius: 10, objectFit: 'cover' }} />
             : <div style={{
                 width: 34, height: 34, borderRadius: 10, background: `${couleur}22`,

@@ -206,6 +206,13 @@ input[type="time"]::-webkit-date-and-time-value {
   isolation: isolate;
 }
 
+/* Carte vacancier, en plein écran : le zoom passait sous la barre d'état et
+   l'encoche, où son « + » ne se touchait plus. La carte du gérant, sous un
+   en-tête, n'est pas concernée. */
+.cc-carte-vacancier .leaflet-top {
+  top: var(--cc-safe-top);
+}
+
 /* Attribution des tuiles satellite. Elle ne peut pas disparaître — Esri
    l'exige partout où son imagerie est affichée — mais rien n'oblige à la
    mettre en évidence. Plus de cartouche blanc : le texte se pose directement
