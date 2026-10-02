@@ -1,11 +1,11 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { toast } from '../toast'
 import { useNavigate } from 'react-router-dom'
-import { supabase } from '../supabase'
+import { supabase, presentFilter } from '../supabase'
 import { esc } from '../utils/esc'
 import { t, useLangue, locale } from '../i18n'
 import { desencombrer } from '../lib/poiCategories'
-import { estActuel } from '../lib/groupes'
+import { estActuel, estComplet } from '../lib/groupes'
 import { couleur as jetons, espace, graisse, ombre, rayon, texte as tailles } from '../design'
 
 let L = null
@@ -89,6 +89,7 @@ export default function Map({ camping: campingProp, vacancier }) {
   const [inscriptions, setInscriptions] = useState([])
   const [mesGroupes, setMesGroupes]     = useState([])
   const [counts, setCounts]             = useState({})
+  const [nbMembres, setNbMembres]       = useState({}) // groupe_id → membres présents
   const [activePin, setActivePin]       = useState(null)
   const [guideTarget, setGuideTarget]   = useState(null) // POI vers lequel on guide
   const [showDest, setShowDest]         = useState(false) // menu "Où aller ?"
@@ -186,18 +187,31 @@ export default function Map({ camping: campingProp, vacancier }) {
       ])
 
       const animsList = anims || []
+      const grpsActuels = (grps || []).filter(g => estActuel(g))
       setAnimations(animsList)
-      setGroupes((grps || []).filter(g => estActuel(g)))
+      setGroupes(grpsActuels)
       setInscriptions((inscs || []).map(i => i.animation_id))
       setMesGroupes((membres || []).map(m => m.groupe_id))
 
-      if (animsList.length > 0) {
-        const { data: allInscs } = await supabase.from('inscriptions').select('animation_id')
-          .in('animation_id', animsList.map(a => a.id))
-        const c = {}
-        for (const ins of (allInscs || [])) c[ins.animation_id] = (c[ins.animation_id] || 0) + 1
-        setCounts(c)
-      }
+      // Sans le nombre de membres, un groupe « Complet » dans la liste restait
+      // joignable depuis la carte. Seuls les groupes limités sont comptés, et
+      // seulement les présents, comme dans la liste des groupes.
+      const limites = grpsActuels.filter(g => g.max_membres > 0).map(g => g.id)
+      const [{ data: allInscs }, { data: allMembres }] = await Promise.all([
+        animsList.length > 0
+          ? supabase.from('inscriptions').select('animation_id').in('animation_id', animsList.map(a => a.id))
+          : { data: [] },
+        limites.length > 0
+          ? supabase.from('membres_groupes').select('groupe_id, vacanciers!inner(id)').in('groupe_id', limites)
+              .or(presentFilter(), { foreignTable: 'vacanciers' })
+          : { data: [] },
+      ])
+      const c = {}
+      for (const ins of (allInscs || [])) c[ins.animation_id] = (c[ins.animation_id] || 0) + 1
+      setCounts(c)
+      const n = {}
+      for (const m of (allMembres || [])) n[m.groupe_id] = (n[m.groupe_id] || 0) + 1
+      setNbMembres(n)
     }
     load()
 
@@ -257,6 +271,7 @@ export default function Map({ camping: campingProp, vacancier }) {
         }
       ).addTo(map)
 
+      // Décalé sous la barre d'état par .cc-carte-vacancier (index.css).
       Lf.control.zoom({ position: 'topright' }).addTo(map)
 
       const campingIcon = Lf.divIcon({
@@ -280,6 +295,12 @@ export default function Map({ camping: campingProp, vacancier }) {
       // Repère camping unique (nom au clic), sans pastille de texte parasite
       Lf.marker(campingLatLng, { icon: campingIcon })
         .addTo(map).bindPopup(`<b>${esc(camping?.nom || 'Camping')}</b>`)
+
+      // Toucher la carte hors d'un point referme la fiche. Ce clic passait par
+      // un onClick React sur le conteneur, qui recevait aussi le clic d'un
+      // marqueur et refermait aussitôt la fiche qu'il venait d'ouvrir. Leaflet,
+      // lui, n'émet pas ce clic quand on touche un marqueur.
+      map.on('click', () => setActivePin(null))
 
       // Drag → désync du suivi GPS
       map.on('dragstart', () => {
@@ -477,10 +498,10 @@ export default function Map({ camping: campingProp, vacancier }) {
         console.error('Désinscription échouée :', error)
         setInscriptions(p => [...p, anim.id])
         setCounts(p => ({ ...p, [anim.id]: (p[anim.id] || 0) + 1 }))
-        toast("Impossible de vous désinscrire pour le moment.", 'erreur')
+        toast(t('agenda.err_desinscr'), 'erreur')
       }
     } else {
-      if (anim.places_max && (counts[anim.id] || 0) >= anim.places_max) return
+      if (anim.places_max > 0 && (counts[anim.id] || 0) >= anim.places_max) return
       setInscriptions(p => [...p, anim.id])
       setCounts(p => ({ ...p, [anim.id]: (p[anim.id] || 0) + 1 }))
       const { error } = await supabase.from('inscriptions').insert({ animation_id: anim.id, vacancier_id: vacancier.id })
@@ -488,8 +509,11 @@ export default function Map({ camping: campingProp, vacancier }) {
         console.error('Inscription échouée :', error)
         setInscriptions(p => p.filter(id => id !== anim.id))
         setCounts(p => ({ ...p, [anim.id]: Math.max(0, (p[anim.id] || 1) - 1) }))
-        toast("Impossible de vous inscrire pour le moment.", 'erreur')
+        toast(t('agenda.err_inscr'), 'erreur')
+        return
       }
+      // Même confirmation que dans l'agenda.
+      toast(`${anim.emoji || '🎉'} ${t('agenda.inscrit_a', { titre: anim.titre })}`, 'succes')
     }
   }
 
@@ -497,7 +521,7 @@ export default function Map({ camping: campingProp, vacancier }) {
     const { error } = await supabase.from('membres_groupes').insert({ groupe_id: id, vacancier_id: vacancier.id })
     if (error && error.code !== '23505') { // 23505 = déjà membre, on laisse passer
       console.error('Rejoindre groupe échoué :', error)
-      toast("Impossible de rejoindre le groupe pour le moment.", 'erreur')
+      toast(t('groupes.err_rejoindre'), 'erreur')
       return
     }
     setMesGroupes(p => p.includes(id) ? p : [...p, id])
@@ -586,7 +610,8 @@ export default function Map({ camping: campingProp, vacancier }) {
 
       {/* Menu discret « Où aller ? » → guidage vers un lieu (piscine, pétanque…) */}
       {mapMode === 'satellite' && lieuxDest.length > 0 && !guideTarget && (
-        <div style={{ position: 'absolute', top: 'calc(12px + var(--cc-safe-top))', left: 12, zIndex: 1500, maxWidth: 'calc(100% - 24px)' }}>
+        // Sous le sélecteur Satellite / Plan quand il existe, sinon il le chevauche.
+        <div style={{ position: 'absolute', top: `calc(${planUrl ? 68 : 12}px + var(--cc-safe-top))`, left: 12, zIndex: 1500, maxWidth: 'calc(100% - 24px)' }}>
           <button
             onClick={() => setShowDest(v => !v)}
             aria-expanded={showDest}
@@ -667,7 +692,9 @@ export default function Map({ camping: campingProp, vacancier }) {
       {/* Toggle Satellite / Plan */}
       {planUrl && (
         <div style={{
-          position: 'absolute', top: 12, left: '50%', transform: 'translateX(-50%)',
+          // Sous la barre d'état, comme le reste de la carte : à 12 px, la moitié
+          // du sélecteur passait sous l'heure et l'encoche.
+          position: 'absolute', top: 'calc(12px + var(--cc-safe-top))', left: '50%', transform: 'translateX(-50%)',
           zIndex: 1000, background: 'rgba(15,23,42,0.85)', backdropFilter: 'blur(10px)',
           borderRadius: 30, padding: 3, display: 'flex', gap: 2,
           boxShadow: '0 2px 12px rgba(0,0,0,0.3)',
@@ -703,8 +730,8 @@ export default function Map({ camping: campingProp, vacancier }) {
       {/* Carte Leaflet (satellite) */}
       <div
         ref={mapRef}
+        className="cc-carte-vacancier"
         style={{ position: 'absolute', inset: 0, display: mapMode === 'satellite' ? 'block' : 'none' }}
-        onClick={() => setActivePin(null)}
       />
 
       {/* Légende */}
@@ -755,6 +782,7 @@ export default function Map({ camping: campingProp, vacancier }) {
               <GroupeFiche
                 groupe={pinData}
                 isMember={mesGroupes.includes(pinData.id)}
+                complet={estComplet(pinData, nbMembres[pinData.id] || 0)}
                 couleur={couleur}
                 onAction={() => mesGroupes.includes(pinData.id) ? navigate(`/chat/${pinData.id}`) : rejoindreGroupe(pinData.id)}
                 onClose={() => setActivePin(null)}
@@ -788,7 +816,7 @@ export default function Map({ camping: campingProp, vacancier }) {
                   display: 'flex', alignItems: 'center', justifyContent: 'center', gap: espace.sm,
                 }}
               >
-                🧭 {t('carte.guider')}
+                {t('carte.guider')}
               </button>
             )}
           </div>
@@ -817,7 +845,7 @@ function GuideBanner({ target, pos, surSite, couleur, onClose }) {
         <div style={{ flex: 1, fontSize: 13, color: jetons.surface, fontWeight: 600 }}>
           📍 {t('carte.activez_pos', { lieu: target.label })}
         </div>
-        <button onClick={onClose} style={guideCloseBtn} aria-label="Fermer">×</button>
+        <button onClick={onClose} style={guideCloseBtn} aria-label={t('commun.fermer')}>×</button>
       </div>
     )
   }
@@ -836,7 +864,7 @@ function GuideBanner({ target, pos, surSite, couleur, onClose }) {
             {t('carte.hors_site')} · {t('carte.guidage_sur_place')}
           </div>
         </div>
-        <button onClick={onClose} style={guideCloseBtn} aria-label="Fermer">×</button>
+        <button onClick={onClose} style={guideCloseBtn} aria-label={t('commun.fermer')}>×</button>
       </div>
     )
   }
@@ -865,7 +893,7 @@ function GuideBanner({ target, pos, surSite, couleur, onClose }) {
           {arrived ? t('carte.arrive') : t('carte.tout_droit', { d: fmtDist(dist) })}
         </div>
       </div>
-      <button onClick={onClose} style={guideCloseBtn} aria-label="Fermer">×</button>
+      <button onClick={onClose} style={guideCloseBtn} aria-label={t('commun.fermer')}>×</button>
     </div>
   )
 }
@@ -886,7 +914,7 @@ const guideCloseBtn = {
 function AnimFiche({ anim, inscrit, nbInscrits, couleur, onToggle, onClose }) {
   useLangue()
   const debut = anim.debut ? new Date(anim.debut) : null
-  const complet = anim.places_max && nbInscrits >= anim.places_max && !inscrit
+  const complet = anim.places_max > 0 && nbInscrits >= anim.places_max && !inscrit
   return (
     <div>
       <div style={{ display: 'flex', justifyContent: 'space-between', gap: 12 }}>
@@ -898,10 +926,11 @@ function AnimFiche({ anim, inscrit, nbInscrits, couleur, onToggle, onClose }) {
               {debut && <span style={{ fontSize: 13, color: jetons.marqueTexte, fontWeight: 600 }}>🕐 {debut.toLocaleTimeString(locale(), { hour: '2-digit', minute: '2-digit' })}</span>}
               {anim.lieu && <span style={{ fontSize: 13, color: jetons.texteDoux }}>📍 {anim.lieu}</span>}
             </div>
-            {anim.places_max && <div style={{ fontSize: 12, color: complet ? '#ef4444' : '#9ca3af', marginTop: 4 }}>{nbInscrits}/{anim.places_max} places</div>}
+            {/* > 0 : `places_max && …` affichait « 0 » sans limite de places. */}
+            {anim.places_max > 0 && <div style={{ fontSize: 12, color: complet ? '#ef4444' : '#9ca3af', marginTop: 4 }}>{t('commun.places', { n: `${nbInscrits}/${anim.places_max}` })}</div>}
           </div>
         </div>
-        <button onClick={onClose} style={{ color: jetons.texteDoux, fontSize: 22, background: 'none', border: 'none', cursor: 'pointer' }} aria-label="Fermer">×</button>
+        <button onClick={onClose} style={{ color: jetons.texteDoux, fontSize: 22, background: 'none', border: 'none', cursor: 'pointer' }} aria-label={t('commun.fermer')}>×</button>
       </div>
       <button onClick={onToggle} disabled={complet} style={{
         marginTop: 14, width: '100%', padding: '13px', borderRadius: 14, fontWeight: 700, fontSize: 15,
@@ -916,8 +945,10 @@ function AnimFiche({ anim, inscrit, nbInscrits, couleur, onToggle, onClose }) {
   )
 }
 
-function GroupeFiche({ groupe, isMember, couleur, onAction, onClose }) {
+function GroupeFiche({ groupe, isMember, complet, couleur, onAction, onClose }) {
   useLangue()
+  // Un membre garde l'accès à la conversation, même si le groupe est plein.
+  const bloque = complet && !isMember
   const heureStr = groupe.heure ? new Date(groupe.heure).toLocaleTimeString(locale(), { hour: '2-digit', minute: '2-digit' }) : null
   return (
     <div>
@@ -932,14 +963,16 @@ function GroupeFiche({ groupe, isMember, couleur, onAction, onClose }) {
             </div>
           </div>
         </div>
-        <button onClick={onClose} style={{ color: jetons.texteDoux, fontSize: 22, background: 'none', border: 'none', cursor: 'pointer' }} aria-label="Fermer">×</button>
+        <button onClick={onClose} style={{ color: jetons.texteDoux, fontSize: 22, background: 'none', border: 'none', cursor: 'pointer' }} aria-label={t('commun.fermer')}>×</button>
       </div>
-      <button onClick={onAction} style={{
+      <button onClick={onAction} disabled={bloque} style={{
         marginTop: 14, width: '100%', padding: '13px', borderRadius: 14, fontWeight: 700, fontSize: 15,
-        background: isMember ? couleur : 'transparent', color: isMember ? jetons.surface : couleur, border: `2px solid ${couleur}`,
-        cursor: 'pointer',
+        background: bloque ? jetons.bordure : isMember ? couleur : 'transparent',
+        color: bloque ? '#9ca3af' : isMember ? jetons.surface : couleur,
+        border: bloque ? 'none' : `2px solid ${couleur}`,
+        cursor: bloque ? 'default' : 'pointer',
       }}>
-        {isMember ? t('groupes.ouvrir_chat') : t('carte.rejoindre_grp')}
+        {bloque ? t('commun.complet') : isMember ? t('groupes.ouvrir_chat') : t('carte.rejoindre_grp')}
       </button>
     </div>
   )
