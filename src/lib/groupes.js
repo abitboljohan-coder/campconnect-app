@@ -17,8 +17,14 @@ const HEURE = 3600 * 1000
  * le gardent dans « Mes groupes » : la conversation leur appartient.
  */
 export function estActuel(groupe, maintenant = Date.now()) {
-  if (groupe.heure) return new Date(groupe.heure).getTime() + 3 * HEURE > maintenant
-  if (groupe.created_at) return new Date(groupe.created_at).getTime() + 24 * HEURE > maintenant
+  // heure est une colonne texte. Une valeur illisible — « 20:00 » laissé par
+  // une ancienne version, ou un format que Safari ne sait pas relire — donnait
+  // NaN, et le groupe disparaissait sans bruit. On retombe alors sur la date
+  // de création plutôt que de cacher le groupe.
+  const heure = groupe.heure ? Date.parse(groupe.heure) : NaN
+  if (!Number.isNaN(heure)) return heure + 3 * HEURE > maintenant
+  const cree = groupe.created_at ? Date.parse(groupe.created_at) : NaN
+  if (!Number.isNaN(cree)) return cree + 24 * HEURE > maintenant
   return true
 }
 
