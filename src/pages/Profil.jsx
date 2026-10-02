@@ -6,6 +6,8 @@ import ChoixEmoji from '../components/ChoixEmoji'
 import { SUGGESTIONS_AVATARS } from '../lib/emojis'
 import { isNative, setAppMode } from '../native'
 import { unregisterPush } from '../push'
+import { chargerBlocages, debloquer } from '../lib/moderation'
+import { AVEC, INTERETS, codeAvec, codesInterets, libelleAvec, libelleInteret } from '../lib/profil'
 import { t, useLangue, locale, LANGUES, setLangue } from '../i18n'
 import {
   Bouton, Carte, Champ, Texte, Pile, Puce,
@@ -13,8 +15,6 @@ import {
 } from '../design'
 
 const TRANCHES = ['18-25', '26-35', '36-45', '46-60', '60+']
-const AVEC_OPTIONS = ['Solo', 'En couple', 'Entre amis', 'En famille']
-const INTERETS = ['Sport', 'Musique', 'Nature', 'Cuisine', 'Jeux', 'Lecture', 'Randonnée', 'Piscine', 'Soirées', 'Enfants']
 
 // « build 119 · main · 1a2b3c4 » : quelle version tourne sur ce téléphone.
 const INFO = typeof __BUILD_INFO__ !== 'undefined' ? __BUILD_INFO__ : {}
@@ -25,8 +25,9 @@ const vide = v => ({
   pseudo: v.pseudo || '',
   emplacement: v.emplacement || '',
   tranche_age: v.tranche_age || '',
-  avec: v.avec || '',
-  interests: Array.isArray(v.interests) ? v.interests : [],
+  // Les anciens profils portent des libellés français : ramenés à leur code.
+  avec: codeAvec(v.avec),
+  interests: codesInterets(v.interests),
   date_depart: v.date_depart || '',
 })
 
@@ -39,6 +40,8 @@ export default function Profil({ camping, vacancier, onLogout, onUpdate }) {
   const [stats, setStats] = useState({ groupes: 0, animations: 0 })
   const [confirmerSuppression, setConfirmerSuppression] = useState(false)
   const [suppression, setSuppression] = useState(false)
+  const [confirmerDeconnexion, setConfirmerDeconnexion] = useState(false)
+  const [bloques, setBloques] = useState(null)   // null : en cours de chargement
 
   useEffect(() => {
     async function loadStats() {
@@ -50,6 +53,30 @@ export default function Profil({ camping, vacancier, onLogout, onUpdate }) {
     }
     loadStats()
   }, [vacancier.id])
+
+  // Vacanciers bloqués : sans cette liste, un blocage par erreur était
+  // définitif — rien dans l'app ne permettait de revenir dessus.
+  useEffect(() => {
+    let actif = true
+    async function loadBloques() {
+      const ids = [...await chargerBlocages(vacancier.id)]
+      if (!ids.length) { if (actif) setBloques([]); return }
+      const { data } = await supabase.from('vacanciers')
+        .select('id, pseudo, avatar_emoji').in('id', ids)
+      const parId = new Map((data || []).map(b => [b.id, b]))
+      if (actif) setBloques(ids.map(id => parId.get(id) || { id }))
+    }
+    loadBloques()
+    return () => { actif = false }
+  }, [vacancier.id])
+
+  async function retirerBlocage(b) {
+    const pseudo = b.pseudo || t('moderation.ce_vacancier')
+    const ok = await debloquer(vacancier.id, b.id)
+    if (!ok) { toast(t('moderation.err_debloquer'), 'erreur'); return }
+    setBloques(l => l.filter(x => x.id !== b.id))
+    toast(t('moderation.debloque', { pseudo }), 'succes')
+  }
 
   function toggleInteret(val) {
     setForm(f => ({
@@ -135,7 +162,7 @@ export default function Profil({ camping, vacancier, onLogout, onUpdate }) {
     onLogout()
   }
 
-  const interests = Array.isArray(vacancier.interests) ? vacancier.interests : []
+  const interests = codesInterets(vacancier.interests)
 
   return (
     <div style={{ background: couleur.fond, minHeight: '100%' }}>
@@ -177,7 +204,7 @@ export default function Profil({ camping, vacancier, onLogout, onUpdate }) {
                 padding: `3px ${espace.md}px`, borderRadius: rayon.rond,
                 border: '1px solid var(--cc-accent-bordure)',
               }}>
-                {tag}
+                {libelleInteret(tag)}
               </span>
             ))}
           </Pile>
@@ -241,7 +268,7 @@ export default function Profil({ camping, vacancier, onLogout, onUpdate }) {
                 <Champ
                   libelle={t('profil.emplacement')}
                   value={form.emplacement}
-                  placeholder="ex : A42"
+                  placeholder={t('onb.emplacement_ph')}
                   onChange={e => setForm(f => ({ ...f, emplacement: e.target.value }))}
                 />
                 <Champ
@@ -260,16 +287,16 @@ export default function Profil({ camping, vacancier, onLogout, onUpdate }) {
                 </Groupe>
 
                 <Groupe libelle={t('profil.avec')}>
-                  {AVEC_OPTIONS.map(a => (
+                  {AVEC.map(a => (
                     <Puce key={a} taille="sm" actif={form.avec === a}
-                          onClick={() => setForm(f => ({ ...f, avec: a }))}>{a}</Puce>
+                          onClick={() => setForm(f => ({ ...f, avec: a }))}>{libelleAvec(a)}</Puce>
                   ))}
                 </Groupe>
 
                 <Groupe libelle={t('profil.interets')}>
                   {INTERETS.map(i => (
                     <Puce key={i} taille="sm" actif={form.interests.includes(i)}
-                          onClick={() => toggleInteret(i)}>{i}</Puce>
+                          onClick={() => toggleInteret(i)}>{libelleInteret(i)}</Puce>
                   ))}
                 </Groupe>
 
@@ -294,7 +321,7 @@ export default function Profil({ camping, vacancier, onLogout, onUpdate }) {
                     : '—'}
                 />
                 {vacancier.tranche_age && <Ligne label={t('profil.tranche_age')} value={vacancier.tranche_age} />}
-                {vacancier.avec && <Ligne label={t('profil.avec')} value={vacancier.avec} />}
+                {vacancier.avec && <Ligne label={t('profil.avec')} value={libelleAvec(vacancier.avec)} />}
               </Pile>
             )}
           </Pile>
@@ -314,8 +341,33 @@ export default function Profil({ camping, vacancier, onLogout, onUpdate }) {
           </Pile>
         </Carte>
 
+        {/* Vacanciers bloqués */}
+        <Carte hauteur="posee" padding={`${espace.lg}px 18px`}>
+          <Pile espace="md">
+            <Texte variante="libelle" as="h2">{t('moderation.bloques_titre')}</Texte>
+            {bloques?.length === 0 && <Texte variante="doux">{t('moderation.aucun_bloque')}</Texte>}
+            {bloques?.map(b => (
+              <Pile key={b.id} direction="ligne" espace="md" aligner="center">
+                <span aria-hidden="true" style={{ fontSize: 22, flexShrink: 0 }}>{b.avatar_emoji || '🏕️'}</span>
+                <Texte variante="corps" as="span" style={{
+                  flex: 1, minWidth: 0, color: couleur.texte, fontWeight: graisse.fort,
+                  overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+                }}>
+                  {b.pseudo || t('moderation.ce_vacancier')}
+                </Texte>
+                <Bouton variante="secondaire" taille="sm" style={{ flexShrink: 0 }}
+                        onClick={() => retirerBlocage(b)}>
+                  {t('moderation.debloquer')}
+                </Bouton>
+              </Pile>
+            ))}
+          </Pile>
+        </Carte>
+
         <Pile espace="sm">
-          <Bouton variante="danger" taille="lg" pleineLargeur onClick={onLogout}>
+          {/* Le plus gros bouton rouge de l'écran : un appui de travers renvoyait
+              à la recherche du camping, avec tout le parcours d'arrivée à refaire. */}
+          <Bouton variante="danger" taille="lg" pleineLargeur onClick={() => setConfirmerDeconnexion(true)}>
             {t('profil.deconnexion')}
           </Bouton>
 
@@ -351,6 +403,27 @@ export default function Profil({ camping, vacancier, onLogout, onUpdate }) {
           </Texte>
         )}
       </Pile>
+
+      {confirmerDeconnexion && (
+        <Sheet onClose={() => setConfirmerDeconnexion(false)}>
+          <Pile espace="lg">
+            <Pile espace="xs">
+              <Texte variante="section" as="h2">{t('profil.deconnexion_titre')}</Texte>
+              <Texte variante="corps">{t('profil.deconnexion_texte')}</Texte>
+            </Pile>
+            {/* Empilés : « Se déconnecter » se coupait en deux lignes à 320 px. */}
+            <Pile espace="sm">
+              <Bouton variante="danger" taille="lg" pleineLargeur onClick={onLogout}>
+                {t('profil.deconnexion')}
+              </Bouton>
+              <Bouton variante="secondaire" taille="lg" pleineLargeur
+                      onClick={() => setConfirmerDeconnexion(false)}>
+                {t('commun.annuler')}
+              </Bouton>
+            </Pile>
+          </Pile>
+        </Sheet>
+      )}
 
       {confirmerSuppression && (
         <Sheet onClose={() => !suppression && setConfirmerSuppression(false)}>

@@ -20,7 +20,8 @@ export default function Puce({ actif = false, taille = 'md', children, style, ..
       style={{
         display: 'inline-flex', alignItems: 'center', gap: espace.xs,
         padding: compact ? `6px ${espace.md}px` : `9px ${espace.lg}px`,
-        minHeight: compact ? 32 : 40,
+        // 40 px même en compact : à 32, les puces de filtre se manquaient au doigt.
+        minHeight: 40,
         borderRadius: rayon.rond,
         fontSize: compact ? tailles.petit : tailles.base,
         fontWeight: graisse.fort,

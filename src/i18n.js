@@ -363,6 +363,29 @@ const STRINGS = {
   'infos.pompiers':       { fr: 'Pompiers', en: 'Fire brigade', es: 'Bomberos', nl: 'Brandweer' },
   'infos.urgence_eu':     { fr: "Numéro d'urgence européen", en: 'European emergency number', es: 'Número de emergencia europeo', nl: 'Europees alarmnummer' },
   'infos.question_texte': { fr: "Passez à la réception ou signalez un problème à l'équipe.", en: 'Drop by reception or report a problem to the team.', es: 'Pasa por recepción o informa de un problema al equipo.', nl: 'Kom langs bij de receptie of meld een probleem aan het team.' },
+
+  // — Lot C : profil et arrivee
+  'profil.avec_solo':      { fr: 'Solo', en: 'Solo', es: 'Solo', nl: 'Alleen' },
+  'profil.avec_couple':    { fr: 'En couple', en: 'As a couple', es: 'En pareja', nl: 'Met partner' },
+  'profil.avec_amis':      { fr: 'Entre amis', en: 'With friends', es: 'Con amigos', nl: 'Met vrienden' },
+  'profil.avec_famille':   { fr: 'En famille', en: 'With family', es: 'En familia', nl: 'Met familie' },
+  'profil.interet_sport':     { fr: 'Sport', en: 'Sport', es: 'Deporte', nl: 'Sport' },
+  'profil.interet_musique':   { fr: 'Musique', en: 'Music', es: 'Música', nl: 'Muziek' },
+  'profil.interet_nature':    { fr: 'Nature', en: 'Nature', es: 'Naturaleza', nl: 'Natuur' },
+  'profil.interet_cuisine':   { fr: 'Cuisine', en: 'Cooking', es: 'Cocina', nl: 'Koken' },
+  'profil.interet_jeux':      { fr: 'Jeux', en: 'Games', es: 'Juegos', nl: 'Spelletjes' },
+  'profil.interet_lecture':   { fr: 'Lecture', en: 'Reading', es: 'Lectura', nl: 'Lezen' },
+  'profil.interet_randonnee': { fr: 'Randonnée', en: 'Hiking', es: 'Senderismo', nl: 'Wandelen' },
+  'profil.interet_piscine':   { fr: 'Piscine', en: 'Pool', es: 'Piscina', nl: 'Zwembad' },
+  'profil.interet_soirees':   { fr: 'Soirées', en: 'Evenings out', es: 'Fiestas', nl: 'Avondjes uit' },
+  'profil.interet_enfants':   { fr: 'Enfants', en: 'Kids', es: 'Niños', nl: 'Kinderen' },
+  'profil.deconnexion_titre': { fr: 'Se déconnecter ?', en: 'Log out?', es: '¿Cerrar sesión?', nl: 'Uitloggen?' },
+  'profil.deconnexion_texte': { fr: 'Pour revenir, il faudra rechercher à nouveau le camping et confirmer votre présence. Votre profil sera retrouvé.', en: 'To come back, you will need to search for the campsite again and confirm you are here. Your profile will be kept.', es: 'Para volver, tendrás que buscar de nuevo el camping y confirmar tu presencia. Tu perfil se conservará.', nl: 'Om terug te komen moet je de camping opnieuw zoeken en bevestigen dat je er bent. Je profiel blijft bewaard.' },
+  'moderation.bloquer_titre':    { fr: 'Bloquer {pseudo} ?', en: 'Block {pseudo}?', es: '¿Bloquear a {pseudo}?', nl: '{pseudo} blokkeren?' },
+  'moderation.bloquer_texte':    { fr: 'Ses messages, statuts et annonces disparaîtront de votre écran, dans tous vos groupes. Vous pourrez le débloquer depuis votre profil.', en: 'Their messages, statuses and notices will disappear from your screen, in all your groups. You can unblock them from your profile.', es: 'Sus mensajes, estados y anuncios desaparecerán de tu pantalla, en todos tus grupos. Podrás desbloquearlo desde tu perfil.', nl: 'Hun berichten, statussen en advertenties verdwijnen van je scherm, in al je groepen. Je kunt de blokkering opheffen via je profiel.' },
+  'moderation.bloquer_confirmer':{ fr: 'Bloquer', en: 'Block', es: 'Bloquear', nl: 'Blokkeren' },
+  'moderation.err_debloquer':    { fr: 'Déblocage impossible. Réessayez.', en: 'Could not unblock. Try again.', es: 'No se pudo desbloquear. Inténtalo de nuevo.', nl: 'Deblokkeren mislukt. Probeer opnieuw.' },
+  'signaler.photo_non_envoyee':  { fr: "La photo n'a pas pu être envoyée : le signalement est parti sans elle.", en: "The photo couldn't be uploaded: the report was sent without it.", es: 'No se pudo subir la foto: el informe se envió sin ella.', nl: 'De foto kon niet worden geüpload: de melding is zonder foto verstuurd.' },
 }
 
 // ── Moteur ──────────────────────────────────────────────────────────────────

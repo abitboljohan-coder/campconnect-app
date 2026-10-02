@@ -6,6 +6,7 @@ import {
 } from 'recharts'
 import { Bloc, Alerte, EnTete } from '../components/Bloc'
 import { Pile, Vide, couleur as jetons } from '../../design'
+import { codesInterets, libelleAvecFr, libelleInteretFr } from '../../lib/profil'
 
 const COLORS = [jetons.marque, '#f59e0b', '#8b5cf6', '#ef4444', '#06b6d4', '#f97316', '#ec4899', '#14b8a6']
 
@@ -79,13 +80,14 @@ export default function Stats({ camping }) {
       })).sort((a, b) => b.inscrits - a.inscrits).slice(0, 8)
     }
 
-    // Top intérêts (flatten arrays)
+    // Les profils récents enregistrent des codes (« couple », « randonnee »),
+    // les anciens des libellés français : tout est ramené au libellé français
+    // pour que les deux se cumulent dans la même part du graphique.
     const interetCounts = {}
     for (const v of (allVacanciers || [])) {
-      if (Array.isArray(v.interests)) {
-        for (const interet of v.interests) {
-          interetCounts[interet] = (interetCounts[interet] || 0) + 1
-        }
+      for (const interet of codesInterets(v.interests)) {
+        const nom = libelleInteretFr(interet)
+        interetCounts[nom] = (interetCounts[nom] || 0) + 1
       }
     }
     const topInterets = Object.entries(interetCounts)
@@ -97,7 +99,7 @@ export default function Stats({ camping }) {
       vacParJour:   groupByDate(vacanciers || [], 'created_at'),
       grpParJour:   groupByDate(groupes || [], 'created_at'),
       trancheAge:   countBy(allVacanciers || [], 'tranche_age'),
-      avec:         countBy(allVacanciers || [], 'avec'),
+      avec:         countBy((allVacanciers || []).map(v => ({ avec: libelleAvecFr(v.avec) })), 'avec'),
       topInterets,
       animStats,
     })

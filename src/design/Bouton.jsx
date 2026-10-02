@@ -4,8 +4,10 @@ import { couleur, espace, graisse, rayon, texte, duree } from './tokens'
 // principale de cet écran », pas « vert et rempli » : le jour où la charte
 // change, les appels ne bougent pas.
 
+// sm reste compact mais ne descend pas sous 40 px : à 36, « Rejoindre » ou
+// « S'inscrire » se manquaient au doigt, d'une main, en plein soleil.
 const TAILLES = {
-  sm: { padding: `${espace.sm}px ${espace.md}px`, fontSize: texte.petit, minHeight: 36 },
+  sm: { padding: `${espace.sm}px ${espace.md}px`, fontSize: texte.petit, minHeight: 40 },
   md: { padding: `${espace.md}px ${espace.lg}px`, fontSize: texte.base, minHeight: 44 },
   lg: { padding: `${espace.lg}px ${espace.xl}px`, fontSize: texte.moyen, minHeight: 52 },
 }

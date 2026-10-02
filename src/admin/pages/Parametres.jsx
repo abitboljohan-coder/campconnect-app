@@ -3,6 +3,7 @@ import { supabase } from '../../supabase'
 import QRCodeGenerator from '../components/QRCodeGenerator'
 import { lienRejoindre } from '../lib/liens'
 import { Bloc, Alerte, EnTete } from '../components/Bloc'
+import { libelleAvecFr } from '../../lib/profil'
 import { Bouton, Texte, Pile, couleur as jetons, espace, graisse, rayon } from '../../design'
 
 export default function Parametres({ camping, session, setCamping }) {
@@ -182,7 +183,7 @@ export default function Parametres({ camping, session, setCamping }) {
               const rows = data || []
               const header = 'Pseudo;Emplacement;Tranche d\'age;Avec;Inscrit le'
               const lines = rows.map(v => [
-                v.pseudo, v.emplacement || '', v.tranche_age || '', v.avec || '',
+                v.pseudo, v.emplacement || '', v.tranche_age || '', libelleAvecFr(v.avec),
                 new Date(v.created_at).toLocaleDateString('fr-FR'),
               ].map(x => `"${String(x).replace(/"/g, '""')}"`).join(';'))
               const csv = '﻿' + [header, ...lines].join('\r\n')
