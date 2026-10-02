@@ -284,6 +284,7 @@ complet (fichier de prospects, routines, semaine type) : `docs/WORKFLOW.md`.
 | `marketing` | LinkedIn, fiches des stores, site, vidéo ; aucune dépense sans accord |
 | `operations` | livraison sur les stores, Xcode Cloud, surveillance, routines |
 | `support` | retour d'un testeur ou d'un utilisateur : diagnostic et réponse |
+| `designer` | écran jugé pas beau, refonte d'un écran ou d'un parcours : 3 directions en images, puis implémentation |
 
 Camping de démo (`les-flots-bleus`, « Camping démo Les Flots Bleus ») : ses
 groupes, messages, animations, statuts et annonces vivent dans Supabase, pas

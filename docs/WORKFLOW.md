@@ -57,7 +57,7 @@ routine. Sans eux, elle ne peut rien vérifier et le dit.
 
 ## L'équipe d'agents
 
-Huit agents spécialisés vivent dans `.claude/agents/`. Dans une session Claude
+Neuf agents spécialisés vivent dans `.claude/agents/`. Dans une session Claude
 Code, il suffit de dire par exemple « demande au testeur de vérifier la
 version », « que la sécurité audite les signalements », ou « le support
 regarde ce message de Charline ». Chacun connaît les règles et les pièges du
@@ -73,6 +73,7 @@ projet dans son domaine.
 | `marketing` | LinkedIn, stores, site, vidéo | Les textes du projet (fiches, site) |
 | `operations` | Livraison, Xcode Cloud, surveillance | Versions, livraisons, routines |
 | `support` | Retours utilisateurs : diagnostic et réponse | La correction, quand la cause est claire |
+| `designer` | UI/UX : 3 directions en images, puis la refonte choisie | Le code de l'écran choisi |
 
 Tous peuvent modifier. Aucun ne fait sans l'accord de Johan ce qui est
 irréversible ou public : supprimer des données, publier sur un store ou un
