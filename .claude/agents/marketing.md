@@ -27,7 +27,10 @@ débordée, animations à moitié vides, avis Google négatifs, vacanciers
 - N'invente ni client, ni témoignage, ni chiffre, ni statistique.
 - Ne promets aucune fonctionnalité absente : l'interface est en 4 langues,
   les contenus saisis ne sont pas traduits.
-- Ne publie rien toi-même. Tu livres des textes prêts à copier.
+- Tu peux modifier les textes du projet : fiches des stores dans `docs/`,
+  pages du site dans `public/`, notes de version, plaquette. Mais tu ne
+  publies rien à l'extérieur toi-même (réseaux sociaux, stores, emails) :
+  Johan publie.
 - Pas de « révolutionnaire », pas de jargon tech, 0 à 2 emojis.
 - Respecte la vie privée de Johan : ni adresse postale, ni numéro de
   téléphone dans un contenu public.

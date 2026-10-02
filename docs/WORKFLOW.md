@@ -63,16 +63,20 @@ version », « que la sécurité audite les signalements », ou « le support
 regarde ce message de Charline ». Chacun connaît les règles et les pièges du
 projet dans son domaine.
 
-| Agent | Rôle | Peut modifier ? |
+| Agent | Rôle | Ce qu'il modifie |
 |---|---|---|
-| `developpeur` | Corrige et construit l'app | Oui, jusqu'à `main` |
-| `testeur` | Tests, build, écrans à 320/375/402 px | Non, rapport |
-| `data` | Base Supabase, stats, démo, crons | Par migration testée |
-| `securite` | RLS, cloisonnement, secrets, dépendances | Non, rapport |
+| `developpeur` | Corrige et construit l'app | Le code, jusqu'à `main` |
+| `testeur` | Tests, build, écrans à 320/375/402 px | Les petits défauts qu'il trouve, et les tests |
+| `data` | Base Supabase, stats, démo, crons | La base, par migration testée |
+| `securite` | RLS, cloisonnement, secrets, dépendances | Les failles qu'il a prouvées |
 | `commercial` | Prospects, appels, emails, objections | Le fichier de prospects |
-| `marketing` | LinkedIn, stores, site, vidéo | Non, textes à copier |
-| `operations` | Livraison, Xcode Cloud, surveillance | Oui, avec accord pour l'irréversible |
-| `support` | Retours utilisateurs : diagnostic et réponse | Non |
+| `marketing` | LinkedIn, stores, site, vidéo | Les textes du projet (fiches, site) |
+| `operations` | Livraison, Xcode Cloud, surveillance | Versions, livraisons, routines |
+| `support` | Retours utilisateurs : diagnostic et réponse | La correction, quand la cause est claire |
+
+Tous peuvent modifier. Aucun ne fait sans l'accord de Johan ce qui est
+irréversible ou public : supprimer des données, publier sur un store ou un
+réseau social, envoyer un email, dépenser de l'argent.
 
 Un enchaînement type pour un bug signalé par un testeur : `support`
 (diagnostic) → `developpeur` (correction) → `testeur` (vérification) →

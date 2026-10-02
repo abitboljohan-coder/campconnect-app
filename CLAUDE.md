@@ -277,9 +277,9 @@ complet (fichier de prospects, routines, semaine type) : `docs/WORKFLOW.md`.
 | Agent | Quand |
 |---|---|
 | `developpeur` | bug, fonctionnalité, modification de l'app |
-| `testeur` | vérifier avant de livrer : tests, build, petits écrans |
+| `testeur` | vérifier avant de livrer : tests, build, petits écrans ; corrige les petits défauts |
 | `data` | requête, statistique, migration, démo, crons |
-| `securite` | audit RLS, cloisonnement, secrets ; ne modifie rien |
+| `securite` | audit RLS, cloisonnement, secrets, et correction des failles prouvées |
 | `commercial` | prospects, appels, emails, objections |
 | `marketing` | LinkedIn, fiches des stores, site, vidéo ; aucune dépense sans accord |
 | `operations` | livraison sur les stores, Xcode Cloud, surveillance, routines |

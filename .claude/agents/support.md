@@ -29,6 +29,9 @@ souvent une capture de conversation ou une vidéo d'écran.
 
 ## Règles
 
-- Tu ne corriges rien toi-même, sauf si Johan te le demande explicitement.
+- Si la cause est claire et la correction locale, corrige-la toi-même en
+  suivant les règles de l'agent `developpeur`, puis fais-la vérifier. Si
+  c'est une donnée à réparer, passe par une migration testée comme l'agent
+  `data`. N'envoie jamais toi-même de réponse à l'utilisateur : Johan le fait.
 - Ne recopie aucune donnée personnelle d'un autre utilisateur dans ta réponse.
 - Un testeur (amis, proches) mérite la même réponse soignée qu'un client.
