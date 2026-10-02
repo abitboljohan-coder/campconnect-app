@@ -411,6 +411,16 @@ const STRINGS = {
   'groupes.tpl_lieu_rando':    { fr: 'Accueil', en: 'Reception', es: 'Recepción', nl: 'Receptie' },
   'groupes.tpl_lieu_volley':   { fr: 'Terrain de sport', en: 'Sports ground', es: 'Pista deportiva', nl: 'Sportveld' },
   'groupes.tpl_lieu_piscine':  { fr: 'Piscine', en: 'Pool', es: 'Piscina', nl: 'Zwembad' },
+
+  // — Supprimer son message
+  'chat.mon_message':     { fr: 'Votre message', en: 'Your message', es: 'Tu mensaje', nl: 'Jouw bericht' },
+  'chat.suppr':           { fr: 'Supprimer le message', en: 'Delete message', es: 'Eliminar el mensaje', nl: 'Bericht verwijderen' },
+  'chat.suppr_detail':    { fr: 'Il disparaîtra pour tous les membres du groupe.', en: 'It will disappear for everyone in the group.', es: 'Desaparecerá para todos los miembros del grupo.', nl: 'Het verdwijnt voor iedereen in de groep.' },
+  'chat.suppr_titre':     { fr: 'Supprimer ce message ?', en: 'Delete this message?', es: '¿Eliminar este mensaje?', nl: 'Dit bericht verwijderen?' },
+  'chat.suppr_texte':     { fr: 'Il disparaîtra pour tous les membres du groupe. Une notification déjà reçue ne peut pas être retirée.', en: 'It will disappear for everyone in the group. A notification already received cannot be withdrawn.', es: 'Desaparecerá para todos los miembros del grupo. Una notificación ya recibida no se puede retirar.', nl: 'Het verdwijnt voor iedereen in de groep. Een al ontvangen melding kan niet worden ingetrokken.' },
+  'chat.suppr_confirmer': { fr: 'Supprimer', en: 'Delete', es: 'Eliminar', nl: 'Verwijderen' },
+  'chat.supprime':        { fr: 'Message supprimé', en: 'Message deleted', es: 'Mensaje eliminado', nl: 'Bericht verwijderd' },
+  'chat.err_suppr':       { fr: 'Impossible de supprimer le message. Vérifiez votre connexion.', en: "Couldn't delete the message. Check your connection.", es: 'No se pudo eliminar el mensaje. Comprueba tu conexión.', nl: 'Kon het bericht niet verwijderen. Controleer je verbinding.' },
 }
 
 // ── Moteur ──────────────────────────────────────────────────────────────────

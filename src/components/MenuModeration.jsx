@@ -14,11 +14,18 @@ const MOTIFS = ['harcelement', 'haine', 'sexuel', 'arnaque', 'autre']
  * s'adresse au gérant et met du temps à produire un effet, bloquer agit tout
  * de suite et ne regarde que soi. Les confondre obligerait à dénoncer
  * quelqu'un pour avoir la paix.
+ *
+ * Sur son propre message, le même appui long propose de le supprimer
+ * (`onSupprimer`, qui renvoie vrai si la base l'a effacé) — et rien d'autre :
+ * on ne se signale ni ne se bloque soi-même.
  */
-export default function MenuModeration({ cible, camping, vacancier, onClose, onBloque }) {
-  const [etape, setEtape] = useState('menu')   // menu | motif | bloquer
+export default function MenuModeration({ cible, camping, vacancier, onClose, onBloque, onSupprimer }) {
+  const [etape, setEtape] = useState('menu')   // menu | motif | bloquer | supprimer
   const [envoi, setEnvoi] = useState(false)
   if (!cible) return null
+
+  const mien = cible.auteurId === vacancier?.id
+  if (mien && !onSupprimer) return null
 
   const pseudo = cible.pseudo || t('moderation.ce_vacancier')
 
@@ -54,10 +61,58 @@ export default function MenuModeration({ cible, camping, vacancier, onClose, onB
     onClose?.()
   }
 
+  async function confirmerSuppression() {
+    if (envoi) return
+    setEnvoi(true)
+    const ok = await onSupprimer(cible)
+    setEnvoi(false)
+    if (ok) onClose?.()   // en cas d'échec, la feuille reste : on peut réessayer
+  }
+
+  // Le message visé, rappelé en tête : on doit savoir lequel on supprime.
+  const extrait = cible.texte && (
+    <Texte variante="doux" style={{
+      overflowWrap: 'anywhere',
+      display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden',
+    }}>
+      « {cible.texte} »
+    </Texte>
+  )
+
   return (
     <Sheet onClose={onClose}>
       <Pile espace="lg" style={{ padding: '4px 0 8px' }}>
-        {etape === 'menu' ? (
+        {mien && etape === 'menu' ? (
+          <>
+            <Pile espace="xs">
+              <Texte variante="sousTitre" as="h2">{t('chat.mon_message')}</Texte>
+              {extrait}
+            </Pile>
+            <Action emoji="🗑️" libelle={t('chat.suppr')}
+                    detail={t('chat.suppr_detail')}
+                    danger onClick={() => setEtape('supprimer')} />
+          </>
+        ) : mien ? (
+          // Supprimer est définitif, et l'appui long se déclenche parfois de
+          // travers en faisant défiler : une confirmation, comme pour bloquer.
+          <>
+            <Pile espace="xs">
+              <Texte variante="sousTitre" as="h2">{t('chat.suppr_titre')}</Texte>
+              {extrait}
+              <Texte variante="doux">{t('chat.suppr_texte')}</Texte>
+            </Pile>
+            <Pile direction="ligne" espace="sm">
+              <Bouton variante="secondaire" taille="lg" style={{ flex: 1 }}
+                      disabled={envoi} onClick={() => setEtape('menu')}>
+                {t('commun.annuler')}
+              </Bouton>
+              <Bouton variante="danger" taille="lg" style={{ flex: 1 }}
+                      charge={envoi} onClick={confirmerSuppression}>
+                {t('chat.suppr_confirmer')}
+              </Bouton>
+            </Pile>
+          </>
+        ) : etape === 'menu' ? (
           <>
             <Pile espace="xs">
               <Texte variante="sousTitre" as="h2">{pseudo}</Texte>
