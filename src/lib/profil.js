@@ -22,17 +22,37 @@ const AVEC_FR = {
   famille: 'En famille',
 }
 
+// L'ordre est celui de l'écran : les plus courants d'un séjour en camping
+// d'abord. Les dix premiers codes historiques (sport… enfants) restent tous
+// proposés : des vacanciers les ont enregistrés, et le gérant les compte.
 const INTERETS_FR = {
-  sport: 'Sport',
-  musique: 'Musique',
-  nature: 'Nature',
-  cuisine: 'Cuisine',
-  jeux: 'Jeux',
-  lecture: 'Lecture',
-  randonnee: 'Randonnée',
+  plage: 'Plage',
   piscine: 'Piscine',
+  apero: 'Apéro',
+  petanque: 'Pétanque',
+  randonnee: 'Randonnée',
+  velo: 'Vélo',
+  padel: 'Padel',
+  paddle: 'Paddle & kayak',
+  yoga: 'Yoga',
+  sport: 'Sport',
+  jeux: 'Jeux',
+  musique: 'Musique',
   soirees: 'Soirées',
+  cuisine: 'Cuisine',
+  nature: 'Nature',
+  photo: 'Photo',
+  lecture: 'Lecture',
   enfants: 'Enfants',
+}
+
+// Un emoji par choix : le profil les montre en puces, pas en liste de mots.
+const EMOJIS_AVEC = { solo: '🎒', couple: '💑', amis: '🙌', famille: '👨‍👩‍👧' }
+const EMOJIS_INTERETS = {
+  plage: '🏖️', piscine: '🏊', apero: '🍹', petanque: '🎯', randonnee: '🥾',
+  velo: '🚲', padel: '🎾', paddle: '🛶', yoga: '🧘', sport: '🏅', jeux: '🎲',
+  musique: '🎸', soirees: '🎉', cuisine: '🍳', nature: '🌿', photo: '📷',
+  lecture: '📚', enfants: '🧸',
 }
 
 export const AVEC = Object.keys(AVEC_FR)
@@ -63,6 +83,33 @@ export function libelleAvec(valeur) {
 export function libelleInteret(valeur) {
   const code = ANCIENS_INTERETS[valeur] || valeur
   return INTERETS_FR[code] ? t(`profil.interet_${code}`) : code
+}
+
+/** Emoji d'un choix, ou chaîne vide pour une valeur inconnue. */
+export function emojiAvec(valeur) {
+  return EMOJIS_AVEC[codeAvec(valeur)] || ''
+}
+
+export function emojiInteret(valeur) {
+  return EMOJIS_INTERETS[ANCIENS_INTERETS[valeur] || valeur] || ''
+}
+
+/** Date du jour (AAAA-MM-JJ) à l'heure du téléphone, pas en UTC : à 1 h du
+ *  matin en France, l'UTC est encore la veille. */
+export function jourLocal(d = new Date()) {
+  const p = n => String(n).padStart(2, '0')
+  return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}`
+}
+
+/**
+ * Nuits restantes avant le départ : 0 le jour du départ, null sans date ou
+ * une fois le départ passé — le profil n'affiche alors rien plutôt qu'un
+ * nombre négatif.
+ */
+export function nuitsRestantes(depart, aujourdhui) {
+  if (!depart || !aujourdhui) return null
+  const n = Math.round((Date.parse(depart) - Date.parse(aujourdhui)) / 86400000)
+  return Number.isFinite(n) && n >= 0 ? n : null
 }
 
 /** Libellés français, pour la console du gérant (statistiques, export). */

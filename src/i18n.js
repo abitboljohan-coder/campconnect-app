@@ -421,6 +421,30 @@ const STRINGS = {
   'chat.suppr_confirmer': { fr: 'Supprimer', en: 'Delete', es: 'Eliminar', nl: 'Verwijderen' },
   'chat.supprime':        { fr: 'Message supprimé', en: 'Message deleted', es: 'Mensaje eliminado', nl: 'Bericht verwijderd' },
   'chat.err_suppr':       { fr: 'Impossible de supprimer le message. Vérifiez votre connexion.', en: "Couldn't delete the message. Check your connection.", es: 'No se pudo eliminar el mensaje. Comprueba tu conexión.', nl: 'Kon het bericht niet verwijderen. Controleer je verbinding.' },
+
+  // — Profil moderne
+  'profil.interet_plage':     { fr: 'Plage', en: 'Beach', es: 'Playa', nl: 'Strand' },
+  'profil.interet_apero':     { fr: 'Apéro', en: 'Drinks', es: 'Aperitivo', nl: 'Borrel' },
+  'profil.interet_petanque':  { fr: 'Pétanque', en: 'Pétanque', es: 'Petanca', nl: 'Jeu de boules' },
+  'profil.interet_velo':      { fr: 'Vélo', en: 'Cycling', es: 'Bici', nl: 'Fietsen' },
+  'profil.interet_padel':     { fr: 'Padel', en: 'Padel', es: 'Pádel', nl: 'Padel' },
+  'profil.interet_paddle':    { fr: 'Paddle & kayak', en: 'Paddle & kayak', es: 'Paddle y kayak', nl: 'Suppen & kajak' },
+  'profil.interet_yoga':      { fr: 'Yoga', en: 'Yoga', es: 'Yoga', nl: 'Yoga' },
+  'profil.interet_photo':     { fr: 'Photo', en: 'Photography', es: 'Fotografía', nl: 'Fotografie' },
+  'profil.modifier':          { fr: 'Modifier le profil', en: 'Edit profile', es: 'Editar perfil', nl: 'Profiel bewerken' },
+  'profil.jusquau':           { fr: 'Jusqu’au {date}', en: 'Until {date}', es: 'Hasta el {date}', nl: 'Tot {date}' },
+  'profil.mes_groupes':       { fr: 'Mes groupes', en: 'My groups', es: 'Mis grupos', nl: 'Mijn groepen' },
+  'profil.mes_animations':    { fr: 'Mes animations', en: 'My events', es: 'Mis actividades', nl: 'Mijn activiteiten' },
+  'profil.groupes_vide':      { fr: 'Rejoindre un groupe', en: 'Join a group', es: 'Unirse a un grupo', nl: 'Word lid van een groep' },
+  'profil.animations_vide':   { fr: 'Voir l’agenda', en: 'See what’s on', es: 'Ver la agenda', nl: 'Bekijk de agenda' },
+  'profil.sejour':            { fr: 'Mon séjour', en: 'My stay', es: 'Mi estancia', nl: 'Mijn verblijf' },
+  'profil.encore_nuits':      { fr: 'Encore {n} nuits', en: '{n} nights left', es: 'Quedan {n} noches', nl: 'Nog {n} nachten' },
+  'profil.encore_nuit':       { fr: 'Encore 1 nuit', en: '1 night left', es: 'Queda 1 noche', nl: 'Nog 1 nacht' },
+  'profil.depart_aujourdhui': { fr: 'Départ aujourd’hui', en: 'Leaving today', es: 'Salida hoy', nl: 'Vandaag vertrek' },
+  'profil.interets_vide':     { fr: 'Ajoutez vos centres d’intérêt', en: 'Add your interests', es: 'Añade tus intereses', nl: 'Voeg je interesses toe' },
+  'profil.interets_vide_aide':{ fr: 'Pour croiser des vacanciers qui aiment les mêmes choses.', en: 'To meet campers who enjoy the same things.', es: 'Para conocer a campistas con tus mismos gustos.', nl: 'Om kampeerders te ontmoeten die van hetzelfde houden.' },
+  'profil.reglages':          { fr: 'Réglages', en: 'Settings', es: 'Ajustes', nl: 'Instellingen' },
+  'profil.compte':            { fr: 'Compte', en: 'Account', es: 'Cuenta', nl: 'Account' },
 }
 
 // ── Moteur ──────────────────────────────────────────────────────────────────

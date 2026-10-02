@@ -52,9 +52,16 @@ export const DEMO_CAMPING = {
   infos: DEMO_INFOS,
 }
 
+const dansJours = (n) => { const d = new Date(); d.setDate(d.getDate() + n); return d.toISOString().slice(0, 10) }
+
+// Profil complet, pour que l'écran Profil de la démo montre tout ce qu'il sait
+// afficher. « Randonnée » est volontairement un ancien libellé français : la
+// démo prouve ainsi qu'un profil d'avant les codes s'affiche toujours.
 export const DEMO_VACANCIER = {
   id: 'vac-1', camping_id: 'camp-demo', pseudo: 'Julie',
-  avatar_emoji: '🏄‍♀️', emplacement: 'B12', date_depart: null,
+  avatar_emoji: '🏄‍♀️', emplacement: 'B12', date_depart: dansJours(5),
+  tranche_age: '26-35', avec: 'amis',
+  interests: ['plage', 'paddle', 'apero', 'yoga', 'Randonnée', 'petanque'],
 }
 
 const VACS = [
