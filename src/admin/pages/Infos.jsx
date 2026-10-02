@@ -1,26 +1,19 @@
 import { useState } from 'react'
 import { supabase } from '../../supabase'
-import { Bloc, Alerte, EnTete } from '../components/Bloc'
+import { Bloc, EnTete } from '../components/Bloc'
+import { toast } from '../../toast'
+import { MODELES_INFOS, infosPubliables } from '../../lib/infos'
 import { Bouton, Pile, couleur as jetons, espace, graisse, rayon } from '../../design'
 
-// Mêmes défauts que la page vacancier (src/pages/Infos.jsx)
-const DEFAULT_INFOS = [
-  { id: 'piscine',    emoji: '🏊', titre: 'Piscine',          contenu: 'Ouverte 9h – 20h\nSurveillée 10h – 19h' },
-  { id: 'snack',      emoji: '🍺', titre: 'Bar / Snack',       contenu: 'Ouvert 10h – 23h\nPetit-déjeuner 8h – 10h30' },
-  { id: 'reception',  emoji: '🏠', titre: 'Réception',         contenu: 'Lun – Ven : 8h – 19h\nSam – Dim : 8h – 20h' },
-  { id: 'wifi',       emoji: '📶', titre: 'Wi-Fi',             contenu: 'Réseau : CampConnect\nCode : CAMPING2026' },
-  { id: 'laverie',    emoji: '👕', titre: 'Laverie',           contenu: 'Ouverte 7h – 22h\nMachines disponibles en libre-service' },
-  { id: 'poubelles',  emoji: '♻️', titre: 'Tri & Poubelles',  contenu: 'Zone tri au bloc sanitaire A\nEnlèvement : chaque matin à 8h' },
-  { id: 'animaux',    emoji: '🐾', titre: 'Animaux',           contenu: 'Acceptés en laisse\nZone détente chiens : allée B' },
-  { id: 'urgences',   emoji: '🚨', titre: 'Urgences',          contenu: 'Réception : 04 XX XX XX XX\nSAMU : 15 · Police : 17 · Pompiers : 18' },
-]
+// Les modèles ne sont que des exemples : on les propose avec leur titre et un
+// contenu vide, l'exemple restant en texte indicatif. Pré-remplis, ils
+// partaient tels quels chez les vacanciers (faux code Wi-Fi, faux numéro de
+// réception) dès que le gérant enregistrait sans tout relire.
+const modeleDe = (id) => MODELES_INFOS.find(m => m.id === id)
 
 export default function Infos({ camping, setCamping }) {
-  const [items, setItems] = useState(
-    Array.isArray(camping?.infos) && camping.infos.length > 0 ? camping.infos : DEFAULT_INFOS
-  )
+  const [items, setItems] = useState(() => infosPubliables(camping?.infos))
   const [saving, setSaving]   = useState(false)
-  const [success, setSuccess] = useState(false)
 
   function update(idx, patch) {
     setItems(list => list.map((it, i) => i === idx ? { ...it, ...patch } : it))
@@ -35,33 +28,56 @@ export default function Infos({ camping, setCamping }) {
     })
   }
   function remove(idx) {
+    const it = items[idx]
+    const rempli = it.titre.trim() || it.contenu.trim()
+    if (rempli && !confirm(`Supprimer la rubrique « ${it.titre.trim() || 'sans titre'} » ?`)) return
     setItems(list => list.filter((_, i) => i !== idx))
   }
   function add() {
     setItems(list => [...list, { id: `custom-${Date.now()}`, emoji: 'ℹ️', titre: '', contenu: '' }])
   }
+  // Ajoute les modèles absents à la suite, sans rien effacer : l'ancien
+  // « Rétablir » remplaçait d'un appui tout le livret du gérant.
+  function ajouterModeles() {
+    setItems(list => [
+      ...list,
+      ...MODELES_INFOS.filter(m => !list.some(it => it.id === m.id)).map(m => ({ ...m, contenu: '' })),
+    ])
+  }
 
   async function save() {
     setSaving(true)
-    const infos = items.filter(it => it.titre.trim())
+    const infos = infosPubliables(items)
     const { error } = await supabase.from('campings').update({ infos }).eq('id', camping.id)
-    if (!error) {
-      setCamping?.({ ...camping, infos })
-      setItems(infos.length > 0 ? infos : DEFAULT_INFOS)
-      setSuccess(true)
-      setTimeout(() => setSuccess(false), 3000)
-    }
     setSaving(false)
+    // Toast plutôt qu'une alerte en haut de page : le bouton est tout en bas,
+    // et un échec passait jusqu'ici inaperçu.
+    if (error) {
+      console.error('Enregistrement du livret échoué :', error)
+      toast("Le livret n'a pas pu être enregistré. Réessayez.", 'erreur')
+      return
+    }
+    setCamping?.({ ...camping, infos })
+    // Les rubriques encore vides restent à l'écran, à compléter.
+    const nonPubliees = items.filter(it => it.titre.trim()).length - infos.length
+    toast(nonPubliees > 0
+      ? `Livret enregistré. ${nonPubliees} rubrique${nonPubliees > 1 ? 's' : ''} sans contenu non publiée${nonPubliees > 1 ? 's' : ''}.`
+      : 'Livret d’accueil mis à jour !', 'succes')
   }
 
   return (
     <Pile espace="lg" style={{ maxWidth: 640 }}>
       <EnTete
         titre="Infos pratiques"
-        sous="Le livret d'accueil affiché aux vacanciers dans l'onglet « Infos ». Personnalisez les rubriques, l'ordre et le contenu."
+        sous="Le livret d'accueil affiché aux vacanciers dans l'onglet « Infos ». Personnalisez les rubriques, l'ordre et le contenu. Une rubrique sans contenu n'est pas publiée."
       />
 
-      {success && <Alerte type="succes">Livret d’accueil mis à jour !</Alerte>}
+      {items.length === 0 && (
+        <Bloc>
+          Votre livret est vide. Les vacanciers voient « demandez à la réception » et les
+          numéros d'urgence (15, 17, 18, 112). Ajoutez vos rubriques, ou partez des modèles.
+        </Bloc>
+      )}
 
       <Pile espace="md">
         {items.map((it, idx) => (
@@ -87,7 +103,7 @@ export default function Infos({ camping, setCamping }) {
             <textarea
               value={it.contenu}
               onChange={e => update(idx, { contenu: e.target.value })}
-              placeholder="Contenu (une info par ligne)"
+              placeholder={modeleDe(it.id) ? `Exemple, à adapter :\n${modeleDe(it.id).contenu}` : 'Contenu (une info par ligne)'}
               aria-label={`Contenu de la rubrique ${idx + 1}`}
               rows={3}
               style={{ ...saisie, width: '100%', resize: 'vertical', fontFamily: 'inherit', lineHeight: 1.5 }}
@@ -113,8 +129,8 @@ export default function Infos({ camping, setCamping }) {
         </button>
 
         <Pile direction="ligne" espace="sm">
-          <Bouton variante="secondaire" taille="lg" style={{ flex: 1 }} onClick={() => setItems(DEFAULT_INFOS)}>
-            Rétablir les rubriques par défaut
+          <Bouton variante="secondaire" taille="lg" style={{ flex: 1 }} onClick={ajouterModeles}>
+            Ajouter les rubriques modèles
           </Bouton>
           <Bouton taille="lg" style={{ flex: 2 }} charge={saving} onClick={save}>
             {saving ? 'Enregistrement…' : 'Enregistrer le livret'}
@@ -131,7 +147,7 @@ function IconeBouton({ libelle, danger, children, ...reste }) {
       aria-label={libelle}
       title={libelle}
       style={{
-        width: 34, height: 34, borderRadius: rayon.sm,
+        width: 44, height: 44, borderRadius: rayon.sm,
         border: `1px solid ${jetons.bordure}`, background: jetons.surface,
         cursor: 'pointer', fontSize: 14, flexShrink: 0,
         color: danger ? jetons.danger : jetons.texteMoyen,

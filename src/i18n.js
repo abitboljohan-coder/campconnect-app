@@ -354,6 +354,15 @@ const STRINGS = {
   'fin.bon_retour':  { fr: 'Bon retour, {pseudo} !', en: 'Welcome back, {pseudo}!', es: '¡Bienvenido de nuevo, {pseudo}!', nl: 'Welkom terug, {pseudo}!' },
   'fin.termine':     { fr: 'Votre séjour {camping}est terminé. Vos données seront automatiquement supprimées. À l\'année prochaine ! 🌲', en: 'Your stay {camping}has ended. Your data will be deleted automatically. See you next year! 🌲', es: 'Tu estancia {camping}ha terminado. Tus datos se eliminarán automáticamente. ¡Hasta el año que viene! 🌲', nl: 'Je verblijf {camping}is voorbij. Je gegevens worden automatisch verwijderd. Tot volgend jaar! 🌲' },
   'fin.de_retour':   { fr: 'Je suis de retour au camping 🏕️', en: "I'm back at the campsite 🏕️", es: 'He vuelto al camping 🏕️', nl: 'Ik ben terug op de camping 🏕️' },
+
+  // — Lot A : carte et infos
+  'infos.vide':           { fr: 'Les infos du camping arrivent. En attendant, demandez à la réception.', en: 'Campsite info is on its way. In the meantime, ask at reception.', es: 'La información del camping llegará pronto. Mientras tanto, pregunta en recepción.', nl: 'De campinginfo komt eraan. Vraag het in de tussentijd bij de receptie.' },
+  'infos.urgences':       { fr: 'Urgences', en: 'Emergencies', es: 'Emergencias', nl: 'Noodgevallen' },
+  'infos.samu':           { fr: 'SAMU · urgence médicale', en: 'Ambulance · medical emergency', es: 'SAMU · urgencia médica', nl: 'Ambulance · medisch noodgeval' },
+  'infos.police':         { fr: 'Police', en: 'Police', es: 'Policía', nl: 'Politie' },
+  'infos.pompiers':       { fr: 'Pompiers', en: 'Fire brigade', es: 'Bomberos', nl: 'Brandweer' },
+  'infos.urgence_eu':     { fr: "Numéro d'urgence européen", en: 'European emergency number', es: 'Número de emergencia europeo', nl: 'Europees alarmnummer' },
+  'infos.question_texte': { fr: "Passez à la réception ou signalez un problème à l'équipe.", en: 'Drop by reception or report a problem to the team.', es: 'Pasa por recepción o informa de un problema al equipo.', nl: 'Kom langs bij de receptie of meld een probleem aan het team.' },
 }
 
 // ── Moteur ──────────────────────────────────────────────────────────────────
