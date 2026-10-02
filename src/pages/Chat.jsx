@@ -8,6 +8,7 @@ import { toast } from '../toast'
 import { chargerBlocages, estBloque } from '../lib/moderation'
 import { estComplet, libelleHeure } from '../lib/groupes'
 import { toutCharger } from '../lib/reseau'
+import { retirerMessage, supprimerMessage } from '../lib/messages'
 import ErreurReseau from '../components/ErreurReseau'
 import { Texte, Pile, Vide, Bouton, couleur, espace, graisse, ombre, rayon, texte as tailles } from '../design'
 
@@ -30,6 +31,9 @@ export default function Chat({ camping, vacancier }) {
   const [moderation, setModeration] = useState(null)   // contenu visé par le menu
   const [, setBloquesVersion]       = useState(0)      // force un rendu après blocage
   const appuiLong                   = useRef(null)
+  // Messages supprimés pendant la visite : un INSERT temps réel encore en
+  // route (il attend le pseudo de l'auteur) ne doit pas les faire revenir.
+  const supprimes                   = useRef(new Set())
 
   const [erreur, setErreur]         = useState('')
   const [quitter, setQuitter]       = useState(false)
@@ -45,7 +49,8 @@ export default function Chat({ camping, vacancier }) {
 
   // Le menu de modération s'ouvre sur appui long, comme dans toutes les
   // messageries. Un bouton visible sur chaque bulle alourdirait l'écran pour
-  // un geste que l'on fait deux fois par an.
+  // un geste que l'on fait deux fois par an. Sur ses propres messages, le même
+  // geste propose de les supprimer.
   function annulerAppuiLong() {
     if (appuiLong.current && appuiLong.current !== 'declenche') {
       clearTimeout(appuiLong.current)
@@ -117,6 +122,7 @@ export default function Chat({ camping, vacancier }) {
       }, async (payload) => {
         const { data: vac } = await supabase
           .from('vacanciers').select('pseudo, avatar_emoji').eq('id', payload.new.auteur_id).single()
+        if (supprimes.current.has(payload.new.id)) return
         setMessages(prev => ajouter(prev, { ...payload.new, vacanciers: vac }))
       })
       .on('postgres_changes', {
@@ -126,6 +132,17 @@ export default function Chat({ camping, vacancier }) {
         setMessages(prev => prev.map(m =>
           m.id === payload.new.id ? { ...m, reactions: payload.new.reactions } : m
         ))
+      })
+      // Supabase ne sait pas filtrer une suppression par groupe : l'ancienne
+      // ligne ne contient que sa clé primaire. On écoute donc toutes les
+      // suppressions de messages, et retirerMessage ignore les id inconnus.
+      .on('postgres_changes', {
+        event: 'DELETE', schema: 'public', table: 'messages',
+      }, (payload) => {
+        const id = payload.old?.id
+        if (!id) return
+        supprimes.current.add(id)
+        setMessages(prev => retirerMessage(prev, id))
       })
       .subscribe()
     return () => supabase.removeChannel(channel)
@@ -213,6 +230,20 @@ export default function Chat({ camping, vacancier }) {
     `👥 ${nbMembres}`,
     groupe?.lieu && `📍 ${groupe.lieu}`,
   ].filter(Boolean).join(' · ')
+
+  // La notification push déjà partie ne se rappelle pas : seul le message,
+  // dans la discussion, disparaît pour tous.
+  async function supprimer(cible) {
+    const ok = await supprimerMessage(cible.id, vacancier.id)
+    if (!ok) {
+      toast(t('chat.err_suppr'), 'erreur')
+      return false
+    }
+    supprimes.current.add(cible.id)
+    setMessages(prev => retirerMessage(prev, cible.id))
+    toast(t('chat.supprime'), 'succes')
+    return true
+  }
 
   async function toggleReaction(msg, emoji) {
     setPickerFor(null)
@@ -393,16 +424,21 @@ export default function Chat({ camping, vacancier }) {
                           setPickerFor(pickerFor === msg.id ? null : msg.id)
                         }}
                         onTouchStart={() => {
-                          if (isMine) return
                           appuiLong.current = setTimeout(() => {
                             appuiLong.current = 'declenche'
                             ouvrirModeration(msg, auteur)
                           }, 500)
                         }}
-                        onTouchEnd={annulerAppuiLong}
+                        onTouchEnd={(e) => {
+                          // Le clic de relâchement tombait sur le fond de la
+                          // feuille tout juste ouverte, qui se refermait aussitôt.
+                          if (appuiLong.current === 'declenche') {
+                            e.preventDefault()
+                            appuiLong.current = null
+                          } else annulerAppuiLong()
+                        }}
                         onTouchMove={annulerAppuiLong}
                         onContextMenu={(e) => {
-                          if (isMine) return
                           e.preventDefault()
                           ouvrirModeration(msg, auteur)
                         }}
@@ -557,6 +593,7 @@ export default function Chat({ camping, vacancier }) {
           vacancier={vacancier}
           onClose={() => setModeration(null)}
           onBloque={() => setBloquesVersion(v => v + 1)}
+          onSupprimer={supprimer}
         />
       )}
     </div>
