@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { estActuel, estComplet, heurePrevue } from './groupes'
+import { estActuel, estComplet, heurePrevue, libelleHeure } from './groupes'
 
 const H = 3600 * 1000
 
@@ -54,5 +54,33 @@ describe('estComplet', () => {
     expect(estComplet({ max_membres: 4 }, 4)).toBe(true)
     expect(estComplet({ max_membres: 4 }, 3)).toBe(false)
     expect(estComplet({ max_membres: null }, 99)).toBe(false)
+  })
+})
+
+describe('libelleHeure', () => {
+  const libelles = { aujourdhui: "Aujourd'hui", demain: 'Demain', locale: 'fr-FR' }
+  const maintenant = new Date('2026-08-10T20:00:00')
+
+  it("préfixe « Aujourd'hui » un rendez-vous du jour", () => {
+    expect(libelleHeure(new Date('2026-08-10T21:30:00').toISOString(), libelles, maintenant)).toBe("Aujourd'hui 21:30")
+  })
+
+  it('préfixe « Demain » un rendez-vous du lendemain', () => {
+    expect(libelleHeure(new Date('2026-08-11T08:00:00').toISOString(), libelles, maintenant)).toBe('Demain 08:00')
+  })
+
+  it('donne la date courte au-delà, et pour la veille', () => {
+    const plusTard = libelleHeure(new Date('2026-08-13T18:00:00').toISOString(), libelles, maintenant)
+    expect(plusTard).toMatch(/13/)
+    expect(plusTard).toMatch(/18:00$/)
+    expect(plusTard).not.toMatch(/Demain|Aujourd/)
+    const veille = libelleHeure(new Date('2026-08-09T23:00:00').toISOString(), libelles, maintenant)
+    expect(veille).toMatch(/23:00$/)
+    expect(veille).not.toMatch(/Demain|Aujourd/)
+  })
+
+  it('ne renvoie rien sans heure lisible', () => {
+    expect(libelleHeure(null, libelles, maintenant)).toBe(null)
+    expect(libelleHeure('20:00', libelles, maintenant)).toBe(null)
   })
 })

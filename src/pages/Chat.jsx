@@ -6,6 +6,9 @@ import MenuModeration from '../components/MenuModeration'
 import Sheet from '../components/Sheet'
 import { toast } from '../toast'
 import { chargerBlocages, estBloque } from '../lib/moderation'
+import { estComplet, libelleHeure } from '../lib/groupes'
+import { toutCharger } from '../lib/reseau'
+import ErreurReseau from '../components/ErreurReseau'
 import { Texte, Pile, Vide, Bouton, couleur, espace, graisse, ombre, rayon, texte as tailles } from '../design'
 
 const REACTIONS = ['❤️', '😂', '👍', '🔥', '🎉']
@@ -31,6 +34,12 @@ export default function Chat({ camping, vacancier }) {
   const [erreur, setErreur]         = useState('')
   const [quitter, setQuitter]       = useState(false)
   const [quittant, setQuittant]     = useState(false)
+  // null tant qu'on ne sait pas : on suppose membre, le cas courant, pour ne
+  // pas faire clignoter la zone de saisie à chaque ouverture.
+  const [membre, setMembre]         = useState(null)
+  const [rejoignant, setRejoignant] = useState(false)
+  const [charge, setCharge]         = useState(false)       // premier chargement terminé
+  const [erreurReseau, setErreurReseau] = useState(false)
   const bottomRef = useRef(null)
   const inputRef  = useRef(null)
 
@@ -52,19 +61,42 @@ export default function Chat({ camping, vacancier }) {
     })
   }
 
-  useEffect(() => {
-    async function init() {
-      const [{ data: grp }, { count }, { data: msgs }] = await Promise.all([
-        supabase.from('groupes').select('*').eq('id', groupeId).single(),
-        supabase.from('membres_groupes').select('*, vacanciers!inner(id)', { count: 'exact', head: true }).eq('groupe_id', groupeId).or(presentFilter(), { foreignTable: 'vacanciers' }),
-        supabase.from('messages').select('*, vacanciers(pseudo, avatar_emoji)').eq('groupe_id', groupeId).order('created_at', { ascending: true }),
-      ])
-      setGroupe(grp)
-      setNbMembres(count || 0)
-      if (msgs) setMessages(msgs)
-      chargerBlocages(vacancier.id).then(() => setBloquesVersion(v => v + 1))
+  async function init() {
+    const { resultats: [{ data: grp }, { count }, { data: msgs }, { data: moi }], error } = await toutCharger([
+      supabase.from('groupes').select('*').eq('id', groupeId).single(),
+      supabase.from('membres_groupes').select('*, vacanciers!inner(id)', { count: 'exact', head: true }).eq('groupe_id', groupeId).or(presentFilter(), { foreignTable: 'vacanciers' }),
+      supabase.from('messages').select('*, vacanciers(pseudo, avatar_emoji)').eq('groupe_id', groupeId).order('created_at', { ascending: true }),
+      // On pouvait écrire dans un groupe qu'on venait de quitter, ou ouvert
+      // par un lien sans en être membre : l'appartenance n'était jamais lue.
+      supabase.from('membres_groupes').select('groupe_id').eq('groupe_id', groupeId).eq('vacancier_id', vacancier.id).maybeSingle(),
+    ])
+    setCharge(true)
+    // Erreur réseau : ne pas afficher « Aucun message… Soyez le premier ! ».
+    // Les messages déjà affichés restent, une relecture ratée ne les efface pas.
+    // PGRST116 (groupe introuvable) n'est pas une coupure : réessayer n'y
+    // changerait rien.
+    const reseau = !!error && error.code !== 'PGRST116'
+    setErreurReseau(reseau)
+    if (reseau) {
+      console.error('Chargement du chat échoué :', error)
+      return
     }
+    setGroupe(grp)
+    setNbMembres(count || 0)
+    setMembre(!!moi)
+    if (msgs) setMessages(msgs)
+    chargerBlocages(vacancier.id).then(() => setBloquesVersion(v => v + 1))
+  }
+
+  function reessayer() {
+    setErreurReseau(false)
+    setCharge(false)
     init()
+  }
+
+  useEffect(() => {
+    async function charger() { await init() }
+    charger()
 
     // Le temps réel ne rattrape rien : les messages arrivés pendant que le
     // téléphone était en veille, ou que le réseau du camping avait décroché,
@@ -73,7 +105,7 @@ export default function Chat({ camping, vacancier }) {
     const auRetour = () => { if (document.visibilityState === 'visible') init() }
     document.addEventListener('visibilitychange', auRetour)
     return () => document.removeEventListener('visibilitychange', auRetour)
-  }, [groupeId, vacancier.id])
+  }, [groupeId, vacancier.id]) // eslint-disable-line react-hooks/exhaustive-deps
 
   // Realtime
   useEffect(() => {
@@ -122,7 +154,19 @@ export default function Chat({ camping, vacancier }) {
     if (error) {
       console.error('Envoi message échoué :', error)
       setTexte(contenu) // on rend le message pour ne pas le perdre
-      setErreur(error.code === '42501' ? t('commun.banni') : t('chat.non_envoye'))
+      if (error.code === '42501') {
+        // La base refuse (42501) deux cas : le vacancier banni, et celui qui
+        // n'est plus membre du groupe (msg_insert exige l'appartenance —
+        // groupe quitté depuis un autre écran, retiré par le gérant). Lui
+        // annoncer qu'il « ne peut plus publier dans ce camping » serait faux
+        // et inquiétant : on relit l'appartenance, sur ce seul chemin d'erreur.
+        const { data: moi } = await supabase.from('membres_groupes').select('groupe_id')
+          .eq('groupe_id', groupeId).eq('vacancier_id', vacancier.id).maybeSingle()
+        if (!moi) setMembre(false)   // la saisie laisse place à « Rejoindre le groupe »
+        else setErreur(t('commun.banni'))
+      } else {
+        setErreur(t('chat.non_envoye'))
+      }
     } else if (data) {
       // Affiché tout de suite, sans attendre l'événement temps réel : s'il ne
       // venait pas, on croyait le message perdu et on le renvoyait.
@@ -142,8 +186,33 @@ export default function Chat({ camping, vacancier }) {
       return
     }
     toast(t('chat.quitte', { titre: groupe?.titre || '' }), 'succes')
-    navigate('/groupes')
+    // replace : le retour Android ramenait dans la conversation quittée.
+    navigate('/groupes', { replace: true })
   }
+
+  async function rejoindre() {
+    if (rejoignant) return
+    setRejoignant(true)
+    const { error } = await supabase.from('membres_groupes').insert({ groupe_id: groupeId, vacancier_id: vacancier.id })
+    setRejoignant(false)
+    if (error && error.code !== '23505') { // 23505 = déjà membre, on laisse passer
+      console.error('Rejoindre groupe échoué :', error)
+      toast(t('groupes.err_rejoindre'), 'erreur')
+      return
+    }
+    setMembre(true)
+    setErreur('')
+    if (!error) setNbMembres(n => n + 1)
+  }
+
+  const complet = membre === false && groupe && estComplet(groupe, nbMembres)
+  // Quand, puis qui, puis où — même ordre que dans la liste des groupes.
+  const heure = libelleHeure(groupe?.heure, { aujourdhui: t('chat.aujourdhui'), demain: t('agenda.demain'), locale: locale() })
+  const infos = [
+    heure && `🕐 ${heure}`,
+    `👥 ${nbMembres}`,
+    groupe?.lieu && `📍 ${groupe.lieu}`,
+  ].filter(Boolean).join(' · ')
 
   async function toggleReaction(msg, emoji) {
     setPickerFor(null)
@@ -170,7 +239,7 @@ export default function Chat({ camping, vacancier }) {
         background: 'var(--cc-accent-sombre)',
         padding: `${espace.md}px ${espace.lg}px`,
         paddingTop: 'calc(12px + var(--cc-safe-top))',
-        display: 'flex', alignItems: 'center', gap: espace.md,
+        display: 'flex', alignItems: 'center', gap: espace.sm,
         flexShrink: 0,
         boxShadow: '0 2px 8px rgba(26, 26, 26, 0.2)',
       }}>
@@ -188,39 +257,45 @@ export default function Chat({ camping, vacancier }) {
           ‹
         </button>
         <span aria-hidden="true" style={{
-          width: 38, height: 38, borderRadius: rayon.md,
+          width: 34, height: 34, borderRadius: rayon.md,
           background: 'rgba(255,255,255,0.16)',
-          display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: tailles.titre, flexShrink: 0,
+          display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: tailles.grand, flexShrink: 0,
         }}>
           {groupe?.emoji || '👥'}
         </span>
-        <div style={{ flex: 1, overflow: 'hidden' }}>
+        {/* Titre sur deux lignes au besoin : à 320 px, à côté de « Quitter »,
+            il n'en restait que « Apéro pét… ». L'heure du rendez-vous, que
+            l'on devait chercher dans les messages, passe en tête de la ligne
+            d'infos, qui peut elle aussi tenir sur deux lignes. */}
+        <div style={{ flex: 1, minWidth: 0, overflow: 'hidden' }}>
           <Texte variante="sousTitre" as="h1" style={{
-            color: '#fff', fontSize: tailles.grand,
-            overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+            color: '#fff', fontSize: tailles.grand, lineHeight: 1.25, overflowWrap: 'anywhere',
+            display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden',
           }}>
             {groupe?.titre || '…'}
           </Texte>
-          <Texte variante="doux" style={{
-            color: 'rgba(255,255,255,0.72)',
-            overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
-          }}>
-            {nbMembres > 1 ? t('chat.participants', { n: nbMembres }) : t('chat.participant', { n: nbMembres })}
-            {groupe?.lieu && ` · 📍 ${groupe.lieu}`}
+          <Texte variante="micro" style={{
+              color: 'rgba(255,255,255,0.8)', marginTop: 2, overflowWrap: 'anywhere',
+              display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden',
+            }}>
+            {infos}
           </Texte>
         </div>
         {/* Rien ne permettait de quitter un groupe : on restait membre, et
-            notifié, d'un apéro d'il y a trois jours jusqu'à la fin du séjour. */}
-        <button
-          onClick={() => setQuitter(true)}
-          style={{
-            color: '#fff', background: 'rgba(255,255,255,0.14)', border: 'none',
-            borderRadius: rayon.rond, padding: `0 ${espace.md}px`, minHeight: 36,
-            fontSize: tailles.petit, fontWeight: graisse.fort, flexShrink: 0, cursor: 'pointer',
-          }}
-        >
-          {t('chat.quitter')}
-        </button>
+            notifié, d'un apéro d'il y a trois jours jusqu'à la fin du séjour.
+            Un non-membre n'a rien à quitter : le bouton n'apparaît pas. */}
+        {membre !== false && (
+          <button
+            onClick={() => setQuitter(true)}
+            style={{
+              color: '#fff', background: 'rgba(255,255,255,0.14)', border: 'none',
+              borderRadius: rayon.rond, padding: `0 10px`, minHeight: 36,
+              fontSize: tailles.petit, fontWeight: graisse.fort, flexShrink: 0, cursor: 'pointer',
+            }}
+          >
+            {t('chat.quitter')}
+          </button>
+        )}
       </div>
 
       {quitter && (
@@ -242,7 +317,12 @@ export default function Chat({ camping, vacancier }) {
 
       {/* Messages */}
       <div style={{ flex: 1, overflowY: 'auto', padding: `${espace.lg}px ${espace.md}px`, display: 'flex', flexDirection: 'column', gap: 4 }}>
-        {messages.length === 0 && (
+        {/* « Aucun message » seulement une fois la conversation lue : il
+            s'affichait pendant le chargement, et à la place d'une erreur. */}
+        {messages.length === 0 && erreurReseau && (
+          <ErreurReseau onReessayer={reessayer} style={{ marginTop: 40 }} />
+        )}
+        {messages.length === 0 && charge && !erreurReseau && (
           <Vide emoji="💬" texte={`${t('chat.aucun_msg')} ${t('chat.premier')}`} style={{ marginTop: 40 }} />
         )}
 
@@ -343,13 +423,16 @@ export default function Chat({ camping, vacancier }) {
                         <div style={{
                           position: 'absolute', bottom: '100%', marginBottom: 6,
                           [isMine ? 'right' : 'left']: 0,
-                          background: couleur.surface, borderRadius: rayon.rond, padding: `6px ${espace.sm}px`,
-                          display: 'flex', gap: 6, zIndex: 30,
+                          background: couleur.surface, borderRadius: rayon.rond, padding: `2px ${espace.xs}px`,
+                          display: 'flex', gap: 0, zIndex: 30,
                           boxShadow: ombre.flottante,
                         }}>
+                          {/* padding 8 : avec 2 px, chaque emoji faisait une
+                              cible de 28 px qu'on manquait au doigt. Le gap
+                              tombe à 0 pour que la barre ne s'élargisse pas. */}
                           {REACTIONS.map(e => (
                             <button key={e} onClick={ev => { ev.stopPropagation(); toggleReaction(msg, e) }}
-                              style={{ fontSize: 20, background: 'none', border: 'none', cursor: 'pointer', padding: 2 }}>
+                              style={{ fontSize: 20, lineHeight: 1, background: 'none', border: 'none', cursor: 'pointer', padding: 8 }}>
                               {e}
                             </button>
                           ))}
@@ -358,14 +441,18 @@ export default function Chat({ camping, vacancier }) {
                       {/* Réactions affichées */}
                       {msg.reactions && Object.keys(msg.reactions).length > 0 && (
                         <div style={{
-                          display: 'flex', gap: 4, marginTop: 3,
+                          // wrap : plus hautes, cinq réactions ne doivent pas
+                          // déborder d'une bulle étroite à 320 px.
+                          display: 'flex', flexWrap: 'wrap', gap: 4, marginTop: 3,
                           justifyContent: isMine ? 'flex-end' : 'flex-start',
                         }}>
                           {Object.entries(msg.reactions).map(([e, ids]) => ids.length > 0 && (
                             <button key={e} onClick={() => toggleReaction(msg, e)}
                               aria-pressed={ids.includes(vacancier.id)}
                               style={{
-                                fontSize: tailles.petit, padding: '2px 7px', borderRadius: rayon.md,
+                                // 36 px de haut : à 2 px de rembourrage, la
+                                // pastille se manquait au doigt.
+                                fontSize: tailles.petit, minHeight: 36, padding: '2px 10px', borderRadius: rayon.md,
                                 background: ids.includes(vacancier.id) ? 'var(--cc-accent-voile)' : couleur.surface,
                                 border: `1px solid ${ids.includes(vacancier.id) ? 'var(--cc-accent)' : couleur.bordure}`,
                                 cursor: 'pointer', fontWeight: graisse.fort, color: couleur.texteMoyen,
@@ -401,6 +488,21 @@ export default function Chat({ camping, vacancier }) {
           ⚠️ {erreur}
         </Texte>
       )}
+      {membre === false ? (
+        /* Non-membre (groupe quitté, lien partagé) : on lit, mais pour
+           écrire il faut d'abord rejoindre — comme depuis la liste. */
+        <div style={{
+          padding: `10px ${espace.md}px`,
+          background: couleur.surface,
+          borderTop: `1px solid ${couleur.bordure}`,
+          paddingBottom: 'max(10px, var(--cc-safe-bottom))',
+          flexShrink: 0,
+        }}>
+          <Bouton taille="lg" pleineLargeur charge={rejoignant} disabled={complet} onClick={rejoindre}>
+            {complet ? t('commun.complet') : t('chat.rejoindre')}
+          </Bouton>
+        </div>
+      ) : (
       <form
         onSubmit={envoyer}
         style={{
@@ -446,6 +548,7 @@ export default function Chat({ camping, vacancier }) {
           ↑
         </button>
       </form>
+      )}
 
       {moderation && (
         <MenuModeration

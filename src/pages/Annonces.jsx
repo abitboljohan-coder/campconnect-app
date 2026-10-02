@@ -2,6 +2,8 @@ import { useEffect, useState } from 'react'
 import Sheet from '../components/Sheet'
 import MenuModeration from '../components/MenuModeration'
 import { chargerBlocages, estBloque } from '../lib/moderation'
+import { estTableAbsente, toutCharger } from '../lib/reseau'
+import ErreurReseau from '../components/ErreurReseau'
 import { supabase } from '../supabase'
 import { toast } from '../toast'
 import { t, useLangue, locale } from '../i18n'
@@ -41,23 +43,32 @@ export default function Annonces({ camping, vacancier }) {
   const [saving, setSaving]     = useState(false)
   const [erreur, setErreur]     = useState('')
   const [indispo, setIndispo]   = useState(false)
+  const [erreurReseau, setErreurReseau] = useState(false)
   const [moderation, setModeration] = useState(null)
   const [, setBloquesVersion]   = useState(0)
 
   async function charger() {
-    const { data, error } = await supabase
+    const { resultats: [{ data }], error } = await toutCharger([supabase
       .from('annonces')
       .select('*, vacanciers(pseudo, avatar_emoji)')
       .eq('camping_id', camping.id)
       .eq('resolu', false)
       .gt('expire_at', new Date().toISOString())
-      .order('created_at', { ascending: false })
+      .order('created_at', { ascending: false })])
     // Ne pas afficher « aucune annonce » si le chargement a échoué : ce serait
-    // mensonger (table absente, réseau coupé…).
-    setIndispo(!!error)
+    // mensonger. Seule la table absente veut dire « indisponible » ; une
+    // coupure réseau se réessaie, et le « + » reste.
+    setIndispo(estTableAbsente(error))
+    setErreurReseau(!!error && !estTableAbsente(error))
     if (error) console.error('Chargement des annonces échoué :', error)
-    setAnnonces(data || [])
+    if (!error) setAnnonces(data || [])
     setLoading(false)
+  }
+
+  function reessayer() {
+    setLoading(true)
+    setErreurReseau(false)
+    charger()
   }
 
   useEffect(() => {
@@ -146,6 +157,8 @@ export default function Annonces({ camping, vacancier }) {
         <Squelette lignes={3} hauteur={84} libelle={t('commun.chargement')} />
       ) : indispo ? (
         <Vide emoji="📭" texte={t('annonces.indispo')} />
+      ) : erreurReseau ? (
+        <ErreurReseau onReessayer={reessayer} />
       ) : affichees.length === 0 ? (
         <Vide
           emoji="📣"

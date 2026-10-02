@@ -1,9 +1,12 @@
 import { useEffect, useState } from 'react'
 import { toast } from '../toast'
+import Sheet from '../components/Sheet'
+import ErreurReseau from '../components/ErreurReseau'
+import { toutCharger } from '../lib/reseau'
 import { supabase } from '../supabase'
 import { t, useLangue, locale } from '../i18n'
 import {
-  Bouton, Carte, Texte, Pile, Badge, Squelette, Vide,
+  Bouton, Carte, Texte, Pile, Squelette, Vide,
   couleur, espace, graisse, rayon, texte as tailles,
 } from '../design'
 
@@ -32,14 +35,9 @@ function getSectionKey(anim) {
   return dayLabel ? `${dayLabel} — ${slot}` : slot
 }
 
-// Le ton du badge vient du système ; seul le classement est propre à l'agenda.
-function getTag(anim) {
-  const txt = `${anim.titre} ${anim.description || ''} ${anim.emoji || ''}`.toLowerCase()
-  if (/sport|foot|tennis|swim|natation|vélo|velo|yoga|petan|march|rando/.test(txt)) return { label: 'Sport',   ton: 'succes' }
-  if (/famille|enfant|kid|parent|junior/.test(txt))                                 return { label: 'Famille', ton: 'alerte' }
-  if (/soir|soiree|soirée|karaok|disco|fest|spectacl/.test(txt))                    return { label: 'Soirée',  ton: 'accent' }
-  return { label: anim.emoji || '🎉', ton: 'neutre' }
-}
+// Pas de badge de catégorie : il était deviné d'après le titre, et faux
+// (« Marché nocturne » classé Sport, en français dans toutes les langues).
+// L'emoji choisi par le gérant, devant le titre, dit déjà de quoi il s'agit.
 
 export default function Agenda({ camping, vacancier }) {
   useLangue()
@@ -47,7 +45,9 @@ export default function Agenda({ camping, vacancier }) {
   const [inscriptions, setInscriptions] = useState([])
   const [counts, setCounts]             = useState({}) // animId -> nb inscrits
   const [loading, setLoading]           = useState(true)
+  const [erreurReseau, setErreurReseau] = useState(false)
   const [filter, setFilter]             = useState('all')
+  const [aDesinscrire, setADesinscrire] = useState(null)  // animation visée par la confirmation
 
   async function load() {
     // Les animations passées restaient au programme toute la saison, en tête
@@ -56,10 +56,17 @@ export default function Agenda({ camping, vacancier }) {
     // pouvait encore s'inscrire à celle de mardi dernier. Celles qui ont
     // commencé depuis moins de deux heures restent : elles sont en cours.
     const depuis = new Date(Date.now() - 2 * 3600 * 1000).toISOString()
-    const [{ data: anims }, { data: inscs }] = await Promise.all([
+    const { resultats: [{ data: anims }, { data: inscs }], error } = await toutCharger([
       supabase.from('animations').select('*').eq('camping_id', camping.id).eq('publiee', true).gte('debut', depuis).order('debut'),
       supabase.from('inscriptions').select('animation_id').eq('vacancier_id', vacancier.id),
     ])
+    // Erreur réseau : ne pas afficher « Aucune animation prévue ».
+    setErreurReseau(!!error)
+    if (error) {
+      console.error("Chargement de l'agenda échoué :", error)
+      setLoading(false)
+      return
+    }
     const animsList = anims || []
     setAnimations(animsList)
     setInscriptions((inscs || []).map(i => i.animation_id))
@@ -79,6 +86,28 @@ export default function Agenda({ camping, vacancier }) {
 
   useEffect(() => { load() }, [camping.id, vacancier.id])
 
+  function reessayer() {
+    setLoading(true)
+    setErreurReseau(false)
+    load()
+  }
+
+  async function desinscrire(anim) {
+    setADesinscrire(null)
+    // MAJ optimiste puis rollback si échec
+    setInscriptions(prev => prev.filter(id => id !== anim.id))
+    setCounts(prev => ({ ...prev, [anim.id]: Math.max(0, (prev[anim.id] || 1) - 1) }))
+    const { error } = await supabase.from('inscriptions').delete().eq('animation_id', anim.id).eq('vacancier_id', vacancier.id)
+    if (error) {
+      console.error('Désinscription échouée :', error)
+      setInscriptions(prev => [...prev, anim.id])
+      setCounts(prev => ({ ...prev, [anim.id]: (prev[anim.id] || 0) + 1 }))
+      toast(t('agenda.err_desinscr'), 'erreur')
+      return
+    }
+    toast(t('agenda.desinscrit_de', { titre: anim.titre }), 'succes')
+  }
+
   async function toggleInscription(anim) {
     const inscrit = inscriptions.includes(anim.id)
     const complet = anim.places_max && (counts[anim.id] || 0) >= anim.places_max
@@ -86,16 +115,9 @@ export default function Agenda({ camping, vacancier }) {
     if (!inscrit && complet) return // complet, ne rien faire
 
     if (inscrit) {
-      // MAJ optimiste puis rollback si échec
-      setInscriptions(prev => prev.filter(id => id !== anim.id))
-      setCounts(prev => ({ ...prev, [anim.id]: Math.max(0, (prev[anim.id] || 1) - 1) }))
-      const { error } = await supabase.from('inscriptions').delete().eq('animation_id', anim.id).eq('vacancier_id', vacancier.id)
-      if (error) {
-        console.error('Désinscription échouée :', error)
-        setInscriptions(prev => [...prev, anim.id])
-        setCounts(prev => ({ ...prev, [anim.id]: (prev[anim.id] || 0) + 1 }))
-        toast(t('agenda.err_desinscr'), 'erreur')
-      }
+      // Un appui pour « vérifier » son inscription la supprimait, sans un mot :
+      // sur une animation limitée, la place était perdue. On confirme d'abord.
+      setADesinscrire(anim)
     } else {
       setInscriptions(prev => [...prev, anim.id])
       setCounts(prev => ({ ...prev, [anim.id]: (prev[anim.id] || 0) + 1 }))
@@ -130,13 +152,16 @@ export default function Agenda({ camping, vacancier }) {
   return (
     <Pile espace="xl" style={{ padding: `${espace.xl}px ${espace.lg}px`, maxWidth: 600, margin: '0 auto' }}>
 
-      <Pile direction="ligne" justifier="space-between" aligner="flex-end">
+      {/* retour : avec le libellé complet « Mes inscriptions », la bascule
+          passe sous le titre sur un petit écran au lieu de déborder. */}
+      <Pile direction="ligne" justifier="space-between" aligner="flex-end" espace="sm" retour>
         <Pile espace="xs">
           <Texte variante="section" as="h1">{t('agenda.titre')}</Texte>
           <Texte variante="doux" style={{ textTransform: 'capitalize' }}>{today}</Texte>
         </Pile>
 
-        {/* Bascule tout / mes inscriptions */}
+        {/* Bascule tout / mes inscriptions : 40 px de haut au moins, la
+            version abrégée de 25 px se manquait au doigt. */}
         <div role="group" aria-label={t('agenda.titre')}
              style={{ display: 'flex', background: couleur.bordure, borderRadius: rayon.rond, padding: 3, gap: 2 }}>
           {[['all', t('agenda.tout')], ['mine', t('agenda.mes_inscr')]].map(([val, label]) => (
@@ -145,6 +170,7 @@ export default function Agenda({ camping, vacancier }) {
               onClick={() => setFilter(val)}
               aria-pressed={filter === val}
               style={{
+                minHeight: 40, whiteSpace: 'nowrap',
                 padding: `5px ${espace.md}px`, borderRadius: rayon.rond,
                 fontSize: tailles.petit, fontWeight: graisse.fort, cursor: 'pointer',
                 background: filter === val ? couleur.surface : 'transparent',
@@ -161,6 +187,8 @@ export default function Agenda({ camping, vacancier }) {
 
       {loading ? (
         <Squelette lignes={4} hauteur={88} libelle={t('commun.chargement')} />
+      ) : erreurReseau ? (
+        <ErreurReseau onReessayer={reessayer} />
       ) : displayed.length === 0 ? (
         <Vide
           emoji="📅"
@@ -187,6 +215,23 @@ export default function Agenda({ camping, vacancier }) {
           </Pile>
         ))
       )}
+
+      {aDesinscrire && (
+        <Sheet onClose={() => setADesinscrire(null)}>
+          <Pile espace="lg">
+            <Texte variante="section" as="h2">{t('agenda.desinscrire_titre', { titre: aDesinscrire.titre })}</Texte>
+            <Texte variante="doux">{t('agenda.desinscrire_texte')}</Texte>
+            <Pile espace="sm">
+              <Bouton variante="danger" pleineLargeur onClick={() => desinscrire(aDesinscrire)}>
+                {t('agenda.se_desinscrire')}
+              </Bouton>
+              <Bouton variante="secondaire" pleineLargeur onClick={() => setADesinscrire(null)}>
+                {t('commun.annuler')}
+              </Bouton>
+            </Pile>
+          </Pile>
+        </Sheet>
+      )}
     </Pile>
   )
 }
@@ -195,7 +240,6 @@ const ombreOnglet = '0 1px 3px rgba(26, 26, 26, 0.1)'
 
 function AnimCard({ anim, inscrit, nbInscrits, onToggle }) {
   const debut = anim.debut ? new Date(anim.debut) : null
-  const tag = getTag(anim)
   const complet = anim.places_max && nbInscrits >= anim.places_max && !inscrit
 
   return (
@@ -211,14 +255,11 @@ function AnimCard({ anim, inscrit, nbInscrits, onToggle }) {
     >
       <Pile direction="ligne" espace="md" justifier="space-between" aligner="flex-start">
         <Pile espace="xs" style={{ flex: 1 }}>
-          <Pile direction="ligne" espace="sm" aligner="center">
-            {debut && (
-              <Texte variante="doux" as="span" style={{ fontWeight: graisse.titre, color: 'var(--cc-accent)' }}>
-                {debut.toLocaleTimeString(locale(), { hour: '2-digit', minute: '2-digit' })}
-              </Texte>
-            )}
-            <Badge ton={tag.ton}>{tag.label}</Badge>
-          </Pile>
+          {debut && (
+            <Texte variante="doux" as="span" style={{ fontWeight: graisse.titre, color: 'var(--cc-accent)' }}>
+              {debut.toLocaleTimeString(locale(), { hour: '2-digit', minute: '2-digit' })}
+            </Texte>
+          )}
 
           <Texte variante="sousTitre" style={{ fontSize: tailles.grand }}>
             {anim.emoji && <span aria-hidden="true" style={{ marginRight: 6 }}>{anim.emoji}</span>}{anim.titre}

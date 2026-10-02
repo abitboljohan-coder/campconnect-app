@@ -1,5 +1,5 @@
 import { t, locale } from '../i18n'
-import { estComplet } from '../lib/groupes'
+import { estComplet, libelleHeure } from '../lib/groupes'
 import { Bouton, Carte, Texte, Pile, couleur, espace, graisse, rayon, texte as tailles } from '../design'
 
 // La ligne d'un groupe existait en deux exemplaires — accueil et liste des
@@ -34,18 +34,22 @@ function PileAvatars({ avatars }) {
   )
 }
 
-const tronque = { overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }
+// Deux lignes au plus : sur une seule, un lieu un peu long coupait l'heure.
+const deuxLignes = {
+  overflowWrap: 'anywhere',
+  display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden',
+}
 
 export default function CarteGroupe({ groupe, membre, avatars, onAction }) {
   // Le maximum fixé par le créateur n'était qu'affiché : on rejoignait un
   // groupe « 4 places » à dix. Les membres, eux, gardent toujours l'accès.
   const complet = !membre && estComplet(groupe, avatars?.length || 0)
-  const heure = groupe.heure
-    ? new Date(groupe.heure).toLocaleTimeString(locale(), { hour: '2-digit', minute: '2-digit' })
-    : null
+  // Quand, avant où : l'heure du rendez-vous est l'information décisive, et
+  // elle passait après le lieu, coupée en bout de ligne et sans le jour.
+  const heure = libelleHeure(groupe.heure, { aujourdhui: t('chat.aujourdhui'), demain: t('agenda.demain'), locale: locale() })
   const meta = [
-    groupe.lieu && `📍 ${groupe.lieu}`,
     heure && `🕐 ${heure}`,
+    groupe.lieu && `📍 ${groupe.lieu}`,
     groupe.max_membres && t('commun.places', { n: groupe.max_membres }),
   ].filter(Boolean).join(' · ')
 
@@ -68,7 +72,7 @@ export default function CarteGroupe({ groupe, membre, avatars, onAction }) {
             fontSize: tailles.moyen, overflowWrap: 'anywhere',
             display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden',
           }}>{groupe.titre}</Texte>
-          {meta && <Texte variante="micro" style={{ marginTop: 2, ...tronque }}>{meta}</Texte>}
+          {meta && <Texte variante="micro" style={{ marginTop: 2, ...deuxLignes }}>{meta}</Texte>}
           <PileAvatars avatars={avatars} />
         </div>
 

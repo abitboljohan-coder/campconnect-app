@@ -156,7 +156,7 @@ const STRINGS = {
   // ── Agenda ──────────────────────────────────────────────────────────────
   'agenda.titre':       { fr: 'Agenda', en: 'Events', es: 'Agenda', nl: 'Agenda' },
   'agenda.tout':        { fr: 'Tout', en: 'All', es: 'Todo', nl: 'Alles' },
-  'agenda.mes_inscr':   { fr: 'Mes inscrip.', en: 'My bookings', es: 'Mis inscrip.', nl: 'Mijn inschr.' },
+  'agenda.mes_inscr':   { fr: 'Mes inscriptions', en: 'My bookings', es: 'Mis inscripciones', nl: 'Mijn inschrijvingen' },
   'agenda.matin':       { fr: 'CE MATIN', en: 'THIS MORNING', es: 'ESTA MAÑANA', nl: 'VANOCHTEND' },
   'agenda.apresmidi':   { fr: 'CET APRÈS-MIDI', en: 'THIS AFTERNOON', es: 'ESTA TARDE', nl: 'VANMIDDAG' },
   'agenda.soir':        { fr: 'CE SOIR', en: 'TONIGHT', es: 'ESTA NOCHE', nl: 'VANAVOND' },
@@ -386,6 +386,31 @@ const STRINGS = {
   'moderation.bloquer_confirmer':{ fr: 'Bloquer', en: 'Block', es: 'Bloquear', nl: 'Blokkeren' },
   'moderation.err_debloquer':    { fr: 'Déblocage impossible. Réessayez.', en: 'Could not unblock. Try again.', es: 'No se pudo desbloquear. Inténtalo de nuevo.', nl: 'Deblokkeren mislukt. Probeer opnieuw.' },
   'signaler.photo_non_envoyee':  { fr: "La photo n'a pas pu être envoyée : le signalement est parti sans elle.", en: "The photo couldn't be uploaded: the report was sent without it.", es: 'No se pudo subir la foto: el informe se envió sin ella.', nl: 'De foto kon niet worden geüpload: de melding is zonder foto verstuurd.' },
+
+  // — Lot B : groupes, chat, agenda
+  'commun.reseau_titre':  { fr: 'Problème de connexion', en: 'Connection problem', es: 'Problema de conexión', nl: 'Verbindingsprobleem' },
+  'commun.reessayer':     { fr: 'Réessayer', en: 'Try again', es: 'Reintentar', nl: 'Opnieuw proberen' },
+  'agenda.desinscrire_titre': { fr: 'Se désinscrire de « {titre} » ?', en: 'Cancel your booking for “{titre}”?', es: '¿Cancelar tu inscripción en «{titre}»?', nl: 'Afmelden voor “{titre}”?' },
+  'agenda.desinscrire_texte': { fr: 'Votre place sera libérée pour un autre vacancier.', en: 'Your spot will be freed up for another camper.', es: 'Tu plaza quedará libre para otro campista.', nl: 'Je plaats komt vrij voor een andere kampeerder.' },
+  'agenda.se_desinscrire':    { fr: 'Se désinscrire', en: 'Cancel booking', es: 'Cancelar inscripción', nl: 'Afmelden' },
+  'agenda.desinscrit_de':     { fr: 'Désinscrit de « {titre} »', en: 'Booking cancelled: “{titre}”', es: 'Inscripción cancelada: «{titre}»', nl: 'Afgemeld voor ‘{titre}’' },
+  'chat.rejoindre':           { fr: 'Rejoindre le groupe', en: 'Join the group', es: 'Unirse al grupo', nl: 'Deelnemen aan groep' },
+  'accueil.statut_suppr_titre': { fr: 'Supprimer mon statut ?', en: 'Delete my update?', es: '¿Eliminar mi estado?', nl: 'Mijn update verwijderen?' },
+  'accueil.statut_suppr':       { fr: 'Supprimer', en: 'Delete', es: 'Eliminar', nl: 'Verwijderen' },
+  'accueil.statut_supprime':    { fr: 'Statut supprimé', en: 'Update deleted', es: 'Estado eliminado', nl: 'Update verwijderd' },
+  'accueil.err_statut_suppr':   { fr: 'Impossible de supprimer votre statut pour le moment.', en: "Couldn't delete your update right now.", es: 'No se pudo eliminar tu estado ahora.', nl: 'Kon je update nu niet verwijderen.' },
+  'groupes.max_place':     { fr: 'ex : 10', en: 'e.g. 10', es: 'ej.: 10', nl: 'bijv. 10' },
+  'groupes.tpl_petanque':  { fr: 'Pétanque', en: 'Pétanque', es: 'Petanca', nl: 'Jeu de boules' },
+  'groupes.tpl_apero':     { fr: 'Apéro ce soir', en: 'Drinks tonight', es: 'Aperitivo esta noche', nl: 'Borrel vanavond' },
+  'groupes.tpl_rando':     { fr: 'Rando demain matin', en: 'Hike tomorrow morning', es: 'Excursión mañana por la mañana', nl: 'Wandeling morgenochtend' },
+  'groupes.tpl_volley':    { fr: 'Volley', en: 'Volleyball', es: 'Voleibol', nl: 'Volleybal' },
+  'groupes.tpl_piscine':   { fr: 'Piscine', en: 'Pool', es: 'Piscina', nl: 'Zwembad' },
+  'groupes.tpl_bbq':       { fr: 'BBQ', en: 'BBQ', es: 'Barbacoa', nl: 'BBQ' },
+  'groupes.tpl_jeux':      { fr: 'Jeux / soirée', en: 'Games night', es: 'Juegos / velada', nl: 'Spelletjesavond' },
+  'groupes.tpl_lieu_petanque': { fr: 'Terrain de pétanque', en: 'Pétanque court', es: 'Pista de petanca', nl: 'Jeu-de-boulesbaan' },
+  'groupes.tpl_lieu_rando':    { fr: 'Accueil', en: 'Reception', es: 'Recepción', nl: 'Receptie' },
+  'groupes.tpl_lieu_volley':   { fr: 'Terrain de sport', en: 'Sports ground', es: 'Pista deportiva', nl: 'Sportveld' },
+  'groupes.tpl_lieu_piscine':  { fr: 'Piscine', en: 'Pool', es: 'Piscina', nl: 'Zwembad' },
 }
 
 // ── Moteur ──────────────────────────────────────────────────────────────────
