@@ -270,6 +270,17 @@ qui ne produisent aucune erreur visible.
 
 Pour démarcher un camping, invoquer la commande `/commercial`.
 
+Camping de démo (`les-flots-bleus`, « Camping démo Les Flots Bleus ») : ses
+groupes, messages, animations, statuts et annonces vivent dans Supabase, pas
+dans l'app. Le cron `rafraichir-demo` (3 h UTC) appelle `rafraichir_demo()`, qui
+les avance d'autant de jours que nécessaire pour qu'ils restent « aujourd'hui ».
+S'il échoue, la démo se vide en un jour ou deux, sans aucune erreur visible :
+les groupes passés sont masqués par `estActuel`. Après toute modification des
+tables `groupes`, `messages`, `animations`, `statuts` ou `annonces`, ou des
+règles d'affichage, vérifier `cron.job_run_details` et que la démo montre
+toujours ses 7 groupes. Ne décaler que les contenus des personnages
+(`vacanciers.user_id is null`) : les vrais comptes gardent leurs dates.
+
 Livrer une version iOS à tester : **fusionner dans `main`**. Xcode Cloud
 (workflow « Default ») compile `main` et dépose sur TestFlight. Les builds des
 branches `claude/…` (workflow « CampConnect ») ne sont pas à installer, même

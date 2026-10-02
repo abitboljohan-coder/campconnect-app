@@ -16,6 +16,12 @@ describe('estActuel', () => {
     expect(estActuel({ created_at: new Date(maintenant - 20 * H).toISOString() }, maintenant)).toBe(true)
     expect(estActuel({ created_at: new Date(maintenant - 30 * H).toISOString() }, maintenant)).toBe(false)
   })
+
+  it("ne cache pas un groupe dont l'heure est illisible", () => {
+    const recent = new Date(maintenant - 2 * H).toISOString()
+    expect(estActuel({ heure: '20:00', created_at: recent }, maintenant)).toBe(true)
+    expect(estActuel({ heure: 'n/importe quoi' }, maintenant)).toBe(true)
+  })
 })
 
 describe('heurePrevue', () => {
