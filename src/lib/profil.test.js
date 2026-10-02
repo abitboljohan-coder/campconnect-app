@@ -1,9 +1,10 @@
 import { describe, it, expect, afterEach } from 'vitest'
 import { setLangue } from '../i18n'
 import {
-  AVEC, INTERETS, champsArrivee, codeAvec, codesInterets,
-  libelleAvec, libelleInteret, libelleAvecFr, libelleInteretFr,
+  AVEC, INTERETS, champsArrivee, codeAvec, codesInterets, emojiAvec, emojiInteret,
+  jourLocal, libelleAvec, libelleInteret, libelleAvecFr, libelleInteretFr, nuitsRestantes,
 } from './profil'
+import { emojiAutorise } from './emojis'
 
 // Les profils enregistrés avant les codes portent des libellés français. Aucune
 // migration n'est faite : ces règles de lecture sont la seule garantie que ces
@@ -27,7 +28,9 @@ describe('choix du profil', () => {
   it('ne perd jamais une valeur inconnue', () => {
     expect(codeAvec('Avec mon chien')).toBe('Avec mon chien')
     expect(libelleAvec('Avec mon chien')).toBe('Avec mon chien')
-    expect(codesInterets(['Pétanque'])).toEqual(['Pétanque'])
+    expect(codesInterets(['Astronomie'])).toEqual(['Astronomie'])
+    expect(libelleInteret('Astronomie')).toBe('Astronomie')
+    expect(emojiInteret('Astronomie')).toBe('')
   })
 
   it('compte une seule fois un intérêt présent sous ses deux formes', () => {
@@ -56,11 +59,65 @@ describe('choix du profil', () => {
     }
   })
 
+  it('garde proposés tous les codes déjà enregistrés en base', () => {
+    const historiques = ['sport', 'musique', 'nature', 'cuisine', 'jeux', 'lecture', 'randonnee', 'piscine', 'soirees', 'enfants']
+    for (const c of historiques) expect(INTERETS).toContain(c)
+    expect(AVEC).toEqual(['solo', 'couple', 'amis', 'famille'])
+  })
+
+  it('propose une liste de centres d’intérêt raisonnable, sans doublon', () => {
+    expect(new Set(INTERETS).size).toBe(INTERETS.length)
+    expect(INTERETS.length).toBeGreaterThanOrEqual(16)
+    expect(INTERETS.length).toBeLessThanOrEqual(18)
+    for (const c of ['padel', 'paddle', 'yoga', 'velo', 'apero', 'petanque', 'plage', 'photo']) {
+      expect(INTERETS).toContain(c)
+    }
+  })
+
+  it('a un emoji autorisé pour chaque choix, ancien libellé compris', () => {
+    for (const c of INTERETS) expect(emojiAutorise(emojiInteret(c))).toBe(true)
+    for (const c of AVEC) expect(emojiAutorise(emojiAvec(c))).toBe(true)
+    expect(emojiInteret('Randonnée')).toBe(emojiInteret('randonnee'))
+    expect(emojiAvec('En famille')).toBe(emojiAvec('famille'))
+  })
+
+  it('donne aux nouveaux codes un libellé français pour le gérant', () => {
+    expect(libelleInteretFr('apero')).toBe('Apéro')
+    expect(libelleInteretFr('paddle')).toBe('Paddle & kayak')
+    expect(libelleInteretFr('velo')).toBe('Vélo')
+  })
+
   it('regroupe anciennes et nouvelles valeurs sous le même libellé pour le gérant', () => {
     expect(libelleAvecFr('couple')).toBe('En couple')
     expect(libelleAvecFr('En couple')).toBe('En couple')
     expect(libelleInteretFr('randonnee')).toBe('Randonnée')
     expect(libelleInteretFr('Randonnée')).toBe('Randonnée')
+  })
+})
+
+describe('nuits restantes avant le départ', () => {
+  it('compte les nuits jusqu’au départ', () => {
+    expect(nuitsRestantes('2026-10-07', '2026-10-02')).toBe(5)
+    expect(nuitsRestantes('2026-10-03', '2026-10-02')).toBe(1)
+  })
+
+  it('vaut 0 le jour du départ', () => {
+    expect(nuitsRestantes('2026-10-02', '2026-10-02')).toBe(0)
+  })
+
+  it('ne renvoie rien sans date, ou une fois le départ passé', () => {
+    expect(nuitsRestantes(null, '2026-10-02')).toBeNull()
+    expect(nuitsRestantes('', '2026-10-02')).toBeNull()
+    expect(nuitsRestantes('2026-09-30', '2026-10-02')).toBeNull()
+  })
+
+  it('franchit les changements de mois et d’heure', () => {
+    expect(nuitsRestantes('2026-11-02', '2026-10-24')).toBe(9)   // passage à l'heure d'hiver le 25
+  })
+
+  it('prend la date du téléphone, pas celle de l’UTC', () => {
+    expect(jourLocal(new Date(2026, 0, 5, 0, 30))).toBe('2026-01-05')
+    expect(jourLocal(new Date(2026, 11, 31, 23, 59))).toBe('2026-12-31')
   })
 })
 
