@@ -96,6 +96,16 @@ Pour livrer :
    pas `main`, ou pas le dernier commit de `main`, ce n'est pas la bonne.
    Absente, c'est un build antérieur au 29 septembre 2026.
 
+**Ne pas compiler pour rien.** Une fusion qui ne touche que la doc, les
+agents (`.claude/`), le studio vidéo ou des scripts SQL ne change pas l'app :
+son commit porte `[ci skip]` dans son titre, et Xcode Cloud ne lance alors
+aucun build. La liste des fichiers de l'app est dans `CLAUDE.md`. Le réglage
+durable se fait dans App Store Connect → Xcode Cloud → Gérer les workflows →
+**Default** → Conditions de départ → *Branch Changes* → **Fichiers et
+dossiers** : ne démarrer que si un changement touche `src`, `public`, `ios`,
+`index.html`, `package.json`, `package-lock.json`, `vite.config.js` ou
+`capacitor.config.json`.
+
 Conseil : le workflow **CampConnect** consomme le quota de 25 h/mois pour des
 builds qu'on n'installe pas. Le restreindre, ou le désactiver (App Store
 Connect → Xcode Cloud → Gérer les workflows), supprime la confusion à la source.

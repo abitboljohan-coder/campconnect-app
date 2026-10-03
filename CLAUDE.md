@@ -315,6 +315,18 @@ avec un numéro plus grand. Le numéro de build est automatique — ne pas le
 modifier à la main. La version qui tourne s'affiche en bas du Profil. Détail :
 `docs/XCODE_CLOUD.md` §4.
 
+**Pas de build Xcode Cloud quand l'app ne change pas.** Chaque poussée
+lance un build (quota de 25 h/mois, emails, builds inutiles dans TestFlight).
+Si un commit, une poussée ou une fusion dans `main` ne touche aucun fichier
+de l'app — `src/`, `public/`, `ios/`, `android/`, `index.html`,
+`package.json`, `package-lock.json`, `vite.config.js`, `capacitor.config.json`
+— mettre **`[ci skip]`** dans le titre du commit (et dans le titre du commit
+de fusion par squash). C'est le cas des docs, de `.claude/`, de
+`studio-video/`, de `scripts/`, de `supabase/`. Vérifier avec
+`git diff --name-only origin/main...HEAD`. `api/` et `vercel.json` ne vont
+que sur Vercel : pas de `[ci skip]` dans ce cas, pour ne pas risquer de
+bloquer le déploiement du site.
+
 ---
 
 # Fonctionnalités en cours de priorité
