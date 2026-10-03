@@ -42,11 +42,12 @@ contact@campconnect.fr. Il prend trois entrées : `destinataire`, `objet`,
 `html`. Lance-le avec l'outil Make `scenarios_run` (`responsive: true`), un
 appel par email, uniquement pour des adresses vérifiées (jamais devinées).
 
-- Corps HTML sobre, comme un email écrit à la main : paragraphes en
-  Helvetica 15 px, la vignette de la vidéo
-  (`https://app.campconnect.fr/video/apercu.jpg`, 150 px) liée à
-  `https://app.campconnect.fr/video` avec « ▶ Voir la vidéo (36 s) », la
-  signature, puis la ligne légale en 11 px gris : « CampConnect – EI Johan
+- Corps HTML **simple, sans aucune couleur ni police imposée** : des `<p>`
+  et des `<br>`, rien d'autre. Johan a refusé le texte vert sur fond vert :
+  sans couleur, le message reste lisible en mode clair comme en mode sombre,
+  et ressemble à un email écrit à la main. Pas d'image. Le lien de la vidéo
+  en clair : `<a href="https://app.campconnect.fr/video">https://app.campconnect.fr/video</a>`.
+  Dernier paragraphe, en `font-size:12px` seulement : « CampConnect – EI Johan
   Abitbol, RCS Évry 109 189 803. Vous recevez ce message car votre camping
   correspond à notre offre professionnelle. Répondez STOP pour ne plus être
   contacté. »
