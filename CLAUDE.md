@@ -282,7 +282,18 @@ Pour démarcher un camping, invoquer la commande `/commercial`.
 Pour sortir une version sur les stores, invoquer `/livraison`. Le workflow
 complet (fichier de prospects, routines, semaine type) : `docs/WORKFLOW.md`.
 
-Équipe d'agents (`.claude/agents/`) : confier chaque tâche au bon métier.
+Équipe d'agents (`.claude/agents/`). **Par défaut, Claude fait lui-même** :
+une correction, une question, un email, une doc, une requête n'ont pas besoin
+d'agent. Un agent démarre à froid et relit tout : il coûte du temps et du
+quota. N'en lancer un que si cela apporte vraiment quelque chose :
+
+- un gros travail qui se découpe en parties indépendantes (audit complet,
+  plusieurs écrans à la fois), à mener en parallèle ;
+- un savoir-faire outillé : rendu vidéo (`studio-video`), plusieurs directions
+  visuelles en images (`designer`) ;
+- un second regard indépendant avant un changement risqué : politiques RLS
+  ou fonction SQL d'accès (`securite`), grosse livraison (`testeur`) ;
+- Johan demande nommément un agent.
 
 | Agent | Quand |
 |---|---|
