@@ -1,0 +1,278 @@
+{
+  "_lisezmoi": [
+    "Thèmes du mode nuit (voir studio-video/NUIT.md). Rotation : le thème du jour est",
+    "themes[(jours écoulés depuis rotation_depuis) modulo nombre de thèmes].",
+    "Chaque plan rejoue des actions réelles dans la démo (demo.html?s=<ecran>) :",
+    "attendre (s), appui / appuiLong (cible), saisir (texte), defiler (px), clavierFerme.",
+    "Cible : t (clé i18n de src/i18n.js), tlabel (aria-label i18n), tplaceholder, text, label,",
+    "placeholder, css ; nth (-1 = dernier) ; exact. \"clic\": false = le doigt se pose, la vidéo coupe.",
+    "*mot* = mot mis en couleur. Durées : accroche 4 s + plans (10 à 14 s au total) + fin 5 s.",
+    "Ajouter un thème : le tester avec  bash studio-video/nuit.sh --theme <slug>  et regarder la planche."
+  ],
+  "rotation_depuis": "2026-10-03",
+  "textes": {
+    "fr": { "vacanciers": "Côté vacanciers", "gerant": "Côté gérant", "slogan": "Connectez votre séjour", "cta": "Demandez une démonstration", "mail": "contact@campconnect.fr" },
+    "en": { "vacanciers": "For your guests", "gerant": "For you", "slogan": "Connect your stay", "cta": "Request a demo", "mail": "contact@campconnect.fr" },
+    "es": { "vacanciers": "Para sus campistas", "gerant": "Para usted", "slogan": "Conecta tu estancia", "cta": "Solicite una demostración", "mail": "contact@campconnect.fr" },
+    "nl": { "vacanciers": "Voor uw gasten", "gerant": "Voor u", "slogan": "Verbind je verblijf", "cta": "Vraag een demo aan", "mail": "contact@campconnect.fr" }
+  },
+  "themes": [
+    {
+      "slug": "creer-un-groupe", "titre": "Créer un groupe en 10 s", "theme": "Créer un groupe", "langue": "fr", "format": "9x16",
+      "accroche": ["Une envie", "de pétanque ?", "*Lancez un groupe.*"],
+      "plans": [
+        { "ecran": "groupes", "cote": "vacanciers", "duree": 7,
+          "titre": ["Créer un groupe,", "*en 10 secondes.*"], "sous": "Un modèle, un lieu, c’est prêt.",
+          "actions": [
+            { "attendre": 0.5 },
+            { "appui": { "tlabel": "groupes.creer", "exact": true }, "puis": 0.9 },
+            { "appui": { "t": "groupes.tpl_apero" }, "puis": 0.7 },
+            { "appui": { "tplaceholder": "groupes.lieu_place" }, "puis": 0.2 },
+            { "saisir": "Bar du camping", "cadence": 2 },
+            { "clavierFerme": true },
+            { "appui": { "t": "groupes.creer_btn" }, "clic": false, "puis": 0.8 }
+          ] },
+        { "ecran": "chat", "cote": "vacanciers", "duree": 5,
+          "titre": ["Et on s’organise", "*en direct.*"], "sous": "Messagerie de groupe en temps réel.",
+          "actions": [
+            { "attendre": 0.4 },
+            { "appui": { "tplaceholder": "chat.ecrire" }, "puis": 0.2 },
+            { "saisir": "Je serai là !", "cadence": 2 },
+            { "appui": { "tlabel": "commun.envoyer" }, "puis": 1.2 }
+          ] }
+      ],
+      "legende": "Sur un camping, les envies naissent vite : une partie de pétanque, un apéro, une rando au lever du soleil. Avec CampConnect, un vacancier lance un groupe en quelques secondes depuis son téléphone, choisit un lieu, et les autres le rejoignent. La discussion s’ouvre aussitôt pour s’organiser. Pour vous, c’est de la convivialité qui se crée toute seule, sans rien organiser de plus. Envie de voir ce que ça donne chez vous ? Demandez une démonstration.\n\n#camping #hotelleriedepleinair #CampConnect"
+    },
+    {
+      "slug": "animations-un-clic", "titre": "Les animations en un clic", "theme": "Animations", "langue": "fr", "format": "9x16",
+      "accroche": ["Vos animations", "méritent", "*du monde.*"],
+      "plans": [
+        { "ecran": "agenda", "cote": "vacanciers", "duree": 7,
+          "titre": ["Les animations,", "*en un clic.*"], "sous": "Le programme du jour, toujours à jour.",
+          "actions": [
+            { "attendre": 0.5 },
+            { "appui": { "t": "agenda.inscrire", "nth": 0 }, "puis": 1.6 },
+            { "appui": { "t": "agenda.mes_inscr" }, "puis": 1.5 }
+          ] },
+        { "ecran": "admin-animations", "cote": "gerant", "duree": 5,
+          "titre": ["Et vous suivez", "*les inscrits.*"], "sous": "Places, inscriptions, publication.",
+          "actions": [ { "attendre": 0.6 }, { "defiler": 330, "duree": 1.8 } ] }
+      ],
+      "legende": "Une animation ne vaut que par ceux qui y viennent. Dans CampConnect, vos vacanciers retrouvent le programme du jour dans l’agenda du camping et s’inscrivent d’un simple appui. De votre côté, vous voyez les places restantes et les inscrits, animation par animation. Moins d’affichettes perdues, moins de questions à l’accueil, et des soirées où l’on sait à l’avance qui sera là. Curieux de le voir sur votre camping ? Demandez une démonstration.\n\n#camping #animation #CampConnect"
+    },
+    {
+      "slug": "gerant-publier-animation", "titre": "Côté gérant : publier une animation", "theme": "Publier une animation", "langue": "fr", "format": "9x16",
+      "accroche": ["Ce soir,", "soirée karaoké.", "*Tout le camping le sait.*"],
+      "plans": [
+        { "ecran": "admin-animations", "cote": "gerant", "duree": 8,
+          "titre": ["Publiez", "*une animation.*"], "sous": "Vos vacanciers présents sont notifiés.",
+          "actions": [
+            { "attendre": 0.3 },
+            { "appui": { "text": "+ Nouvelle animation" }, "puis": 0.7 },
+            { "appui": { "placeholder": "ex: Cours de yoga matinal" }, "puis": 0.2 },
+            { "saisir": "Soirée karaoké", "cadence": 2 },
+            { "appui": { "placeholder": "ex: Piscine, Espace détente..." }, "puis": 0.2 },
+            { "saisir": "Bar du camping", "cadence": 2 },
+            { "clavierFerme": true },
+            { "defiler": 400, "duree": 0.8 },
+            { "appui": { "css": "[role=dialog] button", "nth": -1 }, "puis": 1.2 }
+          ] },
+        { "ecran": "agenda", "cote": "vacanciers", "duree": 4.5,
+          "titre": ["Ils s’inscrivent", "*en un clic.*"], "sous": "Depuis l’agenda du camping.",
+          "actions": [ { "attendre": 0.5 }, { "appui": { "t": "agenda.inscrire", "nth": 1 }, "puis": 1.8 } ] }
+      ],
+      "legende": "Une soirée karaoké décidée à midi, un cours d’aquagym déplacé à cause de la météo : avec CampConnect, vous publiez l’animation depuis votre téléphone en quelques secondes, et les vacanciers présents sont prévenus. Ils la retrouvent dans l’agenda du camping et s’inscrivent d’un appui. Plus besoin de refaire l’affichage à l’accueil ni de courir après les inscriptions. Gérants, envie de le tester sur votre camping ? Demandez une démonstration.\n\n#camping #hotelleriedepleinair #CampConnect"
+    },
+    {
+      "slug": "mini-fiche", "titre": "La mini-fiche et les points communs", "theme": "Mini-fiche", "langue": "fr", "format": "9x16",
+      "accroche": ["Ils ont", "les mêmes envies.", "*Ils ne le savent pas.*"],
+      "plans": [
+        { "ecran": "chat", "cote": "vacanciers", "duree": 6,
+          "titre": ["Les points communs,", "*en un coup d’œil.*"], "sous": "Un appui sur l’avatar suffit.",
+          "actions": [ { "attendre": 0.6 }, { "appui": { "tlabel": "fiche.voir", "vars": { "pseudo": "Léa" } }, "puis": 2.5 } ] },
+        { "ecran": "profil", "cote": "vacanciers", "duree": 5,
+          "titre": ["Chacun choisit", "*ce qu’il partage.*"], "sous": "Ses centres d’intérêt, visibles du camping.",
+          "actions": [ { "attendre": 0.6 }, { "defiler": 300, "duree": 1.8 } ] }
+      ],
+      "legende": "Deux familles passent la semaine à trois emplacements l’une de l’autre, partagent les mêmes envies, et repartent sans s’être parlé. Dans CampConnect, un appui sur l’avatar d’un vacancier ouvre sa mini-fiche : ses centres d’intérêt et ceux que vous avez en commun. Chacun choisit ce qu’il montre. C’est souvent ce petit déclic qui transforme des voisins en compagnons de pétanque. Envie de voir ça sur votre camping ? Demandez une démonstration.\n\n#camping #hotelleriedepleinair #CampConnect"
+    },
+    {
+      "slug": "pub-en", "titre": "CampConnect in English", "theme": "Présentation", "langue": "en", "format": "9x16",
+      "accroche": ["Every day,", "your guests", "*cross paths.*"],
+      "plans": [
+        { "ecran": "accueil", "cote": "vacanciers", "duree": 4,
+          "titre": ["Your campsite,", "*in their pocket.*"], "sous": "Groups, events and campsite info.",
+          "actions": [ { "attendre": 0.6 }, { "defiler": 380, "duree": 1.8 } ] },
+        { "ecran": "groupes", "cote": "vacanciers", "duree": 4,
+          "titre": ["Groups between", "*your guests.*"], "sous": "Pétanque, hikes, drinks…",
+          "actions": [ { "attendre": 0.5 }, { "appui": { "tlabel": "groupes.creer", "exact": true }, "puis": 1.8 } ] },
+        { "ecran": "agenda", "cote": "vacanciers", "duree": 4,
+          "titre": ["Events,", "*in one tap.*"], "sous": "Your daily programme, always up to date.",
+          "actions": [ { "attendre": 0.4 }, { "appui": { "t": "agenda.inscrire", "nth": 0 }, "puis": 1.8 } ] }
+      ],
+      "legende": "Every day, your guests cross paths at the pool, the bar or the playground. CampConnect turns those moments into real encounters. It is a private space for your campsite, in your colours: guests create groups for pétanque, hikes or drinks, chat in real time and sign up for your events in one tap. Your team publishes events and keeps an eye on everything from one screen. Interested? Request a demo at contact@campconnect.fr.\n\n#camping #campsite #CampConnect"
+    },
+    {
+      "slug": "gerant-signalements", "titre": "Côté gérant : les signalements", "theme": "Signalements", "langue": "fr", "format": "9x16",
+      "accroche": ["Une douche", "en panne ?", "*Vous le savez tout de suite.*"],
+      "plans": [
+        { "ecran": "signaler", "cote": "vacanciers", "duree": 5.5,
+          "titre": ["Le vacancier", "*signale.*"], "sous": "Catégorie, lieu, photo si besoin.",
+          "actions": [
+            { "attendre": 0.4 },
+            { "appui": { "text": "Panne" }, "puis": 0.4 },
+            { "appui": { "css": "textarea" }, "puis": 0.2 },
+            { "saisir": "Plus d’eau chaude", "cadence": 2 }
+          ] },
+        { "ecran": "admin-signalements", "cote": "gerant", "duree": 6,
+          "titre": ["Vous suivez", "*et vous traitez.*"], "sous": "Nouveau, en cours, résolu.",
+          "actions": [
+            { "attendre": 0.5 },
+            { "appui": { "text": "Marquer en cours" }, "puis": 1.4 },
+            { "appui": { "text": "En cours" }, "puis": 1.6 }
+          ] }
+      ],
+      "legende": "Une douche sans eau chaude, de la musique trop tard, une poubelle qui déborde : vos vacanciers le remarquent souvent avant vous, et le disent rarement à l’accueil. Avec CampConnect, ils le signalent en quelques secondes depuis leur téléphone, avec le lieu et une photo si besoin. Vous recevez le signalement, vous le passez en cours, puis en résolu. Moins de mauvaises surprises en fin de séjour. Envie d’essayer ? Demandez une démonstration.\n\n#camping #hotelleriedepleinair #CampConnect"
+    },
+    {
+      "slug": "profil-carte-postale", "titre": "Le profil carte postale", "theme": "Profil", "langue": "fr", "format": "1x1",
+      "accroche": ["Un profil", "*comme une carte postale.*"],
+      "plans": [
+        { "ecran": "profil", "cote": "vacanciers", "duree": 6.5,
+          "titre": ["Un profil", "*carte postale.*"], "sous": "Pseudo, avatar, envies du séjour.",
+          "actions": [ { "attendre": 0.9 }, { "defiler": 420, "duree": 2.4 } ] },
+        { "ecran": "minifiche", "cote": "vacanciers", "duree": 5,
+          "titre": ["Et les points", "*communs.*"], "sous": "Pour se trouver entre vacanciers.",
+          "actions": [ { "attendre": 1 } ] }
+      ],
+      "legende": "Dans CampConnect, chaque vacancier a un profil simple, façon carte postale : un pseudo, un avatar, son emplacement et ses envies du séjour. Pas de nom de famille, pas de photo obligatoire, et chacun choisit ce qu’il montre. Quand on croise quelqu’un dans un groupe, on voit tout de suite ce qu’on partage. De quoi engager la conversation plus facilement au bord de la piscine. Envie de le découvrir ? Demandez une démonstration.\n\n#camping #hotelleriedepleinair #CampConnect"
+    },
+    {
+      "slug": "qr-code-entree", "titre": "Le QR code d’entrée", "theme": "QR code", "langue": "fr", "format": "9x16",
+      "accroche": ["Un QR code", "à la réception.", "*Et tout le monde entre.*"],
+      "plans": [
+        { "ecran": "admin", "cote": "gerant", "duree": 6,
+          "titre": ["Votre QR code", "*est prêt.*"], "sous": "À afficher à la réception.",
+          "actions": [ { "attendre": 0.6 }, { "appui": { "text": "Voir le QR code" }, "puis": 2.2 }, { "defiler": 220, "duree": 1.0 } ] },
+        { "ecran": "onboarding", "cote": "vacanciers", "duree": 6,
+          "titre": ["Le vacancier scanne,", "*et c’est parti.*"], "sous": "Sans compte ni mot de passe.",
+          "actions": [
+            { "attendre": 0.6 },
+            { "defiler": 400, "duree": 1.2 },
+            { "appui": { "css": "input[type=checkbox]" }, "puis": 0.6 },
+            { "appui": { "t": "onb.cest_parti" }, "clic": false, "puis": 0.8 }
+          ] }
+      ],
+      "legende": "Pour qu’une application serve sur un camping, il faut que tout le monde puisse y entrer en un instant. Avec CampConnect, votre QR code est prêt dans votre espace gérant : vous l’imprimez et vous l’affichez à la réception. Le vacancier le scanne, choisit un pseudo et un avatar, et le voilà dans l’espace de votre camping, sans compte ni mot de passe. Envie d’essayer ? Demandez une démonstration.\n\n#camping #hotelleriedepleinair #CampConnect"
+    },
+    {
+      "slug": "supprimer-message", "titre": "Supprimer un message", "theme": "Messagerie", "langue": "fr", "format": "9x16",
+      "accroche": ["Un message", "envoyé trop vite ?", "*Il s’efface.*"],
+      "plans": [
+        { "ecran": "chat", "cote": "vacanciers", "duree": 7,
+          "titre": ["Supprimer", "*son message.*"], "sous": "Un appui long, c’est fait.",
+          "actions": [
+            { "attendre": 0.5 },
+            { "appuiLong": { "text": "Parfait, j'apporte" }, "puis": 0.9 },
+            { "appui": { "t": "chat.suppr" }, "puis": 0.9 },
+            { "appui": { "t": "chat.suppr_confirmer", "exact": true }, "puis": 1.5 }
+          ] },
+        { "ecran": "chat", "cote": "vacanciers", "duree": 5,
+          "titre": ["Signaler", "*ou bloquer.*"], "sous": "Chacun garde la main.",
+          "actions": [ { "attendre": 0.5 }, { "appuiLong": { "text": "On se retrouve à 18h30" }, "puis": 2.0 } ] }
+      ],
+      "legende": "Une faute de frappe, un message parti dans le mauvais groupe : ça arrive à tout le monde. Dans la messagerie de CampConnect, un appui long sur son message permet de le supprimer pour tous les membres du groupe. Et sur le message d’un autre, le même geste propose de le signaler à l’équipe du camping ou de bloquer son auteur. Une messagerie simple, où chacun garde la main. Envie d’en savoir plus ? Demandez une démonstration.\n\n#camping #hotelleriedepleinair #CampConnect"
+    },
+    {
+      "slug": "pub-es", "titre": "CampConnect en español", "theme": "Presentación", "langue": "es", "format": "1x1",
+      "accroche": ["Cada día,", "sus campistas", "*se cruzan.*"],
+      "plans": [
+        { "ecran": "accueil", "cote": "vacanciers", "duree": 4,
+          "titre": ["Su camping,", "*en su bolsillo.*"], "sous": "Grupos, actividades e información.",
+          "actions": [ { "attendre": 0.6 }, { "defiler": 380, "duree": 1.8 } ] },
+        { "ecran": "groupes", "cote": "vacanciers", "duree": 4,
+          "titre": ["Grupos entre", "*campistas.*"], "sous": "Petanca, excursiones, aperitivos…",
+          "actions": [ { "attendre": 0.5 }, { "appui": { "tlabel": "groupes.creer", "exact": true }, "puis": 1.8 } ] },
+        { "ecran": "agenda", "cote": "vacanciers", "duree": 4,
+          "titre": ["Actividades,", "*con un toque.*"], "sous": "El programa del día, siempre al día.",
+          "actions": [ { "attendre": 0.4 }, { "appui": { "t": "agenda.inscrire", "nth": 0 }, "puis": 1.8 } ] }
+      ],
+      "legende": "Cada día, sus campistas se cruzan en la piscina, en el bar o en la zona de juegos. CampConnect convierte esos momentos en verdaderos encuentros. Es un espacio privado para su camping, con sus colores: los campistas crean grupos de petanca, excursiones o aperitivos, chatean en tiempo real y se apuntan a sus actividades con un solo toque. Su equipo publica el programa y lo sigue todo desde una sola pantalla. ¿Le interesa? Solicite una demostración en contact@campconnect.fr.\n\n#camping #CampConnect"
+    },
+    {
+      "slug": "quitter-groupe", "titre": "Quitter un groupe", "theme": "Groupes", "langue": "fr", "format": "9x16",
+      "accroche": ["Plus envie", "de suivre ?", "*On quitte en deux appuis.*"],
+      "plans": [
+        { "ecran": "chat", "cote": "vacanciers", "duree": 5.5,
+          "titre": ["Quitter un groupe,", "*simplement.*"], "sous": "Plus de messages ni de notifications.",
+          "actions": [
+            { "attendre": 0.6 },
+            { "appui": { "t": "chat.quitter", "exact": true }, "puis": 1.0 },
+            { "appui": { "css": "[role=dialog] button", "nth": 0 }, "clic": false, "puis": 1.0 }
+          ] },
+        { "ecran": "groupes", "cote": "vacanciers", "duree": 5,
+          "titre": ["Et en rejoindre", "*un autre.*"], "sous": "Volley, jeux, apéro…",
+          "actions": [ { "attendre": 1.2 }, { "appui": { "t": "groupes.rejoindre", "nth": 0 }, "clic": false, "puis": 1.0 } ] }
+      ],
+      "legende": "Sur un camping, les envies changent d’un jour à l’autre : la rando d’hier, le tournoi de volley de demain. Dans CampConnect, un vacancier quitte un groupe en deux appuis, et il ne reçoit plus ni ses messages ni ses notifications. Il peut en rejoindre un autre aussi vite. Pas de discussion qui s’éternise, pas d’alerte qui agace : chacun reste dans ce qui l’intéresse vraiment. Envie de le voir en vrai ? Demandez une démonstration.\n\n#camping #hotelleriedepleinair #CampConnect"
+    },
+    {
+      "slug": "livret-accueil", "titre": "Le livret d’accueil", "theme": "Livret d’accueil", "langue": "fr", "format": "16x9",
+      "accroche": ["Les horaires", "de la piscine ?", "*Plus besoin de demander.*"],
+      "plans": [
+        { "ecran": "infos", "cote": "vacanciers", "duree": 6,
+          "titre": ["Le livret d’accueil,", "*dans la poche.*"], "sous": "Plage, piscine, Wi-Fi, urgences…",
+          "actions": [ { "attendre": 0.6 }, { "appui": { "text": "Accès plage" }, "puis": 2.0 }, { "defiler": 250, "duree": 1.2 } ] },
+        { "ecran": "admin-infos", "cote": "gerant", "duree": 6,
+          "titre": ["Vous le rédigez", "*vous-même.*"], "sous": "Rubriques, ordre et contenu.",
+          "actions": [ { "attendre": 0.6 }, { "defiler": 320, "duree": 2.2 } ] }
+      ],
+      "legende": "Les horaires de la piscine, le code Wi-Fi, l’heure du pain, le numéro d’urgence : ce sont les questions qu’on vous pose sans cesse en saison. Dans CampConnect, le livret d’accueil de votre camping est dans la poche de chaque vacancier, toujours à jour. Vous écrivez les rubriques vous-même, dans l’ordre que vous voulez, et une modification se voit tout de suite. Votre équipe d’accueil respire. Envie de voir le vôtre ? Demandez une démonstration.\n\n#camping #hotelleriedepleinair #CampConnect"
+    },
+    {
+      "slug": "pub-nl", "titre": "CampConnect in het Nederlands", "theme": "Presentatie", "langue": "nl", "format": "9x16",
+      "accroche": ["Elke dag", "kruisen uw gasten", "*elkaars pad.*"],
+      "plans": [
+        { "ecran": "accueil", "cote": "vacanciers", "duree": 4,
+          "titre": ["Uw camping,", "*in hun broekzak.*"], "sous": "Groepen, activiteiten en info.",
+          "actions": [ { "attendre": 0.6 }, { "defiler": 380, "duree": 1.8 } ] },
+        { "ecran": "groupes", "cote": "vacanciers", "duree": 4,
+          "titre": ["Groepen tussen", "*kampeerders.*"], "sous": "Jeu de boules, wandelen, borrel…",
+          "actions": [ { "attendre": 0.5 }, { "appui": { "tlabel": "groupes.creer", "exact": true }, "puis": 1.8 } ] },
+        { "ecran": "agenda", "cote": "vacanciers", "duree": 4,
+          "titre": ["Activiteiten,", "*met één tik.*"], "sous": "Het dagprogramma, altijd actueel.",
+          "actions": [ { "attendre": 0.4 }, { "appui": { "t": "agenda.inscrire", "nth": 0 }, "puis": 1.8 } ] }
+      ],
+      "legende": "Elke dag kruisen uw gasten elkaars pad bij het zwembad, de bar of de speeltuin. CampConnect maakt van die momenten echte ontmoetingen. Het is een besloten ruimte voor uw camping, in uw eigen kleuren: gasten maken groepen voor jeu de boules, wandelingen of een borrel, chatten in realtime en schrijven zich met één tik in voor uw activiteiten. Uw team publiceert het programma en houdt alles bij op één scherm. Interesse? Vraag een demo aan via contact@campconnect.fr.\n\n#camping #CampConnect"
+    },
+    {
+      "slug": "gerant-moderation", "titre": "Côté gérant : la modération", "theme": "Modération", "langue": "fr", "format": "16x9",
+      "accroche": ["Une communauté,", "*sous votre contrôle.*"],
+      "plans": [
+        { "ecran": "admin-moderation", "cote": "gerant", "duree": 6,
+          "titre": ["Modérez", "*en un coup d’œil.*"], "sous": "Messages, statuts, groupes, vacanciers.",
+          "actions": [ { "attendre": 0.6 }, { "appui": { "text": "Statuts (3)" }, "puis": 1.6 }, { "appui": { "text": "Vacanciers (5)" }, "puis": 1.6 } ] },
+        { "ecran": "chat", "cote": "vacanciers", "duree": 5,
+          "titre": ["Vos vacanciers", "*signalent aussi.*"], "sous": "Signaler ou bloquer, en un geste.",
+          "actions": [ { "attendre": 0.5 }, { "appuiLong": { "text": "On se retrouve à 18h30" }, "puis": 2.0 } ] }
+      ],
+      "legende": "Ouvrir un espace d’échange à vos vacanciers, c’est aussi pouvoir y garder la main. Dans CampConnect, l’espace gérant rassemble au même endroit les messages, les statuts, les groupes et la liste des vacanciers : vous supprimez un contenu ou bannissez un auteur en un appui. Et chaque vacancier peut lui-même signaler un message ou bloquer quelqu’un. Une communauté vivante, qui reste à l’image de votre camping. Envie de voir comment ? Demandez une démonstration.\n\n#camping #hotelleriedepleinair #CampConnect"
+    },
+    {
+      "slug": "pub-16x9", "titre": "La pub CampConnect en 16:9", "theme": "Présentation", "langue": "fr", "format": "16x9",
+      "accroche": ["Chaque jour,", "vos vacanciers", "*se croisent.*"],
+      "plans": [
+        { "ecran": "accueil", "cote": "vacanciers", "duree": 4,
+          "titre": ["Votre camping,", "*dans leur poche.*"], "sous": "Groupes, animations, infos utiles.",
+          "actions": [ { "attendre": 0.6 }, { "defiler": 380, "duree": 1.8 } ] },
+        { "ecran": "agenda", "cote": "vacanciers", "duree": 4,
+          "titre": ["Les animations,", "*en un clic.*"], "sous": "Le programme du jour, toujours à jour.",
+          "actions": [ { "attendre": 0.4 }, { "appui": { "t": "agenda.inscrire", "nth": 0 }, "puis": 1.8 } ] },
+        { "ecran": "admin", "cote": "gerant", "duree": 4,
+          "titre": ["Et pour vous,", "*tout au même endroit.*"], "sous": "Code d’accès, signalements, réglages.",
+          "actions": [ { "attendre": 0.6 }, { "defiler": 200, "duree": 1.6 } ] }
+      ],
+      "legende": "Chaque jour, vos vacanciers se croisent à la piscine, au snack ou sur l’aire de jeux. CampConnect transforme ces moments en vraies rencontres. C’est l’espace privé de votre camping, à vos couleurs : vos vacanciers entrent par QR code, créent leurs groupes et s’inscrivent à vos animations en un clic. Vous publiez, vous suivez les signalements et vous gardez la main, depuis un seul écran. Une version au format paysage, pour vos rendez-vous. Demandez une démonstration.\n\n#camping #hotelleriedepleinair #CampConnect"
+    }
+  ]
+}

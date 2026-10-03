@@ -153,7 +153,13 @@ class Query {
   gte() { return this } lte() { return this } gt() { return this } lt() { return this }
   ilike() { return this } is() { return this } not() { return this }
   order() { return this } limit() { return this } range() { return this }
-  insert(rows) { this._ret = Array.isArray(rows) ? rows[0] : rows; return this }
+  // Comme la base : la ligne créée revient avec un id et sa date. Sans date,
+  // un message envoyé dans la démo s'affichait sous « Invalid Date ».
+  insert(rows) {
+    const row = Array.isArray(rows) ? rows[0] : rows
+    this._ret = { id: `demo-${Date.now()}`, created_at: new Date().toISOString(), ...row }
+    return this
+  }
   update() { return this } delete() { this._delete = true; return this } upsert() { return this }
   single() { this._single = true; return this }
   maybeSingle() { this._single = true; return this }

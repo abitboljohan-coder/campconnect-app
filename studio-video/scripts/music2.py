@@ -1,9 +1,21 @@
+# Musique procédurale CampConnect (120 BPM, ré majeur) + sound design.
+# Usage : python3 scripts/music2.py            -> spot v2 de 44 s (sorties dans v2/)
+#         python3 scripts/music2.py cfg.json   -> durée, sections et repères donnés
+#           par cfg.json (mode nuit, voir nuit/render.cjs) : dur, out, sections
+#           [[début, nom]…], break [a, b], fx [[t, 'riser'|'impact', durée, gain]…],
+#           fade, cuts [t…], pops [[t, fréquence]…], impacts_sfx [[t, gain]…].
+import json
+import os
+import sys
+
 import numpy as np
 from scipy.signal import butter, sosfilt, fftconvolve
 from scipy.io import wavfile
 
 SR = 48000
-DUR = 44.0
+CFG = json.load(open(sys.argv[1], encoding='utf-8')) if len(sys.argv) > 1 else {}
+DUR = float(CFG.get('dur', 44.0))
+OUT = CFG.get('out', 'v2')
 N = int(SR * DUR)
 BPM = 120
 BEAT = 60 / BPM
@@ -206,12 +218,18 @@ chords = [
     [62, 67, 71, 74],  # G
 ]
 roots = [38, 33, 35, 31]
-NBARS = int(DUR / BAR)
+NBARS = int(round(DUR / BAR)) if CFG else int(DUR / BAR)
 
 pad = buf(); plk = buf(); bass = buf(); drums = buf(); fx = buf()
 
 def section(b):
     t = b * BAR
+    if CFG.get('sections'):
+        nom = CFG['sections'][0][1]
+        for debut, n in CFG['sections']:
+            if t >= debut - 1e-6:
+                nom = n
+        return nom
     if t < 4: return 'intro'
     if t < 8: return 'reveal'
     if t < 24: return 'main'
@@ -289,35 +307,41 @@ music = reverb(pad, 2.5, 0.45) + reverb(plk, 1.6, 0.3) + bass + reverb(drums, 0.
 # low-pass sweep in intro: crossfade from filtered to full during 0-4s and during break 20-22
 filt = lp(music, 1200)
 w = np.ones(N)
-w[tt < 4] = (tt[tt < 4] / 4) ** 2
-br = (tt >= 24) & (tt < 26.5)
-w[br] = 0.35 + 0.65 * ((tt[br] - 24) / 2.5) ** 2
+INTRO = float(CFG.get("intro", 4.0))
+w[tt < INTRO] = (tt[tt < INTRO] / INTRO) ** 2
+BRK = CFG.get('break', [24, 26.5] if not CFG else None)
+br = (tt >= BRK[0]) & (tt < BRK[1]) if BRK else np.zeros(N, bool)
+if BRK:
+    w[br] = 0.35 + 0.65 * ((tt[br] - BRK[0]) / (BRK[1] - BRK[0])) ** 2
 music = music * w[:, None] + filt * (1 - w[:, None])
 
 # transitions FX (part of music bed)
-place(fx, riser(1.8), 4.0 - 1.8, 0.35)
-place(fx, impact(), 4.0, 0.55)
-place(fx, riser(1.5), 26.5 - 1.5, 0.25)
-place(fx, riser(1.6), 35.5 - 1.6, 0.3)
-place(fx, impact(), 35.5, 0.45)
+FX = CFG.get('fx', [[4.0, 'riser', 1.8, 0.35], [4.0, 'impact', 0, 0.55], [26.5, 'riser', 1.5, 0.25],
+                    [35.5, 'riser', 1.6, 0.3], [35.5, 'impact', 0, 0.45]])
+for t_fx, kind, d_fx, g_fx in FX:
+    if kind == 'riser':
+        place(fx, riser(d_fx), t_fx - d_fx, g_fx)
+    else:
+        place(fx, impact(), t_fx, g_fx)
 music += reverb(fx, 1.5, 0.3)
 
 # fade out tail
-fade = np.ones(N); fs = int(42.6 * SR); fade[fs:] = np.linspace(1, 0, N - fs) ** 1.5
+fade = np.ones(N); fs = int(float(CFG.get('fade', 42.6)) * SR); fade[fs:] = np.linspace(1, 0, N - fs) ** 1.5
 music *= fade[:, None]
 
 # ---------- SFX (UI sound design, separate stem) ----------
 sfx = buf()
-cuts = [8.0, 11.5, 14.5, 18.0, 21.5, 24.0, 26.5, 29.5, 32.5]
+cuts = CFG.get('cuts', [8.0, 11.5, 14.5, 18.0, 21.5, 24.0, 26.5, 29.5, 32.5])
 for c in cuts:
     place(sfx, whoosh(0.5, True), c - 0.3, 0.22)
-for t, f in [(0.55, 1400), (2.1, 1200), (9.8, 1500), (16.5, 1700), (19.75, 1500), (27.4, 1300), (30.4, 1300), (33.4, 1300),
-             (37.8, 1100), (39.1, 1500)]:
+POPS = CFG.get('pops', [(0.55, 1400), (2.1, 1200), (9.8, 1500), (16.5, 1700), (19.75, 1500), (27.4, 1300), (30.4, 1300), (33.4, 1300),
+             (37.8, 1100), (39.1, 1500)])
+for t, f in POPS:
     place(sfx, pop(f), t, 0.35, pan=rng.uniform(-0.2, 0.2))
 sfx = reverb(sfx, 0.8, 0.2)
 sfx_m = sfx.copy()
-place(sfx_m, impact(), 4.0, 0.35)
-place(sfx_m, impact(), 35.5, 0.3)
+for t_i, g_i in CFG.get('impacts_sfx', [[4.0, 0.35], [35.5, 0.3]]):
+    place(sfx_m, impact(), t_i, g_i)
 
 def norm(x, peak=0.89):
     return x / np.max(np.abs(x)) * peak
@@ -325,9 +349,10 @@ def norm(x, peak=0.89):
 def soft_limit(x):
     return np.tanh(x * 1.1) / np.tanh(1.1)
 
+os.makedirs(OUT, exist_ok=True)
 full = soft_limit(norm(music, 0.8) + sfx * 0.6)
 full = norm(full, 0.89)
-wavfile.write('v2/mix_full.wav', SR, (full * 32767).astype(np.int16))
-wavfile.write('v2/sfx_seul.wav', SR, (norm(soft_limit(sfx_m), 0.6) * 32767).astype(np.int16))
-wavfile.write('v2/musique_seule.wav', SR, (norm(music, 0.89) * 32767).astype(np.int16))
-print('done')
+wavfile.write(f'{OUT}/mix_full.wav', SR, (full * 32767).astype(np.int16))
+wavfile.write(f'{OUT}/sfx_seul.wav', SR, (norm(soft_limit(sfx_m), 0.6) * 32767).astype(np.int16))
+wavfile.write(f'{OUT}/musique_seule.wav', SR, (norm(music, 0.89) * 32767).astype(np.int16))
+print('musique :', OUT)

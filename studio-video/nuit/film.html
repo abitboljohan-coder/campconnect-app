@@ -1,0 +1,417 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<title>CampConnect Nuit</title>
+<!--
+  Moteur du mode nuit : même charte et même grammaire que app/index.html
+  (réseau de points, téléphone 3D, typographie cinétique masquée), mais piloté
+  par window.FILM (injecté par nuit/render.cjs) : format 9:16, 1:1 ou 16:9,
+  langue, accroche, 1 à 3 plans d'écran capturés dans la démo, fin avec CTA.
+  window.seek(t) dessine l'image du temps t ; window.verifier() liste les
+  textes qui débordent (contrôle qualité).
+-->
+<style>
+@font-face{font-family:Jak;font-weight:800;src:url(../app/node_modules/@fontsource/plus-jakarta-sans/files/plus-jakarta-sans-latin-800-normal.woff2)}
+@font-face{font-family:Jak;font-weight:700;src:url(../app/node_modules/@fontsource/plus-jakarta-sans/files/plus-jakarta-sans-latin-700-normal.woff2)}
+@font-face{font-family:Jak;font-weight:800;src:url(../app/node_modules/@fontsource/plus-jakarta-sans/files/plus-jakarta-sans-latin-ext-800-normal.woff2);unicode-range:U+0100-02AF,U+1E00-1EFF}
+@font-face{font-family:DMS;font-weight:500;src:url(../app/node_modules/@fontsource/dm-sans/files/dm-sans-latin-500-normal.woff2)}
+@font-face{font-family:DMS;font-weight:700;src:url(../app/node_modules/@fontsource/dm-sans/files/dm-sans-latin-700-normal.woff2)}
+:root{--sage:#9BBB8F;--lagoon:#79DBDC;--salmon:#FA8072;--forest:#23423A;--cream:#F8F8F4}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{overflow:hidden;background:var(--cream)}
+#stage{position:absolute;left:0;top:0;overflow:hidden;background:var(--cream);font-family:DMS,sans-serif;color:var(--forest)}
+.layer{position:absolute;inset:0}
+.abs{position:absolute}
+canvas{position:absolute;left:0;top:0}
+.blob{position:absolute;border-radius:50%;filter:blur(90px)}
+.ln{overflow:hidden;display:block;padding:0.06em 0 0.14em;margin-bottom:-0.14em;white-space:nowrap}
+.ln>span{display:inline-block;will-change:transform}
+.titre{font-family:Jak;font-weight:800;letter-spacing:-0.02em;word-spacing:0.08em;line-height:1.04}
+.sous{font-family:DMS;font-weight:500;line-height:1.3;color:#4d6660}
+.eyebrow{font-family:DMS;font-weight:700;letter-spacing:0.28em;text-transform:uppercase;white-space:nowrap}
+.hl{color:var(--salmon)}
+.sombre .hl{color:var(--lagoon)}
+#phoneWrap{position:absolute;left:0;top:0;perspective:2600px}
+#phone{position:absolute;left:0;top:0;width:592px;height:1245px;border-radius:92px;transform-origin:50% 0;
+  background:linear-gradient(150deg,#3b4441 0%,#151a19 30%,#0d1110 70%,#2a3130 100%);
+  box-shadow:0 0 0 2px #4b5552 inset,0 0 0 5px #0b0e0d inset,0 60px 120px -20px rgba(18,40,34,.55),0 30px 50px -20px rgba(18,40,34,.45)}
+#screen{position:absolute;left:16px;top:16px;width:560px;height:1213px;border-radius:78px;overflow:hidden;background:#f8f6f1}
+#screen .scr{position:absolute;left:0;top:0;width:560px;height:1213px}
+#screen .scr img{position:absolute;left:0;top:0;width:560px;height:1213px;display:block}
+#glare{position:absolute;inset:0;border-radius:78px;pointer-events:none;background:linear-gradient(115deg,rgba(255,255,255,0) 30%,rgba(255,255,255,.14) 45%,rgba(255,255,255,0) 60%)}
+.btnside{position:absolute;background:#1a201f;border-radius:4px}
+#touch{position:absolute;width:70px;height:70px;margin:-35px 0 0 -35px;border-radius:50%;background:rgba(255,255,255,.42);
+  border:4px solid rgba(255,255,255,.95);box-shadow:0 6px 18px rgba(0,0,0,.28);display:none;z-index:5}
+#shadow{position:absolute;width:560px;height:90px;border-radius:50%;background:rgba(20,45,38,.35);filter:blur(40px)}
+.pill{display:inline-flex;align-items:center;gap:18px;padding:0.72em 1.2em;border-radius:999px;background:var(--salmon);color:#fff;font-family:Jak;font-weight:800;letter-spacing:-0.01em;white-space:nowrap;
+  box-shadow:0 26px 50px -16px rgba(250,128,114,.7)}
+</style>
+</head>
+<body>
+<div id="stage">
+  <div id="bgCream" class="layer">
+    <div class="blob" id="b1" style="width:760px;height:760px;background:rgba(121,219,220,.33)"></div>
+    <div class="blob" id="b2" style="width:680px;height:680px;background:rgba(155,187,143,.38)"></div>
+    <div class="blob" id="b3" style="width:520px;height:520px;background:rgba(250,128,114,.16)"></div>
+  </div>
+  <div id="bgForest" class="layer" style="background:radial-gradient(120% 80% at 20% 0%,#2f5a4e 0%,#23423A 55%,#1b3530 100%)"></div>
+  <canvas id="net"></canvas>
+
+  <div id="hook" class="abs titre sombre" style="color:var(--cream)"></div>
+
+  <div id="eyeV" class="abs eyebrow" style="color:#6f8f66"></div>
+  <div id="eyeG" class="abs eyebrow" style="color:var(--sage)"></div>
+  <div id="caps"></div>
+
+  <div id="shadow"></div>
+  <div id="phoneWrap">
+    <div id="phone">
+      <div class="btnside" style="left:-5px;top:250px;width:6px;height:70px"></div>
+      <div class="btnside" style="left:-5px;top:350px;width:6px;height:110px"></div>
+      <div class="btnside" style="left:-5px;top:480px;width:6px;height:110px"></div>
+      <div class="btnside" style="right:-5px;top:380px;width:6px;height:160px"></div>
+      <div id="screen">
+        <div class="scr" id="scrB"><img id="imgB"></div>
+        <div class="scr" id="scrA"><img id="imgA"></div>
+        <div id="touch"></div>
+        <div id="glare"></div>
+      </div>
+    </div>
+  </div>
+
+  <div id="fin" class="layer">
+    <img id="finSym" class="abs" src="../app/assets/logo_symbol.png">
+    <div id="finWordBox" class="abs" style="left:0;right:0;text-align:center;overflow:hidden"><img id="finWord" src="../app/assets/wordmark.png"></div>
+    <div id="finSlogan" class="abs eyebrow" style="left:0;right:0;text-align:center;color:#55685f"></div>
+    <div id="finLine" class="abs" style="height:4px;border-radius:2px;background:var(--sage)"></div>
+    <div id="finCta" class="abs" style="left:0;right:0;text-align:center"><div id="finPill" class="pill"><span id="finCtaTxt"></span>
+      <svg id="finArrow" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></div></div>
+    <div id="finMail" class="abs" style="left:0;right:0;text-align:center;font-family:Jak;font-weight:700;color:var(--forest)"></div>
+  </div>
+</div>
+
+<script>
+const F = window.FILM;
+const $ = id => document.getElementById(id);
+const clamp = (x, a = 0, b = 1) => Math.min(b, Math.max(a, x));
+const lerp = (a, b, t) => a + (b - a) * t;
+const E = {
+  lin: t => t, out3: t => 1 - Math.pow(1 - t, 3), out5: t => 1 - Math.pow(1 - t, 5), in3: t => t * t * t,
+  inout3: t => t < .5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2,
+  inout5: t => t < .5 ? 16 * t ** 5 : 1 - Math.pow(-2 * t + 2, 5) / 2,
+  back: t => { const c1 = 1.45, c3 = c1 + 1; return 1 + c3 * Math.pow(t - 1, 3) + c1 * Math.pow(t - 1, 2); },
+};
+const P = (t, a, b, e = 'inout3') => E[e](clamp((t - a) / (b - a)));
+const show = (el, on) => { el.style.display = on ? '' : 'none'; };
+const esc = s => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+// *mot* = mot mis en couleur (saumon sur fond clair, lagon sur fond forêt)
+const md = s => esc(s).replace(/\*([^*]+)\*/g, '<span class="hl">$1</span>');
+
+// ---------- mise en page selon le format ----------
+const W = F.W, H = F.H;
+const L = {
+  '9x16': { hook: { x: 84, y: 470, w: 912, size: 112 }, eye: { x: 84, y: 150, size: 26 },
+            cap: { x: 84, y: 205, w: 912, size: 82, sub: 38 }, phone: { cx: 540, top: 560, s: 1 },
+            net: { cx: 540, cy: 1300, ty: 0, sc: 1 },
+            fin: { sym: [300, 330], word: [660, 665, 118], slogan: [800, 28], line: 900, cta: [1030, 44], mail: [1220, 44] } },
+  '1x1':  { hook: { x: 90, y: 170, w: 900, size: 92 }, eye: { x: 80, y: 300, size: 22 },
+            cap: { x: 80, y: 345, w: 470, size: 60, sub: 30 }, phone: { cx: 790, top: 70, s: 0.74 },
+            net: { cx: 540, cy: 760, ty: -300, sc: 0.8 },
+            fin: { sym: [190, 90], word: [470, 300, 86], slogan: [400, 22], line: 470, cta: [560, 36], mail: [740, 36] } },
+  '16x9': { hook: { x: 160, y: 250, w: 1600, size: 104 }, eye: { x: 160, y: 330, size: 24 },
+            cap: { x: 160, y: 380, w: 820, size: 78, sub: 36 }, phone: { cx: 1380, top: 64, s: 0.76 },
+            net: { cx: 960, cy: 760, ty: -280, sc: 1 },
+            fin: { sym: [200, 80], word: [520, 300, 94], slogan: [410, 24], line: 480, cta: [560, 38], mail: [745, 38] } },
+}[F.format];
+
+const stage = $('stage');
+stage.style.width = W + 'px'; stage.style.height = H + 'px';
+document.documentElement.style.width = document.body.style.width = W + 'px';
+document.documentElement.style.height = document.body.style.height = H + 'px';
+$('phoneWrap').style.width = W + 'px'; $('phoneWrap').style.height = H + 'px';
+$('net').width = W; $('net').height = H;
+
+// lignes cinétiques
+function setLines(el, lignes) { el.innerHTML = lignes.map(l => `<div class="ln"><span>${md(l)}</span></div>`).join(''); }
+// réduit la taille de police jusqu'à ce que la plus longue ligne tienne
+function fit(el, size, width) {
+  el.style.fontSize = size + 'px';
+  for (let s = size; s > 20; s -= 2) {
+    el.style.fontSize = s + 'px';
+    const max = Math.max(...[...el.querySelectorAll('.ln>span')].map(x => x.getBoundingClientRect().width));
+    if (max <= width) return s;
+  }
+  return 20;
+}
+
+// accroche
+const hook = $('hook');
+setLines(hook, F.hook);
+Object.assign(hook.style, { left: L.hook.x + 'px', top: L.hook.y + 'px', width: L.hook.w + 'px' });
+
+// surtitres
+for (const [id, txt] of [['eyeV', F.textes.vacanciers], ['eyeG', F.textes.gerant]]) {
+  const e = $(id); e.textContent = txt;
+  Object.assign(e.style, { left: L.eye.x + 'px', top: L.eye.y + 'px', fontSize: L.eye.size + 'px' });
+}
+
+// légendes des plans
+const capEls = F.shots.map(s => {
+  const w = document.createElement('div');
+  w.className = 'abs' + (s.cote === 'gerant' ? ' sombre' : '');
+  Object.assign(w.style, { left: L.cap.x + 'px', top: L.cap.y + 'px', width: L.cap.w + 'px' });
+  w.innerHTML = `<div class="titre lignes" style="color:${s.cote === 'gerant' ? 'var(--cream)' : 'var(--forest)'}"></div>
+    <div class="sous" style="margin-top:0.55em;font-size:${L.cap.sub}px;${s.cote === 'gerant' ? 'color:#b9cfc6' : ''}">${md(s.sous || '')}</div>`;
+  setLines(w.querySelector('.lignes'), s.titre);
+  $('caps').appendChild(w);
+  return w;
+});
+
+// fin
+const fin = L.fin;
+Object.assign($('finSym').style, { width: fin.sym[0] + 'px', left: (W - fin.sym[0]) / 2 + 'px', top: fin.sym[1] + 'px' });
+$('finWord').style.width = fin.word[0] + 'px';
+Object.assign($('finWordBox').style, { top: fin.word[1] + 'px', height: fin.word[2] + 'px' });
+$('finSlogan').textContent = F.textes.slogan;
+Object.assign($('finSlogan').style, { top: fin.slogan[0] + 'px', fontSize: fin.slogan[1] + 'px' });
+Object.assign($('finLine').style, { top: fin.line + 'px', left: (W / 2 - 50) + 'px', width: '100px' });
+$('finCtaTxt').textContent = F.textes.cta;
+Object.assign($('finCta').style, { top: fin.cta[0] + 'px' });
+$('finPill').style.fontSize = fin.cta[1] + 'px';
+$('finArrow').setAttribute('width', fin.cta[1] * 0.9); $('finArrow').setAttribute('height', fin.cta[1] * 0.9);
+$('finMail').textContent = F.textes.mail;
+Object.assign($('finMail').style, { top: fin.mail[0] + 'px', fontSize: fin.mail[1] + 'px' });
+
+// ---------- réseau de points (fil rouge : les vacanciers qui se relient) ----------
+function rnd(seed) { return () => { seed = (seed * 16807) % 2147483647; return (seed - 1) / 2147483646; }; }
+const R = rnd(42);
+const COLORS = ['#9BBB8F', '#79DBDC', '#FA8072', '#F8F8F4', '#9BBB8F', '#79DBDC'];
+const nodes = [];
+const cols = Math.max(6, Math.round(W / 180));
+for (let i = 0; i < cols * 6; i++) {
+  const gx = i % cols, gy = Math.floor(i / cols);
+  nodes.push({ x: 110 + gx * ((W - 220) / (cols - 1)) + (R() - .5) * 110, y: 1020 + gy * 150 + (R() - .5) * 90,
+    r: 9 + R() * 12, c: COLORS[Math.floor(R() * COLORS.length)], d: R() * 0.9, ph: R() * 6.28, sp: 0.4 + R() * 0.6 });
+}
+const edges = [];
+for (let i = 0; i < nodes.length; i++) for (let j = i + 1; j < nodes.length; j++) {
+  const a = nodes[i], b = nodes[j];
+  if (Math.hypot(a.x - b.x, a.y - b.y) < 215 && R() < 0.62) edges.push([i, j, R() * 0.6]);
+}
+const ctx = $('net').getContext('2d');
+function drawNet(t, o) {
+  ctx.clearRect(0, 0, W, H);
+  if (!o) return;
+  const { alpha = 1, appear = 0, connect = 0, converge = 0, cx, cy, lineCol = 'rgba(248,248,244,', ty = 0, sc = 1 } = o;
+  ctx.save(); ctx.globalAlpha = alpha;
+  const pos = nodes.map(n => {
+    let x = n.x + Math.sin(t * n.sp + n.ph) * 10, y = n.y + Math.cos(t * n.sp * 0.8 + n.ph) * 10 + ty;
+    x = cx + (x - W / 2) * sc; y = cy + (y - 1300) * sc;
+    const c = E.inout3(clamp(converge));
+    return [lerp(x, cx, c), lerp(y, cy, c)];
+  });
+  for (const [i, j, d] of edges) {
+    const p = clamp((connect - d) / 0.4); if (p <= 0) continue;
+    const [x1, y1] = pos[i], [x2, y2] = pos[j], pe = E.out3(p);
+    ctx.strokeStyle = lineCol + (0.45 * p) + ')'; ctx.lineWidth = 3; ctx.lineCap = 'round';
+    ctx.beginPath(); ctx.moveTo(x1, y1); ctx.lineTo(lerp(x1, x2, pe), lerp(y1, y2, pe)); ctx.stroke();
+  }
+  nodes.forEach((n, i) => {
+    const p = E.back(clamp((appear - n.d) / 0.35)); if (p <= 0) return;
+    const [x, y] = pos[i];
+    ctx.fillStyle = n.c; ctx.beginPath(); ctx.arc(x, y, Math.max(0, n.r * p * sc), 0, 6.283); ctx.fill();
+  });
+  ctx.restore();
+}
+
+// ---------- animations de texte ----------
+function lines(el, t, tin, tout, { stagger = 0.09, dur = 0.6, exitDur = 0.35, dist = 110 } = {}) {
+  const spans = el.querySelectorAll(':scope>.ln>span');
+  const vis = t >= tin - 0.01 && t < tout + exitDur + 0.1;
+  show(el, vis); if (!vis) return;
+  spans.forEach((s, i) => {
+    const p = E.out5(clamp((t - (tin + i * stagger)) / dur));
+    const q = E.in3(clamp((t - (tout + i * 0.04)) / exitDur));
+    s.style.transform = `translateY(${(1 - p) * dist - q * dist * 0.9}%)`;
+    s.style.opacity = (0.2 + 0.8 * p) * (1 - q);
+  });
+}
+function fadeUp(el, t, tin, tout, { dur = 0.6, dist = 30, exitDur = 0.3 } = {}) {
+  const vis = t >= tin && t < tout + exitDur; show(el, vis); if (!vis) return;
+  const p = E.out5(clamp((t - tin) / dur)), q = E.in3(clamp((t - tout) / exitDur));
+  el.style.opacity = p * (1 - q); el.style.transform = `translateY(${(1 - p) * dist - q * dist * 0.6}px)`;
+}
+
+// ---------- images des plans ----------
+const imgA = $('imgA'), imgB = $('imgB');
+function frameSrc(s, t) {
+  const i = clamp(Math.floor((t - s.a) * F.fps) + 1, 1, s.images);
+  return `${s.dir}/${String(i).padStart(4, '0')}.jpg`;
+}
+async function setImg(img, src) { if (img.dataset.src !== src) { img.dataset.src = src; img.src = src; } await img.decode().catch(() => {}); }
+
+const T_HOOK = F.hookFin;                 // fin de l'accroche (= début du 1er plan)
+const T_END = F.finDebut;                 // début de la fin
+const S = F.shots;
+
+// fond forêt pendant : accroche, plans « gérant »
+function forestOn(t) {
+  if (t < T_HOOK) return true;
+  if (t >= T_END) return false;
+  const s = S.find(s => t >= s.a && t < s.b) || S[S.length - 1];
+  return s.cote === 'gerant';
+}
+function forestClip(t) {
+  // cercle qui s'ouvre / se ferme en 0,6 s autour de chaque changement d'univers
+  const bounds = [T_HOOK, ...S.slice(1).map(s => s.a), T_END];
+  for (const b of bounds) {
+    if (t >= b - 0.3 && t < b + 0.3) {
+      const before = forestOn(b - 0.01), after = forestOn(b + 0.01);
+      if (before !== after) {
+        const p = E.inout5(clamp((t - (b - 0.3)) / 0.6));
+        return 150 * (after ? p : 1 - p);
+      }
+    }
+  }
+  return forestOn(t) ? 150 : 0;
+}
+
+window.seek = async function (t) {
+  // fonds
+  const fc = forestClip(t), bgF = $('bgForest');
+  bgF.style.clipPath = `circle(${fc}% at ${W / 2}px ${H * 0.47}px)`; show(bgF, fc > 0.01);
+  $('b1').style.transform = `translate(${-160 + Math.sin(t * 0.35) * 90}px,${H * 0.14 + Math.cos(t * 0.3) * 70}px)`;
+  $('b2').style.transform = `translate(${W - 560 + Math.cos(t * 0.28) * 90}px,${H * 0.6 + Math.sin(t * 0.33) * 80}px)`;
+  $('b3').style.transform = `translate(${W * 0.6 + Math.sin(t * 0.4) * 60}px,${60 + Math.cos(t * 0.45) * 60}px)`;
+
+  // réseau : accroche (les points apparaissent, se relient, convergent) et fin
+  const N = L.net;
+  if (t < T_HOOK + 0.4) {
+    drawNet(t, { alpha: 1 - P(t, T_HOOK - 0.1, T_HOOK + 0.35), appear: clamp(t / 1.4) * 1.3,
+      connect: P(t, 1.2, T_HOOK - 0.6, 'out3'), converge: P(t, T_HOOK - 0.55, T_HOOK + 0.2, 'inout5'), cx: N.cx, cy: N.cy, ty: N.ty, sc: N.sc });
+  } else if (t >= T_END + 0.1) {
+    drawNet(t, { alpha: 0.5 * P(t, T_END + 0.2, T_END + 1.4), appear: P(t, T_END + 0.1, T_END + 1.4, 'lin') * 1.3,
+      connect: P(t, T_END + 0.8, T_END + 2.8, 'out3'), lineCol: 'rgba(35,66,58,', cx: N.cx, cy: N.cy + (F.format === '9x16' ? 420 : 200), ty: N.ty, sc: N.sc });
+  } else drawNet(t, null);
+
+  // accroche
+  lines(hook, t, 0.25, T_HOOK - 0.75, { stagger: 0.16, dur: 0.7 });
+
+  // surtitres
+  const plages = c => { const r = []; for (const s of S) if (s.cote === c) { const l = r[r.length - 1]; if (l && Math.abs(l[1] - s.a) < 0.01) l[1] = s.b; else r.push([s.a, s.b]); } return r; };
+  for (const [id, c] of [['eyeV', 'vacanciers'], ['eyeG', 'gerant']]) {
+    const el = $(id); const pl = plages(c).find(([a, b]) => t >= a - 0.05 && t < b + 0.3);
+    if (!pl) { show(el, false); continue; }
+    fadeUp(el, t, pl[0] + 0.05, Math.min(pl[1], T_END) - 0.3, { dur: 0.5, dist: 20 });
+  }
+
+  // légendes
+  S.forEach((s, i) => {
+    const el = capEls[i], tin = s.a + 0.1, tout = s.b - 0.35;
+    const vis = t >= tin && t < tout + 0.45; show(el, vis); if (!vis) return;
+    lines(el.querySelector('.lignes'), t, tin + 0.05, tout, { stagger: 0.08, dur: 0.55, exitDur: 0.28 });
+    const sub = el.querySelector('.sous'), p = P(t, tin + 0.3, tin + 0.8, 'out5'), q = P(t, tout, tout + 0.25, 'in3');
+    sub.style.opacity = p * (1 - q); sub.style.transform = `translateY(${(1 - p) * 24}px)`;
+  });
+
+  // téléphone
+  const Ph = L.phone, ph = $('phone');
+  const vis = t >= T_HOOK - 0.45 && t < T_END + 0.5;
+  show($('phoneWrap'), vis); show($('shadow'), vis);
+  if (vis) {
+    const enter = P(t, T_HOOK - 0.45, T_HOOK + 0.45, 'out5'), exit = P(t, T_END - 0.3, T_END + 0.45, 'in3');
+    const y = lerp(H + 40, Ph.top, enter) + exit * (H + 40 - Ph.top) + Math.sin(t * 1.3) * 6;
+    const s = Ph.s * lerp(0.9, 1, enter) * (1 + 0.03 * P(t, T_HOOK, T_END, 'lin'));
+    const ry = lerp(-22, -6, enter) + Math.sin(t * 0.5) * 3, rx = lerp(18, 4, enter), rz = lerp(6, 0, enter);
+    ph.style.left = (Ph.cx - 296) + 'px'; ph.style.top = y + 'px';
+    ph.style.transform = `rotateX(${rx}deg) rotateY(${ry}deg) rotateZ(${rz}deg) scale(${s})`;
+    $('glare').style.transform = `translateX(${(ry + 10) * 14}px)`;
+    const sh = $('shadow'); sh.style.left = (Ph.cx - 280 + 20) + 'px'; sh.style.top = Math.min(y + 1210 * Ph.s, H + 40) + 'px';
+    sh.style.transform = `scale(${Ph.s})`; sh.style.opacity = clamp(1 - (y - Ph.top) / 900);
+    // écran : plan courant, glissé latéral entre deux plans
+    const idx = Math.max(0, S.findIndex(s => t >= s.a && t < s.b)), cur = t >= T_END ? S[S.length - 1] : (t < S[0].a ? S[0] : S[idx]);
+    const prev = S[S.indexOf(cur) - 1], tr = 0.4;
+    const pin = prev && t < cur.a + tr ? E.inout3(clamp((t - cur.a) / tr)) : 1;
+    await setImg(imgA, frameSrc(cur, t));
+    $('scrA').style.transform = `translateX(${(1 - pin) * 100}%)`;
+    if (pin < 1) {
+      show($('scrB'), true); await setImg(imgB, frameSrc(prev, prev.b - 0.001));
+      $('scrB').style.transform = `translateX(${-pin * 35}%) scale(${1 - 0.05 * pin})`; $('scrB').style.opacity = 1 - 0.6 * pin;
+      $('scrA').style.boxShadow = '-30px 0 60px rgba(0,0,0,.18)';
+    } else { show($('scrB'), false); $('scrA').style.boxShadow = 'none'; }
+    // doigt (appuis enregistrés pendant la capture) — dessiné par-dessus, jamais dans l'interface
+    const k = 560 / F.capture.largeur, touch = $('touch');
+    let on = false;
+    for (const a of (pin < 1 ? [] : cur.appuis)) {
+      const ta = cur.a + (a.f - 1) / F.fps, tb = ta + a.duree + 0.25;
+      if (t >= ta && t < tb) {
+        const pIn = E.out3(clamp((t - ta) / 0.15)), pOut = clamp((t - (tb - 0.25)) / 0.25);
+        const press = t >= ta + 0.2 ? 0.86 : 1;
+        touch.style.left = (a.x * k) + 'px'; touch.style.top = (a.y * k) + 'px';
+        touch.style.opacity = pIn * (1 - pOut);
+        touch.style.transform = `scale(${(0.6 + 0.4 * pIn) * press * (1 + 0.4 * pOut)})`;
+        on = true;
+      }
+    }
+    touch.style.display = on ? 'block' : 'none';
+  }
+
+  // fin
+  const finOn = t >= T_END; show($('fin'), finOn);
+  if (finOn) {
+    const a = T_END + 0.1;
+    const p = P(t, a, a + 0.9, 'out5'), pb = E.back(clamp((t - a) / 0.9));
+    const sym = $('finSym'); sym.style.transform = `scale(${0.5 + 0.5 * pb}) rotate(${(1 - p) * -20}deg)`; sym.style.clipPath = `circle(${p * 75}% at 50% 55%)`;
+    const w = $('finWord'), pw = P(t, a + 0.35, a + 1.05, 'out5'); w.style.transform = `translateY(${(1 - pw) * 110}%)`; w.style.opacity = pw;
+    const tg = $('finSlogan'), pt = P(t, a + 0.7, a + 1.5, 'out5'); tg.style.opacity = pt; tg.style.letterSpacing = (0.6 - 0.32 * pt) + 'em';
+    $('finLine').style.transform = `scaleX(${P(t, a + 0.9, a + 1.6, 'out5')})`;
+    const pill = $('finPill'), pp = E.back(clamp((t - (a + 1.0)) / 0.6));
+    const pulse = t > a + 2 ? 1 + 0.025 * Math.sin((t - a - 2) * Math.PI) : 1;
+    pill.style.opacity = clamp(pp * 1.6); pill.style.transform = `translateY(${(1 - pp) * 40}px) scale(${(0.8 + 0.2 * pp) * pulse})`;
+    const sw = ((t - a - 1.8) % 2.6) / 2.6;
+    pill.style.backgroundImage = t > a + 1.8 ? `linear-gradient(105deg,transparent ${sw * 160 - 40}%,rgba(255,255,255,.28) ${sw * 160 - 25}%,transparent ${sw * 160 - 10}%)` : 'none';
+    fadeUp($('finMail'), t, a + 1.45, 999, { dur: 0.6, dist: 30 });
+  }
+  return true;
+};
+
+// ---------- contrôle qualité : rien ne déborde du cadre ni de sa colonne ----------
+window.verifier = function () {
+  const pb = [];
+  const check = (el, nom, maxW) => {
+    const prev = el.style.display; el.style.display = '';
+    for (const s of el.querySelectorAll('.ln>span, .sous')) {
+      const r = s.getBoundingClientRect();
+      if (r.width > maxW + 1) pb.push(`${nom} : « ${s.textContent} » trop large (${Math.round(r.width)} > ${maxW})`);
+    }
+    const r = el.getBoundingClientRect();
+    if (r.left < 0 || r.right > W || r.bottom > H) pb.push(`${nom} : sort du cadre`);
+    el.style.display = prev;
+  };
+  check(hook, 'accroche', L.hook.w);
+  capEls.forEach((c, i) => check(c, `légende ${i + 1}`, L.cap.w));
+  // la légende ne doit pas passer sous le téléphone (9:16) ni à côté (1:1, 16:9)
+  capEls.forEach((c, i) => {
+    const prev = c.style.display; c.style.display = '';
+    const r = c.getBoundingClientRect();
+    if (F.format === '9x16' && r.bottom > L.phone.top - 4) pb.push(`légende ${i + 1} : chevauche le téléphone (${Math.round(r.bottom)} > ${L.phone.top})`);
+    if (F.format !== '9x16' && r.right > L.phone.cx - 296 * L.phone.s - 10) pb.push(`légende ${i + 1} : chevauche le téléphone`);
+    c.style.display = prev;
+  });
+  for (const id of ['finPill', 'finMail', 'finSlogan']) {
+    const el = $(id), fin = $('fin'), prev = fin.style.display; fin.style.display = '';
+    const r = el.getBoundingClientRect(); if (r.left < 0 || r.right > W) pb.push(`fin : ${id} sort du cadre`);
+    fin.style.display = prev;
+  }
+  return pb;
+};
+
+window.ready = document.fonts.ready.then(() => {
+  fit(hook, L.hook.size, L.hook.w);
+  capEls.forEach(c => fit(c.querySelector('.lignes'), L.cap.size, L.cap.w));
+  return Promise.all([...document.images].map(i => i.decode().catch(() => {})));
+});
+</script>
+</body>
+</html>
