@@ -30,3 +30,25 @@ export function estPresent(v, maintenant = new Date()) {
   if (v.date_depart) return v.date_depart >= todayISO(maintenant)
   return !!v.created_at && jour(new Date(v.created_at)) >= debutFenetre(maintenant)
 }
+
+// La date de départ des AUTRES vacanciers ne se lit plus : la fonction de base
+// vacanciers_presents() applique cette même règle et ne rend que l'id et
+// l'avatar des présents (voir src/lib/vacanciers.js). Toute modification de
+// la règle doit être faite aux deux endroits.
+
+/**
+ * Avatars des membres encore présents, groupe par groupe.
+ * membres  : [{ groupe_id, vacancier_id }] (table membres_groupes)
+ * presents : [{ id, avatar_emoji }]        (vacanciers_presents)
+ * → { [groupe_id]: ['🏄‍♀️', '🚴', …] } ; un groupe sans présent est absent.
+ */
+export function avatarsPresentsParGroupe(membres, presents) {
+  const avatars = new Map((presents || []).map(p => [p.id, p.avatar_emoji || '🙂']))
+  const parGroupe = {}
+  for (const m of membres || []) {
+    if (!avatars.has(m.vacancier_id)) continue
+    if (!parGroupe[m.groupe_id]) parGroupe[m.groupe_id] = []
+    parGroupe[m.groupe_id].push(avatars.get(m.vacancier_id))
+  }
+  return parGroupe
+}

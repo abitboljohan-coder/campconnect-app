@@ -5,6 +5,7 @@ import { estAccesLibre, estJoignable } from '../lib/acces'
 import { SUGGESTIONS_AVATARS } from '../lib/emojis'
 import ChoixEmoji from '../components/ChoixEmoji'
 import { champsArrivee } from '../lib/profil'
+import { lireMonProfil } from '../lib/vacanciers'
 import { t, useLangue } from '../i18n'
 import {
   Bouton, Carte, Champ, Texte, Pile, appliquerTheme,
@@ -150,10 +151,7 @@ export default function Onboarding({ initialCamping, onDone }) {
       await ensureAnonSession()
       const { data: { user } } = await supabase.auth.getUser()
       if (!user?.id) return
-      const { data: v } = await supabase
-        .from('vacanciers').select('pseudo, emplacement, avatar_emoji, date_depart')
-        .eq('user_id', user.id).eq('camping_id', camping.id)
-        .maybeSingle()
+      const { data: v } = await lireMonProfil(camping.id)
       if (!actif || !v) return
       setForm(f => ({
         pseudo: f.pseudo || v.pseudo || '',
@@ -280,10 +278,7 @@ export default function Onboarding({ initialCamping, onDone }) {
     const deviceId = localStorage.getItem('deviceId')
     // Re-séjour avec la même identité (ex: retour l'année suivante, ou après
     // « Se déconnecter ») → réutiliser le profil
-    const { data: existing } = await supabase
-      .from('vacanciers').select('id, avatar_emoji, emplacement, date_depart')
-      .eq('user_id', uid).eq('camping_id', camping.id)
-      .maybeSingle()
+    const { data: existing } = await lireMonProfil(camping.id)
 
     // Un champ laissé vide n'efface pas le profil retrouvé : le formulaire
     // est vierge si le pré-remplissage n'est pas encore arrivé.
@@ -295,11 +290,15 @@ export default function Onboarding({ initialCamping, onDone }) {
       cgu_acceptees_at: new Date().toISOString(),
     }
 
-    const { data, error } = existing
-      ? await supabase.from('vacanciers').update(profil).eq('id', existing.id).select().single()
-      : await supabase.from('vacanciers').insert(profil).select().single()
+    // Sans .select() : PostgREST relirait toutes les colonnes de la ligne, et
+    // la table ne livrera plus l'emplacement ni la date de départ. Le profil
+    // enregistré est relu par mon_profil (src/lib/vacanciers.js).
+    const { error } = existing
+      ? await supabase.from('vacanciers').update(profil).eq('id', existing.id)
+      : await supabase.from('vacanciers').insert(profil)
+    const { data, error: errLecture } = error ? { data: null } : await lireMonProfil(camping.id)
 
-    if (error) { setFormError(t('onb.err_generique')); setSaving(false); return }
+    if (error || errLecture || !data) { setFormError(t('onb.err_generique')); setSaving(false); return }
     onDone(camping, data)
   }
 

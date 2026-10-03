@@ -194,11 +194,19 @@ const noopChannel = {
   send: async () => ({ status: 'ok' }),
 }
 
+// Fonctions de la base (src/lib/vacanciers.js) : les profils complets ne se
+// lisent que par elles. Les personnages restent présents toute la démo.
+const RPC = {
+  mon_profil: () => [DEMO_VACANCIER],
+  vacanciers_du_camping: () => VACS.map(v => ({ created_at: ago(600), date_depart: dansJours(4), banni: false, ...v })),
+  vacanciers_presents: () => VACS.map(v => ({ id: v.id, avatar_emoji: v.avatar_emoji })),
+}
+
 export const supabase = {
   from: (t) => new Query(t),
   channel: () => noopChannel,
   removeChannel: () => {},
-  rpc: async () => ({ data: null, error: null }),
+  rpc: async (nom) => ({ data: RPC[nom]?.() ?? null, error: null }),
   auth: {
     getSession: async () => ({ data: { session: { user: { id: 'demo-uid', email: 'demo@camp.fr' } } } }),
     getUser: async () => ({ data: { user: { id: 'demo-uid', email: 'demo@camp.fr' } } }),

@@ -1,0 +1,69 @@
+-- ═════════════════════════════════════════════════════════════════════════════
+-- PHASE 2 — NE PAS APPLIQUER AVANT QUE LA VERSION 1.0.3 SOIT SUR LES STORES
+-- Fin de la faille « données des vacanciers trop lisibles » (audit du 3 octobre 2026)
+-- Nom de migration à utiliser : retrait_lecture_colonnes_sensibles_vacanciers
+-- ═════════════════════════════════════════════════════════════════════════════
+--
+-- CE QUE ÇA FAIT
+--   Aujourd'hui, n'importe quel vacancier peut lire, par l'API et avec la clé
+--   publique, l'emplacement (où il dort), la tranche d'âge, la date de départ,
+--   le device_id et le user_id de TOUS les vacanciers de son camping.
+--   Cette migration retire au rôle « authenticated » la lecture directe de ces
+--   colonnes. Il ne peut plus lire, dans la table vacanciers, que :
+--     id, camping_id, pseudo, avatar_emoji, avec, interests, created_at
+--   (ce que montrent la mini-fiche, les avatars, les noms d'auteurs).
+--   Le reste ne passe plus que par les fonctions créées en phase 1
+--   (scripts/sql/2026-10-03_fonctions_lecture_vacanciers.sql) :
+--     mon_profil(camping)            son propre profil, complet ;
+--     vacanciers_du_camping(camping) tous les profils complets, gérants seulement ;
+--     vacanciers_presents(camping)   id + avatar des présents.
+--   L'écriture (inscription, modification du profil, bannissement) ne change pas.
+--
+-- QUAND L'APPLIQUER
+--   Seulement quand TOUTES ces conditions sont réunies :
+--   1. La version 1.0.3 (ou plus), qui contient la phase 1 (commit « Sécurité :
+--      cloisonnement… » du 3 octobre 2026), est publiée sur l'App Store ET sur
+--      Google Play.
+--   2. On a laissé quelques jours aux téléphones pour se mettre à jour.
+--      Les versions 1.0.2 et antérieures lisent encore ces colonnes
+--      directement (select('*') du profil, compteurs de présence, espace
+--      gérant) : elles ne pourraient plus ouvrir le profil ni compter les
+--      présents. Idéalement, imposer la mise à jour (ou accepter que les
+--      retardataires voient l'app dégradée jusqu'à ce qu'ils mettent à jour).
+--   3. L'espace gérant web (Vercel) est déployé depuis la même version.
+--
+-- COMMENT L'APPLIQUER
+--   Supabase → SQL Editor → coller la section « MIGRATION » ci-dessous → Run.
+--   (ou demander à l'agent « data » / « securite » : apply_migration avec le nom
+--   ci-dessus.)
+--
+-- COMMENT VÉRIFIER (dans les minutes qui suivent)
+--   a) Requête de contrôle (doit afficher les 7 colonnes listées plus haut) :
+--        select string_agg(column_name, ', ' order by column_name)
+--          from information_schema.column_privileges
+--         where table_schema = 'public' and table_name = 'vacanciers'
+--           and grantee = 'authenticated' and privilege_type = 'SELECT';
+--   b) Sur un téléphone en 1.0.3 : ouvrir l'app (le profil s'affiche avec son
+--      emplacement), l'accueil (compteur « vacanciers présents »), un groupe
+--      (nombre de membres), la mini-fiche d'un autre vacancier, puis modifier
+--      son profil. Côté gérant : Vue d'ensemble (départs du jour avec
+--      emplacement), Statistiques, export CSV, Signalements, Modération.
+--   c) Dans Supabase → Logs → API : aucune erreur 42501 « permission denied
+--      for table vacanciers » venant de la 1.0.3.
+--
+-- COMMENT REVENIR EN ARRIÈRE (immédiat, sans perte de données)
+--   Coller et exécuter :
+--        grant select on public.vacanciers to authenticated;
+--   La lecture de toutes les colonnes est rétablie (situation d'avant).
+--
+-- PREUVE (3 octobre 2026) : testé dans une transaction annulée contre le code
+-- de la phase 1 (simulation des rôles vacancier et gérant) : toutes les
+-- requêtes de la 1.0.3 passent ; la lecture de l'emplacement d'un autre
+-- vacancier est refusée (42501) ; la lecture « select * » de la 1.0.2 est
+-- refusée, d'où l'attente.
+-- ═════════════════════════════════════════════════════════════════════════════
+
+-- MIGRATION ───────────────────────────────────────────────────────────────────
+revoke select on public.vacanciers from authenticated, anon;
+grant  select (id, camping_id, pseudo, avatar_emoji, avec, interests, created_at)
+  on public.vacanciers to authenticated;

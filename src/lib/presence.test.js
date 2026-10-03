@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { presentFilter, estPresent } from './presence'
+import { presentFilter, estPresent, avatarsPresentsParGroupe } from './presence'
 
 const maintenant = new Date('2026-10-02T10:00:00Z')
 
@@ -19,5 +19,27 @@ describe('présence au camping', () => {
     expect(presentFilter(maintenant)).toBe(
       'date_depart.gte.2026-10-02,and(date_depart.is.null,created_at.gte.2026-09-25)'
     )
+  })
+})
+
+describe('membres présents des groupes', () => {
+  const presents = [
+    { id: 'v1', avatar_emoji: '🏄‍♀️' },
+    { id: 'v2', avatar_emoji: null },
+  ]
+  const membres = [
+    { groupe_id: 'g1', vacancier_id: 'v1' },
+    { groupe_id: 'g1', vacancier_id: 'v2' },
+    { groupe_id: 'g1', vacancier_id: 'parti' },
+    { groupe_id: 'g2', vacancier_id: 'parti' },
+  ]
+
+  it('ne garde que les présents, avec leur avatar ou 🙂 à défaut', () => {
+    expect(avatarsPresentsParGroupe(membres, presents)).toEqual({ g1: ['🏄‍♀️', '🙂'] })
+  })
+
+  it('supporte des listes absentes', () => {
+    expect(avatarsPresentsParGroupe(null, presents)).toEqual({})
+    expect(avatarsPresentsParGroupe(membres, null)).toEqual({})
   })
 })

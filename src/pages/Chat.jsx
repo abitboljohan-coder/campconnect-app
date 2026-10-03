@@ -1,6 +1,8 @@
 import { useEffect, useState, useRef } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
-import { supabase, presentFilter } from '../supabase'
+import { supabase } from '../supabase'
+import { avatarsPresentsParGroupe } from '../lib/presence'
+import { lirePresents } from '../lib/vacanciers'
 import { t, useLangue, locale } from '../i18n'
 import MenuModeration from '../components/MenuModeration'
 import MiniFiche from '../components/MiniFiche'
@@ -80,13 +82,15 @@ export default function Chat({ camping, vacancier }) {
   }
 
   async function init() {
-    const { resultats: [{ data: grp }, { count }, { data: msgs }, { data: moi }], error } = await toutCharger([
+    const { resultats: [{ data: grp }, { data: membres }, { data: msgs }, { data: moi }, { data: presents }], error } = await toutCharger([
       supabase.from('groupes').select('*').eq('id', groupeId).single(),
-      supabase.from('membres_groupes').select('*, vacanciers!inner(id)', { count: 'exact', head: true }).eq('groupe_id', groupeId).or(presentFilter(), { foreignTable: 'vacanciers' }),
+      supabase.from('membres_groupes').select('groupe_id, vacancier_id').eq('groupe_id', groupeId),
       supabase.from('messages').select('*, vacanciers(pseudo, avatar_emoji)').eq('groupe_id', groupeId).order('created_at', { ascending: true }),
       // On pouvait écrire dans un groupe qu'on venait de quitter, ou ouvert
       // par un lien sans en être membre : l'appartenance n'était jamais lue.
       supabase.from('membres_groupes').select('groupe_id').eq('groupe_id', groupeId).eq('vacancier_id', vacancier.id).maybeSingle(),
+      // Les membres présents se comptent sans lire la date de départ de chacun.
+      lirePresents(camping.id),
     ])
     setCharge(true)
     // Erreur réseau : ne pas afficher « Aucun message… Soyez le premier ! ».
@@ -100,7 +104,7 @@ export default function Chat({ camping, vacancier }) {
       return
     }
     setGroupe(grp)
-    setNbMembres(count || 0)
+    setNbMembres(avatarsPresentsParGroupe(membres, presents)[groupeId]?.length || 0)
     setMembre(!!moi)
     if (msgs) setMessages(msgs)
     chargerBlocages(vacancier.id).then(() => setBloquesVersion(v => v + 1))

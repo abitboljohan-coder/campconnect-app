@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react'
 import { supabase, ensureAnonSession } from './supabase'
 import { isNative } from './native'
 import { registerPush, unregisterPush } from './push'
+import { lireMonProfil } from './lib/vacanciers'
 
 import Onboarding from './pages/Onboarding'
 import Accueil from './pages/Accueil'
@@ -99,10 +100,7 @@ function App() {
       // 2. Récupérer le vacancier par son identité auth (accès cloisonné au camping)
       let v = null
       if (uid) {
-        const { data } = await supabase
-          .from('vacanciers').select('*')
-          .eq('user_id', uid).eq('camping_id', campingData.id)
-          .maybeSingle()
+        const { data } = await lireMonProfil(campingData.id)
         v = data
       }
 

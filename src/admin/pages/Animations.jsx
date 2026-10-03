@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { supabase } from '../../supabase'
+import { lireVacanciersDuCamping } from '../../lib/vacanciers'
 import { toast } from '../../toast'
 import Sheet from '../../components/Sheet'
 import AnimationForm from '../components/AnimationForm'
@@ -106,14 +107,19 @@ export default function Animations({ camping }) {
   // venait d'un échec de chargement.
   async function voirInscrits(anim) {
     setInscritsModal({ anim, vacanciers: [], chargement: true, erreur: false })
-    const { data, error } = await supabase
-      .from('inscriptions')
-      .select('*, vacanciers(pseudo, emplacement, tranche_age, avec)')
-      .eq('animation_id', anim.id)
-      .order('created_at')
+    // Emplacement et tranche d'âge : par vacanciers_du_camping, réservée aux
+    // gérants (la table ne les livrera plus directement).
+    const [{ data, error: errInsc }, { data: vacs, error: errVacs }] = await Promise.all([
+      supabase.from('inscriptions').select('vacancier_id, created_at')
+        .eq('animation_id', anim.id)
+        .order('created_at'),
+      lireVacanciersDuCamping(camping.id),
+    ])
+    const error = errInsc || errVacs
     if (error) console.error('Chargement des inscrits échoué :', error)
+    const parId = new Map(vacs.map(v => [v.id, v]))
     setInscritsModal(m => m?.anim.id === anim.id
-      ? { anim, vacanciers: (data || []).map(i => i.vacanciers), chargement: false, erreur: !!error }
+      ? { anim, vacanciers: (data || []).map(i => parId.get(i.vacancier_id) || null), chargement: false, erreur: !!error }
       : m)
   }
 

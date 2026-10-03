@@ -50,11 +50,91 @@ détaillés : rédigés par les agents, non versionnés.
 - Signalements gérant : aucun toast au changement de statut.
 - Accueil à 320×568 : la première carte de groupe demande encore un petit
   défilement.
-- `stat_insert` ne vérifie pas le camping ; `mg_insert` ne vérifie pas
-  `est_banni` (sans fuite constatée).
 - Supabase → Authentication → URL Configuration : ajouter
   `https://app.campconnect.fr/admin` aux adresses de retour (mot de passe
   oublié).
+
+## Sécurité — audit du 3 octobre 2026
+
+Chaque faille a été prouvée par une simulation de rôle (vacancier, gérant,
+anonyme) dans une transaction annulée, puis corrigée et revérifiée de la même
+façon, sans casser la 1.0.2 publiée, la démo (cron `rafraichir-demo`,
+7 groupes) ni les notifications (déclencheurs `push_*`).
+
+### Fermé (migrations appliquées le 3 octobre, SQL dans `scripts/sql/2026-10-03_*`)
+
+- **Jeton push détourné** (`durcissement_rls_cloisonnement`) : un appareil
+  pouvait s'abonner aux notifications d'un autre vacancier, même d'un autre
+  camping, et recevoir l'aperçu de ses messages. Le jeton doit désormais
+  désigner un profil de la même identité (`jeton_push_autorise`).
+- **Groupe au nom d'un autre** (`grp_insert` vérifie `createur_id`) ;
+  **statut dans un autre camping** (`stat_insert`) ; **position dans un
+  autre camping** (`pos_insert`, `pos_update`) ; **banni qui rejoint un
+  groupe** (`mg_insert`) ; **brouillons d'animations lisibles** par les
+  vacanciers (`anim_select` : publiées seulement).
+- **Profil courant au hasard** : `my_camping_id()`, `my_vacancier_id()`,
+  `est_banni()` prennent le profil le plus récent (`order by`).
+- **Fonctions security definer** (`durcissement_fonctions_securite`) :
+  fonctions de déclencheur (`notifier_push`, `notifier_candidature`,
+  `touch_push_tokens`) plus appelables par l'API ; `a_cree_camping`,
+  `est_banni` plus appelables sans session ; `search_path` fixé sur
+  `touch_push_tokens`.
+- **Couleur du camping injectée dans la carte** (`bornes_longueurs_couleurs`
+  + `esc()` dans `Map.jsx`) : un gérant pouvait glisser du HTML exécuté chez
+  ses vacanciers. La base n'accepte plus que `#rrggbb`.
+- **Longueurs bornées côté base** : pseudo, statut, annonce, signalement,
+  candidature (formulaire public), etc.
+- **`api/notify.js`** (Vercel, ancienne alerte candidature) : fermé par
+  défaut (secret obligatoire) et contenu échappé.
+- Vérifié sain : RLS active partout ; un vacancier ou un gérant ne lit ni
+  n'écrit rien d'un autre camping ; `send-push` (et sa copie `smart-service`)
+  refuse sans `x-webhook-secret` (401) ; bucket `camping-assets` limité à
+  JPEG/PNG/WebP 5 Mo, chemins par camping ; aucun secret ni
+  `google-services.json` ni keystore dans le dépôt et son historique ;
+  `camping_createurs` et `demo_ancre` : refus total voulu (utilisées
+  seulement par des fonctions internes).
+
+### Phase 2 en attente — à appliquer après la 1.0.3
+
+**Les données des vacanciers restent trop lisibles tant que la phase 2 n'est
+pas appliquée** : n'importe quel vacancier peut encore lire par l'API
+l'emplacement, la tranche d'âge, la date de départ, le device_id et le
+user_id des autres vacanciers de son camping.
+
+- Phase 1 (faite) : l'app 1.0.3 ne lit plus ces colonnes que par
+  `mon_profil()`, `vacanciers_du_camping()` (gérants) et
+  `vacanciers_presents()` (`src/lib/vacanciers.js`). Fonctions créées en base
+  (`fonctions_lecture_vacanciers`), sans effet sur la 1.0.2.
+- Phase 2 (préparée, **non appliquée**) :
+  `scripts/sql/a_appliquer_apres_1.0.3_colonnes_vacanciers.sql` retire la
+  lecture directe de ces colonnes. Testée contre le code 1.0.3 ; elle
+  casserait la 1.0.2. Quand, comment vérifier, comment revenir en arrière :
+  en tête du fichier.
+
+### Restant
+
+- **Entrer dans n'importe quel camping** (haute, décision produit) : le code
+  du jour et le contrôle GPS ne sont vérifiés que par l'app. Le code se
+  calcule à partir de l'identifiant public du camping (`getHourlyCode`). Par
+  l'API, n'importe qui peut créer un profil dans n'importe quel camping, puis
+  y lire messages, statuts, annonces (et, avant la phase 2, les
+  emplacements). Correction : vérifier l'entrée côté base (code secret par
+  camping, inscription par une fonction), dans une version future de l'app.
+- **Réactions** : un vacancier peut réécrire la colonne `reactions` de
+  n'importe quel message de son camping (effacer celles des autres). Corriger
+  demande une fonction « réagir » et une nouvelle version de l'app.
+- **Edge Function `notify-candidature`** : appelable par n'importe qui
+  (email vers Johan au contenu choisi). Le déclencheur envoie déjà le secret ;
+  il reste à poser `NOTIFY_SECRET` (étapes dans le rapport de sécurité).
+- **Protection contre les mots de passe divulgués** désactivée (Supabase →
+  Authentication → réglage à activer par Johan).
+- `smart-service` : copie inutilisée de `send-push`, à supprimer du tableau
+  de bord.
+- `photo_url` des annonces et signalements accepte n'importe quelle adresse
+  (pixel espion possible) : à restreindre au stockage du projet.
+- Dépendances : `react-router` 7.13.1 et `ws` 8.19.0 ont des alertes hautes,
+  non exploitables ici (rendu serveur / RSC non utilisés ; `ws` ne tourne pas
+  dans le navigateur). Mettre à jour à la prochaine montée de version.
 
 ---
 

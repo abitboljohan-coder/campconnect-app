@@ -8,6 +8,7 @@ import { SUGGESTIONS_AVATARS } from '../lib/emojis'
 import { isNative, setAppMode } from '../native'
 import { unregisterPush } from '../push'
 import { chargerBlocages, debloquer } from '../lib/moderation'
+import { lireMonProfil } from '../lib/vacanciers'
 import {
   AVEC, INTERETS, codeAvec, codesInterets, emojiAvec,
   jourLocal, libelleAvec, nuitsRestantes, phraseAvec,
@@ -123,7 +124,10 @@ export default function Profil({ camping, vacancier, onLogout, onUpdate }) {
   async function sauvegarder() {
     if (!form.pseudo.trim() || saving) return   // un pseudo vide rendait l'auteur anonyme partout
     setSaving(true)
-    const { data, error } = await supabase.from('vacanciers').update({
+    // Sans .select() : PostgREST relirait alors toutes les colonnes de la
+    // ligne, et la table ne livrera plus l'emplacement ni la date de départ.
+    // Le profil enregistré est relu par mon_profil (src/lib/vacanciers.js).
+    const { error } = await supabase.from('vacanciers').update({
       avatar_emoji: form.avatar_emoji,
       pseudo:      form.pseudo.trim(),
       emplacement: form.emplacement.trim() || null,
@@ -131,7 +135,7 @@ export default function Profil({ camping, vacancier, onLogout, onUpdate }) {
       avec:        form.avec || null,
       interests:   form.interests.length > 0 ? form.interests : null,
       date_depart: form.date_depart || null,
-    }).eq('id', vacancier.id).select().single()
+    }).eq('id', vacancier.id)
 
     if (error) {
       console.error('Sauvegarde profil échouée :', error)
@@ -143,6 +147,7 @@ export default function Profil({ camping, vacancier, onLogout, onUpdate }) {
     // qu'en base et dans le stockage local : l'écran continuait d'afficher
     // l'ancien pseudo — « Enregistré », mais rien n'avait changé à l'œil —,
     // et l'accueil comme le chat le gardaient jusqu'au redémarrage.
+    const { data } = await lireMonProfil(vacancier.camping_id)
     const updated = data || { ...vacancier, ...form }
     localStorage.setItem('vacancier', JSON.stringify(updated))
     onUpdate?.(updated)

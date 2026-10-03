@@ -264,6 +264,11 @@ Publiée sur l'App Store et sur Google Play depuis septembre 2026.
 Entreprise immatriculée au RCS d'Évry, SIREN 109 189 803.
 Aucun camping client à ce jour : l'enjeu est commercial, pas technique.
 
+Sécurité, phase 2 en attente : dès que la 1.0.3 est sur les deux stores,
+appliquer `scripts/sql/a_appliquer_apres_1.0.3_colonnes_vacanciers.sql`
+(les vacanciers ne liront plus l'emplacement, l'âge ni la date de départ des
+autres). D'ici là, ne lire ces colonnes que par `src/lib/vacanciers.js`.
+
 Les notifications push fonctionnent sur les deux plateformes — voir
 `docs/PUSH_NOTIFICATIONS.md`, dont la section dépannage recense des pannes
 qui ne produisent aucune erreur visible.
