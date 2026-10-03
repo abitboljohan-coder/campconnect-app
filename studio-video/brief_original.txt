@@ -1,0 +1,291 @@
+Je souhaite que tu agisses comme une directrice artistique senior, réalisatrice publicitaire et experte en montage vidéo spécialisée dans les lancements d’applications mobiles, les startups et les vidéos commerciales B2B.
+
+Ta mission est de concevoir et, si tes capacités le permettent, de PRODUIRE une véritable vidéo publicitaire professionnelle pour mon application CampConnect.
+
+Je ne veux pas une simple présentation de fonctionnalités, un diaporama ou une vidéo qui ressemble à un projet étudiant.
+
+Je veux une publicité moderne, esthétique, dynamique, mémorable et crédible, digne d’une startup qui commercialise un véritable produit numérique.
+
+IMPORTANT : Je souhaite que tu passes de la réflexion à la production concrète. Ne te contente pas de me donner des conseils, un storyboard ou un script si tu es capable de réaliser le montage vidéo.
+
+━━━━━━━━━━━━━━━━━━
+
+1. PRÉSENTATION DU PROJET
+    ━━━━━━━━━━━━━━━━━━
+
+Nom : CampConnect
+
+Slogan : « Connectez votre séjour »
+
+CampConnect est une application mobile destinée aux campings, conçue pour améliorer l’expérience des vacanciers tout en facilitant le quotidien des gérants.
+
+L’idée centrale : transformer le camping en un véritable lieu de vie connecté, où les vacanciers peuvent facilement se rencontrer, participer aux activités, communiquer et accéder à toutes les informations utiles.
+
+L’application permet également aux gérants de mieux gérer les animations, les informations, les signalements et la vie quotidienne de leur établissement.
+
+Il ne s’agit pas simplement d’une application d’information touristique, mais d’un outil qui favorise la convivialité, l’engagement des vacanciers et la gestion du camping.
+
+━━━━━━━━━━━━━━━━━━
+2. OBJECTIF COMMERCIAL DE LA VIDÉO
+━━━━━━━━━━━━━━━━━━
+
+Cette vidéo sera envoyée directement à mes premiers prospects : des propriétaires, directeurs et gérants de campings.
+
+Je cherche à convaincre mes premiers établissements de découvrir CampConnect et d’envisager son adoption.
+
+La vidéo doit donc répondre implicitement à trois questions :
+
+* Qu’est-ce que CampConnect ?
+* En quoi cette application peut-elle apporter une vraie valeur à mon camping ?
+* Pourquoi aurais-je envie de demander une démonstration ?
+
+La cible est professionnelle : les gérants de camping.
+
+Il faut donc séduire visuellement tout en faisant comprendre les bénéfices commerciaux du produit.
+
+Ne réalise pas une publicité uniquement destinée aux vacanciers.
+
+━━━━━━━━━━━━━━━━━━
+3. IDENTITÉ VISUELLE ET CHARTE GRAPHIQUE
+━━━━━━━━━━━━━━━━━━
+
+Je vais te fournir la charte graphique officielle.
+
+Elle doit être respectée.
+
+Palette :
+
+* Vert sauge : #9BBB8F
+* Bleu lagon : #79DBDC
+* Orange saumon : #FA8072
+* Vert forêt : #23423A
+* Blanc cassé : #F8F8F4
+
+Identité : naturelle, moderne, conviviale, accessible et rassurante.
+
+Le logo représente un lien entre le camping, la nature et les vacanciers.
+
+Je souhaite une direction artistique premium, inspirée des publicités de produits numériques modernes.
+
+Références d’ambiance :
+
+* Publicités de lancement d’applications mobiles.
+* Films de présentation de startups technologiques.
+* Motion design élégant et minimaliste.
+* Typographie contemporaine.
+* Transitions fluides et maîtrisées.
+* Interface mobile mise en scène avec réalisme.
+
+Évite absolument :
+
+* Les templates Canva trop reconnaissables.
+* Les animations PowerPoint.
+* Les transitions basiques et répétitives.
+* Les effets gadgets.
+* Les textes trop nombreux.
+* Les compositions qui font amateur.
+* Les illustrations génériques qui ne correspondent pas à l’application.
+
+━━━━━━━━━━━━━━━━━━
+4. UTILISATION DES VÉRITABLES ÉCRANS
+━━━━━━━━━━━━━━━━━━
+
+Je vais te transmettre un enregistrement d’écran de CampConnect ainsi que des captures de l’application.
+
+C’est une consigne essentielle :
+
+UTILISE EN PRIORITÉ LES VÉRITABLES RUSHS DE MON ENREGISTREMENT D’ÉCRAN.
+
+Je ne veux pas que tu remplaces mon application par une interface fictive générée par IA.
+
+Tu peux :
+
+* Sélectionner les passages les plus visuellement intéressants.
+* Couper les temps morts.
+* Accélérer certaines séquences.
+* Recadrer intelligemment les captures.
+* Faire apparaître l’application dans un smartphone en perspective.
+* Créer des zooms fluides sur les fonctionnalités.
+* Ajouter des mouvements de caméra numériques.
+* Utiliser des transitions entre les différents écrans.
+* Masquer les éléments inutiles de l’enregistrement, notamment les barres système du téléphone, si cela améliore le rendu.
+
+Attention : ne coupe pas arbitrairement le haut des écrans de l’application. Les interfaces doivent rester lisibles et correctement cadrées.
+
+Les écrans réels doivent rester fidèles au produit.
+
+Ne fabrique pas de fonctionnalités inexistantes.
+
+━━━━━━━━━━━━━━━━━━
+5. LES FONCTIONNALITÉS À METTRE EN AVANT
+━━━━━━━━━━━━━━━━━━
+
+Il existe de nombreuses fonctionnalités. Ne cherche surtout pas à toutes les présenter.
+
+Sélectionne les plus vendeuses pour une vidéo courte.
+
+CÔTÉ VACANCIER :
+
+1. Accès simple à l’application grâce au QR code du camping, sans email ni mot de passe.
+2. Accueil personnalisé avec météo, informations et actualités du camping.
+3. Création et participation à des groupes : pétanque, apéro, randonnée, activités entre vacanciers.
+4. Messagerie de groupe en temps réel avec réactions.
+5. Agenda des animations : consultation et inscription en un clic.
+6. Carte interactive du camping avec les points d’intérêt, les activités et les groupes.
+7. Petites annonces entre vacanciers : objets perdus, trouvés ou prêtés.
+8. Signalement rapide d’un problème auprès du gérant.
+9. Interface disponible en français, anglais, espagnol et néerlandais.
+
+CÔTÉ GÉRANT :
+
+1. Création et publication des animations.
+2. Notifications envoyées aux vacanciers lors de la publication d’une animation.
+3. Réception et suivi des signalements en temps réel.
+4. Gestion des groupes et modération des contenus.
+5. Tableau de bord avec les statistiques de fréquentation et d’engagement.
+6. Personnalisation de l’application aux couleurs et au nom du camping.
+7. Carte personnalisée et livret d’accueil numérique.
+
+━━━━━━━━━━━━━━━━━━
+6. CONCEPT CRÉATIF SOUHAITÉ
+━━━━━━━━━━━━━━━━━━
+
+Je veux que tu développes un concept publicitaire avec une vraie intention créative.
+
+La vidéo doit faire ressentir que CampConnect transforme le séjour en camping en une expérience plus vivante, plus conviviale et mieux organisée.
+
+L’idée directrice pourrait être :
+
+« Le camping ne se limite plus à un emplacement. Il devient une communauté. »
+
+Mais tu peux proposer une accroche plus forte si tu en identifies une.
+
+Je souhaite un mélange équilibré entre :
+
+* Émotion et convivialité des vacances.
+* Innovation et simplicité technologique.
+* Démonstration réelle du produit.
+* Bénéfices concrets pour le gérant.
+
+━━━━━━━━━━━━━━━━━━
+7. STRUCTURE NARRATIVE ENVISAGÉE
+━━━━━━━━━━━━━━━━━━
+
+Durée idéale : 30 à 40 secondes maximum.
+
+Format principal : vertical 9:16, adapté au visionnage sur smartphone.
+
+Tu peux également prévoir une version horizontale 16:9 pour une présentation commerciale.
+
+SCÈNE 1 — ACCROCHE (0 à 4 secondes)
+
+Créer immédiatement de la curiosité.
+
+Une phrase courte et impactante qui évoque le potentiel de convivialité et d’animation d’un camping.
+
+Ne commence pas par un logo statique.
+
+SCÈNE 2 — RÉVÉLATION (4 à 8 secondes)
+
+Introduction de CampConnect avec une animation élégante du logo.
+
+Faire comprendre immédiatement la promesse du produit.
+
+SCÈNE 3 — EXPÉRIENCE VACANCIER (8 à 20 secondes)
+
+Montrer les fonctionnalités les plus visuelles :
+
+* Accueil.
+* Groupes.
+* Messagerie.
+* Agenda.
+* Carte.
+
+Utiliser les véritables enregistrements d’écran avec un montage rythmé et des mouvements subtils.
+
+Chaque fonctionnalité doit être associée à un bénéfice simple.
+
+SCÈNE 4 — VALEUR POUR LE GÉRANT (20 à 29 secondes)
+
+Faire comprendre que CampConnect n’est pas seulement un outil pour les vacanciers.
+
+Montrer la gestion des animations, les signalements et le tableau de bord.
+
+Mettre en avant la simplicité de gestion et la centralisation des informations.
+
+SCÈNE 5 — CONCLUSION COMMERCIALE (29 à 38 secondes)
+
+Terminer sur une composition visuelle forte avec le logo CampConnect.
+
+Slogan : « Connectez votre séjour »
+
+Appel à l’action :
+
+« Découvrez CampConnect »
+
+« Demandez une démonstration »
+
+La fin doit donner envie au gérant de prendre contact.
+
+━━━━━━━━━━━━━━━━━━
+8. DIRECTION ARTISTIQUE DU MONTAGE
+━━━━━━━━━━━━━━━━━━
+
+Je souhaite un montage qui utilise :
+
+* Des transitions fluides et cinématographiques.
+* Des animations de typographie.
+* Des zooms et mouvements de caméra subtils.
+* Des mockups de smartphone réalistes si cela sert la composition.
+* Des changements de rythme pour éviter la monotonie.
+* Une hiérarchie visuelle très claire.
+* Des effets de profondeur maîtrisés.
+* Une musique moderne, positive, dynamique et élégante.
+* Un sound design discret pour accompagner les interactions.
+
+Le résultat doit être propre, fluide et professionnel.
+
+Ne surcharge pas la vidéo.
+
+La qualité de la composition est plus importante que la quantité d’effets.
+
+━━━━━━━━━━━━━━━━━━
+9. TON ET MESSAGE
+━━━━━━━━━━━━━━━━━━
+
+Le ton doit être :
+
+* Moderne.
+* Chaleureux.
+* Professionnel.
+* Accessible.
+* Dynamique.
+* Convaincant sans être agressivement commercial.
+
+Je veux que le prospect comprenne que CampConnect peut contribuer à créer une expérience plus conviviale pour les vacanciers et à simplifier certaines tâches quotidiennes du gérant.
+
+Ne promets pas d’augmentation de chiffre d’affaires, de taux de fidélisation ou de satisfaction sans données démontrées.
+
+━━━━━━━━━━━━━━━━━━
+10. LIVRABLE ATTENDU
+━━━━━━━━━━━━━━━━━━
+
+Je souhaite que tu réalises directement :
+
+1. Une vidéo promotionnelle finalisée de 30 à 40 secondes.
+2. Une qualité d’image Full HD minimum si possible.
+3. Un format vertical 1080 × 1920.
+4. Des textes parfaitement lisibles et sans fautes.
+5. Une musique adaptée et libre d’utilisation commerciale.
+6. Une conclusion avec le logo et l’appel à l’action.
+7. Si possible, une version sans musique pour pouvoir l’adapter ultérieurement.
+
+Avant de commencer, analyse les fichiers que je t’ai transmis, notamment la charte graphique et l’enregistrement d’écran.
+
+Si tu estimes qu’une autre structure narrative ou une autre direction artistique serait plus pertinente, prends des initiatives créatives et explique brièvement tes choix.
+
+Je ne veux pas que tu me proposes une vidéo simplement correcte.
+
+Je veux une publicité qui donne immédiatement une impression de qualité, de sérieux et de modernité, et qui donne envie à un gérant de camping de découvrir CampConnect.
+
+AGIS COMME UNE VÉRITABLE ÉQUIPE DE CRÉATION PUBLICITAIRE ET PRODUIS LE MEILLEUR RENDU POSSIBLE AVEC LES ASSETS FOURNIS.

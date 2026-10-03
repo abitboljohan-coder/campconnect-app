@@ -1,0 +1,469 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<title>CampConnect Spot</title>
+<style>
+@font-face{font-family:Jak;font-weight:600;src:url(node_modules/@fontsource/plus-jakarta-sans/files/plus-jakarta-sans-latin-600-normal.woff2)}
+@font-face{font-family:Jak;font-weight:700;src:url(node_modules/@fontsource/plus-jakarta-sans/files/plus-jakarta-sans-latin-700-normal.woff2)}
+@font-face{font-family:Jak;font-weight:800;src:url(node_modules/@fontsource/plus-jakarta-sans/files/plus-jakarta-sans-latin-800-normal.woff2)}
+@font-face{font-family:DMS;font-weight:400;src:url(node_modules/@fontsource/dm-sans/files/dm-sans-latin-400-normal.woff2)}
+@font-face{font-family:DMS;font-weight:500;src:url(node_modules/@fontsource/dm-sans/files/dm-sans-latin-500-normal.woff2)}
+@font-face{font-family:DMS;font-weight:700;src:url(node_modules/@fontsource/dm-sans/files/dm-sans-latin-700-normal.woff2)}
+:root{--sage:#9BBB8F;--lagoon:#79DBDC;--salmon:#FA8072;--forest:#23423A;--cream:#F8F8F4;--ink:#1d2f2a}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{width:1080px;height:1920px;overflow:hidden;background:var(--cream)}
+#stage{position:absolute;inset:0;overflow:hidden;background:var(--cream);font-family:DMS,sans-serif;color:var(--forest)}
+.abs{position:absolute}
+.layer{position:absolute;inset:0}
+canvas{position:absolute;inset:0}
+.blob{position:absolute;border-radius:50%;filter:blur(90px)}
+/* kinetic lines */
+.lines{position:absolute;left:0;right:0}
+.ln{overflow:hidden;display:block;padding:0.06em 0 0.12em;margin-bottom:-0.12em}
+.ln>span{display:inline-block;will-change:transform}
+.h-xl{font-family:Jak;font-weight:800;font-size:112px;line-height:1.02;letter-spacing:-0.022em;word-spacing:0.08em}
+.h-l{font-family:Jak;font-weight:800;font-size:82px;line-height:1.04;letter-spacing:-0.02em;word-spacing:0.08em}
+.h-m{font-family:Jak;font-weight:800;font-size:64px;line-height:1.08;letter-spacing:-0.015em;word-spacing:0.06em}
+.sub{font-family:DMS;font-weight:500;font-size:38px;line-height:1.3;color:#4d6660}
+.eyebrow{font-family:DMS;font-weight:700;font-size:26px;letter-spacing:0.28em;text-transform:uppercase}
+.hl-salmon{color:var(--salmon)}
+.hl-lagoon{color:var(--lagoon)}
+/* phone */
+#phoneWrap{position:absolute;left:0;top:0;width:1080px;height:1920px;perspective:2600px;perspective-origin:50% 45%}
+#phone{position:absolute;width:592px;height:1245px;border-radius:92px;
+  background:linear-gradient(150deg,#3b4441 0%,#151a19 30%,#0d1110 70%,#2a3130 100%);
+  box-shadow:0 0 0 2px #4b5552 inset,0 0 0 5px #0b0e0d inset, 0 60px 120px -20px rgba(18,40,34,.55), 0 30px 50px -20px rgba(18,40,34,.45);
+  transform-style:preserve-3d}
+#screen{position:absolute;left:16px;top:16px;width:560px;height:1213px;border-radius:78px;overflow:hidden;background:#f7f4ee}
+#screen .scr{position:absolute;left:0;top:0;width:560px;height:1213px;will-change:transform,opacity}
+#screen .scr img{position:absolute;left:0;top:0;width:560px;height:1213px;display:block}
+#glare{position:absolute;inset:0;border-radius:78px;pointer-events:none;
+  background:linear-gradient(115deg,rgba(255,255,255,0) 30%,rgba(255,255,255,.16) 45%,rgba(255,255,255,0) 60%)}
+.btnside{position:absolute;background:#1a201f;border-radius:4px}
+#shadow{position:absolute;width:560px;height:90px;border-radius:50%;background:rgba(20,45,38,.35);filter:blur(40px)}
+/* chips */
+.chip{position:absolute;display:flex;align-items:center;gap:26px;padding:26px 34px 26px 26px;border-radius:34px;background:rgba(255,255,255,.96);
+  box-shadow:0 30px 60px -18px rgba(8,25,20,.45),0 2px 0 rgba(255,255,255,.6) inset;min-width:470px}
+.chip .ic{width:84px;height:84px;border-radius:24px;display:grid;place-items:center;flex:none}
+.chip .t1{font-family:Jak;font-weight:800;font-size:31px;color:var(--forest);letter-spacing:-0.01em}
+.chip .t2{font-family:DMS;font-weight:500;font-size:27px;color:#5d726c;margin-top:4px}
+.tag{display:inline-flex;align-items:center;gap:12px;padding:16px 26px;border-radius:999px;border:2px solid rgba(155,187,143,.55);color:var(--cream);font-family:DMS;font-weight:700;font-size:28px;background:rgba(255,255,255,.06)}
+.pill{display:inline-flex;align-items:center;gap:18px;padding:34px 56px;border-radius:999px;background:var(--salmon);color:#fff;font-family:Jak;font-weight:800;font-size:44px;letter-spacing:-0.01em;
+  box-shadow:0 26px 50px -16px rgba(250,128,114,.7)}
+#qr{position:absolute;width:250px;padding:22px;border-radius:36px;background:#fff;box-shadow:0 34px 70px -20px rgba(18,40,34,.45)}
+#qr img{width:206px;height:206px;display:block;image-rendering:pixelated}
+#qr .cap{font-family:Jak;font-weight:800;font-size:22px;text-align:center;margin-top:14px;color:var(--forest);letter-spacing:.02em}
+#wipe{position:absolute;inset:0}
+body.plate .txt{visibility:hidden!important}
+body.iso, body.iso #stage{background:transparent!important}
+body.iso #bgCream, body.iso #bgForest, body.iso #net, body.iso #phoneWrap, body.iso #shadow, body.iso #s2sym, body.iso #s2word, body.iso #s2tag, body.iso #s5sym, body.iso #s5word, body.iso #s5tag, body.iso #s5line{visibility:hidden!important}
+body.iso .txt:not(.keep){visibility:hidden!important}
+body.iso .txt.keep, body.iso .txt.keep *{visibility:visible!important}
+.progress{position:absolute;left:80px;height:6px;border-radius:3px}
+</style>
+</head>
+<body>
+<div id="stage">
+  <!-- backgrounds -->
+  <div id="bgCream" class="layer" style="background:var(--cream)">
+    <div class="blob" id="b1" style="width:760px;height:760px;background:rgba(121,219,220,.33)"></div>
+    <div class="blob" id="b2" style="width:680px;height:680px;background:rgba(155,187,143,.38)"></div>
+    <div class="blob" id="b3" style="width:520px;height:520px;background:rgba(250,128,114,.16)"></div>
+  </div>
+  <div id="bgForest" class="layer" style="background:radial-gradient(120% 80% at 20% 0%,#2f5a4e 0%,#23423A 55%,#1b3530 100%)"></div>
+  <canvas id="net" width="1080" height="1920"></canvas>
+
+  <!-- S1 hook -->
+  <div id="s1a" class="txt lines h-xl" style="top:380px;left:84px;color:var(--cream)">
+    <div class="ln"><span>Chaque jour,</span></div>
+    <div class="ln"><span>vos vacanciers</span></div>
+    <div class="ln"><span style="color:var(--sage)">se croisent.</span></div>
+  </div>
+  <div id="s1b" class="txt lines h-xl" style="top:380px;left:84px;color:var(--cream)">
+    <div class="ln"><span>Et s’ils se</span></div>
+    <div class="ln"><span class="hl-salmon">rencontraient</span></div>
+    <div class="ln"><span>vraiment ?</span></div>
+  </div>
+
+  <!-- S2 reveal -->
+  <div id="s2" class="layer">
+    <img id="s2sym" class="abs" src="assets/logo_symbol.png" style="width:380px;left:350px;top:520px">
+    <div class="abs" style="left:0;right:0;top:930px;text-align:center;overflow:hidden;height:130px"><img id="s2word" src="assets/wordmark.png" style="width:720px"></div>
+    <div id="s2tag" class="abs eyebrow" style="left:0;right:0;top:1075px;text-align:center;color:#55685f;font-size:30px">Connectez votre séjour</div>
+    <div id="s2prom" class="txt lines h-m" style="top:1300px;text-align:center;color:var(--forest)">
+      <div class="ln"><span>Le camping devient</span></div>
+      <div class="ln"><span>une <span class="hl-salmon">communauté.</span></span></div>
+    </div>
+  </div>
+
+  <!-- S3 captions -->
+  <div id="s3eye" class="txt abs eyebrow" style="left:84px;top:150px;color:#6f8f66">Côté vacanciers</div>
+  <div id="caps"></div>
+
+  <!-- S4 title -->
+  <div id="s4eye" class="txt abs eyebrow" style="left:84px;top:150px;color:var(--sage)">Côté gérant</div>
+  <div id="s4t" class="txt lines h-xl" style="top:640px;left:84px;color:var(--cream)">
+    <div class="ln"><span>Et pour vous,</span></div>
+    <div class="ln"><span>tout devient</span></div>
+    <div class="ln"><span class="hl-lagoon">plus simple.</span></div>
+  </div>
+
+  <!-- phone -->
+  <div id="shadow"></div>
+  <div id="phoneWrap">
+    <div id="phone">
+      <div class="btnside" style="left:-5px;top:250px;width:6px;height:70px"></div>
+      <div class="btnside" style="left:-5px;top:350px;width:6px;height:110px"></div>
+      <div class="btnside" style="left:-5px;top:480px;width:6px;height:110px"></div>
+      <div class="btnside" style="right:-5px;top:380px;width:6px;height:160px"></div>
+      <div id="screen">
+        <div class="scr" id="scrA"><img id="imgA"></div>
+        <div class="scr" id="scrB"><img id="imgB"></div>
+        <div id="glare"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- QR card -->
+  <div id="qr" class="txt"><img src="assets/qr.png"><div class="cap">SCANNEZ</div></div>
+
+  <!-- S4 chips -->
+  <div id="chips"></div>
+  <div id="tags" class="txt abs" style="left:84px;right:60px;top:1775px;display:flex;gap:16px;flex-wrap:wrap"></div>
+
+  <!-- S5 end -->
+  <div id="s5" class="layer">
+    <img id="s5sym" class="abs" src="assets/logo_symbol.png" style="width:300px;left:390px;top:330px">
+    <div class="abs" style="left:0;right:0;top:665px;text-align:center;overflow:hidden;height:118px"><img id="s5word" src="assets/wordmark.png" style="width:660px"></div>
+    <div id="s5tag" class="abs eyebrow" style="left:0;right:0;top:800px;text-align:center;color:#55685f;font-size:28px">Connectez votre séjour</div>
+    <div id="s5line" class="abs" style="left:490px;width:100px;top:900px;height:4px;border-radius:2px;background:var(--sage)"></div>
+    <div id="s5h" class="txt lines h-m" style="top:975px;text-align:center;color:var(--forest)">
+      <div class="ln"><span>Découvrez CampConnect</span></div>
+      <div class="ln"><span style="color:#5d726c;font-family:DMS;font-weight:500;font-size:40px;letter-spacing:0">pour votre camping, dès la saison 2027.</span></div>
+    </div>
+    <div id="s5cta" class="txt abs" style="left:0;right:0;top:1250px;text-align:center"><div id="s5pill" class="pill">Demandez une démonstration
+      <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></div></div>
+    <div id="s5mail" class="txt abs" style="left:0;right:0;top:1450px;text-align:center;font-family:Jak;font-weight:700;font-size:44px;color:var(--forest)">contact@campconnect.fr</div>
+  </div>
+
+  <div id="wipe"></div>
+</div>
+
+<script>
+// ---------- helpers ----------
+const $=id=>document.getElementById(id);
+const clamp=(x,a=0,b=1)=>Math.min(b,Math.max(a,x));
+const lerp=(a,b,t)=>a+(b-a)*t;
+const E={
+  lin:t=>t,
+  out3:t=>1-Math.pow(1-t,3),
+  out5:t=>1-Math.pow(1-t,5),
+  inout3:t=>t<.5?4*t*t*t:1-Math.pow(-2*t+2,3)/2,
+  inout5:t=>t<.5?16*t**5:1-Math.pow(-2*t+2,5)/2,
+  in3:t=>t*t*t,
+  back:t=>{const c1=1.45,c3=c1+1;return 1+c3*Math.pow(t-1,3)+c1*Math.pow(t-1,2)},
+  expo:t=>t===1?1:1-Math.pow(2,-10*t),
+};
+// keyframes: [[t,v,ease],...] ease applies to segment ending at that key
+function K(t,keys){
+  if(t<=keys[0][0])return keys[0][1];
+  for(let i=1;i<keys.length;i++){
+    const [t1,v1,e]=keys[i],[t0,v0]=keys[i-1];
+    if(t<=t1){const p=(t-t0)/(t1-t0);const f=(E[e||'inout3'])(clamp(p));
+      if(Array.isArray(v0))return v0.map((a,j)=>lerp(a,v1[j],f));return lerp(v0,v1,f);}
+  }
+  return keys[keys.length-1][1];
+}
+const P=(t,a,b,e='inout3')=>(E[e])(clamp((t-a)/(b-a)));
+function show(el,on){el.style.display=on?'':'none'}
+
+// kinetic lines: reveal from below with stagger, exit upward
+function lines(el,t,tin,tout,{stagger=0.09,dur=0.6,exitDur=0.35,dist=110}={}){
+  const spans=el.querySelectorAll(':scope>.ln>span');
+  const vis=t>=tin-0.01&&t<tout+exitDur+0.02;
+  show(el,vis); if(!vis)return;
+  spans.forEach((s,i)=>{
+    const a=tin+i*stagger;
+    const p=E.out5(clamp((t-a)/dur));
+    const q=E.in3(clamp((t-(tout+i*0.04))/exitDur));
+    const y=(1-p)*dist - q*dist*0.9;
+    s.style.transform=`translateY(${y}%)`;
+    s.style.opacity=(0.2+0.8*p)*(1-q);
+  });
+}
+function fadeUp(el,t,tin,tout,{dur=0.6,dist=40,exitDur=0.3}={}){
+  const vis=t>=tin&&t<tout+exitDur; show(el,vis); if(!vis)return;
+  const p=E.out5(clamp((t-tin)/dur)), q=E.in3(clamp((t-tout)/exitDur));
+  el.style.opacity=p*(1-q); el.style.transform=`translateY(${(1-p)*dist - q*dist*0.6}px)`;
+}
+
+// ---------- seeded network ----------
+function rnd(seed){return()=>{seed=(seed*16807)%2147483647;return(seed-1)/2147483646}}
+const R=rnd(42);
+const COLORS=['#9BBB8F','#79DBDC','#FA8072','#F8F8F4','#9BBB8F','#79DBDC'];
+const nodes=[];
+for(let i=0;i<34;i++){
+  const gx=i%6, gy=Math.floor(i/6);
+  nodes.push({x:110+gx*172+(R()-.5)*110, y:1020+gy*150+(R()-.5)*90, r:9+R()*12, c:COLORS[Math.floor(R()*COLORS.length)], d:R()*0.9, ph:R()*6.28, sp:0.4+R()*0.6});
+}
+const edges=[];
+for(let i=0;i<nodes.length;i++)for(let j=i+1;j<nodes.length;j++){
+  const a=nodes[i],b=nodes[j];const dd=Math.hypot(a.x-b.x,a.y-b.y);
+  if(dd<215&&R()<0.62)edges.push([i,j,R()*0.6]);
+}
+const ctx=$('net').getContext('2d');
+function drawNet(t,opts){
+  ctx.clearRect(0,0,1080,1920);
+  if(!opts)return;
+  const {alpha=1,appear=0,connect=0,converge=0,cx=540,cy=900,lineCol='rgba(248,248,244,',ty=0,scale=1}=opts;
+  ctx.save();ctx.globalAlpha=alpha;
+  const pos=nodes.map(n=>{
+    let x=n.x+Math.sin(t*n.sp+n.ph)*10, y=n.y+Math.cos(t*n.sp*0.8+n.ph)*10+ty;
+    x=cx+(x-cx)*scale; y=cy+(y-cy)*scale;
+    const c=E.inout3(clamp(converge));
+    return [lerp(x,cx,c),lerp(y,cy,c)];
+  });
+  edges.forEach(([i,j,d])=>{
+    const p=clamp((connect-d)/0.4); if(p<=0)return;
+    const [x1,y1]=pos[i],[x2,y2]=pos[j];
+    const pe=E.out3(p);
+    ctx.strokeStyle=lineCol+(0.45*p)+')';ctx.lineWidth=3;ctx.lineCap='round';
+    ctx.beginPath();ctx.moveTo(x1,y1);ctx.lineTo(lerp(x1,x2,pe),lerp(y1,y2,pe));ctx.stroke();
+  });
+  nodes.forEach((n,i)=>{
+    const p=E.back(clamp((appear-n.d)/0.35)); if(p<=0)return;
+    const [x,y]=pos[i];
+    ctx.fillStyle=n.c;ctx.beginPath();ctx.arc(x,y,Math.max(0,n.r*p),0,6.283);ctx.fill();
+    // glow ring when connected
+    const g=clamp((connect-n.d*0.6)/0.5);
+    if(g>0){ctx.strokeStyle=n.c;ctx.globalAlpha=alpha*0.35*g;ctx.lineWidth=2;ctx.beginPath();ctx.arc(x,y,n.r*p+8+6*g,0,6.283);ctx.stroke();ctx.globalAlpha=alpha;}
+  });
+  ctx.restore();
+}
+
+// ---------- clips ----------
+const CLIPS={onb:181,grp:337,chat:241,map:337,ag:217,inf:181,sig:43};
+function frameSrc(name,sec){const n=CLIPS[name];const i=clamp(Math.round(sec*60)+1,1,n);return `clips/${name}/${String(i).padStart(4,'0')}.jpg`}
+// S3 screen schedule: [start,end,clip,srcOffset,speed,zoom]
+const SHOTS=[
+  {a:7.6,b:10.5,clip:'onb',off:0.1,sp:1.0,t0:8.0},
+  {a:10.5,b:13.0,clip:'grp',off:0.2,sp:2.0},
+  {a:13.0,b:15.5,clip:'chat',off:0.1,sp:1.4},
+  {a:15.5,b:18.0,clip:'ag',off:0.4,sp:1.12,zoom:{t1:15.95,t2:16.6,s:1.12,ox:50,oy:30}},
+  {a:18.0,b:20.4,clip:'map',off:0.2,sp:2.5},
+  {a:21.6,b:24.0,clip:'ag',off:0.4,sp:0,freeze:true},
+  {a:24.0,b:26.0,clip:'sig',off:0.5,sp:0.12},
+  {a:26.0,b:28.6,clip:'inf',off:0.2,sp:1.0},
+];
+function shotFrame(s,t){
+  const t0=s.t0??s.a;
+  return frameSrc(s.clip, s.off+Math.max(0,t-t0)*s.sp);
+}
+const imgA=$('imgA'),imgB=$('imgB');
+async function setImg(img,src){ if(img.dataset.src!==src){img.dataset.src=src;img.src=src;} await img.decode().catch(()=>{}); }
+
+// captions S3
+const CAPS=[
+  {a:8.0,b:10.5,h:['Un QR code,','<span class="hl-salmon">et c’est parti.</span>'],s:'Sans compte ni mot de passe.'},
+  {a:10.5,b:13.0,h:['Des groupes','<span class="hl-salmon">entre vacanciers.</span>'],s:'Pétanque, rando, apéro, barbecue…'},
+  {a:13.0,b:15.5,h:['On s’organise','<span class="hl-salmon">en direct.</span>'],s:'Messagerie de groupe en temps réel.'},
+  {a:15.5,b:18.0,h:['Les animations,','<span class="hl-salmon">en un clic.</span>'],s:'Agenda du camping et inscription.'},
+  {a:18.0,b:20.0,h:['Tout le camping,','<span class="hl-salmon">sur une carte.</span>'],s:'Activités, services et groupes.'},
+  // gérant
+  {a:22.0,b:24.0,h:['Publiez vos','<span class="hl-lagoon">animations.</span>'],s:'Vos vacanciers sont notifiés.',dark:true},
+  {a:24.0,b:26.0,h:['Suivez les','<span class="hl-lagoon">signalements.</span>'],s:'En temps réel, au même endroit.',dark:true},
+  {a:26.0,b:28.0,h:['À votre nom,','<span class="hl-lagoon">à vos couleurs.</span>'],s:'Livret d’accueil et carte personnalisés.',dark:true},
+];
+const capEls=CAPS.map(c=>{
+  const w=document.createElement('div');w.className='txt abs';w.style.cssText='left:84px;right:60px;top:205px';
+  w.innerHTML=`<div class="lines h-l" style="position:relative;color:${c.dark?'var(--cream)':'var(--forest)'}">${c.h.map(x=>`<div class="ln"><span>${x}</span></div>`).join('')}</div>
+  <div class="sub" style="margin-top:22px;${c.dark?'color:#b9cfc6':''}">${c.s}</div>`;
+  $('caps').appendChild(w);return w;
+});
+
+// chips S4
+const ICONS={
+  bell:'<svg width="46" height="46" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg>',
+  alert:'<svg width="46" height="46" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/><path d="M12 9v4M12 17h.01"/></svg>',
+  palette:'<svg width="46" height="46" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="13.5" cy="6.5" r="1.2"/><circle cx="17.5" cy="10.5" r="1.2"/><circle cx="8.5" cy="7.5" r="1.2"/><circle cx="6.5" cy="12.5" r="1.2"/><path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10c.9 0 1.6-.7 1.6-1.7 0-.4-.2-.8-.4-1.1-.3-.3-.4-.7-.4-1.1 0-.9.7-1.7 1.7-1.7h2c3 0 5.5-2.5 5.5-5.5C22 6 17.5 2 12 2z"/></svg>',
+  chart:'<svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="#9BBB8F" stroke-width="2.4" stroke-linecap="round"><path d="M3 3v18h18"/><path d="M8 16v-4M13 16V8M18 16v-7"/></svg>',
+  shield:'<svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="#9BBB8F" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="m9 12 2 2 4-4"/></svg>',
+  globe:'<svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="#9BBB8F" stroke-width="2.4" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><path d="M2 12h20M12 2a15 15 0 0 1 0 20M12 2a15 15 0 0 0 0 20"/></svg>',
+};
+const CHIPS=[
+  {a:22.35,b:24.0,ic:'bell',bg:'var(--salmon)',t1:'Nouvelle animation',t2:'Concert live · ce soir 21:30',y:1180},
+  {a:24.35,b:26.0,ic:'alert',bg:'#e9a23b',t1:'Nouveau signalement',t2:'Propreté · Sanitaires bloc B',y:1180},
+  {a:26.35,b:28.0,ic:'palette',bg:'#4fb7b8',t1:'Votre camping',t2:'Nom, couleurs, carte, livret',y:1180},
+];
+const chipEls=CHIPS.map(c=>{
+  const d=document.createElement('div');d.className='txt chip';d.style.left='60px';d.style.top=c.y+'px';
+  d.innerHTML=`<div class="ic" style="background:${c.bg}">${ICONS[c.ic]}</div><div><div class="t1">${c.t1}</div><div class="t2">${c.t2}</div></div>`;
+  $('chips').appendChild(d);return d;
+});
+const TAGS=[['chart','Tableau de bord'],['shield','Modération'],['globe','FR · EN · ES · NL']];
+const tagEls=TAGS.map(([i,l])=>{const d=document.createElement('div');d.className='tag';d.innerHTML=ICONS[i]+l;$('tags').appendChild(d);return d});
+
+// ---------- main seek ----------
+window.seek=async function(t){
+  // ---- backgrounds ----
+  // forest: 0-4 (hook), 20-28 (gérant). cream otherwise. Wipes via clip-path circle.
+  const bgF=$('bgForest');
+  let fClip;
+  if(t<3.75) fClip=150;
+  else if(t<4.35) fClip=150*(1-E.inout5(P(t,3.75,4.35,'lin'))); // shrink to reveal cream
+  else if(t<19.85) fClip=0;
+  else if(t<20.55) fClip=150*E.inout5(P(t,19.85,20.55,'lin'));
+  else if(t<27.75) fClip=150;
+  else if(t<28.45) fClip=150*(1-E.inout5(P(t,27.75,28.45,'lin')));
+  else fClip=0;
+  const fcx = t<10?540:540, fcy = t<10?900:(t<24?1160:1000);
+  bgF.style.clipPath=`circle(${fClip}% at ${fcx}px ${fcy}px)`;
+  show(bgF,fClip>0.01);
+  // cream blobs drifting
+  $('b1').style.transform=`translate(${-160+Math.sin(t*0.35)*90}px,${260+Math.cos(t*0.3)*70}px)`;
+  $('b2').style.transform=`translate(${520+Math.cos(t*0.28)*90}px,${1180+Math.sin(t*0.33)*80}px)`;
+  $('b3').style.transform=`translate(${640+Math.sin(t*0.4)*60}px,${120+Math.cos(t*0.45)*60}px)`;
+
+  // ---- network canvas ----
+  if(t<4.4){
+    drawNet(t,{alpha:1-P(t,3.9,4.35),appear:clamp(t/1.4)*1.3,connect:P(t,2.05,3.4,'out3')*1.0,converge:P(t,3.45,4.2,'inout5'),cx:540,cy:1260});
+  } else if(t>=28.2){
+    drawNet(t,{alpha:0.55*P(t,28.4,29.6),appear:P(t,28.3,29.6,'lin')*1.3,connect:P(t,29.0,31,'out3'),lineCol:'rgba(35,66,58,',ty:260,scale:1,cx:540,cy:1300});
+  } else drawNet(t,null);
+
+  // ---- S1 ----
+  lines($('s1a'),t,0.25,1.85,{stagger:0.16,dur:0.7});
+  lines($('s1b'),t,2.15,3.55,{stagger:0.14,dur:0.65});
+
+  // ---- S2 reveal ----
+  const s2on=t>=3.9&&t<8.6; show($('s2'),s2on);
+  if(s2on){
+    const p=P(t,4.0,4.9,'out5'), pb=E.back(clamp((t-4.0)/0.9));
+    const sym=$('s2sym');
+    const out=P(t,7.25,7.85,'inout5');
+    sym.style.transform=`translateY(${-out*260}px) scale(${(0.55+0.45*pb)*(1-out*0.35)}) rotate(${(1-p)*-25}deg)`;
+    sym.style.clipPath=`circle(${p*75}% at 50% 55%)`;
+    sym.style.opacity=1-out;
+    const w=$('s2word'); const pw=P(t,4.45,5.15,'out5');
+    w.style.transform=`translateY(${(1-pw)*110}%)`; w.style.opacity=pw*(1-out);
+    w.parentElement.style.transform=`translateY(${-out*260}px)`;
+    const tg=$('s2tag'); const pt=P(t,4.95,5.8,'out5');
+    tg.style.opacity=pt*(1-out); tg.style.letterSpacing=(0.6-0.32*pt)+'em'; tg.style.transform=`translateY(${-out*260}px)`;
+    lines($('s2prom'),t,5.75,7.15,{stagger:0.12,dur:0.6});
+  }
+
+  // ---- phone choreography ----
+  // base pose keyed through the film
+  const ph=$('phone'), wrap=$('phoneWrap');
+  const pose={
+    x:K(t,[[7.6,0],[8.0,0],[19.9,0],[20.3,0],[21.5,90],[22.4,120,'out5'],[27.7,120],[28.3,120]]),
+    y:K(t,[[7.6,1950],[8.4,560,'out5'],[19.85,560],[20.35,1950,'in3'],[21.7,1950],[22.45,520,'out5'],[27.7,520],[28.25,1950,'in3']]),
+    s:K(t,[[7.5,0.9],[8.35,1,'out5'],[19.9,1.04,'lin'],[21.6,0.84],[22.35,0.88,'out5'],[27.7,0.91,'lin']]),
+    ry:K(t,[[7.5,-22],[8.6,-7,'out5'],[13,-3,'inout3'],[17,-8,'inout3'],[19.9,-4,'inout3'],[21.6,-30],[22.5,-17,'out5'],[27.7,-12,'lin']]),
+    rx:K(t,[[7.5,18],[8.6,5,'out5'],[19.9,3],[21.6,14],[22.5,7,'out5'],[27.7,5]]),
+    rz:K(t,[[7.5,6],[8.6,0,'out5'],[19.9,0],[21.6,4],[22.5,2,'out5'],[27.7,1]]),
+  };
+  const phoneVis=t>=7.4&&t<28.35; show(wrap,phoneVis); show($('shadow'),phoneVis);
+  if(phoneVis){
+    const float=Math.sin(t*1.3)*6;
+    const px=540-296+pose.x, py=pose.y+float;
+    ph.style.left=px+'px'; ph.style.top=py+'px';
+    ph.style.transform=`rotateX(${pose.rx}deg) rotateY(${pose.ry}deg) rotateZ(${pose.rz}deg) scale(${pose.s})`;
+    $('glare').style.transform=`translateX(${(pose.ry+10)*14}px)`;
+    const sh=$('shadow'); sh.style.left=(540-280+pose.x+20)+'px'; sh.style.top=(Math.min(py+1210,1960))+'px';
+    sh.style.opacity=clamp(1-(py-560)/900)*(t>20.4&&t<22.4?0.6:1);
+    // screen content
+    const cur=SHOTS.findIndex(s=>t>=s.a&&t<s.b);
+    const idx=cur<0?(t<8?0:SHOTS.length-1):cur;
+    const s=SHOTS[idx], prev=SHOTS[idx-1];
+    const tr=0.38; // transition time
+    const pin=(prev&&prev.b===s.a&&t<s.a+tr)?E.inout3((t-s.a)/tr):1;
+    await setImg(imgA,shotFrame(s,t));
+    let zA=1,ox=50,oy=50;
+    if(s.zoom){const z=s.zoom; zA=1+(z.s-1)*P(t,z.t1,z.t2,'inout5'); ox=z.ox; oy=z.oy;}
+    const push=1+0.03*P(t,s.a,s.b,'lin');
+    $('scrA').style.transformOrigin=`${ox}% ${oy}%`;
+    $('scrA').style.transform=`translateX(${(1-pin)*100}%) scale(${zA*push})`;
+    $('scrA').style.opacity=1;
+    if(pin<1){
+      show($('scrB'),true);
+      await setImg(imgB,shotFrame(prev,s.a));
+      $('scrB').style.transformOrigin='50% 50%';
+      $('scrB').style.transform=`translateX(${-pin*35}%) scale(${1.03-0.06*pin})`;
+      $('scrB').style.opacity=1-0.6*pin;
+      $('scrB').style.zIndex=0; $('scrA').style.zIndex=1;
+      $('scrA').style.boxShadow='-30px 0 60px rgba(0,0,0,.18)';
+    } else { show($('scrB'),false); $('scrA').style.boxShadow='none'; }
+  }
+
+  // ---- QR card ----
+  const qr=$('qr'); const qon=t>=8.2&&t<10.6; show(qr,qon);
+  if(qon){const p=E.back(clamp((t-8.25)/0.6)); const q=P(t,10.1,10.5,'in3');
+    qr.style.left=(60-q*80)+'px'; qr.style.top=(1150+Math.sin(t*1.6)*8)+'px';
+    qr.style.transform=`perspective(1200px) rotateY(${18-8*p}deg) rotateZ(${-6+4*p}deg) scale(${0.6+0.4*p})`;
+    qr.style.opacity=clamp(p*1.4)*(1-q);}
+
+  // ---- captions ----
+  fadeUp($('s3eye'),t,8.05,19.75,{dur:0.5,dist:20});
+  CAPS.forEach((c,i)=>{
+    const el=capEls[i]; const tin=c.a+0.05, tout=c.b-0.3;
+    const vis=t>=tin&&t<tout+0.4; show(el,vis); if(!vis)return;
+    lines(el.querySelector('.lines'),t,tin+0.05,tout,{stagger:0.08,dur:0.55,exitDur:0.28});
+    const sub=el.querySelector('.sub'); const p=P(t,tin+0.3,tin+0.8,'out5'), q=P(t,tout,tout+0.25,'in3');
+    sub.style.opacity=p*(1-q); sub.style.transform=`translateY(${(1-p)*24}px)`;
+  });
+
+  // ---- S4 ----
+  fadeUp($('s4eye'),t,20.45,27.6,{dur:0.5,dist:20});
+  lines($('s4t'),t,20.45,21.4,{stagger:0.11,dur:0.6});
+  CHIPS.forEach((c,i)=>{
+    const el=chipEls[i]; const vis=t>=c.a&&t<c.b+0.05; show(el,vis); if(!vis)return;
+    const p=E.back(clamp((t-c.a)/0.55)); const q=P(t,c.b-0.28,c.b,'in3');
+    el.style.opacity=clamp(p*1.5)*(1-q);
+    el.style.transform=`translate(${(1-p)*-120 - q*60}px,${Math.sin(t*1.4)*5}px) scale(${0.85+0.15*p})`;
+  });
+  tagEls.forEach((el,i)=>{
+    const a=26.55+i*0.12; const vis=t>=a&&t<28.1; show(el,vis); if(!vis)return;
+    const p=E.out5(clamp((t-a)/0.5)), q=P(t,27.7,28.0,'in3');
+    el.style.opacity=p*(1-q); el.style.transform=`translateY(${(1-p)*30}px)`;
+  });
+
+  // ---- S5 end ----
+  const s5on=t>=28.2; show($('s5'),s5on);
+  if(s5on){
+    const p=P(t,28.35,29.25,'out5'), pb=E.back(clamp((t-28.35)/0.9));
+    const sym=$('s5sym'); sym.style.transform=`scale(${0.5+0.5*pb}) rotate(${(1-p)*-20}deg)`; sym.style.clipPath=`circle(${p*75}% at 50% 55%)`;
+    const w=$('s5word'); const pw=P(t,28.8,29.5,'out5'); w.style.transform=`translateY(${(1-pw)*110}%)`; w.style.opacity=pw;
+    const tg=$('s5tag'); const pt=P(t,29.2,30.0,'out5'); tg.style.opacity=pt; tg.style.letterSpacing=(0.6-0.32*pt)+'em';
+    const ln=$('s5line'); const pl=P(t,29.6,30.3,'out5'); ln.style.transform=`scaleX(${pl})`;
+    lines($('s5h'),t,30.0,99,{stagger:0.14,dur:0.65});
+    const pill=$('s5pill'); const pp=E.back(clamp((t-30.75)/0.6));
+    const pulse=t>32?1+0.025*Math.sin((t-32)*Math.PI*1.0):1;
+    pill.style.opacity=clamp(pp*1.6); pill.style.transform=`translateY(${(1-pp)*40}px) scale(${(0.8+0.2*pp)*pulse})`;
+    // light sweep across pill
+    const sw=((t-31.6)%2.6)/2.6; pill.style.backgroundImage=t>31.6?`linear-gradient(105deg,transparent ${sw*160-40}%,rgba(255,255,255,.28) ${sw*160-25}%,transparent ${sw*160-10}%)`:'none';
+    fadeUp($('s5mail'),t,31.3,99,{dur:0.6,dist:30});
+  }
+
+  // ---- final fade / safety ----
+  $('wipe').style.background=`rgba(248,248,244,${0})`;
+  return true;
+};
+
+// ---- v2 time warp (slower on key details): [newStart,newEnd,oldStart,oldEnd]
+const WARP=[[0,8,0,8],[8,11.5,8,10.5],[11.5,14.5,10.5,13],[14.5,18,13,15.5],[18,21.5,15.5,18],[21.5,24,18,20],
+  [24,26.5,20,22],[26.5,29.5,22,24],[29.5,32.5,24,26],[32.5,35.5,26,28],[35.5,44,28,36.5]];
+window.USE_WARP=false;
+window.warp=T=>{for(const [a,b,c,d] of WARP){if(T<b)return c+(T-a)*(d-c)/(b-a);}const w=WARP[WARP.length-1];return w[3]+(T-w[1]);};
+window.render=T=>window.seek(window.USE_WARP?window.warp(T):T);
+window.setLayer=(mode,ids)=>{document.body.classList.remove('plate','iso');document.querySelectorAll('.keep').forEach(e=>e.classList.remove('keep'));
+  if(mode==='plate')document.body.classList.add('plate');
+  document.documentElement.style.background=mode==='iso'?'transparent':'';
+  if(mode==='iso'){document.body.classList.add('iso');ids.forEach(sel=>document.querySelectorAll(sel).forEach(e=>e.classList.add('keep')));}};
+document.querySelectorAll('#caps>div').forEach((e,i)=>e.id='cap'+i);
+document.querySelectorAll('#chips>div').forEach((e,i)=>e.id='chip'+i);
+window.ready=document.fonts.ready.then(()=>Promise.all([...document.images].map(i=>i.decode().catch(()=>{}))));
+</script>
+</body>
+</html>

@@ -1,0 +1,66 @@
+CAMPCONNECT — PUB v2 (44 s, 1080x1920, 30 i/s) — KIT DE MONTAGE DAVINCI RESOLVE
+================================================================================
+
+CONTENU
+-------
+CampConnect_Pub_v2.fcpxml        Timeline prête à importer (tous les calques placés + marqueurs de scènes)
+00_fond_telephone_logo.mp4       Calque de fond : décors, téléphone avec les vrais écrans, logo — SANS aucun texte
+textes/01_... à 22_...mov        Chaque texte / vignette / bouton en calque séparé, fond transparent (ProRes 4444)
+audio/musique_seule.wav          Musique originale (composée pour la pub, libre de droits, usage commercial OK)
+audio/sound_design.wav           Whooshes et "pops" de transition, sans musique
+reference/CampConnect_pub_v2_9x16.mp4   Le montage final tel que je l'ai exporté (référence)
+polices/                         Plus Jakarta Sans + DM Sans (licence libre OFL) — à installer avant de créer de nouveaux textes
+
+OUVRIR DANS DAVINCI RESOLVE (version gratuite suffisante)
+--------------------------------------------------------
+1. Installe les polices du dossier "polices" (clic droit > Installer).
+2. Ouvre Resolve > nouveau projet.
+3. Fichier > Importer > Timeline… (File > Import > Timeline) > choisis CampConnect_Pub_v2.fcpxml.
+   Laisse cochée l'option d'import automatique des médias.
+4. La timeline s'ouvre en 1080x1920 30 i/s :
+   - V1 : fond + téléphone + logo
+   - V2 et + : textes (un clip par texte, transparent)
+   - A1 : musique / A2 : sound design
+   - Marqueurs : Accroche, Logo, QR code, Groupes, Messagerie, Agenda, Carte, Côté gérant, Animations, Signalements, Personnalisation, Fin/CTA
+   Si Resolve affiche des médias "hors ligne" : clic droit sur le dossier dans le Media Pool > Relink > pointe le dossier CampConnect_Pub_v2.
+
+CE QUE TU PEUX AFFINER DIRECTEMENT
+---------------------------------
+- Ralentir / allonger un passage : allonge le clip texte, ou ralentis la portion du fond (Retime / clic droit > Change Clip Speed).
+- Déplacer, agrandir, changer l'opacité d'un texte : Inspector > Transform.
+- Supprimer un texte : supprime son clip (le fond n'a aucun texte incrusté).
+- Remplacer la musique : coupe A1, garde A2 (sound design).
+- Modifier un texte : supprime le clip correspondant et crée un titre "Text+" à la place,
+  avec les réglages de la charte ci-dessous. Ou demande-moi : je régénère le calque avec le nouveau texte.
+
+CHARTE UTILISÉE DANS LA VIDÉO
+-----------------------------
+Titres     : Plus Jakarta Sans ExtraBold — 82 px (captions), 112 px (accroche / titre gérant), 64 px (promesse / fin)
+Sous-titres: DM Sans Medium 38 px — gris vert #4D6660
+Surtitres  : DM Sans Bold 26 px, MAJUSCULES, interlettrage large
+Couleurs   : Vert forêt #23423A · Vert sauge #9BBB8F · Bleu lagon #79DBDC · Orange saumon #FA8072 · Blanc cassé #F8F8F4
+Accent     : 2e ligne des captions en saumon (vacanciers) ou lagon (gérant)
+
+TEXTES (dans l'ordre)
+---------------------
+00:00  Chaque jour, / vos vacanciers / se croisent.
+00:02  Et s'ils se / rencontraient / vraiment ?
+00:05  Le camping devient / une communauté.
+00:08  [Côté vacanciers] Un QR code, / et c'est parti. — Sans compte ni mot de passe.
+00:11  Des groupes / entre vacanciers. — Pétanque, rando, apéro, barbecue…
+00:14  On s'organise / en direct. — Messagerie de groupe en temps réel.
+00:18  Les animations, / en un clic. — Agenda du camping et inscription.
+00:21  Tout le camping, / sur une carte. — Activités, services et groupes.
+00:24  [Côté gérant] Et pour vous, / tout devient / plus simple.
+00:26  Publiez vos / animations. — Vos vacanciers sont notifiés.   [Vignette : Nouvelle animation · Concert live · ce soir 21:30]
+00:29  Suivez les / signalements. — En temps réel, au même endroit. [Vignette : Nouveau signalement · Propreté · Sanitaires bloc B]
+00:32  À votre nom, / à vos couleurs. — Livret d'accueil et carte personnalisés. [Vignette : Votre camping]
+       Étiquettes : Tableau de bord · Modération · FR · EN · ES · NL
+00:37  Découvrez CampConnect / pour votre camping, dès la saison 2027.
+00:38  [Bouton] Demandez une démonstration →
+00:38  contact@campconnect.fr
+
+EXPORT CONSEILLÉ
+----------------
+Deliver > H.264, 1080x1920, 30 i/s, débit 20 Mb/s, audio AAC 256 kb/s.
+Pour LinkedIn / e-mail : garder sous 50 Mo.

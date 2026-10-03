@@ -1,0 +1,9 @@
+out/
+v2/
+kit/
+rushs/
+frames/
+node_modules/
+*.mp4
+*.mov
+*.wav

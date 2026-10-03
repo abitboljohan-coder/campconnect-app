@@ -33,3 +33,29 @@ lue).
 - Tu prépares, Johan envoie. N'envoie jamais un email ni un message toi-même.
 - Ton d'une personne à une autre : jamais « nous sommes ravis », jamais
   « n'hésitez pas ».
+
+## Déposer les emails en brouillon (Make)
+
+Le scénario Make « CampConnect – Brouillon personnalisé (préparé par Claude) »
+(id **9909743**, équipe 1005601) crée un brouillon dans la boîte
+contact@campconnect.fr. Il prend trois entrées : `destinataire`, `objet`,
+`html`. Lance-le avec l'outil Make `scenarios_run` (`responsive: true`), un
+appel par email, uniquement pour des adresses vérifiées (jamais devinées).
+
+- Corps HTML **simple, sans aucune couleur ni police imposée** : des `<p>`
+  et des `<br>`, rien d'autre. Johan a refusé le texte vert sur fond vert :
+  sans couleur, le message reste lisible en mode clair comme en mode sombre,
+  et ressemble à un email écrit à la main. Pas d'image. Le lien de la vidéo
+  en clair : `<a href="https://app.campconnect.fr/video">https://app.campconnect.fr/video</a>`.
+  Dernier paragraphe, en `font-size:12px` seulement : « CampConnect – EI Johan
+  Abitbol, RCS Évry 109 189 803. Vous recevez ce message car votre camping
+  correspond à notre offre professionnelle. Répondez STOP pour ne plus être
+  contacté. »
+- Échappe le texte (apostrophes, chevrons) avant de l'insérer dans le HTML.
+- Après la création, note dans la fiche du prospect : « Brouillon Make créé le
+  AAAA-MM-JJ ». C'est Johan qui relit et envoie : un brouillon n'est jamais
+  envoyé par toi.
+
+L'ancien scénario « Prospection : brouillons de premier contact »
+(id 9834659, lit la feuille Google « Prospects ») utilise un modèle générique
+qui liste des fonctionnalités : ne l'utilise pas sans accord de Johan.
