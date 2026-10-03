@@ -295,6 +295,7 @@ complet (fichier de prospects, routines, semaine type) : `docs/WORKFLOW.md`.
 | `operations` | livraison sur les stores, Xcode Cloud, surveillance, routines |
 | `support` | retour d'un testeur ou d'un utilisateur : diagnostic et réponse |
 | `designer` | écran jugé pas beau, refonte d'un écran ou d'un parcours : 3 directions en images, puis implémentation |
+| `studio-video` | vidéo publicitaire ou déclinaison à partir des vrais écrans (démo ou enregistrement) ; vidéo de la nuit |
 
 Camping de démo (`les-flots-bleus`, « Camping démo Les Flots Bleus ») : ses
 groupes, messages, animations, statuts et annonces vivent dans Supabase, pas
