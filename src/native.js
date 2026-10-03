@@ -1,5 +1,6 @@
 import { Capacitor } from '@capacitor/core'
 import { App as CapApp } from '@capacitor/app'
+import { cleDuLien } from './lib/acces'
 
 export const isNative = Capacitor.isNativePlatform()
 
@@ -29,11 +30,14 @@ export function initNative() {
     if (m) {
       localStorage.setItem('campingSlug', m[1])
       localStorage.setItem('appMode', 'vacancier')
-      // On recharge sur « / », donc Onboarding ne verra plus /join/ dans le
-      // chemin : sans ce drapeau, le scan du QR ne vaudrait pas preuve de
-      // présence dans l'app native et le contrôle GPS se déclencherait quand
-      // même — alors que le vacancier est bel et bien sur place.
-      localStorage.setItem('arriveeParQR', '1')
+      // On recharge sur « / », donc Onboarding ne verra plus le lien : la clé
+      // du QR (?k=…) est rangée ici. Sans elle, le scan ne vaudrait pas preuve
+      // de présence et le contrôle GPS se déclencherait quand même — alors que
+      // le vacancier est bel et bien sur place. C'est le serveur qui la juge.
+      localStorage.removeItem('arriveeParQR') // ancien drapeau, sans valeur de preuve
+      const cle = cleDuLien(url)
+      if (cle) localStorage.setItem('cleQR', cle)
+      else localStorage.removeItem('cleQR')
       window.location.href = '/'
     }
   })

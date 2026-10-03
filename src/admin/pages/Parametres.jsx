@@ -1,8 +1,9 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { supabase } from '../../supabase'
 import { lireVacanciersDuCamping } from '../../lib/vacanciers'
 import QRCodeGenerator from '../components/QRCodeGenerator'
 import { lienRejoindre, MESSAGE_ORDINATEUR } from '../lib/liens'
+import { lireAccesCamping, changerCleAcces } from '../lib/accesCamping'
 import { versCsv } from '../lib/csv'
 import { traduireErreur } from '../lib/erreurs'
 import { Bloc, EnTete } from '../components/Bloc'
@@ -21,6 +22,21 @@ export default function Parametres({ camping, session, setCamping }) {
   const [savingCamping, setSavingCamping] = useState(false)
   const [resetting, setResetting] = useState(false)
   const [exporting, setExporting] = useState(false)
+  const [cleQR, setCleQR] = useState(null)
+  const [cleIndispo, setCleIndispo] = useState(false)
+  const [changementCle, setChangementCle] = useState(false)
+
+  // Clé du QR code, lue par une fonction réservée au gérant (acces_camping).
+  useEffect(() => {
+    if (!camping?.id) return
+    let actif = true
+    lireAccesCamping(camping.id).then(({ data }) => {
+      if (!actif) return
+      setCleQR(data?.cle || null)
+      setCleIndispo(!data?.cle)
+    })
+    return () => { actif = false }
+  }, [camping?.id])
 
   // toast() plutôt qu'une alerte en tête de page : le gérant appuie sur un
   // bouton en bas d'écran, le message apparaissait 400 px plus haut, hors de vue.
@@ -126,7 +142,23 @@ export default function Parametres({ camping, session, setCamping }) {
     flash('success', `${rows.length} vacancier${rows.length > 1 ? 's' : ''} exporté${rows.length > 1 ? 's' : ''}.`)
   }
 
+  // Adresse publique (sans clé) pour l'affichage ; le QR code, lui, porte la
+  // clé secrète du camping, qui seule vaut preuve de présence.
   const appUrl = lienRejoindre(camping?.slug)
+  const qrUrl = cleQR ? lienRejoindre(camping?.slug, cleQR) : null
+
+  async function changerCle() {
+    const ok = window.confirm(
+      'Changer la clé du QR code ?\n\nLes QR codes déjà imprimés ne marcheront plus : il faudra imprimer et afficher le nouveau. Le code du jour change aussi.'
+    )
+    if (!ok) return
+    setChangementCle(true)
+    const { data, error: err } = await changerCleAcces(camping.id)
+    setChangementCle(false)
+    if (err || !data) { flash('error', traduireErreur(err)); return }
+    setCleQR(data)
+    flash('success', 'Nouvelle clé : imprimez et affichez le nouveau QR code.')
+  }
 
   return (
     <Pile espace="xl">
@@ -195,7 +227,22 @@ export default function Parametres({ camping, session, setCamping }) {
           <p style={{ fontSize: 14, color: jetons.texteDoux, marginBottom: 16 }}>
             Affichez ce QR code à la réception : en le scannant, vos vacanciers entrent directement dans votre camping, sans code.
           </p>
-          <QRCodeGenerator url={appUrl} campingNom={camping?.nom} />
+          {qrUrl
+            ? <QRCodeGenerator url={qrUrl} campingNom={camping?.nom} />
+            : <p style={{ fontSize: 14, color: cleIndispo ? jetons.danger : jetons.texteDoux, margin: 0 }}>
+                {cleIndispo ? 'QR code indisponible : vérifiez la connexion et rechargez la page.' : 'Chargement du QR code…'}
+              </p>}
+          {/* Un QR photographié et partagé hors du camping ouvre la porte à
+              distance : changer la clé le rend inutilisable. */}
+          <div style={{ marginTop: 18, paddingTop: 16, borderTop: `1px solid ${jetons.bordure}` }}>
+            <p style={{ fontSize: 13, color: jetons.texteDoux, margin: '0 0 10px' }}>
+              Votre QR code circule hors du camping ? Changez sa clé : les QR codes déjà imprimés ne marcheront plus.
+            </p>
+            <Bouton variante="secondaire" taille="sm" charge={changementCle} disabled={!cleQR}
+                    onClick={changerCle} style={{ minHeight: 44 }}>
+              Changer la clé du QR code
+            </Bouton>
+          </div>
         </Bloc>
 
         {/* Export CSV */}

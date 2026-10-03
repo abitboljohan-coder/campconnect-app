@@ -1,0 +1,61 @@
+-- ═════════════════════════════════════════════════════════════════════════════
+-- PHASE 2 — NE PAS APPLIQUER AVANT QUE LA VERSION 1.0.3 SOIT SUR LES STORES
+-- Fin de la faille « n'importe qui peut entrer dans n'importe quel camping »
+-- (3 octobre 2026). Nom de migration à utiliser : retrait_insertion_directe_vacanciers
+-- À appliquer en même temps que a_appliquer_apres_1.0.3_colonnes_vacanciers.sql
+-- (mêmes conditions).
+-- ═════════════════════════════════════════════════════════════════════════════
+--
+-- CE QUE ÇA FAIT
+--   Aujourd'hui (phase 1), la politique vac_insert laisse encore n'importe quel
+--   utilisateur connecté (même anonyme) créer un profil vacancier dans
+--   n'importe quel camping par l'API, avec la clé publique — puis lire les
+--   messages, statuts et annonces de ce camping. La 1.0.2 des stores crée ses
+--   profils ainsi, c'est pourquoi le chemin reste ouvert.
+--   Cette migration retire aux rôles anon et authenticated le droit d'insérer
+--   dans vacanciers. Seule la fonction rejoindre_camping (phase 1,
+--   scripts/sql/2026-10-03_code_acces_serveur.sql) crée alors des profils, et
+--   seulement avec une preuve de présence : QR code de la réception, code du
+--   jour, GPS sur place, ou camping en accès libre (démo).
+--   Ne change pas : la modification de son profil (Profil), le bannissement par
+--   le gérant, la suppression de compte, le retour après « Se déconnecter ».
+--
+-- QUAND L'APPLIQUER
+--   Seulement quand TOUTES ces conditions sont réunies :
+--   1. La version 1.0.3 (ou plus), qui contient « Code d'accès calculé par le
+--      serveur » (3 octobre 2026), est publiée sur l'App Store ET sur Google Play.
+--   2. On a laissé quelques jours aux téléphones pour se mettre à jour.
+--      Une 1.0.2 ne pourra plus créer de NOUVEAU profil (message « Erreur,
+--      réessayez ») ; les vacanciers déjà inscrits ne voient aucune différence.
+--   3. L'app web (app.campconnect.fr, Vercel) est déployée depuis la même version.
+--
+-- COMMENT L'APPLIQUER
+--   Supabase → SQL Editor → coller la section « MIGRATION » ci-dessous → Run.
+--   (ou demander à l'agent « securite » : apply_migration avec le nom ci-dessus.)
+--
+-- COMMENT VÉRIFIER (dans les minutes qui suivent)
+--   a) Requête de contrôle, doit répondre false :
+--        select has_table_privilege('authenticated', 'public.vacanciers', 'INSERT');
+--   b) Sur un téléphone en 1.0.3 : « Se déconnecter », puis revenir dans le
+--      camping par le QR code de la réception (Paramètres → QR code) : le
+--      profil est retrouvé. Sur un second téléphone jamais inscrit : entrer
+--      avec le code du jour (Vue d'ensemble → carte « Code d'accès »).
+--   c) La démo les-flots-bleus s'ouvre toujours sans code.
+--   d) Supabase → Logs → API : pas d'erreur 42501 « permission denied for table
+--      vacanciers » venant d'une 1.0.3 (une 1.0.2 qui tente une inscription en
+--      produira, c'est attendu).
+--
+-- COMMENT REVENIR EN ARRIÈRE (immédiat, sans perte de données)
+--   Coller et exécuter :
+--        grant insert on public.vacanciers to authenticated;
+--   La politique vac_insert, laissée en place, s'applique de nouveau.
+--
+-- PREUVE (3 octobre 2026) : testée dans une transaction annulée, après la
+-- phase 1 : insertion directe façon 1.0.2 → refus 42501 ; rejoindre_camping
+-- par QR → profil créé ; modification du profil → 1 ligne ; retour après
+-- déconnexion → même profil ; mise à jour façon 1.0.2 → 1 ligne ; démo en
+-- accès libre → ok ; mon_profil → 1 ligne ; intrus sans preuve → refusé.
+-- ═════════════════════════════════════════════════════════════════════════════
+
+-- MIGRATION ───────────────────────────────────────────────────────────────────
+revoke insert on public.vacanciers from anon, authenticated;

@@ -5,9 +5,9 @@ import { estPresent } from '../../lib/presence'
 import { lireVacanciersDuCamping } from '../../lib/vacanciers'
 import { toast } from '../../toast'
 import StatCard from '../components/StatCard'
-import { getHourlyCode } from '../../pages/Onboarding'
 import { estActuel } from '../../lib/groupes'
 import { lienRejoindre } from '../lib/liens'
+import { lireAccesCamping, msAvantNouveauCode } from '../lib/accesCamping'
 import { tauxRemplissage } from '../lib/animations'
 import { Bloc, EnTete } from '../components/Bloc'
 import { Bouton, Texte, Pile, Squelette, Vide, Icone, couleur as jetons, espace, graisse, rayon, texte as tailles } from '../../design'
@@ -317,27 +317,45 @@ export default function Overview({ camping }) {
 }
 
 function AccessCodeCard({ camping }) {
-  const [code, setCode] = useState(getHourlyCode(camping.id))
+  // Code et clé du QR viennent du serveur (acces_camping) : plus aucun calcul
+  // ici. Relus à chaque nouvelle heure, et toutes les cinq minutes au cas où
+  // la clé aurait été changée depuis un autre appareil.
+  const [acces, setAcces] = useState(null)
+  const [echec, setEchec] = useState(false)
   const [remaining, setRemaining] = useState('')
 
   useEffect(() => {
+    let actif = true
+    let heure = Math.floor(Date.now() / 3_600_000)
+    async function charger() {
+      const { data, error } = await lireAccesCamping(camping.id)
+      if (!actif) return
+      setEchec(!!error || !data)
+      if (data) setAcces(data)
+    }
     function tick() {
-      setCode(getHourlyCode(camping.id))
-      const ms = 3_600_000 - (Date.now() % 3_600_000)
+      const ms = msAvantNouveauCode()
       const m = Math.floor(ms / 60000)
       const s = Math.floor((ms % 60000) / 1000)
       setRemaining(`${m}m ${String(s).padStart(2, '0')}s`)
+      const h = Math.floor(Date.now() / 3_600_000)
+      if (h !== heure) { heure = h; charger() }
     }
+    charger()
     tick()
     const iv = setInterval(tick, 1000)
-    return () => clearInterval(iv)
+    const relecture = setInterval(charger, 5 * 60_000)
+    return () => { actif = false; clearInterval(iv); clearInterval(relecture) }
   }, [camping.id])
 
-  const joinUrl = lienRejoindre(camping.slug)
+  const code = acces?.code || (echec ? '—' : '····')
+  const joinUrl = lienRejoindre(camping.slug, acces?.cle)
 
   // « Copier » ne disait rien, et ne faisait rien là où le presse-papiers est
   // refusé : le gérant ne savait pas s'il pouvait coller.
   async function copier() {
+    // Sans la clé, le lien copié ne vaudrait pas preuve de présence.
+    if (!acces?.cle) { toast('Lien pas encore chargé : réessayez dans un instant.', 'erreur'); return }
     try {
       await navigator.clipboard.writeText(joinUrl)
       toast('Lien copié', 'succes')
@@ -370,7 +388,9 @@ function AccessCodeCard({ camping }) {
             {code}
           </div>
           <Texte variante="micro" style={{ color: 'rgba(255,255,255,0.45)', marginTop: espace.sm }}>
-            Change dans <strong style={{ color: 'rgba(151,196,89,0.8)' }}>{remaining}</strong>
+            {echec && !acces
+              ? 'Code indisponible : vérifiez la connexion et rechargez la page.'
+              : <>Change dans <strong style={{ color: 'rgba(151,196,89,0.8)' }}>{remaining}</strong></>}
           </Texte>
         </div>
         <div style={{ textAlign: 'center' }}>

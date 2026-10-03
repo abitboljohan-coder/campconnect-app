@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { supabase, ensureAnonSession } from '../supabase'
 import { isNative, setAppMode } from '../native'
-import { estAccesLibre, estJoignable } from '../lib/acces'
+import { estAccesLibre, estJoignable, cleDuLien, messageAcces, estRefusDePreuve } from '../lib/acces'
 import { SUGGESTIONS_AVATARS } from '../lib/emojis'
 import ChoixEmoji from '../components/ChoixEmoji'
 import { champsArrivee } from '../lib/profil'
@@ -17,47 +17,42 @@ import {
 const TITRE = '#2f4a26'
 const SOUS_TITRE = '#6d7964'
 
-// Code tournant : 4 chiffres, change toutes les heures, unique par camping
-// Fonctionne avec UUID (string) ou number
-export function getHourlyCode(campingId, instant = Date.now()) {
-  const h = Math.floor(instant / 3_600_000)
-  const str = String(campingId) + String(h)
-  let hash = 0
-  for (let i = 0; i < str.length; i++) {
-    hash = Math.imul(31, hash) + str.charCodeAt(i) | 0
-  }
-  return String((Math.abs(hash) % 9000) + 1000)
-}
-
 const aujourdhui = () => new Date().toISOString().slice(0, 10)
 
-function haversine(lat1, lng1, lat2, lng2) {
-  const R = 6371000
-  const dLat = (lat2 - lat1) * Math.PI / 180
-  const dLng = (lng2 - lng1) * Math.PI / 180
-  const a = Math.sin(dLat / 2) ** 2 + Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * Math.sin(dLng / 2) ** 2
-  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a))
-}
+// Clé du QR code de la réception. Sur le web, elle est dans le lien
+// (/join/<slug>?k=…). Dans l'app native, le chemin est toujours « / » : le
+// deep link passe par native.js, qui la range en localStorage et recharge.
+const lireCleQR = () => cleDuLien(window.location.search) || localStorage.getItem('cleQR')
 
-// Si on est arrivé via /join/slug → le QR code physique = preuve de présence → pas besoin de vérifier
-// Attention : ne vaut que sur le web. Dans l'app native, le chemin est toujours
-// « / » — le deep link passe par native.js, qui range le slug en localStorage et
-// recharge sur la racine. D'où le drapeau ci-dessous, posé au même moment.
-const fromQR = !!window.location.pathname.match(/^\/join\/([^/?#]+)/)
-             || localStorage.getItem('arriveeParQR') === '1'
+/**
+ * Preuve de présence jugée par le serveur (verifier_acces_camping) : QR code,
+ * position GPS ou code du jour. Tout se décide là-bas — le code n'est plus
+ * calculable dans l'app, et le serveur limite les essais. En cas de succès, il
+ * rend un jeton, valable une à deux heures, que l'inscription présente.
+ */
+async function verifierAcces(slug, preuve) {
+  const { data, error } = await supabase.rpc('verifier_acces_camping', { p_slug: slug, p_preuve: preuve })
+  if (error || !data) return { ok: false, erreur: 'reseau' }
+  return data
+}
 
 export default function Onboarding({ initialCamping, onDone }) {
   useLangue()
-  // L'arrivée par QR vaut preuve de présence : elle passe devant tout le
-  // reste, y compris devant un camping que la réception n'a pas fini de
-  // configurer — c'est justement elle qui a affiché ce QR.
+  const [cleQR, setCleQR] = useState(lireCleQR)
+  // L'arrivée par QR passe devant tout le reste, y compris devant un camping
+  // que la réception n'a pas fini de configurer — c'est justement elle qui a
+  // affiché ce QR. Sa clé est contrôlée sur l'écran de vérification.
   const initialStep = !initialCamping
     ? 'search'
-    : fromQR || estAccesLibre(initialCamping) ? 'form'
+    : estAccesLibre(initialCamping) ? 'form'
+    : cleQR ? 'verify'
     : !estJoignable(initialCamping) ? 'pas_pret'
     : 'verify'
   const [step, setStep] = useState(initialStep)
   const [camping, setCamping] = useState(initialCamping)
+  // Jeton rendu par le serveur après une vérification réussie.
+  const [jeton, setJeton] = useState(null)
+  const [qrErreur, setQrErreur] = useState('')
 
   // L'accent du camping est posé dès qu'il est identifié : l'inscription se
   // fait donc déjà à ses couleurs, avant même d'entrer dans l'application.
@@ -74,6 +69,7 @@ export default function Onboarding({ initialCamping, onDone }) {
   const [gpsStatus, setGpsStatus] = useState('idle') // idle | checking | ok | fail
   const [code, setCode] = useState('')
   const [codeError, setCodeError] = useState('')
+  const [codeEnCours, setCodeEnCours] = useState(false)
 
   // Formulaire profil. Avatar vide = pas encore choisi : 🏕️ par défaut, ou
   // celui du profil retrouvé — on ne l'écrase pas avec le choix par défaut.
@@ -82,18 +78,26 @@ export default function Onboarding({ initialCamping, onDone }) {
   const [formError, setFormError] = useState('')
   const [saving, setSaving] = useState(false)
 
-  const isDev = window.location.hostname === 'localhost' || window.location.hostname.startsWith('192.168.')
+  // Accès accordé : le jeton du serveur accompagnera l'inscription.
+  function accesAccorde(j) {
+    setJeton(j || null)
+    setCodeError('')
+    setQrErreur('')
+  }
 
-  // Lancer la vérif GPS automatiquement à l'arrivée sur 'verify'
-  useEffect(() => {
-    if (step === 'verify' && camping) {
-      if (isDev) { setStep('form'); return } // bypass en dev local
-      // Camping de démonstration : ouvrable depuis n'importe où. Couvre le cas
-      // où l'on arrive par la recherche plutôt que par un lien /join.
-      if (estAccesLibre(camping)) { setStep('form'); return }
-      checkGPS()
-    }
-  }, [step, camping?.id])
+  // Un QR imprimé avant un changement de clé ne vaut plus rien : on le dit,
+  // on l'oublie, et l'on passe au GPS — le vacancier est sans doute sur place.
+  async function verifierQR() {
+    setGpsStatus('checking')
+    const r = await verifierAcces(camping.slug, { cle: cleQR })
+    if (r.ok) { accesAccorde(r.jeton); setStep('form'); return }
+    // Sur une simple panne réseau, la clé reste rangée : rouvrir l'app la
+    // réessaiera, sans avoir à rescanner.
+    if (r.erreur === 'qr_perime') localStorage.removeItem('cleQR')
+    setCleQR(null)
+    setQrErreur(t(r.erreur === 'qr_perime' ? 'onb.qr_perime' : 'onb.err_generique'))
+    checkGPS()
+  }
 
   function checkGPS() {
     setGpsStatus('checking')
@@ -128,8 +132,11 @@ export default function Onboarding({ initialCamping, onDone }) {
           return
         }
 
-        const dist = haversine(lat, lng, campingLat, campingLng)
-        if (dist < 800) {
+        // La distance (moins de 800 m du centre) est jugée par le serveur :
+        // calculée ici, elle se contournait en appelant l'API directement.
+        const r = await verifierAcces(camping.slug, { lat, lng })
+        if (r.ok) {
+          accesAccorde(r.jeton)
           setGpsStatus('ok')
           setTimeout(() => setStep('form'), 900)
         } else {
@@ -140,6 +147,19 @@ export default function Onboarding({ initialCamping, onDone }) {
       { timeout: 8000, maximumAge: 30000 }
     )
   }
+
+  // À l'arrivée sur 'verify' : la clé du QR d'abord, sinon le GPS. Le code du
+  // jour reste en repli. (Le contournement « localhost » d'autrefois a
+  // disparu : c'est désormais le serveur qui décide, il ne servirait à rien.)
+  useEffect(() => {
+    if (step === 'verify' && camping) {
+      // Camping de démonstration : ouvrable depuis n'importe où. Couvre le cas
+      // où l'on arrive par la recherche plutôt que par un lien /join.
+      if (estAccesLibre(camping)) { setStep('form'); return }
+      if (cleQR) verifierQR()
+      else checkGPS()
+    }
+  }, [step, camping?.id]) // eslint-disable-line react-hooks/exhaustive-deps
 
   // Retour après « Se déconnecter » : la même identité retrouve son profil sur
   // ce camping. Le formulaire est pré-rempli plutôt que de repartir à vide,
@@ -229,6 +249,11 @@ export default function Onboarding({ initialCamping, onDone }) {
     const complet = data || c
     setCamping(complet)
     setGpsStatus('idle')
+    // Une clé de QR encore dans l'adresse appartient au camping du lien, pas
+    // à celui que l'on vient de choisir dans la liste.
+    setCleQR(null)
+    setJeton(null)
+    setQrErreur('')
 
     if (estAccesLibre(complet)) { setStep('form'); return }
     // La relecture doit avoir abouti pour conclure qu'un camping n'est pas
@@ -242,25 +267,27 @@ export default function Onboarding({ initialCamping, onDone }) {
   function changerCamping() {
     localStorage.removeItem('campingSlug')
     localStorage.removeItem('vacancier')
+    localStorage.removeItem('cleQR')
+    setCleQR(null)
+    setJeton(null)
+    setQrErreur('')
     setCamping(null)
     setQuery('')
     setGpsStatus('idle')
     setStep('search')
   }
 
-  function checkCode() {
-    // Le code lu à la réception à 10 h 58 était refusé s'il était tapé à
-    // 11 h 01 : on accepte encore le précédent pendant les dix premières
-    // minutes de l'heure, le temps de rejoindre son emplacement.
+  // Le code est vérifié par le serveur, qui accepte aussi celui de l'heure
+  // précédente pendant les dix premières minutes (lu à 10 h 58, tapé à
+  // 11 h 01) et bloque après dix codes faux dans l'heure.
+  async function checkCode() {
     const saisi = code.trim()
-    const maintenant = Date.now()
-    const debutHeure = maintenant % 3_600_000 < 10 * 60_000
-    if (saisi === getHourlyCode(camping.id, maintenant)
-        || (debutHeure && saisi === getHourlyCode(camping.id, maintenant - 3_600_000))) {
-      setStep('form')
-    } else {
-      setCodeError(t('onb.code_erreur'))
-    }
+    if (saisi.length !== 4 || codeEnCours) { setCodeError(t('onb.code_erreur')); return }
+    setCodeEnCours(true)
+    const r = await verifierAcces(camping.slug, { code: saisi })
+    setCodeEnCours(false)
+    if (r.ok) { accesAccorde(r.jeton); setStep('form') }
+    else setCodeError(t(messageAcces(r.erreur)))
   }
 
   async function handleSubmit(e) {
@@ -273,32 +300,41 @@ export default function Onboarding({ initialCamping, onDone }) {
     setSaving(true)
     setFormError('')
     await ensureAnonSession()
-    const { data: { user } } = await supabase.auth.getUser()
-    const uid = user?.id
-    const deviceId = localStorage.getItem('deviceId')
     // Re-séjour avec la même identité (ex: retour l'année suivante, ou après
-    // « Se déconnecter ») → réutiliser le profil
+    // « Se déconnecter ») → le serveur réutilise le profil.
     const { data: existing } = await lireMonProfil(camping.id)
 
     // Un champ laissé vide n'efface pas le profil retrouvé : le formulaire
-    // est vierge si le pré-remplissage n'est pas encore arrivé.
+    // est vierge si le pré-remplissage n'est pas encore arrivé. (Le serveur
+    // applique la même règle de son côté.)
     const profil = {
-      camping_id: camping.id,
       ...champsArrivee(form, existing, aujourdhui()),
-      device_id: deviceId,
-      user_id: uid,
-      cgu_acceptees_at: new Date().toISOString(),
+      device_id: localStorage.getItem('deviceId'),
+      cgu: true,
     }
 
-    // Sans .select() : PostgREST relirait toutes les colonnes de la ligne, et
-    // la table ne livrera plus l'emplacement ni la date de départ. Le profil
-    // enregistré est relu par mon_profil (src/lib/vacanciers.js).
-    const { error } = existing
-      ? await supabase.from('vacanciers').update(profil).eq('id', existing.id)
-      : await supabase.from('vacanciers').insert(profil)
-    const { data, error: errLecture } = error ? { data: null } : await lireMonProfil(camping.id)
+    // L'inscription passe par le serveur, qui exige une preuve de présence
+    // (jeton de la vérification, ou accès libre de la démo) : l'insertion
+    // directe dans vacanciers permettait d'entrer dans n'importe quel camping.
+    const { data: r, error } = await supabase.rpc('rejoindre_camping', {
+      p_slug: camping.slug,
+      p_preuve: jeton ? { jeton } : {},
+      p_profil: profil,
+    })
+    if (!error && r && !r.ok && estRefusDePreuve(r.erreur)) {
+      // Vérification trop ancienne (formulaire laissé ouvert plus d'une heure)
+      // ou QR changé entre-temps : on la refait, le formulaire reste rempli.
+      setSaving(false)
+      setJeton(null)
+      setGpsStatus('idle')
+      setQrErreur(t(messageAcces(r.erreur)))
+      setStep('verify')
+      return
+    }
+    const { data, error: errLecture } = error || !r?.ok ? { data: null } : await lireMonProfil(camping.id)
 
-    if (error || errLecture || !data) { setFormError(t('onb.err_generique')); setSaving(false); return }
+    if (error || !r?.ok || errLecture || !data) { setFormError(t('onb.err_generique')); setSaving(false); return }
+    localStorage.removeItem('cleQR')
     onDone(camping, data)
   }
 
@@ -424,12 +460,21 @@ export default function Onboarding({ initialCamping, onDone }) {
 
       <Card>
         <Pile espace="lg">
+          {qrErreur && (
+            <Texte variante="doux" role="alert" style={{
+              color: jetons.danger, fontWeight: graisse.fort,
+              padding: `10px ${espace.md}px`, background: jetons.dangerFond, borderRadius: rayon.sm,
+            }}>
+              {qrErreur}
+            </Texte>
+          )}
+
           {/* GPS — l'état est annoncé aux lecteurs d'écran, pas seulement teinté. */}
           <Pile espace="xs" role="status" aria-live="polite">
             <Pile direction="ligne" espace="sm" aligner="center">
-              <span aria-hidden="true" style={{ fontSize: 20 }}>📍</span>
+              <span aria-hidden="true" style={{ fontSize: 20 }}>{cleQR ? '🔳' : '📍'}</span>
               <Texte variante="corps" as="span" style={{ fontWeight: graisse.fort, color: jetons.texte }}>
-                {t('onb.verif_gps')}
+                {cleQR ? t('onb.qr_verif') : t('onb.verif_gps')}
               </Texte>
               {gpsStatus === 'checking' && <Spinner />}
               {gpsStatus === 'ok' && (
@@ -442,7 +487,7 @@ export default function Onboarding({ initialCamping, onDone }) {
               )}
             </Pile>
             <Texte variante="micro">
-              {gpsStatus === 'checking' && t('onb.gps_en_cours')}
+              {gpsStatus === 'checking' && !cleQR && t('onb.gps_en_cours')}
               {gpsStatus === 'ok' && t('onb.gps_ok')}
               {gpsStatus === 'fail' && t('onb.gps_echec')}
               {gpsStatus === 'idle' && t('commun.chargement')}
@@ -481,7 +526,7 @@ export default function Onboarding({ initialCamping, onDone }) {
                   style={{ fontSize: 22, textAlign: 'center', letterSpacing: 8, fontWeight: graisse.titre }}
                 />
                 </div>
-                <Bouton taille="lg" onClick={checkCode} style={{ flexShrink: 0, minHeight: 48 }}>OK</Bouton>
+                <Bouton taille="lg" onClick={checkCode} charge={codeEnCours} style={{ flexShrink: 0, minHeight: 48 }}>OK</Bouton>
               </Pile>
             </Pile>
           )}
