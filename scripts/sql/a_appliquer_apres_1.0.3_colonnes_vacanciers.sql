@@ -2,6 +2,11 @@
 -- PHASE 2 — NE PAS APPLIQUER AVANT QUE LA VERSION 1.0.3 SOIT SUR LES STORES
 -- Fin de la faille « données des vacanciers trop lisibles » (audit du 3 octobre 2026)
 -- Nom de migration à utiliser : retrait_lecture_colonnes_sensibles_vacanciers
+--
+-- ⚠ À APPLIQUER EN MÊME TEMPS, mêmes conditions :
+--   scripts/sql/a_appliquer_apres_1.0.3_insertion_vacanciers.sql
+--   (retire l'insertion directe dans vacanciers : seule rejoindre_camping
+--   crée des profils, avec une preuve de présence).
 -- ═════════════════════════════════════════════════════════════════════════════
 --
 -- CE QUE ÇA FAIT

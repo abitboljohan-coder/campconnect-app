@@ -1,5 +1,42 @@
 import { describe, it, expect } from 'vitest'
-import { estJoignable, estAccesLibre } from './acces'
+import { estJoignable, estAccesLibre, cleDuLien, messageAcces, estRefusDePreuve } from './acces'
+
+const CLE = 'c0ffee00c0ffee00c0ffee00c0ffee00'
+
+describe('cleDuLien', () => {
+  it('lit la clé du QR dans le lien web et dans le lien de l’app', () => {
+    expect(cleDuLien(`https://app.campconnect.fr/join/les-pins?k=${CLE}`)).toBe(CLE)
+    expect(cleDuLien(`campconnect://join/les-pins?k=${CLE}`)).toBe(CLE)
+    expect(cleDuLien(`?utm=x&k=${CLE.toUpperCase()}#haut`)).toBe(CLE)
+  })
+
+  // Un ancien QR (sans clé) ou un lien bricolé ne doit rien ouvrir : sans clé
+  // lisible, l'écran passe au GPS et au code.
+  it('ne rend rien sans clé valable', () => {
+    expect(cleDuLien('https://app.campconnect.fr/join/les-pins')).toBeNull()
+    expect(cleDuLien('https://app.campconnect.fr/join/les-pins?k=1234')).toBeNull()
+    expect(cleDuLien(`?k=${CLE}zz`)).toBeNull()
+    expect(cleDuLien(null)).toBeNull()
+  })
+})
+
+describe('messageAcces', () => {
+  it('donne un message clair pour chaque refus du serveur', () => {
+    expect(messageAcces('code_faux')).toBe('onb.code_erreur')
+    expect(messageAcces('trop_essais')).toBe('onb.code_trop')
+    expect(messageAcces('qr_perime')).toBe('onb.qr_perime')
+    expect(messageAcces('verification_expiree')).toBe('onb.verif_expiree')
+    expect(messageAcces('reseau')).toBe('onb.err_generique')
+    expect(messageAcces(undefined)).toBe('onb.err_generique')
+  })
+
+  it('distingue les refus de preuve, qui renvoient à la vérification', () => {
+    expect(estRefusDePreuve('verification_expiree')).toBe(true)
+    expect(estRefusDePreuve('qr_perime')).toBe(true)
+    expect(estRefusDePreuve('pseudo_obligatoire')).toBe(false)
+    expect(estRefusDePreuve('toString')).toBe(false)
+  })
+})
 
 // Un camping sans accès libre et sans centre GPS ne peut dire oui à personne :
 // le contrôle de présence n'a rien à comparer, il échoue, et l'écran retombe
