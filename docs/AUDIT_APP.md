@@ -111,15 +111,50 @@ user_id des autres vacanciers de son camping.
   casserait la 1.0.2. Quand, comment vérifier, comment revenir en arrière :
   en tête du fichier.
 
+### Entrer dans n'importe quel camping — fermé en phase 1, phase 2 en attente
+
+**Faille (haute)** : le code du jour se calculait dans l'app à partir de
+l'identifiant public du camping (`getHourlyCode`), le contrôle GPS n'était
+fait que dans l'app, et la politique `vac_insert` n'exige que
+`user_id = auth.uid()`. Par l'API, n'importe qui pouvait créer un profil dans
+n'importe quel camping, puis y lire messages, statuts, annonces.
+Décision de Johan : « un code calculé par le serveur ».
+
+- Phase 1 (faite, migration `code_acces_serveur`,
+  `scripts/sql/2026-10-03_code_acces_serveur.sql`) :
+  - clé secrète par camping (`camping_secrets`, illisible par anon et
+    authenticated ; générée pour les campings existants et, par déclencheur,
+    pour chaque nouveau) ;
+  - code du jour = HMAC de la clé et de l'heure, 4 chiffres ; celui de l'heure
+    précédente accepté 10 minutes ; 10 codes faux au plus par utilisateur et
+    par heure, 60 par camping (`acces_essais`) ;
+  - QR code de la réception = `…/join/<slug>?k=<clé>` ; le gérant lit code et
+    clé par `acces_camping`, change la clé par `changer_cle_acces`
+    (Paramètres → « Changer la clé du QR code ») ;
+  - `verifier_acces_camping` (QR, GPS à moins de 800 m du centre, code) rend
+    un jeton d'une à deux heures ; `rejoindre_camping` crée ou retrouve le
+    profil avec ce jeton, les mêmes bornes que l'insertion, et l'accès libre
+    de la démo ;
+  - un profil ne peut plus changer de `camping_id` (sinon : entrer par la
+    démo, puis basculer vers un autre camping) ;
+  - l'app 1.0.3 n'insère plus dans `vacanciers` ; `getHourlyCode` a disparu.
+  Simulé avant application (vacancier neuf et existant, gérant, anonyme ; bon
+  code, mauvais code, code de l'heure précédente, clé QR, mauvaise clé, GPS
+  dedans et dehors, accès libre, limite d'essais) puis vérifié après.
+  Le GPS reste falsifiable par qui sait simuler une position : accepté.
+- Phase 2 (préparée, **non appliquée**) :
+  `scripts/sql/a_appliquer_apres_1.0.3_insertion_vacanciers.sql` retire
+  l'insertion directe dans `vacanciers` (la 1.0.2 l'utilise encore). **Tant
+  qu'elle n'est pas appliquée, la faille reste ouverte par l'API.** À
+  appliquer avec la phase 2 des colonnes, mêmes conditions ; testée dans une
+  transaction annulée.
+
 ### Restant
 
-- **Entrer dans n'importe quel camping** (haute, décision produit) : le code
-  du jour et le contrôle GPS ne sont vérifiés que par l'app. Le code se
-  calcule à partir de l'identifiant public du camping (`getHourlyCode`). Par
-  l'API, n'importe qui peut créer un profil dans n'importe quel camping, puis
-  y lire messages, statuts, annonces (et, avant la phase 2, les
-  emplacements). Correction : vérifier l'entrée côté base (code secret par
-  camping, inscription par une fonction), dans une version future de l'app.
+- **Schéma de travail `sim_acces`** : copie des fonctions ayant servi aux
+  simulations du 3 octobre, sans aucun droit pour anon ni authenticated et
+  invisible de l'API. Sa suppression demande une confirmation que l'agent ne
+  pouvait pas donner : `drop schema sim_acces cascade;` (SQL Editor).
 - **Réactions** : un vacancier peut réécrire la colonne `reactions` de
   n'importe quel message de son camping (effacer celles des autres). Corriger
   demande une fonction « réagir » et une nouvelle version de l'app.

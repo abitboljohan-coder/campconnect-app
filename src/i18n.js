@@ -283,6 +283,10 @@ const STRINGS = {
   'onb.avatar':        { fr: 'Avatar', en: 'Avatar', es: 'Avatar', nl: 'Avatar' },
   'onb.depart_aide':   { fr: "Jusqu'à quand restez-vous ? Modifiable dans votre profil si vous prolongez.", en: 'How long are you staying? You can change it in your profile if you extend.', es: '¿Hasta cuándo te quedas? Puedes cambiarlo en tu perfil si prolongas.', nl: 'Hoelang blijf je? Je kunt dit in je profiel wijzigen als je verlengt.' },
   'onb.err_generique': { fr: 'Erreur. Réessayez.', en: 'Something went wrong. Please try again.', es: 'Se produjo un error. Inténtalo de nuevo.', nl: 'Er ging iets mis. Probeer opnieuw.' },
+  'onb.code_trop':     { fr: 'Trop d\'essais. Réessayez dans une heure, ou scannez le QR code de la réception.', en: 'Too many attempts. Try again in an hour, or scan the QR code at reception.', es: 'Demasiados intentos. Vuelve a intentarlo en una hora o escanea el código QR de recepción.', nl: 'Te veel pogingen. Probeer het over een uur opnieuw of scan de QR-code bij de receptie.' },
+  'onb.qr_perime':     { fr: 'Ce QR code n\'est plus valable. Demandez le nouveau QR code à la réception.', en: 'This QR code is no longer valid. Ask reception for the new QR code.', es: 'Este código QR ya no es válido. Pide el nuevo código QR en recepción.', nl: 'Deze QR-code is niet meer geldig. Vraag de nieuwe QR-code bij de receptie.' },
+  'onb.qr_verif':      { fr: 'Vérification du QR code', en: 'Checking the QR code', es: 'Verificando el código QR', nl: 'QR-code controleren' },
+  'onb.verif_expiree': { fr: 'Vérification expirée : confirmez à nouveau votre présence.', en: 'Check expired: please confirm you are on site again.', es: 'Verificación caducada: confirma de nuevo tu presencia.', nl: 'Controle verlopen: bevestig opnieuw dat je aanwezig bent.' },
   'onb.emplacement_ph':{ fr: 'ex : A42 (optionnel)', en: 'e.g. A42 (optional)', es: 'ej.: A42 (opcional)', nl: 'bijv. A42 (optioneel)' },
   'onb.pseudo_place':  { fr: 'ex : Marie42', en: 'e.g. Marie42', es: 'ej.: Marie42', nl: 'bijv. Marie42' },
 

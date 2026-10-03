@@ -267,7 +267,11 @@ Aucun camping client à ce jour : l'enjeu est commercial, pas technique.
 Sécurité, phase 2 en attente : dès que la 1.0.3 est sur les deux stores,
 appliquer `scripts/sql/a_appliquer_apres_1.0.3_colonnes_vacanciers.sql`
 (les vacanciers ne liront plus l'emplacement, l'âge ni la date de départ des
-autres). D'ici là, ne lire ces colonnes que par `src/lib/vacanciers.js`.
+autres) et `scripts/sql/a_appliquer_apres_1.0.3_insertion_vacanciers.sql`
+(plus d'insertion directe dans `vacanciers` : sans elle, n'importe qui entre
+encore dans n'importe quel camping par l'API). D'ici là, ne lire ces colonnes
+que par `src/lib/vacanciers.js`, et ne créer un profil vacancier que par la
+fonction `rejoindre_camping` (preuve de présence vérifiée par le serveur).
 
 Les notifications push fonctionnent sur les deux plateformes — voir
 `docs/PUSH_NOTIFICATIONS.md`, dont la section dépannage recense des pannes

@@ -110,10 +110,12 @@ en avant sur tablettes et Chromebooks.
 CampConnect est **fermé par défaut**. `src/pages/Onboarding.jsx` exige, pour
 entrer dans un camping :
 
-- une position GPS à **moins de 800 m** du camping (ligne 85), **ou**
-- un **code à 4 chiffres qui change toutes les heures** (`getHourlyCode`), **ou**
-- une arrivée via `/join/<slug>` — le QR physique vaut preuve de présence et la
-  vérification est alors sautée (commentaire ligne 28).
+- une position GPS à **moins de 800 m** du camping, **ou**
+- un **code à 4 chiffres qui change toutes les heures**, affiché à la
+  réception, **ou**
+- le **QR code de la réception** (`/join/<slug>?k=<clé>`).
+
+Les trois sont vérifiés par le serveur (`rejoindre_camping`, depuis la 1.0.3).
 
 Un testeur Google, à l'étranger et sans code, **ne peut pas ouvrir l'app**.
 C'est un motif de rejet classique (« fonctionnalité inaccessible au testeur »).

@@ -140,6 +140,9 @@ const SEED = {
   inscriptions: INSCRIPTIONS,
   membres_groupes: MEMBRES,
   positions: [],
+  // L'espace gérant de la démo (/admin) : sans gérant, il restait sur l'écran
+  // de connexion et la carte du code d'accès ne se montrait pas.
+  gerants: [{ id: 'ger-demo', user_id: 'demo-uid', camping_id: 'camp-demo', campings: DEMO_CAMPING }],
 }
 
 class Query {
@@ -194,10 +197,60 @@ const noopChannel = {
   send: async () => ({ status: 'ok' }),
 }
 
+// Entrée dans le camping (verifier_acces_camping, rejoindre_camping) et carte
+// du gérant (acces_camping, changer_cle_acces), simulées avec les mêmes règles
+// que la base : QR code (clé), code du jour, GPS à moins de 800 m du centre,
+// dix codes faux au plus. Arriver par un lien /join/ fait de la démo un
+// nouveau visiteur, pour montrer l'inscription ; sinon Julie est déjà inscrite.
+export const DEMO_CODE = '4821'
+let demoCleQR = 'c0ffee00c0ffee00c0ffee00c0ffee00'
+let demoEchecs = 0
+let demoInscrit = !(typeof window !== 'undefined' && /^\/join\//.test(window.location.pathname))
+const DEMO_JETON = 'jeton-demo'
+
+function demoPreuve(p = {}) {
+  if (p.jeton) return p.jeton === DEMO_JETON ? null : 'verification_expiree'
+  if (p.cle) return p.cle === demoCleQR ? null : 'qr_perime'
+  if (p.lat != null || p.lng != null) {
+    const d = Math.hypot((p.lat - CENTER.lat) * 111_000, (p.lng - CENTER.lng) * 111_000 * Math.cos(CENTER.lat * Math.PI / 180))
+    return d < 800 ? null : 'hors_camping'
+  }
+  if (p.code != null) {
+    if (demoEchecs >= 10) return 'trop_essais'
+    if (p.code === DEMO_CODE) return null
+    demoEchecs++
+    return 'code_faux'
+  }
+  return 'preuve_manquante'
+}
+
 // Fonctions de la base (src/lib/vacanciers.js) : les profils complets ne se
 // lisent que par elles. Les personnages restent présents toute la démo.
 const RPC = {
-  mon_profil: () => [DEMO_VACANCIER],
+  verifier_acces_camping: ({ p_preuve } = {}) => {
+    const refus = demoPreuve(p_preuve)
+    return refus ? { ok: false, erreur: refus } : { ok: true, jeton: DEMO_JETON }
+  },
+  rejoindre_camping: ({ p_preuve, p_profil } = {}) => {
+    if (!p_profil?.pseudo?.trim()) return { ok: false, erreur: 'pseudo_obligatoire' }
+    if (p_profil.cgu !== true) return { ok: false, erreur: 'cgu_obligatoires' }
+    const refus = demoPreuve(p_preuve)
+    if (refus) return { ok: false, erreur: refus }
+    Object.assign(DEMO_VACANCIER, {
+      pseudo: p_profil.pseudo.trim(),
+      avatar_emoji: p_profil.avatar_emoji || DEMO_VACANCIER.avatar_emoji,
+      emplacement: p_profil.emplacement || DEMO_VACANCIER.emplacement,
+      date_depart: p_profil.date_depart || DEMO_VACANCIER.date_depart,
+    })
+    demoInscrit = true
+    return { ok: true, id: DEMO_VACANCIER.id }
+  },
+  acces_camping: () => ({ code: DEMO_CODE, cle: demoCleQR }),
+  changer_cle_acces: () => {
+    demoCleQR = Array.from({ length: 32 }, () => '0123456789abcdef'[Math.floor(Math.random() * 16)]).join('')
+    return demoCleQR
+  },
+  mon_profil: () => (demoInscrit ? [DEMO_VACANCIER] : []),
   vacanciers_du_camping: () => VACS.map(v => ({ created_at: ago(600), date_depart: dansJours(4), banni: false, ...v })),
   vacanciers_presents: () => VACS.map(v => ({ id: v.id, avatar_emoji: v.avatar_emoji })),
 }
@@ -206,7 +259,7 @@ export const supabase = {
   from: (t) => new Query(t),
   channel: () => noopChannel,
   removeChannel: () => {},
-  rpc: async (nom) => ({ data: RPC[nom]?.() ?? null, error: null }),
+  rpc: async (nom, args) => ({ data: RPC[nom]?.(args) ?? null, error: null }),
   auth: {
     getSession: async () => ({ data: { session: { user: { id: 'demo-uid', email: 'demo@camp.fr' } } } }),
     getUser: async () => ({ data: { user: { id: 'demo-uid', email: 'demo@camp.fr' } } }),
