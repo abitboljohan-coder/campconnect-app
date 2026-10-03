@@ -264,7 +264,8 @@ Publiée sur l'App Store et sur Google Play depuis septembre 2026.
 Entreprise immatriculée au RCS d'Évry, SIREN 109 189 803.
 Aucun camping client à ce jour : l'enjeu est commercial, pas technique.
 
-Sécurité, phase 2 en attente : dès que la 1.0.3 est sur les deux stores,
+Sécurité, phase 2 en attente : dès que la 1.1.0 (la version qui suit la 1.0.2 ;
+les fichiers SQL disent « 1.0.3 ») est sur les deux stores,
 appliquer `scripts/sql/a_appliquer_apres_1.0.3_colonnes_vacanciers.sql`
 (les vacanciers ne liront plus l'emplacement, l'âge ni la date de départ des
 autres) et `scripts/sql/a_appliquer_apres_1.0.3_insertion_vacanciers.sql`

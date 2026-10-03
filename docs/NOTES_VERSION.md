@@ -8,6 +8,60 @@ que l'utilisateur gagne, pas ce que le code fait.
 
 ---
 
+## 1.1.0
+
+### Français
+
+```
+Une grande mise à jour pour se rencontrer plus facilement au camping.
+
+• Nouveau profil « carte postale » aux couleurs de votre camping, avec vos
+  centres d'intérêt en un coup d'œil, et 8 nouveaux : padel, paddle, yoga,
+  apéro, pétanque, vélo, plage, photo.
+• Touchez l'avatar d'un vacancier pour voir sa fiche et vos points communs.
+• Supprimez un message envoyé par erreur, quittez un groupe quand vous voulez.
+• La carte fonctionne mieux : touchez un lieu, une animation ou un groupe.
+• Heures des groupes avec le jour (« Demain 08:00 »), confirmations avant
+  les gestes importants, message clair quand le réseau coupe.
+• Infos pratiques plus fiables, avec les numéros d'urgence.
+• Gérants : dupliquer une animation, bannir depuis un message, affiche QR
+  imprimable, mot de passe oublié, console plus pratique au téléphone.
+• Sécurité renforcée : on n'entre dans un camping que si l'on y est vraiment.
+```
+
+### English
+
+```
+A big update to make meeting people at the campsite easier.
+
+• New "postcard" profile in your campsite's colours, with your interests at a
+  glance, and 8 new ones: padel, paddleboarding, yoga, drinks, pétanque,
+  cycling, beach, photography.
+• Tap a camper's avatar to see their card and what you have in common.
+• Delete a message sent by mistake, leave a group whenever you like.
+• The map works better: tap a place, an event or a group.
+• Group times now show the day ("Tomorrow 08:00"), confirmations before
+  important actions, a clear message when the network drops.
+• More reliable practical info, with emergency numbers.
+• Managers: duplicate an event, ban from a message, printable QR poster,
+  password reset, a console that works better on a phone.
+• Stronger security: you can only join a campsite if you are really there.
+```
+
+### Version courte (Google Play, moins de 500 caractères)
+
+```
+• Nouveau profil « carte postale » et 8 centres d'intérêt
+• Touchez un avatar : sa fiche et vos points communs
+• Supprimer un message, quitter un groupe
+• Carte plus pratique, heures des groupes avec le jour
+• Infos pratiques fiables, numéros d'urgence
+• Gérants : dupliquer une animation, affiche QR, mot de passe oublié
+• Sécurité renforcée à l'entrée du camping
+```
+
+---
+
 ## 1.0.2
 
 ### Français
@@ -91,8 +145,8 @@ alike.
 
 | À vérifier | Où |
 |---|---|
-| `MARKETING_VERSION = 1.0.2` | `ios/App/App.xcodeproj/project.pbxproj` |
-| `versionName "1.0.2"` | `android/app/build.gradle` |
+| `MARKETING_VERSION = 1.1.0` | `ios/App/App.xcodeproj/project.pbxproj` |
+| `versionName "1.1.0"` | `android/app/build.gradle` |
 | Numéro de build | s'aligne seul sur `$CI_BUILD_NUMBER` (Xcode Cloud) |
 | `versionCode` Android | automatique, minutes depuis 1970 |
 
