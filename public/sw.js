@@ -67,6 +67,12 @@ self.addEventListener('fetch', (e) => {
   // Supabase et les autres API : jamais de cache, jamais d'interception.
   if (url.hostname.endsWith('.supabase.co')) return
 
+  // La page de présentation /video n'est pas l'app. Sa page enregistrée comme
+  // coquille (« /index.html ») ferait s'ouvrir l'app hors ligne sur la vidéo,
+  // et la vidéo se lit par morceaux (requêtes Range, réponses 206) que le
+  // cache ne sait pas stocker. On laisse tout /video au navigateur.
+  if (url.pathname.startsWith('/video')) return
+
   // Tuiles satellite : réseau d'abord, cache en secours.
   if (url.hostname.includes('arcgisonline.com') || url.hostname.includes('tile.')) {
     e.respondWith(

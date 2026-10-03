@@ -1,0 +1,87 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>CampConnect en 36 secondes</title>
+<meta name="description" content="CampConnect, l'app qui aide les vacanciers d'un camping à se retrouver : groupes, animations, messagerie. Campings pilotes recherchés pour la saison 2027.">
+<!-- Aperçu soigné quand le lien est collé dans un email, WhatsApp ou LinkedIn. -->
+<meta property="og:title" content="CampConnect en 36 secondes">
+<meta property="og:description" content="Le camping devient une communauté. Campings pilotes recherchés pour la saison 2027.">
+<meta property="og:image" content="https://app.campconnect.fr/video/apercu.jpg">
+<meta property="og:type" content="video.other">
+<meta property="og:video" content="https://app.campconnect.fr/video/campconnect.mp4">
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400;9..40,600;9..40,700&display=swap">
+<style>
+  /* Page de présentation envoyée aux gérants : la vidéo d'abord, une seule
+     action ensuite. Couleurs de la vidéo (vert profond, crème, corail). */
+  :root {
+    --fond: #f6f3ec; --vert: #123524; --vert-doux: #2f6b4f; --texte: #1d2a22;
+    --doux: #5d6b62; --corail: #ef6a5a; --carte: #ffffff;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; }
+  body {
+    background: var(--fond); color: var(--texte);
+    font: 16px/1.55 "DM Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+    padding: max(20px, env(safe-area-inset-top)) 16px max(32px, env(safe-area-inset-bottom));
+  }
+  main { max-width: 440px; margin: 0 auto; display: grid; gap: 22px; }
+  header { display: flex; align-items: center; gap: 10px; }
+  header img { width: 36px; height: 36px; }
+  header span { font-weight: 700; font-size: 20px; color: var(--vert); letter-spacing: -.01em; }
+  h1 { margin: 0; font-size: 28px; line-height: 1.15; letter-spacing: -.02em; color: var(--vert); text-wrap: balance; }
+  h1 em { font-style: normal; color: var(--corail); }
+  .video {
+    width: 100%; aspect-ratio: 9 / 16; border-radius: 22px; overflow: hidden;
+    background: var(--vert); box-shadow: 0 18px 40px -18px rgba(18, 53, 36, .45);
+  }
+  video { width: 100%; height: 100%; display: block; object-fit: cover; }
+  .pilote { background: var(--carte); border-radius: 16px; padding: 18px; display: grid; gap: 8px; }
+  .pilote b { color: var(--vert); font-size: 17px; }
+  .pilote p { margin: 0; color: var(--doux); }
+  .action {
+    display: block; text-align: center; background: var(--corail); color: #fff;
+    font-weight: 700; text-decoration: none; padding: 15px 18px; border-radius: 999px; min-height: 44px;
+  }
+  .action:focus-visible { outline: 3px solid var(--vert); outline-offset: 3px; }
+  .contact { text-align: center; color: var(--doux); margin: -8px 0 0; }
+  .contact span { user-select: all; color: var(--texte); font-weight: 600; }
+  footer { text-align: center; color: var(--doux); font-size: 13px; display: grid; gap: 4px; }
+  footer a { color: var(--vert-doux); }
+</style>
+</head>
+<body>
+<main>
+  <header>
+    <img src="/logo-mark.png" alt="">
+    <span>CampConnect</span>
+  </header>
+
+  <h1>Le camping devient <em>une communauté.</em></h1>
+
+  <div class="video">
+    <video controls playsinline preload="metadata" poster="/video/apercu.jpg">
+      <source src="/video/campconnect.mp4" type="video/mp4">
+      Votre navigateur ne lit pas la vidéo : <a href="/video/campconnect.mp4">téléchargez-la ici</a>.
+    </video>
+  </div>
+
+  <section class="pilote">
+    <b>Campings pilotes, saison 2027</b>
+    <p>Je cherche 3 à 5 campings pour utiliser CampConnect gratuitement pendant la saison 2027, en échange d'un retour honnête.</p>
+  </section>
+
+  <a class="action" href="mailto:contact@campconnect.fr?subject=D%C3%A9monstration%20CampConnect">Demander une démonstration</a>
+  <p class="contact">ou écrivez à <span>contact@campconnect.fr</span></p>
+
+  <footer>
+    <span>Johan Abitbol, fondateur de CampConnect</span>
+    <span>Disponible sur l'<a href="https://apps.apple.com/fr/app/id6796962438">App Store</a> et <a href="https://play.google.com/store/apps/details?id=com.campconnect.app">Google Play</a></span>
+  </footer>
+</main>
+</body>
+</html>
