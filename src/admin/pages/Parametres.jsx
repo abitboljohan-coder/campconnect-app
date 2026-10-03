@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { supabase } from '../../supabase'
+import { lireVacanciersDuCamping } from '../../lib/vacanciers'
 import QRCodeGenerator from '../components/QRCodeGenerator'
 import { lienRejoindre, MESSAGE_ORDINATEUR } from '../lib/liens'
 import { versCsv } from '../lib/csv'
@@ -101,12 +102,12 @@ export default function Parametres({ camping, session, setCamping }) {
 
   async function exporterCsv() {
     setExporting(true)
-    const { data, error: err } = await supabase.from('vacanciers')
-      .select('pseudo, emplacement, tranche_age, avec, created_at')
-      .eq('camping_id', camping.id).order('created_at')
+    // Emplacement et tranche d'âge : par vacanciers_du_camping, réservée aux
+    // gérants (la table ne les livrera plus directement).
+    const { data, error: err } = await lireVacanciersDuCamping(camping.id)
     setExporting(false)
     if (err) { flash('error', traduireErreur(err)); return }
-    const rows = data || []
+    const rows = [...data].sort((a, b) => String(a.created_at).localeCompare(String(b.created_at)))
     // versCsv neutralise les formules : les pseudos sont saisis par des
     // vacanciers anonymes, et « =LIEN_HYPERTEXTE(…) » s'exécutait dans Excel.
     const csv = versCsv(

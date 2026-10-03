@@ -8,7 +8,9 @@ import { estActuel, heurePrevue } from '../lib/groupes'
 import { toutCharger } from '../lib/reseau'
 import ErreurReseau from '../components/ErreurReseau'
 import { useLocation, useNavigate } from 'react-router-dom'
-import { supabase, presentFilter } from '../supabase'
+import { supabase } from '../supabase'
+import { avatarsPresentsParGroupe } from '../lib/presence'
+import { lirePresents } from '../lib/vacanciers'
 import { t, useLangue } from '../i18n'
 import {
   Bouton, Carte, Champ, Texte, Pile, Puce, Squelette, Vide, Fab,
@@ -50,9 +52,10 @@ export default function Groupes({ camping, vacancier }) {
   }, [location.state, location.pathname, navigate])
 
   async function load() {
-    const { resultats: [{ data: grps }, { data: membres }], error } = await toutCharger([
+    const { resultats: [{ data: grps }, { data: membres }, { data: presents }], error } = await toutCharger([
       supabase.from('groupes').select('*').eq('camping_id', camping.id).eq('actif', true).order('created_at', { ascending: false }),
       supabase.from('membres_groupes').select('groupe_id').eq('vacancier_id', vacancier.id),
+      lirePresents(camping.id),
     ])
     setErreurReseau(!!error)
     if (error) {
@@ -67,15 +70,10 @@ export default function Groupes({ camping, vacancier }) {
     // Avatars des membres par groupe
     const ids = (grps || []).map(g => g.id)
     if (ids.length) {
+      // Seuls les présents (vacanciers_presents : sans la date de départ de chacun).
       const { data: allMembres } = await supabase
-        .from('membres_groupes').select('groupe_id, vacanciers!inner(avatar_emoji)').in('groupe_id', ids)
-        .or(presentFilter(), { foreignTable: 'vacanciers' })
-      const map = {}
-      for (const m of allMembres || []) {
-        if (!map[m.groupe_id]) map[m.groupe_id] = []
-        map[m.groupe_id].push(m.vacanciers?.avatar_emoji || '🙂')
-      }
-      setMembresMap(map)
+        .from('membres_groupes').select('groupe_id, vacancier_id').in('groupe_id', ids)
+      setMembresMap(avatarsPresentsParGroupe(allMembres, presents))
     }
   }
 

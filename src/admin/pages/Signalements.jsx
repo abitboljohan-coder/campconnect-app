@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { supabase } from '../../supabase'
 import { toast } from '../../toast'
+import { lireVacanciersDuCamping } from '../../lib/vacanciers'
 import { Bloc, EnTete } from '../components/Bloc'
 import { Bouton, Texte, Pile, Squelette, Vide, couleur as jetons, espace, graisse, rayon } from '../../design'
 
@@ -39,22 +40,29 @@ export default function Signalements({ camping }) {
   const [retires, setRetires] = useState(() => new Set()) // contenus supprimés depuis cette page
 
   async function charger() {
-    // Deux clés étrangères mènent de signalements à vacanciers : l'auteur du
-    // signalement et la personne signalée. Sans le nom de la contrainte, la
-    // jointure est ambiguë, Supabase répond 300 et ne renvoie rien — la page
-    // a ainsi affiché « Aucun nouveau signalement » pendant des semaines alors
-    // que les signalements arrivaient bien en base.
-    const { data, error } = await supabase
-      .from('signalements')
-      .select(`*,
-        vacanciers!signalements_vacancier_id_fkey(pseudo, avatar_emoji, emplacement),
-        auteur:vacanciers!signalements_auteur_signale_id_fkey(pseudo, avatar_emoji, banni)`)
-      .eq('camping_id', camping.id)
-      .order('created_at', { ascending: false })
+    // L'auteur du signalement (avec son emplacement) et la personne signalée
+    // (avec son état « banni ») viennent de vacanciers_du_camping, réservée aux
+    // gérants : la table ne livrera plus ces colonnes directement. Cela évite
+    // aussi la jointure ambiguë (deux clés étrangères vers vacanciers), qui
+    // avait fait afficher « Aucun nouveau signalement » pendant des semaines.
+    const [{ data, error: errSig }, { data: vacs, error: errVacs }] = await Promise.all([
+      supabase.from('signalements').select('*')
+        .eq('camping_id', camping.id)
+        .order('created_at', { ascending: false }),
+      lireVacanciersDuCamping(camping.id),
+    ])
+    const error = errSig || errVacs
     // Un échec ne doit jamais se lire comme « rien à traiter ».
     if (error) console.error('Chargement des signalements échoué :', error)
     setErreur(!!error)
-    if (!error) setItems(data || [])
+    if (!error) {
+      const parId = new Map(vacs.map(v => [v.id, v]))
+      setItems((data || []).map(s => ({
+        ...s,
+        vacanciers: parId.get(s.vacancier_id) || null,
+        auteur: parId.get(s.auteur_signale_id) || null,
+      })))
+    }
     setLoading(false)
   }
 

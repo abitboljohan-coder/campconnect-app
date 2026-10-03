@@ -11,7 +11,12 @@
 //                      (par défaut « onboarding@resend.dev », qui fonctionne
 //                       sans vérifier de domaine mais n'envoie qu'à l'adresse
 //                       du compte Resend)
-//   NOTIFY_SECRET    — (optionnel) secret partagé avec le webhook
+//   NOTIFY_SECRET    — secret partagé avec la base. À poser : sans lui, n'importe
+//                      qui peut appeler la fonction et envoyer un email à
+//                      NOTIFY_TO (audit du 3 octobre 2026). Valeur : celle du
+//                      secret « push_webhook_secret » du coffre (Vault), que le
+//                      déclencheur notifier_candidature envoie dans l'en-tête
+//                      x-webhook-secret depuis le 3 octobre 2026.
 // ─────────────────────────────────────────────────────────────────────────────
 
 const RESEND_API_KEY = Deno.env.get('RESEND_API_KEY')

@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { supabase } from '../../supabase'
 import { toast } from '../../toast'
+import { lireVacanciersDuCamping } from '../../lib/vacanciers'
 import { Bloc, EnTete } from '../components/Bloc'
 import { Bouton, Champ, Pile, Puce, Squelette, Vide, Badge as Pastille, couleur as jetons, espace, graisse, rayon } from '../../design'
 
@@ -15,31 +16,37 @@ export default function Moderation({ camping }) {
   const [recherche, setRecherche] = useState('')
 
   async function load() {
-    const { data: grps } = await supabase.from('groupes')
-      .select('*, vacanciers(pseudo, avatar_emoji, banni)')
-      .eq('camping_id', camping.id).order('created_at', { ascending: false })
+    // Les profils (pseudo, avatar, « banni », emplacement) viennent de
+    // vacanciers_du_camping, réservée aux gérants : la table ne livrera plus
+    // ces colonnes directement. On les rattache ensuite à chaque contenu.
+    const [{ data: grps }, { data: vacs }] = await Promise.all([
+      supabase.from('groupes').select('*')
+        .eq('camping_id', camping.id).order('created_at', { ascending: false }),
+      lireVacanciersDuCamping(camping.id),
+    ])
+    const parId = new Map(vacs.map(v => [v.id, v]))
+    const avecAuteur = cle => x => ({ ...x, vacanciers: parId.get(x[cle]) || null })
     const grpIds = (grps || []).map(g => g.id)
     const grpNames = Object.fromEntries((grps || []).map(g => [g.id, g.titre]))
 
     // Annonces et groupes sont du contenu publié par les vacanciers, photos et
     // titres compris : ils n'avaient pas d'onglet, et le gérant ne pouvait
     // retirer ni une annonce déplacée, ni un groupe au titre injurieux.
-    const [{ data: msgs }, { data: sts }, { data: vacs }, { data: anns }] = await Promise.all([
+    const [{ data: msgs }, { data: sts }, { data: anns }] = await Promise.all([
       grpIds.length
-        ? supabase.from('messages').select('*, vacanciers(pseudo, avatar_emoji, banni)')
+        ? supabase.from('messages').select('*')
             .in('groupe_id', grpIds).order('created_at', { ascending: false }).limit(100)
         : Promise.resolve({ data: [] }),
-      supabase.from('statuts').select('*, vacanciers(pseudo, avatar_emoji, banni)')
+      supabase.from('statuts').select('*')
         .eq('camping_id', camping.id).order('created_at', { ascending: false }).limit(50),
-      supabase.from('vacanciers').select('*').eq('camping_id', camping.id).order('created_at', { ascending: false }),
-      supabase.from('annonces').select('*, vacanciers(pseudo, avatar_emoji, banni)')
+      supabase.from('annonces').select('*')
         .eq('camping_id', camping.id).order('created_at', { ascending: false }).limit(50),
     ])
-    setMessages((msgs || []).map(m => ({ ...m, groupe_nom: grpNames[m.groupe_id] })))
-    setStatuts(sts || [])
-    setVacanciers(vacs || [])
-    setAnnonces(anns || [])
-    setGroupes(grps || [])
+    setMessages((msgs || []).map(m => ({ ...avecAuteur('auteur_id')(m), groupe_nom: grpNames[m.groupe_id] })))
+    setStatuts((sts || []).map(avecAuteur('vacancier_id')))
+    setVacanciers([...vacs].sort((a, b) => String(b.created_at).localeCompare(String(a.created_at))))
+    setAnnonces((anns || []).map(avecAuteur('vacancier_id')))
+    setGroupes((grps || []).map(avecAuteur('createur_id')))
     setLoading(false)
   }
 

@@ -1,4 +1,5 @@
-import { useEffect, useState } from 'react'
+import { Children, useEffect, useRef, useState } from 'react'
+import { Link } from 'react-router-dom'
 import { toast } from '../toast'
 import { supabase } from '../supabase'
 import Sheet from '../components/Sheet'
@@ -7,14 +8,32 @@ import { SUGGESTIONS_AVATARS } from '../lib/emojis'
 import { isNative, setAppMode } from '../native'
 import { unregisterPush } from '../push'
 import { chargerBlocages, debloquer } from '../lib/moderation'
-import { AVEC, INTERETS, codeAvec, codesInterets, libelleAvec, libelleInteret } from '../lib/profil'
+import { lireMonProfil } from '../lib/vacanciers'
+import {
+  AVEC, INTERETS, codeAvec, codesInterets, emojiAvec,
+  jourLocal, libelleAvec, nuitsRestantes, phraseAvec,
+} from '../lib/profil'
+import { accentCourant, teintesPaysage } from '../lib/paysage'
+import { AvatarPostale, GrilleInterets, Paysage, RondsInterets } from '../components/CartePostale'
 import { t, useLangue, locale, LANGUES, setLangue } from '../i18n'
 import {
-  Bouton, Carte, Champ, Texte, Pile, Puce,
+  Bouton, Carte, Champ, Icone, Texte, Pile, Puce,
   couleur, espace, graisse, rayon, texte as tailles,
 } from '../design'
 
 const TRANCHES = ['18-25', '26-35', '36-45', '46-60', '60+']
+
+// Marge latérale du profil : un peu plus que le reste de l'application, comme
+// sur la maquette « carte postale » — le texte respire sous le paysage.
+const MARGE = 20
+const TITRE = { fontSize: 32, fontWeight: graisse.affiche, letterSpacing: '-1px', lineHeight: 1.08, overflowWrap: 'anywhere' }
+const TITRE_SECTION = { fontSize: 18, fontWeight: graisse.titre, letterSpacing: '-0.3px', color: couleur.texte }
+// L'action principale du profil, à l'encre : l'accent est déjà partout dans
+// le paysage, un bouton de plus à sa couleur s'y perdrait.
+const BOUTON_ENCRE = {
+  background: couleur.texte, color: couleur.texteSurAccent, border: '1px solid transparent',
+  borderRadius: rayon.rond, padding: `0 ${espace.lg}px`, minHeight: 44, fontSize: tailles.moyen - 0.5,
+}
 
 // « build 119 · main · 1a2b3c4 » : quelle version tourne sur ce téléphone.
 const INFO = typeof __BUILD_INFO__ !== 'undefined' ? __BUILD_INFO__ : {}
@@ -36,12 +55,15 @@ export default function Profil({ camping, vacancier, onLogout, onUpdate }) {
   const [editing, setEditing] = useState(false)
   const [form, setForm] = useState(() => vide(vacancier))
   const [saving, setSaving] = useState(false)
-  const [success, setSuccess] = useState(false)
-  const [stats, setStats] = useState({ groupes: 0, animations: 0 })
+  // null tant que les compteurs chargent : un « 0 » affiché une demi-seconde
+  // invitait à rejoindre un groupe que l'on avait déjà rejoint.
+  const [stats, setStats] = useState({ groupes: null, animations: null })
   const [confirmerSuppression, setConfirmerSuppression] = useState(false)
   const [suppression, setSuppression] = useState(false)
   const [confirmerDeconnexion, setConfirmerDeconnexion] = useState(false)
   const [bloques, setBloques] = useState(null)   // null : en cours de chargement
+  const [feuille, setFeuille] = useState(null)   // 'langue' | 'bloques'
+  const haut = useRef(null)
 
   useEffect(() => {
     async function loadStats() {
@@ -78,6 +100,20 @@ export default function Profil({ camping, vacancier, onLogout, onUpdate }) {
     toast(t('moderation.debloque', { pseudo }), 'succes')
   }
 
+  // L'édition remplace la page : on repart du haut, sinon un appui sur
+  // « Ajoutez vos centres d'intérêt », plus bas, ouvrait le formulaire au milieu.
+  function ouvrirEdition() {
+    setForm(vide(vacancier))
+    setEditing(true)
+    requestAnimationFrame(() => haut.current?.scrollIntoView({ block: 'start' }))
+  }
+
+  function fermerEdition() {
+    setEditing(false)
+    setForm(vide(vacancier))
+    requestAnimationFrame(() => haut.current?.scrollIntoView({ block: 'start' }))
+  }
+
   function toggleInteret(val) {
     setForm(f => ({
       ...f,
@@ -88,7 +124,10 @@ export default function Profil({ camping, vacancier, onLogout, onUpdate }) {
   async function sauvegarder() {
     if (!form.pseudo.trim() || saving) return   // un pseudo vide rendait l'auteur anonyme partout
     setSaving(true)
-    const { data, error } = await supabase.from('vacanciers').update({
+    // Sans .select() : PostgREST relirait alors toutes les colonnes de la
+    // ligne, et la table ne livrera plus l'emplacement ni la date de départ.
+    // Le profil enregistré est relu par mon_profil (src/lib/vacanciers.js).
+    const { error } = await supabase.from('vacanciers').update({
       avatar_emoji: form.avatar_emoji,
       pseudo:      form.pseudo.trim(),
       emplacement: form.emplacement.trim() || null,
@@ -96,7 +135,7 @@ export default function Profil({ camping, vacancier, onLogout, onUpdate }) {
       avec:        form.avec || null,
       interests:   form.interests.length > 0 ? form.interests : null,
       date_depart: form.date_depart || null,
-    }).eq('id', vacancier.id).select().single()
+    }).eq('id', vacancier.id)
 
     if (error) {
       console.error('Sauvegarde profil échouée :', error)
@@ -108,13 +147,14 @@ export default function Profil({ camping, vacancier, onLogout, onUpdate }) {
     // qu'en base et dans le stockage local : l'écran continuait d'afficher
     // l'ancien pseudo — « Enregistré », mais rien n'avait changé à l'œil —,
     // et l'accueil comme le chat le gardaient jusqu'au redémarrage.
+    const { data } = await lireMonProfil(vacancier.camping_id)
     const updated = data || { ...vacancier, ...form }
     localStorage.setItem('vacancier', JSON.stringify(updated))
     onUpdate?.(updated)
     setEditing(false)
-    setSuccess(true)
-    setTimeout(() => setSuccess(false), 3000)
+    toast(t('profil.enregistre'), 'succes')
     setSaving(false)
+    requestAnimationFrame(() => haut.current?.scrollIntoView({ block: 'start' }))
   }
 
   /**
@@ -163,189 +203,211 @@ export default function Profil({ camping, vacancier, onLogout, onUpdate }) {
   }
 
   const interests = codesInterets(vacancier.interests)
+  const aujourdhui = jourLocal()
+  const depart = vacancier.date_depart >= aujourdhui ? vacancier.date_depart : null
+  const nuits = nuitsRestantes(depart, aujourdhui)
+  const langueActuelle = LANGUES.find(l => l.code === langue)
+  const accent = teintesPaysage(accentCourant())
+
+  // « En vacances entre amis · 26–35 ans » : seulement ce qui est renseigné.
+  const bio = [
+    vacancier.avec && phraseAvec(vacancier.avec),
+    vacancier.tranche_age && t('profil.age', { tranche: vacancier.tranche_age.replace('-', '–') }),
+  ].filter(Boolean).join(' · ')
 
   return (
-    <div style={{ background: couleur.fond, minHeight: '100%' }}>
+    <div ref={haut} style={{ minHeight: '100%', overflowX: 'hidden', paddingBottom: espace.xl }}>
 
-      {/* Bandeau d'identité */}
-      <Pile espace="md" aligner="center"
-            style={{ background: couleur.marqueSombre, padding: '28px 20px 24px' }}>
-        <div
-          aria-hidden="true"
-          style={{
-            width: 80, height: 80, borderRadius: rayon.rond,
-            background: 'var(--cc-accent-voile)',
-            border: '3px solid var(--cc-accent)',
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-            fontSize: 40,
-          }}
-        >
-          {vacancier.avatar_emoji || '🏕️'}
-        </div>
-
-        <Pile espace="xs" aligner="center" style={{ textAlign: 'center' }}>
-          <Texte variante="section" as="h1" style={{ color: '#fff', fontSize: tailles.titre }}>
-            {vacancier.pseudo}
-          </Texte>
-          {vacancier.emplacement && (
-            <Texte variante="doux" style={{ color: '#C0DD97' }}>
-              📍 {t('profil.emplacement')} {vacancier.emplacement}
-            </Texte>
-          )}
-          <Texte variante="micro" style={{ color: 'rgba(255,255,255,0.55)' }}>{camping?.nom}</Texte>
-        </Pile>
-
-        {interests.length > 0 && (
-          <Pile direction="ligne" espace="xs" retour justifier="center">
-            {interests.map(tag => (
-              <span key={tag} style={{
-                background: 'var(--cc-accent-voile)', color: '#C0DD97',
-                fontSize: tailles.petit, fontWeight: graisse.normal,
-                padding: `3px ${espace.md}px`, borderRadius: rayon.rond,
-                border: '1px solid var(--cc-accent-bordure)',
-              }}>
-                {libelleInteret(tag)}
-              </span>
-            ))}
-          </Pile>
+      {/* L'en-tête « carte postale » : le paysage du camping, l'avatar posé
+          dessus et, à droite, l'action principale de l'écran. */}
+      <Paysage />
+      <div style={{
+        display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', gap: espace.md,
+        // Le chevauchement suit la hauteur du paysage, proportionnelle à la
+        // largeur : fixe, il faisait remonter le bouton sur la tente à 320 px.
+        padding: `0 ${MARGE}px`, marginTop: 'clamp(-58px, -14vw, -44px)', position: 'relative',
+      }}>
+        <AvatarPostale emoji={(editing ? form.avatar_emoji : vacancier.avatar_emoji) || '🏕️'} />
+        {!editing && (
+          <Bouton onClick={ouvrirEdition} icone={<Icone nom="crayon" taille={16} epaisseur={2} />} style={{
+            ...BOUTON_ENCRE, marginBottom: espace.sm, flexShrink: 1, minWidth: 0, whiteSpace: 'nowrap',
+          }}>
+            {t('profil.modifier')}
+          </Bouton>
         )}
-      </Pile>
+      </div>
 
-      <Pile espace="lg" style={{ padding: `${espace.xl}px ${espace.lg}px`, maxWidth: 500, margin: '0 auto' }}>
+      {editing ? (
+        <Pile espace="xl" style={{ padding: `${espace.lg}px ${MARGE}px 0` }}>
+          <Texte variante="titre" as="h1" style={TITRE}>{t('profil.modifier')}</Texte>
 
-        {success && (
-          <Carte hauteur="posee" padding={espace.md} role="status"
-                 style={{ background: '#f0fdf4', border: '1px solid #bbf7d0', textAlign: 'center' }}>
-            <Texte variante="corps" style={{ color: couleur.succes, fontWeight: graisse.fort }}>
-              {t('profil.enregistre')}
-            </Texte>
-          </Carte>
-        )}
+          <Section titre={t('profil.mes_infos')}>
+            {/* L'avatar se choisissait à l'inscription, puis plus jamais. */}
+            <ChoixEmoji
+              libelle={t('onb.avatar')}
+              valeur={form.avatar_emoji}
+              suggestions={SUGGESTIONS_AVATARS}
+              onChange={avatar_emoji => setForm(f => ({ ...f, avatar_emoji }))}
+            />
+            <Champ
+              libelle={t('profil.pseudo')}
+              value={form.pseudo}
+              maxLength={40}
+              onChange={e => setForm(f => ({ ...f, pseudo: e.target.value }))}
+            />
+            <Champ
+              libelle={t('profil.emplacement')}
+              value={form.emplacement}
+              placeholder={t('onb.emplacement_ph')}
+              onChange={e => setForm(f => ({ ...f, emplacement: e.target.value }))}
+            />
+            <Champ
+              libelle={t('profil.depart')}
+              type="date"
+              value={form.date_depart}
+              min={aujourdhui}
+              onChange={e => setForm(f => ({ ...f, date_depart: e.target.value }))}
+            />
+          </Section>
 
-        {/* Compteurs */}
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: espace.sm }}>
-          {[
-            { n: stats.groupes,    label: t('nav.groupes'),    icon: '👥' },
-            { n: stats.animations, label: t('nav.agenda'),     icon: '📅' },
-            { n: interests.length, label: t('profil.interets_court'), icon: '⭐' },
-          ].map(s => (
-            <Carte key={s.label} hauteur="posee" padding={`14px ${espace.sm}px`} style={{ textAlign: 'center' }}>
-              <div aria-hidden="true" style={{ fontSize: 22 }}>{s.icon}</div>
-              <Texte variante="section" style={{ fontSize: 22 }}>{s.n}</Texte>
-              <Texte variante="micro" style={{ marginTop: 2 }}>{s.label}</Texte>
-            </Carte>
-          ))}
-        </div>
+          <Section titre={t('profil.interets')} aide={t('profil.interets_visibles')}>
+            <GrilleInterets codes={INTERETS} choisis={form.interests} onBasculer={toggleInteret} />
+          </Section>
 
-        {/* Informations */}
-        <Carte hauteur="posee" padding={20}>
-          <Pile espace="lg">
-            <Pile direction="ligne" justifier="space-between" aligner="center">
-              <Texte variante="sousTitre" as="h2">{t('profil.mes_infos')}</Texte>
-              {!editing && (
-                <Bouton variante="discret" taille="sm" onClick={() => setEditing(true)}
-                        style={{ color: 'var(--cc-accent)' }}>
-                  {t('commun.modifier')}
-                </Bouton>
-              )}
-            </Pile>
-
-            {editing ? (
-              <Pile espace="lg">
-                {/* L'avatar se choisissait à l'inscription, puis plus jamais. */}
-                <ChoixEmoji
-                  libelle={t('onb.avatar')}
-                  valeur={form.avatar_emoji}
-                  suggestions={SUGGESTIONS_AVATARS}
-                  onChange={avatar_emoji => setForm(f => ({ ...f, avatar_emoji }))}
-                />
-                <Champ
-                  libelle={t('profil.pseudo')}
-                  value={form.pseudo}
-                  maxLength={40}
-                  onChange={e => setForm(f => ({ ...f, pseudo: e.target.value }))}
-                />
-                <Champ
-                  libelle={t('profil.emplacement')}
-                  value={form.emplacement}
-                  placeholder={t('onb.emplacement_ph')}
-                  onChange={e => setForm(f => ({ ...f, emplacement: e.target.value }))}
-                />
-                <Champ
-                  libelle={t('profil.depart')}
-                  type="date"
-                  value={form.date_depart}
-                  min={new Date().toISOString().slice(0, 10)}
-                  onChange={e => setForm(f => ({ ...f, date_depart: e.target.value }))}
-                />
-
-                <Groupe libelle={t('profil.tranche_age')}>
-                  {TRANCHES.map(v => (
-                    <Puce key={v} taille="sm" actif={form.tranche_age === v}
-                          onClick={() => setForm(f => ({ ...f, tranche_age: v }))}>{v}</Puce>
-                  ))}
-                </Groupe>
-
-                <Groupe libelle={t('profil.avec')}>
-                  {AVEC.map(a => (
-                    <Puce key={a} taille="sm" actif={form.avec === a}
-                          onClick={() => setForm(f => ({ ...f, avec: a }))}>{libelleAvec(a)}</Puce>
-                  ))}
-                </Groupe>
-
-                <Groupe libelle={t('profil.interets')}>
-                  {INTERETS.map(i => (
-                    <Puce key={i} taille="sm" actif={form.interests.includes(i)}
-                          onClick={() => toggleInteret(i)}>{libelleInteret(i)}</Puce>
-                  ))}
-                </Groupe>
-
-                <Pile direction="ligne" espace="sm">
-                  <Bouton variante="secondaire" style={{ flex: 1 }}
-                          onClick={() => { setEditing(false); setForm(vide(vacancier)) }}>
-                    {t('commun.annuler')}
-                  </Bouton>
-                  <Bouton charge={saving} disabled={!form.pseudo.trim()} onClick={sauvegarder} style={{ flex: 2 }}>
-                    {saving ? t('commun.enregistrement') : t('commun.enregistrer')}
-                  </Bouton>
-                </Pile>
-              </Pile>
-            ) : (
-              <Pile espace="md">
-                <Ligne label={t('profil.pseudo')} value={vacancier.pseudo} />
-                <Ligne label={t('profil.emplacement')} value={vacancier.emplacement || '—'} />
-                <Ligne
-                  label={t('profil.depart')}
-                  value={vacancier.date_depart
-                    ? new Date(vacancier.date_depart + 'T12:00').toLocaleDateString(locale(), { weekday: 'long', day: 'numeric', month: 'long' })
-                    : '—'}
-                />
-                {vacancier.tranche_age && <Ligne label={t('profil.tranche_age')} value={vacancier.tranche_age} />}
-                {vacancier.avec && <Ligne label={t('profil.avec')} value={libelleAvec(vacancier.avec)} />}
-              </Pile>
-            )}
-          </Pile>
-        </Carte>
-
-        {/* Langue */}
-        <Carte hauteur="posee" padding={`${espace.lg}px 18px`}>
-          <Pile espace="md">
-            <Texte variante="libelle" as="span">{t('profil.langue')}</Texte>
-            <Pile direction="ligne" espace="sm" retour>
-              {LANGUES.map(l => (
-                <Puce key={l.code} actif={langue === l.code} onClick={() => setLangue(l.code)}>
-                  <span aria-hidden="true" style={{ fontSize: 17 }}>{l.drapeau}</span>{l.label}
-                </Puce>
+          <Section titre={t('profil.avec')}>
+            <Pile direction="ligne" espace="sm" retour role="group" aria-label={t('profil.avec')}>
+              {AVEC.map(a => (
+                <PuceChoix key={a} actif={form.avec === a} emoji={emojiAvec(a)}
+                           onClick={() => setForm(f => ({ ...f, avec: a }))}>
+                  {libelleAvec(a)}
+                </PuceChoix>
               ))}
             </Pile>
-          </Pile>
-        </Carte>
+          </Section>
 
-        {/* Vacanciers bloqués */}
-        <Carte hauteur="posee" padding={`${espace.lg}px 18px`}>
-          <Pile espace="md">
-            <Texte variante="libelle" as="h2">{t('moderation.bloques_titre')}</Texte>
-            {bloques?.length === 0 && <Texte variante="doux">{t('moderation.aucun_bloque')}</Texte>}
+          <Section titre={t('profil.tranche_age')}>
+            <Pile direction="ligne" espace="sm" retour role="group" aria-label={t('profil.tranche_age')}>
+              {TRANCHES.map(v => (
+                <PuceChoix key={v} actif={form.tranche_age === v}
+                           onClick={() => setForm(f => ({ ...f, tranche_age: v }))}>
+                  {v.replace('-', '–')}
+                </PuceChoix>
+              ))}
+            </Pile>
+          </Section>
+
+          <Pile direction="ligne" espace="sm">
+            <Bouton variante="secondaire" taille="lg" style={{ flex: 1, minWidth: 0, borderRadius: rayon.rond }} onClick={fermerEdition}>
+              {t('commun.annuler')}
+            </Bouton>
+            <Bouton taille="lg" charge={saving} disabled={!form.pseudo.trim()} onClick={sauvegarder}
+                    style={{ ...BOUTON_ENCRE, flex: 2, minWidth: 0 }}>
+              {saving ? t('commun.enregistrement') : t('commun.enregistrer')}
+            </Bouton>
+          </Pile>
+        </Pile>
+      ) : (
+        <>
+          <div style={{ padding: `14px ${MARGE}px 0` }}>
+            <Texte variante="titre" as="h1" style={TITRE}>{vacancier.pseudo}</Texte>
+            {bio && (
+              <Texte variante="corps" style={{ marginTop: 6, fontSize: 16, lineHeight: 1.4, color: couleur.texteMoyen }}>{bio}</Texte>
+            )}
+            {(vacancier.emplacement || depart) && (
+              <div style={{
+                display: 'flex', flexWrap: 'wrap', gap: `${espace.xs}px ${espace.lg}px`, marginTop: 10,
+                fontSize: tailles.base + 0.5, color: couleur.texteDoux,
+              }}>
+                {vacancier.emplacement && (
+                  <Meta icone="pin" couleurIcone={accent.texte}>{t('profil.emplacement')} {vacancier.emplacement}</Meta>
+                )}
+                {depart && (
+                  <Meta icone="lune" couleurIcone={accent.texte}>
+                    {t('profil.jusquau', {
+                      date: new Date(depart + 'T12:00').toLocaleDateString(locale(), { weekday: 'long', day: 'numeric', month: 'long' }),
+                    })}
+                  </Meta>
+                )}
+              </div>
+            )}
+          </div>
+
+          {/* Compteurs en ligne, à la façon d'un profil social. Les deux
+              premiers mènent à la liste qu'ils comptent. */}
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: `${espace.sm}px 26px`, padding: `${espace.lg}px ${MARGE}px 0` }}>
+            <Compteur to="/groupes" valeur={stats.groupes} couleurValeur={accent.texte}
+                      libelle={t(stats.groupes === 1 ? 'profil.nb_groupe' : 'profil.nb_groupes')} />
+            <Compteur to="/agenda" valeur={stats.animations} couleurValeur={accent.texte}
+                      libelle={t(stats.animations === 1 ? 'profil.nb_animation' : 'profil.nb_animations')} />
+            {nuits !== null && (nuits === 0
+              ? <Compteur valeur="🧳" libelle={t('profil.depart_aujourdhui')} />
+              : <Compteur valeur={nuits} libelle={t(nuits === 1 ? 'profil.nb_nuit' : 'profil.nb_nuits')} />)}
+          </div>
+
+          <section style={{ padding: `${espace.xxl}px ${MARGE}px 0` }}>
+            <Texte variante="sousTitre" as="h2" style={TITRE_SECTION}>{t('profil.interets')}</Texte>
+            <Texte variante="doux" style={{ marginTop: 2, marginBottom: 14 }}>{t('profil.interets_visibles')}</Texte>
+            <RondsInterets codes={interests} onAjouter={ouvrirEdition} libelle={t('profil.interets')} />
+          </section>
+
+          {/* Réglages : calmes, regroupés, chacun à un appui. */}
+          <Pile espace="md" style={{ padding: `${espace.xxl}px ${espace.lg}px 0` }}>
+            <Liste>
+              <Rangee icone="globe" libelle={t('profil.langue')} valeur={langueActuelle?.label}
+                      onClick={() => setFeuille('langue')} />
+              <Rangee icone="interdit" libelle={t('moderation.bloques_titre')}
+                      valeur={bloques === null ? '' : String(bloques.length)}
+                      onClick={() => setFeuille('bloques')} />
+              {/* L'entrée gérant n'existait que sur l'écran de recherche : une fois
+                  le camping rejoint, Onboarding ne s'affiche plus et la console
+                  devenait injoignable sans supprimer son compte. Un gérant est
+                  d'abord un vacancier de son propre camping — il lui faut une
+                  porte depuis l'intérieur. */}
+              {isNative && (
+                <Rangee icone="cle" libelle={t('profil.espace_gerant')} onClick={() => setAppMode('gerant')} />
+              )}
+            </Liste>
+
+            <Liste>
+              <Rangee icone="sortie" libelle={t('profil.deconnexion')} danger
+                      onClick={() => setConfirmerDeconnexion(true)} />
+            </Liste>
+
+            {/* Se déconnecter et supprimer son compte ne sont pas la même chose,
+                et rien ne doit laisser croire le contraire : le second est écrit
+                en clair, séparé, et demande une confirmation. */}
+            <Bouton variante="discret" pleineLargeur onClick={() => setConfirmerSuppression(true)}
+                    style={{ color: couleur.danger, fontWeight: graisse.normal, fontSize: tailles.base }}>
+              {t('profil.suppr_compte')}
+            </Bouton>
+
+            <Pile espace="xs" style={{ textAlign: 'center' }}>
+              <Texte variante="micro">CampConnect — {camping?.nom}</Texte>
+              {VERSION && <Texte variante="micro" style={{ opacity: 0.6 }}>{VERSION}</Texte>}
+            </Pile>
+          </Pile>
+        </>
+      )}
+
+      {feuille === 'langue' && (
+        <Sheet onClose={() => setFeuille(null)}>
+          <Pile espace="lg">
+            <Texte variante="section" as="h2">{t('profil.langue')}</Texte>
+            <Liste>
+              {LANGUES.map(l => (
+                <Rangee key={l.code} emoji={l.drapeau} libelle={l.label} actif={langue === l.code}
+                        onClick={() => { setLangue(l.code); setFeuille(null) }} />
+              ))}
+            </Liste>
+          </Pile>
+        </Sheet>
+      )}
+
+      {feuille === 'bloques' && (
+        <Sheet onClose={() => setFeuille(null)}>
+          <Pile espace="lg">
+            <Texte variante="section" as="h2">{t('moderation.bloques_titre')}</Texte>
+            {bloques?.length === 0 && <Texte variante="corps">{t('moderation.aucun_bloque')}</Texte>}
             {bloques?.map(b => (
               <Pile key={b.id} direction="ligne" espace="md" aligner="center">
                 <span aria-hidden="true" style={{ fontSize: 22, flexShrink: 0 }}>{b.avatar_emoji || '🏕️'}</span>
@@ -361,48 +423,12 @@ export default function Profil({ camping, vacancier, onLogout, onUpdate }) {
                 </Bouton>
               </Pile>
             ))}
-          </Pile>
-        </Carte>
-
-        <Pile espace="sm">
-          {/* Le plus gros bouton rouge de l'écran : un appui de travers renvoyait
-              à la recherche du camping, avec tout le parcours d'arrivée à refaire. */}
-          <Bouton variante="danger" taille="lg" pleineLargeur onClick={() => setConfirmerDeconnexion(true)}>
-            {t('profil.deconnexion')}
-          </Bouton>
-
-          {/* Se déconnecter et supprimer son compte ne sont pas la même chose,
-              et rien ne doit laisser croire le contraire : le second est écrit
-              en clair, séparé, et demande une confirmation. */}
-          <Bouton variante="discret" pleineLargeur
-                  onClick={() => setConfirmerSuppression(true)}
-                  style={{ color: couleur.danger }}>
-            {t('profil.suppr_compte')}
-          </Bouton>
-
-          {/* L'entrée gérant n'existait que sur l'écran de recherche : une fois
-              le camping rejoint, Onboarding ne s'affiche plus et la console
-              devenait injoignable sans supprimer son compte. Un gérant est
-              d'abord un vacancier de son propre camping — il lui faut une
-              porte depuis l'intérieur. */}
-          {isNative && (
-            <Bouton variante="discret" pleineLargeur
-                    onClick={() => setAppMode('gerant')}
-                    style={{ textDecoration: 'underline' }}>
-              {t('profil.espace_gerant')}
+            <Bouton variante="secondaire" taille="lg" pleineLargeur onClick={() => setFeuille(null)}>
+              {t('commun.fermer')}
             </Bouton>
-          )}
-        </Pile>
-
-        <Texte variante="micro" style={{ textAlign: 'center' }}>
-          CampConnect — {camping?.nom}
-        </Texte>
-        {VERSION && (
-          <Texte variante="micro" style={{ textAlign: 'center', opacity: 0.6, marginTop: -espace.md }}>
-            {VERSION}
-          </Texte>
-        )}
-      </Pile>
+          </Pile>
+        </Sheet>
+      )}
 
       {confirmerDeconnexion && (
         <Sheet onClose={() => setConfirmerDeconnexion(false)}>
@@ -458,25 +484,102 @@ export default function Profil({ camping, vacancier, onLogout, onUpdate }) {
   )
 }
 
-function Ligne({ label, value }) {
+/** Carte qui empile des rangées, séparées d'un filet. */
+function Liste({ children }) {
   return (
-    <Pile direction="ligne" justifier="space-between" aligner="center"
-          style={{ paddingBottom: espace.md, borderBottom: `1px solid ${couleur.fond}` }}>
-      <Texte variante="corps" as="span">{label}</Texte>
-      <Texte variante="corps" as="span" style={{ fontSize: tailles.moyen, color: couleur.texte, fontWeight: graisse.fort }}>
-        {value}
-      </Texte>
-    </Pile>
+    <div style={{ background: couleur.surface, border: `1px solid ${couleur.bordure}`, borderRadius: 18, overflow: 'hidden' }}>
+      {Children.toArray(children).filter(Boolean).map((enfant, i) => (
+        <div key={i} style={{ borderTop: i ? `1px solid ${couleur.bordure}` : 'none' }}>{enfant}</div>
+      ))}
+    </div>
   )
 }
 
-/** Un libellé au-dessus d'un ensemble de puces. Ce n'est pas un champ de saisie :
- *  il n'a donc pas de `for`, mais un groupe nommé, ce qu'attend un lecteur d'écran. */
-function Groupe({ libelle, children }) {
+/** Rangée de réglage : pictogramme, libellé, valeur actuelle, chevron. */
+function Rangee({ emoji, icone, libelle, valeur, onClick, danger, actif }) {
   return (
-    <Pile espace="sm" role="group" aria-label={libelle}>
-      <Texte variante="libelle" as="span">{libelle}</Texte>
-      <Pile direction="ligne" espace="sm" retour>{children}</Pile>
-    </Pile>
+    <button type="button" onClick={onClick} aria-pressed={actif} style={{
+      display: 'flex', alignItems: 'center', gap: 14, width: '100%', minHeight: 56,
+      padding: `${espace.sm}px ${espace.lg}px`, background: 'none', border: 'none',
+      textAlign: 'left', cursor: 'pointer', fontFamily: 'inherit', color: danger ? couleur.danger : couleur.texte,
+    }}>
+      <span aria-hidden="true" style={{
+        width: 24, flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20,
+        color: danger ? couleur.danger : couleur.texteDoux,
+      }}>
+        {icone ? <Icone nom={icone} taille={22} /> : emoji}
+      </span>
+      <span style={{
+        flex: 1, minWidth: 0, fontSize: tailles.moyen, fontWeight: graisse.fort,
+        overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+      }}>
+        {libelle}
+      </span>
+      {valeur && (
+        <span style={{
+          minWidth: 0, maxWidth: '40%', fontSize: tailles.base, color: couleur.texteDoux,
+          overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+        }}>
+          {valeur}
+        </span>
+      )}
+      {actif !== undefined
+        ? actif && <Icone nom="coche" taille={20} style={{ color: 'var(--cc-accent)' }} />
+        : !danger && <Icone nom="chevron" taille={18} style={{ color: couleur.texteDoux }} />}
+    </button>
+  )
+}
+
+/** Puce de choix du mode édition : emoji, libellé, et une coche quand elle
+ *  est choisie — l'état ne repose pas que sur la couleur. */
+function PuceChoix({ actif, emoji, children, onClick }) {
+  return (
+    <Puce actif={actif} onClick={onClick} style={{ maxWidth: '100%', minHeight: 44 }}>
+      {emoji && <span aria-hidden="true">{emoji}</span>}
+      <span style={{ minWidth: 0, overflowWrap: 'anywhere' }}>{children}</span>
+      {actif && <Icone nom="coche" taille={15} epaisseur={2.4} />}
+    </Puce>
+  )
+}
+
+/** Une partie du mode édition : un titre, une aide éventuelle, ses champs.
+ *  Pas de carte autour : l'espace et le titre suffisent à séparer. */
+function Section({ titre, aide, children }) {
+  return (
+    <section>
+      <Texte variante="sousTitre" as="h2" style={TITRE_SECTION}>{titre}</Texte>
+      {aide && <Texte variante="doux" style={{ marginTop: 2 }}>{aide}</Texte>}
+      <Pile espace="lg" style={{ marginTop: 14 }}>{children}</Pile>
+    </section>
+  )
+}
+
+/** Emplacement, date de départ : une icône à la couleur du camping, un texte. */
+function Meta({ icone, couleurIcone, children }) {
+  return (
+    <span style={{ display: 'flex', alignItems: 'center', gap: 5, minWidth: 0 }}>
+      <Icone nom={icone} taille={16} epaisseur={2} style={{ color: couleurIcone }} />
+      <span style={{ minWidth: 0, overflowWrap: 'anywhere' }}>{children}</span>
+    </span>
+  )
+}
+
+/**
+ * Un compteur : le nombre, puis ce qu'il compte. Avec `to`, c'est un lien.
+ * null pendant le chargement : un « 0 » affiché une demi-seconde invitait à
+ * rejoindre un groupe que l'on avait déjà rejoint.
+ */
+function Compteur({ to, valeur, libelle, couleurValeur = couleur.texte }) {
+  const Balise = to ? Link : 'div'
+  return (
+    <Balise to={to} style={{
+      display: 'flex', flexDirection: 'column', justifyContent: 'center', minHeight: 44, minWidth: 44,
+      textDecoration: 'none', color: couleur.texte,
+    }}>
+      <span style={{ fontSize: 22, fontWeight: graisse.affiche, letterSpacing: '-0.5px', lineHeight: 1.1, color: couleurValeur }}>
+        {valeur ?? '–'}
+      </span>
+      <span style={{ marginTop: 2, fontSize: tailles.base - 0.5, color: couleur.texteDoux }}>{libelle}</span>
+    </Balise>
   )
 }

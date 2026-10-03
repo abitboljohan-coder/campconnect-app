@@ -1,6 +1,8 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { supabase, presentFilter, todayISO } from '../../supabase'
+import { supabase, todayISO } from '../../supabase'
+import { estPresent } from '../../lib/presence'
+import { lireVacanciersDuCamping } from '../../lib/vacanciers'
 import { toast } from '../../toast'
 import StatCard from '../components/StatCard'
 import { getHourlyCode } from '../../pages/Onboarding'
@@ -119,27 +121,30 @@ export default function Overview({ camping }) {
     const in7j = new Date(Date.now() + 7 * 86400000).toISOString().slice(0, 10)
 
     const [
-      { count: vacCount },
+      { data: vacs },
       { data: grpActifs },
       { data: anims },
       { data: grps },
-      { data: departsAuj },
-      { count: departsSem },
       { count: animTotal },
       { count: sigCount },
     ] = await Promise.all([
-      supabase.from('vacanciers').select('*', { count: 'exact', head: true }).eq('camping_id', camping.id).or(presentFilter()),
+      // Emplacements et dates de départ : par vacanciers_du_camping, réservée
+      // aux gérants du camping (la table ne les livrera plus directement).
+      lireVacanciersDuCamping(camping.id),
       // Personne ne ferme un groupe : compter la colonne « actif » additionnait
       // les apéros de la semaine dernière. Même règle que côté vacancier.
       supabase.from('groupes').select('heure, created_at').eq('camping_id', camping.id).eq('actif', true),
       supabase.from('animations').select('id, titre, places_max, debut').eq('camping_id', camping.id).eq('publiee', true),
       supabase.from('groupes').select('*').eq('camping_id', camping.id).order('created_at', { ascending: false }).limit(5),
-      supabase.from('vacanciers').select('pseudo, avatar_emoji, emplacement').eq('camping_id', camping.id).eq('date_depart', today).order('pseudo'),
-      supabase.from('vacanciers').select('*', { count: 'exact', head: true }).eq('camping_id', camping.id).gte('date_depart', today).lte('date_depart', in7j),
       supabase.from('animations').select('*', { count: 'exact', head: true }).eq('camping_id', camping.id),
       supabase.from('signalements').select('id', { count: 'exact', head: true }).eq('camping_id', camping.id).eq('statut', 'nouveau'),
     ])
     const grpCount = (grpActifs || []).filter(g => estActuel(g)).length
+    const vacCount = vacs.filter(v => estPresent(v)).length
+    const departsAuj = vacs.filter(v => v.date_depart === today)
+      .sort((a, b) => (a.pseudo || '').localeCompare(b.pseudo || ''))
+    const departsSem = vacs.filter(v => v.date_depart >= today && v.date_depart <= in7j).length
+    const vacParId = new Map(vacs.map(v => [v.id, v]))
 
     const animIds = (anims || []).map(a => a.id)
 
@@ -154,20 +159,20 @@ export default function Overview({ camping }) {
           .gte('created_at', todayStart.toISOString()),
         supabase.from('inscriptions').select('animation_id').in('animation_id', animIds),
         supabase.from('inscriptions')
-          .select('*, vacanciers(pseudo, emplacement), animations(titre)')
+          .select('*, animations(titre)')
           .in('animation_id', animIds)
           .order('created_at', { ascending: false })
           .limit(5),
       ])
 
       inscCount = iCount || 0
-      recentInscs = recentI || []
+      recentInscs = (recentI || []).map(i => ({ ...i, vacanciers: vacParId.get(i.vacancier_id) || null }))
 
       taux = tauxRemplissage(anims, allInscs)
     }
 
     setStats({ vacanciers: vacCount || 0, groupes: grpCount, inscriptions: inscCount, taux, animations: animTotal || 0, signalements: sigCount || 0 })
-    setDeparts({ aujourdhui: departsAuj || [], semaine: departsSem || 0 })
+    setDeparts({ aujourdhui: departsAuj, semaine: departsSem })
     setRecentGroupes(grps || [])
     setRecentInscriptions(recentInscs)
     setLoading(false)

@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { supabase } from '../../supabase'
+import { lireVacanciersDuCamping } from '../../lib/vacanciers'
 import {
   LineChart, Line, BarChart, Bar, PieChart, Pie, Cell,
   XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer,
@@ -58,7 +59,8 @@ export default function Stats({ camping }) {
       supabase.from('vacanciers').select('created_at').eq('camping_id', camping.id).gte('created_at', since),
       supabase.from('groupes').select('created_at').eq('camping_id', camping.id).gte('created_at', since),
       supabase.from('animations').select('id, titre, places_max').eq('camping_id', camping.id).eq('publiee', true),
-      supabase.from('vacanciers').select('tranche_age, avec, interests').eq('camping_id', camping.id),
+      // Tranche d'âge : par vacanciers_du_camping, réservée aux gérants.
+      lireVacanciersDuCamping(camping.id),
     ])
 
     // Inscriptions par animation

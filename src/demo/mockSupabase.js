@@ -52,17 +52,32 @@ export const DEMO_CAMPING = {
   infos: DEMO_INFOS,
 }
 
+const dansJours = (n) => { const d = new Date(); d.setDate(d.getDate() + n); return d.toISOString().slice(0, 10) }
+
+// Profil complet, pour que l'écran Profil de la démo montre tout ce qu'il sait
+// afficher. « Randonnée » est volontairement un ancien libellé français : la
+// démo prouve ainsi qu'un profil d'avant les codes s'affiche toujours.
 export const DEMO_VACANCIER = {
   id: 'vac-1', camping_id: 'camp-demo', pseudo: 'Julie',
-  avatar_emoji: '🏄‍♀️', emplacement: 'B12', date_depart: null,
+  avatar_emoji: '🏄‍♀️', emplacement: 'B12', date_depart: dansJours(5),
+  tranche_age: '26-35', avec: 'amis',
+  interests: ['plage', 'paddle', 'apero', 'yoga', 'Randonnée', 'petanque'],
 }
 
+// Les personnages ont eux aussi des centres d'intérêt : leur mini-fiche
+// (appui sur un avatar du chat, d'un statut) montre ce qu'ils partagent avec
+// Julie. Léa en a trois en commun, Marc un seul, Tom aucun ; Sophie garde un
+// ancien libellé français (« Plage ») qui doit compter comme « plage ».
 const VACS = [
   DEMO_VACANCIER,
-  { id: 'vac-2', pseudo: 'Marc',   avatar_emoji: '🚴', emplacement: 'A04', camping_id: 'camp-demo' },
-  { id: 'vac-3', pseudo: 'Sophie', avatar_emoji: '🧘‍♀️', emplacement: 'C21', camping_id: 'camp-demo' },
-  { id: 'vac-4', pseudo: 'Tom',    avatar_emoji: '🎸', emplacement: 'D08', camping_id: 'camp-demo' },
-  { id: 'vac-5', pseudo: 'Léa',    avatar_emoji: '🏊‍♀️', emplacement: 'B15', camping_id: 'camp-demo' },
+  { id: 'vac-2', pseudo: 'Marc',   avatar_emoji: '🚴', emplacement: 'A04', camping_id: 'camp-demo',
+    avec: 'famille', interests: ['velo', 'petanque', 'padel', 'cuisine'] },
+  { id: 'vac-3', pseudo: 'Sophie', avatar_emoji: '🧘‍♀️', emplacement: 'C21', camping_id: 'camp-demo',
+    avec: 'couple', interests: ['Plage', 'lecture', 'nature'] },
+  { id: 'vac-4', pseudo: 'Tom',    avatar_emoji: '🎸', emplacement: 'D08', camping_id: 'camp-demo',
+    avec: 'solo', interests: ['musique', 'soirees', 'jeux'] },
+  { id: 'vac-5', pseudo: 'Léa',    avatar_emoji: '🏊‍♀️', emplacement: 'B15', camping_id: 'camp-demo',
+    avec: 'amis', interests: ['piscine', 'plage', 'apero', 'paddle', 'photo', 'soirees'] },
 ]
 
 const GROUPES = [
@@ -128,22 +143,40 @@ const SEED = {
 }
 
 class Query {
-  constructor(table) { this.table = table; this._head = false; this._single = false }
+  constructor(table) { this.table = table; this._head = false; this._single = false; this._eq = [] }
   select(_c, opts) { if (opts?.head) this._head = true; if (opts?.count) this._count = true; return this }
-  eq() { return this } neq() { return this } or() { return this } in() { return this }
+  eq(col, val) { this._eq.push([col, val]); return this }
+  neq() { return this } or() { return this } in() { return this }
   gte() { return this } lte() { return this } gt() { return this } lt() { return this }
   ilike() { return this } is() { return this } not() { return this }
   order() { return this } limit() { return this } range() { return this }
   insert(rows) { this._ret = Array.isArray(rows) ? rows[0] : rows; return this }
-  update() { return this } delete() { return this } upsert() { return this }
+  update() { return this } delete() { this._delete = true; return this } upsert() { return this }
   single() { this._single = true; return this }
   maybeSingle() { this._single = true; return this }
   then(resolve) { resolve(this._resolve()) }
   _resolve() {
     const rows = SEED[this.table] || []
+    // Suppression : réussit toujours, comme le veut l'app (.select() non vide).
+    // Seuls les messages sont réellement retirés, pour que celui que l'on
+    // supprime dans la démo ne revienne pas au retour au premier plan ; les
+    // autres tables gardent leur jeu de données intact pendant la présentation.
+    if (this._delete) {
+      if (this.table === 'messages') {
+        const vise = r => this._eq.every(([c, v]) => r[c] === v)
+        for (let i = rows.length - 1; i >= 0; i--) if (vise(rows[i])) rows.splice(i, 1)
+      }
+      return { data: [Object.fromEntries(this._eq)], error: null }
+    }
     if (this._head || this._count) return { count: rows.length, data: null, error: null }
     if (this._ret) return { data: this._ret, error: null }
-    if (this._single) return { data: rows[0] || null, error: null }
+    // Les filtres .eq() comptent pour une ligne unique : la mini-fiche de Léa
+    // doit ramener Léa, pas la première vacancière de la table. Sans
+    // correspondance, l'ancien comportement (la première ligne) est gardé.
+    if (this._single) {
+      const vise = r => this._eq.every(([c, v]) => !(c in r) || r[c] === v)
+      return { data: rows.find(vise) || rows[0] || null, error: null }
+    }
     return { data: rows, error: null }
   }
 }
@@ -161,11 +194,19 @@ const noopChannel = {
   send: async () => ({ status: 'ok' }),
 }
 
+// Fonctions de la base (src/lib/vacanciers.js) : les profils complets ne se
+// lisent que par elles. Les personnages restent présents toute la démo.
+const RPC = {
+  mon_profil: () => [DEMO_VACANCIER],
+  vacanciers_du_camping: () => VACS.map(v => ({ created_at: ago(600), date_depart: dansJours(4), banni: false, ...v })),
+  vacanciers_presents: () => VACS.map(v => ({ id: v.id, avatar_emoji: v.avatar_emoji })),
+}
+
 export const supabase = {
   from: (t) => new Query(t),
   channel: () => noopChannel,
   removeChannel: () => {},
-  rpc: async () => ({ data: null, error: null }),
+  rpc: async (nom) => ({ data: RPC[nom]?.() ?? null, error: null }),
   auth: {
     getSession: async () => ({ data: { session: { user: { id: 'demo-uid', email: 'demo@camp.fr' } } } }),
     getUser: async () => ({ data: { user: { id: 'demo-uid', email: 'demo@camp.fr' } } }),

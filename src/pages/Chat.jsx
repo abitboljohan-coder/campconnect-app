@@ -1,13 +1,17 @@
 import { useEffect, useState, useRef } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
-import { supabase, presentFilter } from '../supabase'
+import { supabase } from '../supabase'
+import { avatarsPresentsParGroupe } from '../lib/presence'
+import { lirePresents } from '../lib/vacanciers'
 import { t, useLangue, locale } from '../i18n'
 import MenuModeration from '../components/MenuModeration'
+import MiniFiche from '../components/MiniFiche'
 import Sheet from '../components/Sheet'
 import { toast } from '../toast'
 import { chargerBlocages, estBloque } from '../lib/moderation'
 import { estComplet, libelleHeure } from '../lib/groupes'
 import { toutCharger } from '../lib/reseau'
+import { retirerMessage, supprimerMessage } from '../lib/messages'
 import ErreurReseau from '../components/ErreurReseau'
 import { Texte, Pile, Vide, Bouton, couleur, espace, graisse, ombre, rayon, texte as tailles } from '../design'
 
@@ -28,8 +32,12 @@ export default function Chat({ camping, vacancier }) {
   const [sending, setSending]       = useState(false)
   const [pickerFor, setPickerFor]   = useState(null)
   const [moderation, setModeration] = useState(null)   // contenu visé par le menu
+  const [fiche, setFiche]           = useState(null)   // mini-fiche d'un auteur
   const [, setBloquesVersion]       = useState(0)      // force un rendu après blocage
   const appuiLong                   = useRef(null)
+  // Messages supprimés pendant la visite : un INSERT temps réel encore en
+  // route (il attend le pseudo de l'auteur) ne doit pas les faire revenir.
+  const supprimes                   = useRef(new Set())
 
   const [erreur, setErreur]         = useState('')
   const [quitter, setQuitter]       = useState(false)
@@ -45,12 +53,24 @@ export default function Chat({ camping, vacancier }) {
 
   // Le menu de modération s'ouvre sur appui long, comme dans toutes les
   // messageries. Un bouton visible sur chaque bulle alourdirait l'écran pour
-  // un geste que l'on fait deux fois par an.
+  // un geste que l'on fait deux fois par an. Sur ses propres messages, le même
+  // geste propose de les supprimer.
   function annulerAppuiLong() {
     if (appuiLong.current && appuiLong.current !== 'declenche') {
       clearTimeout(appuiLong.current)
       appuiLong.current = null
     }
+  }
+
+  // Un appui simple sur l'avatar ou le pseudo d'un auteur ouvre sa
+  // mini-fiche. L'appui long, lui, reste sur la bulle : c'est le menu
+  // signaler / bloquer / supprimer, qui ne bouge pas.
+  function ouvrirFiche(msg, auteur) {
+    setPickerFor(null)
+    setFiche({
+      id: msg.auteur_id, apercu: auteur,
+      contexte: { type: 'message', id: msg.id, texte: msg.contenu, auteurId: msg.auteur_id, pseudo: auteur?.pseudo },
+    })
   }
 
   function ouvrirModeration(msg, auteur) {
@@ -62,13 +82,15 @@ export default function Chat({ camping, vacancier }) {
   }
 
   async function init() {
-    const { resultats: [{ data: grp }, { count }, { data: msgs }, { data: moi }], error } = await toutCharger([
+    const { resultats: [{ data: grp }, { data: membres }, { data: msgs }, { data: moi }, { data: presents }], error } = await toutCharger([
       supabase.from('groupes').select('*').eq('id', groupeId).single(),
-      supabase.from('membres_groupes').select('*, vacanciers!inner(id)', { count: 'exact', head: true }).eq('groupe_id', groupeId).or(presentFilter(), { foreignTable: 'vacanciers' }),
+      supabase.from('membres_groupes').select('groupe_id, vacancier_id').eq('groupe_id', groupeId),
       supabase.from('messages').select('*, vacanciers(pseudo, avatar_emoji)').eq('groupe_id', groupeId).order('created_at', { ascending: true }),
       // On pouvait écrire dans un groupe qu'on venait de quitter, ou ouvert
       // par un lien sans en être membre : l'appartenance n'était jamais lue.
       supabase.from('membres_groupes').select('groupe_id').eq('groupe_id', groupeId).eq('vacancier_id', vacancier.id).maybeSingle(),
+      // Les membres présents se comptent sans lire la date de départ de chacun.
+      lirePresents(camping.id),
     ])
     setCharge(true)
     // Erreur réseau : ne pas afficher « Aucun message… Soyez le premier ! ».
@@ -82,7 +104,7 @@ export default function Chat({ camping, vacancier }) {
       return
     }
     setGroupe(grp)
-    setNbMembres(count || 0)
+    setNbMembres(avatarsPresentsParGroupe(membres, presents)[groupeId]?.length || 0)
     setMembre(!!moi)
     if (msgs) setMessages(msgs)
     chargerBlocages(vacancier.id).then(() => setBloquesVersion(v => v + 1))
@@ -117,6 +139,7 @@ export default function Chat({ camping, vacancier }) {
       }, async (payload) => {
         const { data: vac } = await supabase
           .from('vacanciers').select('pseudo, avatar_emoji').eq('id', payload.new.auteur_id).single()
+        if (supprimes.current.has(payload.new.id)) return
         setMessages(prev => ajouter(prev, { ...payload.new, vacanciers: vac }))
       })
       .on('postgres_changes', {
@@ -126,6 +149,17 @@ export default function Chat({ camping, vacancier }) {
         setMessages(prev => prev.map(m =>
           m.id === payload.new.id ? { ...m, reactions: payload.new.reactions } : m
         ))
+      })
+      // Supabase ne sait pas filtrer une suppression par groupe : l'ancienne
+      // ligne ne contient que sa clé primaire. On écoute donc toutes les
+      // suppressions de messages, et retirerMessage ignore les id inconnus.
+      .on('postgres_changes', {
+        event: 'DELETE', schema: 'public', table: 'messages',
+      }, (payload) => {
+        const id = payload.old?.id
+        if (!id) return
+        supprimes.current.add(id)
+        setMessages(prev => retirerMessage(prev, id))
       })
       .subscribe()
     return () => supabase.removeChannel(channel)
@@ -213,6 +247,20 @@ export default function Chat({ camping, vacancier }) {
     `👥 ${nbMembres}`,
     groupe?.lieu && `📍 ${groupe.lieu}`,
   ].filter(Boolean).join(' · ')
+
+  // La notification push déjà partie ne se rappelle pas : seul le message,
+  // dans la discussion, disparaît pour tous.
+  async function supprimer(cible) {
+    const ok = await supprimerMessage(cible.id, vacancier.id)
+    if (!ok) {
+      toast(t('chat.err_suppr'), 'erreur')
+      return false
+    }
+    supprimes.current.add(cible.id)
+    setMessages(prev => retirerMessage(prev, cible.id))
+    toast(t('chat.supprime'), 'succes')
+    return true
+  }
 
   async function toggleReaction(msg, emoji) {
     setPickerFor(null)
@@ -357,14 +405,28 @@ export default function Chat({ camping, vacancier }) {
                     marginBottom: 2,
                   }}
                 >
-                  {showAuthor && auteur && (
+                  {/* Le pseudo ouvre la mini-fiche. La zone sensible déborde
+                      de quelques pixels (marges négatives) pour atteindre
+                      44 px sans espacer les messages. Un auteur parti n'a
+                      plus de fiche. */}
+                  {showAuthor && auteur && (msg.vacanciers ? (
+                    <button type="button" onClick={() => ouvrirFiche(msg, auteur)}
+                      style={{
+                        background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'inherit',
+                        padding: '15px 8px', margin: '-15px -8px -12px 38px', maxWidth: 'calc(100% - 38px)',
+                        textAlign: 'left', color: 'var(--cc-accent)', fontWeight: graisse.fort,
+                        fontSize: tailles.micro, lineHeight: 1.4, overflowWrap: 'anywhere',
+                      }}>
+                      {auteur.avatar_emoji} {auteur.pseudo}
+                    </button>
+                  ) : (
                     <Texte variante="micro" style={{
                       color: 'var(--cc-accent)', fontWeight: graisse.fort,
                       marginBottom: 3, marginLeft: 46,
                     }}>
                       {auteur.avatar_emoji} {auteur.pseudo}
                     </Texte>
-                  )}
+                  ))}
                   {/* width 100% indispensable : la bulle porte un maxWidth en
                       pourcentage, qui a besoin d'une largeur de référence
                       définie. Sans lui, cette ligne se dimensionne sur son
@@ -373,7 +435,24 @@ export default function Chat({ camping, vacancier }) {
                       s'affiche alors une lettre par ligne. */}
                   <div style={{ display: 'flex', alignItems: 'flex-end', gap: 6, width: '100%', flexDirection: isMine ? 'row-reverse' : 'row' }}>
                     {/* Avatar auteur (them) */}
-                    {!isMine && (
+                    {!isMine && (showAuthor && msg.vacanciers ? (
+                      // 32 px à l'œil, 44 px au doigt : le rembourrage est
+                      // compensé par des marges négatives.
+                      <button type="button" onClick={() => ouvrirFiche(msg, auteur)}
+                        aria-label={t('fiche.voir', { pseudo: auteur.pseudo })}
+                        style={{
+                          padding: 6, margin: -6, background: 'none', border: 'none', cursor: 'pointer',
+                          flexShrink: 0, borderRadius: rayon.rond,
+                        }}>
+                        <span aria-hidden="true" style={{
+                          width: 32, height: 32, borderRadius: rayon.rond,
+                          background: couleur.bordure,
+                          display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 16,
+                        }}>
+                          {auteur.avatar_emoji || '🏕️'}
+                        </span>
+                      </button>
+                    ) : (
                       <span aria-hidden="true" style={{
                         width: 32, height: 32, borderRadius: rayon.rond,
                         background: couleur.bordure,
@@ -383,7 +462,7 @@ export default function Chat({ camping, vacancier }) {
                       }}>
                         {auteur?.avatar_emoji || '🏕️'}
                       </span>
-                    )}
+                    ))}
                     <div style={{ position: 'relative', maxWidth: '72%' }}>
                       <div
                         onClick={() => {
@@ -393,16 +472,21 @@ export default function Chat({ camping, vacancier }) {
                           setPickerFor(pickerFor === msg.id ? null : msg.id)
                         }}
                         onTouchStart={() => {
-                          if (isMine) return
                           appuiLong.current = setTimeout(() => {
                             appuiLong.current = 'declenche'
                             ouvrirModeration(msg, auteur)
                           }, 500)
                         }}
-                        onTouchEnd={annulerAppuiLong}
+                        onTouchEnd={(e) => {
+                          // Le clic de relâchement tombait sur le fond de la
+                          // feuille tout juste ouverte, qui se refermait aussitôt.
+                          if (appuiLong.current === 'declenche') {
+                            e.preventDefault()
+                            appuiLong.current = null
+                          } else annulerAppuiLong()
+                        }}
                         onTouchMove={annulerAppuiLong}
                         onContextMenu={(e) => {
-                          if (isMine) return
                           e.preventDefault()
                           ouvrirModeration(msg, auteur)
                         }}
@@ -550,6 +634,11 @@ export default function Chat({ camping, vacancier }) {
       </form>
       )}
 
+      {fiche && (
+        <MiniFiche {...fiche} camping={camping} vacancier={vacancier}
+                   onClose={() => setFiche(null)} onBloque={() => setBloquesVersion(v => v + 1)} />
+      )}
+
       {moderation && (
         <MenuModeration
           cible={moderation}
@@ -557,6 +646,7 @@ export default function Chat({ camping, vacancier }) {
           vacancier={vacancier}
           onClose={() => setModeration(null)}
           onBloque={() => setBloquesVersion(v => v + 1)}
+          onSupprimer={supprimer}
         />
       )}
     </div>

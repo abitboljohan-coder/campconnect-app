@@ -1,8 +1,10 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { toast } from '../toast'
 import { useNavigate } from 'react-router-dom'
-import { supabase, presentFilter } from '../supabase'
+import { supabase } from '../supabase'
 import { esc } from '../utils/esc'
+import { avatarsPresentsParGroupe } from '../lib/presence'
+import { lirePresents } from '../lib/vacanciers'
 import { t, useLangue, locale } from '../i18n'
 import { desencombrer } from '../lib/poiCategories'
 import { estActuel, estComplet } from '../lib/groupes'
@@ -199,20 +201,20 @@ export default function Map({ camping: campingProp, vacancier }) {
       // joignable depuis la carte. Seuls les groupes limités sont comptés, et
       // seulement les présents, comme dans la liste des groupes.
       const limites = grpsActuels.filter(g => g.max_membres > 0).map(g => g.id)
-      const [{ data: allInscs }, { data: allMembres }] = await Promise.all([
+      const [{ data: allInscs }, { data: allMembres }, { data: presents }] = await Promise.all([
         animsList.length > 0
           ? supabase.from('inscriptions').select('animation_id').in('animation_id', animsList.map(a => a.id))
           : { data: [] },
         limites.length > 0
-          ? supabase.from('membres_groupes').select('groupe_id, vacanciers!inner(id)').in('groupe_id', limites)
-              .or(presentFilter(), { foreignTable: 'vacanciers' })
+          ? supabase.from('membres_groupes').select('groupe_id, vacancier_id').in('groupe_id', limites)
           : { data: [] },
+        limites.length > 0 ? lirePresents(campingProp.id) : { data: [] },
       ])
       const c = {}
       for (const ins of (allInscs || [])) c[ins.animation_id] = (c[ins.animation_id] || 0) + 1
       setCounts(c)
       const n = {}
-      for (const m of (allMembres || [])) n[m.groupe_id] = (n[m.groupe_id] || 0) + 1
+      for (const [g, avatars] of Object.entries(avatarsPresentsParGroupe(allMembres, presents))) n[g] = avatars.length
       setNbMembres(n)
     }
     load()
@@ -277,7 +279,7 @@ export default function Map({ camping: campingProp, vacancier }) {
       Lf.control.zoom({ position: 'topright' }).addTo(map)
 
       const campingIcon = Lf.divIcon({
-        html: `<div style="background:${couleur};width:44px;height:44px;border-radius:50% 50% 50% 0;transform:rotate(-45deg);border:3px solid white;box-shadow:0 2px 8px rgba(0,0,0,0.3)"><div style="transform:rotate(45deg);display:flex;align-items:center;justify-content:center;width:100%;height:100%;font-size:22px">🏕️</div></div>`,
+        html: `<div style="background:${esc(couleur)};width:44px;height:44px;border-radius:50% 50% 50% 0;transform:rotate(-45deg);border:3px solid white;box-shadow:0 2px 8px rgba(0,0,0,0.3)"><div style="transform:rotate(45deg);display:flex;align-items:center;justify-content:center;width:100%;height:100%;font-size:22px">🏕️</div></div>`,
         className: '',
         iconSize: [44, 44],
         iconAnchor: [22, 44],
@@ -397,7 +399,7 @@ export default function Map({ camping: campingProp, vacancier }) {
 
     const avatar = esc(vacancier?.avatar_emoji || '🏕️')
     const icon = L.divIcon({
-      html: `<div style="background:${couleur};width:46px;height:46px;border-radius:50%;border:3px solid white;box-shadow:0 0 0 5px ${couleur}40, 0 3px 14px rgba(0,0,0,0.35);display:flex;align-items:center;justify-content:center;font-size:24px;">${avatar}</div>`,
+      html: `<div style="background:${esc(couleur)};width:46px;height:46px;border-radius:50%;border:3px solid white;box-shadow:0 0 0 5px ${esc(couleur)}40, 0 3px 14px rgba(0,0,0,0.35);display:flex;align-items:center;justify-content:center;font-size:24px;">${avatar}</div>`,
       className: '', iconSize: [46, 46], iconAnchor: [23, 23],
     })
     userMarker.current = L.marker([effectivePos.lat, effectivePos.lng], { icon, zIndexOffset: 1000 })

@@ -17,7 +17,7 @@ import { couleur, rayon } from '../design'
  * clavier ouvert sur un petit écran, une feuille non défilante tronque ses
  * propres boutons de validation.
  */
-export default function Sheet({ onClose, children }) {
+export default function Sheet({ onClose, entete, children }) {
   // Zone réellement visible, clavier déduit.
   //
   // Une feuille en position fixed s'ancre au viewport de mise en page, que le
@@ -143,7 +143,19 @@ export default function Sheet({ onClose, children }) {
           animation: 'slideUp 0.22s cubic-bezier(0.32, 0.72, 0, 1)',
         }}
       >
-        <div aria-hidden="true" style={{ width: 44, height: 5, background: couleur.bordure, borderRadius: 3, margin: '0 auto 18px' }} />
+        {entete ? (
+          // Un en-tête illustré va d'un bord à l'autre de la feuille ; la
+          // poignée se pose dessus, en blanc translucide.
+          <div style={{ position: 'relative', margin: '-22px -20px 0' }}>
+            {entete}
+            <div aria-hidden="true" style={{
+              position: 'absolute', top: 10, left: '50%', transform: 'translateX(-50%)',
+              width: 44, height: 5, borderRadius: 3, background: 'rgba(255,255,255,0.8)',
+            }} />
+          </div>
+        ) : (
+          <div aria-hidden="true" style={{ width: 44, height: 5, background: couleur.bordure, borderRadius: 3, margin: '0 auto 18px' }} />
+        )}
         {children}
       </div>
     </div>,

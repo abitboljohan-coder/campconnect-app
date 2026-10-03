@@ -22,17 +22,37 @@ const AVEC_FR = {
   famille: 'En famille',
 }
 
+// L'ordre est celui de l'écran : les plus courants d'un séjour en camping
+// d'abord. Les dix premiers codes historiques (sport… enfants) restent tous
+// proposés : des vacanciers les ont enregistrés, et le gérant les compte.
 const INTERETS_FR = {
-  sport: 'Sport',
-  musique: 'Musique',
-  nature: 'Nature',
-  cuisine: 'Cuisine',
-  jeux: 'Jeux',
-  lecture: 'Lecture',
-  randonnee: 'Randonnée',
+  plage: 'Plage',
   piscine: 'Piscine',
+  apero: 'Apéro',
+  petanque: 'Pétanque',
+  randonnee: 'Randonnée',
+  velo: 'Vélo',
+  padel: 'Padel',
+  paddle: 'Paddle & kayak',
+  yoga: 'Yoga',
+  sport: 'Sport',
+  jeux: 'Jeux',
+  musique: 'Musique',
   soirees: 'Soirées',
+  cuisine: 'Cuisine',
+  nature: 'Nature',
+  photo: 'Photo',
+  lecture: 'Lecture',
   enfants: 'Enfants',
+}
+
+// Un emoji par choix : le profil les montre en puces, pas en liste de mots.
+const EMOJIS_AVEC = { solo: '🎒', couple: '💑', amis: '🙌', famille: '👨‍👩‍👧' }
+const EMOJIS_INTERETS = {
+  plage: '🏖️', piscine: '🏊', apero: '🍹', petanque: '🎯', randonnee: '🥾',
+  velo: '🚲', padel: '🎾', paddle: '🛶', yoga: '🧘', sport: '🏅', jeux: '🎲',
+  musique: '🎸', soirees: '🎉', cuisine: '🍳', nature: '🌿', photo: '📷',
+  lecture: '📚', enfants: '🧸',
 }
 
 export const AVEC = Object.keys(AVEC_FR)
@@ -63,6 +83,70 @@ export function libelleAvec(valeur) {
 export function libelleInteret(valeur) {
   const code = ANCIENS_INTERETS[valeur] || valeur
   return INTERETS_FR[code] ? t(`profil.interet_${code}`) : code
+}
+
+/** Emoji d'un choix, ou chaîne vide pour une valeur inconnue. */
+export function emojiAvec(valeur) {
+  return EMOJIS_AVEC[codeAvec(valeur)] || ''
+}
+
+export function emojiInteret(valeur) {
+  return EMOJIS_INTERETS[ANCIENS_INTERETS[valeur] || valeur] || ''
+}
+
+/**
+ * Colonnes lues pour la mini-fiche d'un autre vacancier — et rien d'autre.
+ * Ni l'emplacement, ni la tranche d'âge, ni la date de départ : savoir où
+ * dort quelqu'un, son âge et le jour où il part n'aide pas à lier
+ * connaissance, et ne regarde que lui.
+ */
+export const COLONNES_FICHE = 'id, pseudo, avatar_emoji, avec, interests'
+
+/** « En vacances entre amis » : le « Je voyage » dit comme une phrase. */
+export function phraseAvec(valeur) {
+  const code = codeAvec(valeur)
+  return AVEC_FR[code] ? t(`profil.bio_${code}`) : code
+}
+
+/**
+ * Centres d'intérêt partagés avec un autre vacancier, dans l'ordre de ses
+ * choix à lui. Les anciens libellés français sont ramenés à leur code des
+ * deux côtés : « Randonnée » chez l'un et « randonnee » chez l'autre, c'est
+ * bien la même envie.
+ */
+export function pointsCommuns(miens, siens) {
+  const moi = new Set(codesInterets(miens))
+  return codesInterets(siens).filter(c => moi.has(c))
+}
+
+/**
+ * La phrase qui donne une raison de se parler : « Vous aimez tous les deux
+ * le padel » pour un seul point commun, « 3 centres d'intérêt en commun »
+ * au-delà, null sans aucun.
+ */
+export function phraseCommuns(communs) {
+  if (!communs?.length) return null
+  if (communs.length > 1) return t('fiche.communs', { n: communs.length })
+  const code = communs[0]
+  return t('fiche.commun_un', { chose: INTERETS_FR[code] ? t(`profil.objet_${code}`) : code })
+}
+
+/** Date du jour (AAAA-MM-JJ) à l'heure du téléphone, pas en UTC : à 1 h du
+ *  matin en France, l'UTC est encore la veille. */
+export function jourLocal(d = new Date()) {
+  const p = n => String(n).padStart(2, '0')
+  return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}`
+}
+
+/**
+ * Nuits restantes avant le départ : 0 le jour du départ, null sans date ou
+ * une fois le départ passé — le profil n'affiche alors rien plutôt qu'un
+ * nombre négatif.
+ */
+export function nuitsRestantes(depart, aujourdhui) {
+  if (!depart || !aujourdhui) return null
+  const n = Math.round((Date.parse(depart) - Date.parse(aujourdhui)) / 86400000)
+  return Number.isFinite(n) && n >= 0 ? n : null
 }
 
 /** Libellés français, pour la console du gérant (statistiques, export). */

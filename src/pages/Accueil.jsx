@@ -2,11 +2,14 @@ import { useEffect, useRef, useState } from 'react'
 import { toast } from '../toast'
 import Sheet from '../components/Sheet'
 import { useNavigate } from 'react-router-dom'
-import { supabase, presentFilter } from '../supabase'
+import { supabase } from '../supabase'
+import { avatarsPresentsParGroupe } from '../lib/presence'
+import { lirePresents } from '../lib/vacanciers'
 import { t, useLangue } from '../i18n'
 import Meteo from '../components/Meteo'
 import { usePresence } from '../usePresence'
 import MenuModeration from '../components/MenuModeration'
+import MiniFiche from '../components/MiniFiche'
 import { chargerBlocages, estBloque } from '../lib/moderation'
 import CarteGroupe from '../components/CarteGroupe'
 import ChoixEmoji from '../components/ChoixEmoji'
@@ -37,12 +40,12 @@ export default function Accueil({ camping, vacancier }) {
     const { resultats: [
       { data: grpsBruts },
       { count: aCount },
-      { count: vCount },
+      { data: presents },
       { data: membres },
     ], error } = await toutCharger([
       supabase.from('groupes').select('*').eq('camping_id', camping.id).eq('actif', true).order('created_at', { ascending: false }).limit(30),
       supabase.from('animations').select('*', { count: 'exact', head: true }).eq('camping_id', camping.id).eq('publiee', true).gte('debut', now),
-      supabase.from('vacanciers').select('*', { count: 'exact', head: true }).eq('camping_id', camping.id).or(presentFilter()),
+      lirePresents(camping.id),
       supabase.from('membres_groupes').select('groupe_id').eq('vacancier_id', vacancier.id),
     ])
     // Erreur réseau : on ne fait pas croire qu'il n'y a aucun groupe.
@@ -61,21 +64,17 @@ export default function Accueil({ camping, vacancier }) {
     setGroupes(grps)
     setNbGroupes(actuels.length)
     setNbAnimations(aCount || 0)
-    setVacancierCount(vCount || 0)
+    setVacancierCount(presents?.length || 0)
     setMesGroupes((membres || []).map(m => m.groupe_id))
     setLoading(false)
 
     const ids = grps.map(g => g.id)
     if (ids.length) {
+      // Seuls les présents : leur liste vient de vacanciers_presents, qui ne
+      // livre pas la date de départ de chacun.
       const { data: allMembres } = await supabase
-        .from('membres_groupes').select('groupe_id, vacanciers!inner(avatar_emoji)').in('groupe_id', ids)
-        .or(presentFilter(), { foreignTable: 'vacanciers' })
-      const map = {}
-      for (const m of allMembres || []) {
-        if (!map[m.groupe_id]) map[m.groupe_id] = []
-        map[m.groupe_id].push(m.vacanciers?.avatar_emoji || '🙂')
-      }
-      setMembresMap(map)
+        .from('membres_groupes').select('groupe_id, vacancier_id').in('groupe_id', ids)
+      setMembresMap(avatarsPresentsParGroupe(allMembres, presents))
     }
   }
 
@@ -216,8 +215,23 @@ function AccesRapide({ emoji, fond, libelle, onClick }) {
 function StatutsStrip({ camping, vacancier }) {
   const [statuts, setStatuts] = useState([])
   const [moderation, setModeration] = useState(null)
+  const [fiche, setFiche] = useState(null)
   const [, setBloquesVersion] = useState(0)
   const appuiLong = useRef(null)
+
+  // Appui simple sur l'auteur d'un statut : sa mini-fiche (son propre statut
+  // mène au Profil). Juste après un appui long, le relâchement déclenche
+  // aussi un clic : il ne doit pas ouvrir la fiche par-dessus le menu.
+  function ouvrirFiche(st) {
+    if (appuiLong.current === 'declenche') { appuiLong.current = null; return }
+    setFiche({
+      id: st.vacancier_id, apercu: st.vacanciers,
+      contexte: {
+        type: 'statut', id: st.id, texte: `${st.emoji || ''} ${st.texte}`.trim(),
+        auteurId: st.vacancier_id, pseudo: st.vacanciers?.pseudo,
+      },
+    })
+  }
 
   function annulerAppuiLong() {
     if (appuiLong.current && appuiLong.current !== 'declenche') {
@@ -364,10 +378,20 @@ function StatutsStrip({ camping, vacancier }) {
               boxShadow: ombre.posee,
             }}>
             <Pile direction="ligne" espace="xs" aligner="center" style={{ marginBottom: espace.xs }}>
-              <span aria-hidden="true" style={{ fontSize: 16 }}>{s.vacanciers?.avatar_emoji || '🙂'}</span>
-              <Texte variante="doux" as="span" style={{ fontWeight: graisse.titre, color: couleur.texte }}>
-                {s.vacanciers?.pseudo}
-              </Texte>
+              {/* L'auteur ouvre sa mini-fiche ; 44 px au doigt grâce à un
+                  rembourrage compensé, sans grossir la carte. */}
+              <button type="button" onClick={() => ouvrirFiche(s)}
+                aria-label={t('fiche.voir', { pseudo: s.vacanciers?.pseudo || '' })}
+                style={{
+                  display: 'flex', alignItems: 'center', gap: espace.xs, minWidth: 0,
+                  padding: '12px 8px', margin: '-12px -8px', background: 'none', border: 'none',
+                  cursor: 'pointer', fontFamily: 'inherit', textAlign: 'left',
+                }}>
+                <span aria-hidden="true" style={{ fontSize: 16 }}>{s.vacanciers?.avatar_emoji || '🙂'}</span>
+                <Texte variante="doux" as="span" style={{ fontWeight: graisse.titre, color: couleur.texte }}>
+                  {s.vacanciers?.pseudo}
+                </Texte>
+              </button>
               <Texte variante="micro" as="span" style={{ marginLeft: 'auto', whiteSpace: 'nowrap' }}>
                 {timeAgo(s.created_at)}
               </Texte>
@@ -387,6 +411,11 @@ function StatutsStrip({ camping, vacancier }) {
           onClose={() => setModeration(null)}
           onBloque={() => setBloquesVersion(v => v + 1)}
         />
+      )}
+
+      {fiche && (
+        <MiniFiche {...fiche} camping={camping} vacancier={vacancier}
+                   onClose={() => setFiche(null)} onBloque={() => setBloquesVersion(v => v + 1)} />
       )}
 
       {aSupprimer && (

@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import Sheet from '../components/Sheet'
 import MenuModeration from '../components/MenuModeration'
+import MiniFiche from '../components/MiniFiche'
 import { chargerBlocages, estBloque } from '../lib/moderation'
 import { estTableAbsente, toutCharger } from '../lib/reseau'
 import ErreurReseau from '../components/ErreurReseau'
@@ -45,6 +46,7 @@ export default function Annonces({ camping, vacancier }) {
   const [indispo, setIndispo]   = useState(false)
   const [erreurReseau, setErreurReseau] = useState(false)
   const [moderation, setModeration] = useState(null)
+  const [fiche, setFiche]       = useState(null)   // mini-fiche de l'auteur
   const [, setBloquesVersion]   = useState(0)
 
   async function charger() {
@@ -191,8 +193,24 @@ export default function Annonces({ camping, vacancier }) {
                   </div>
 
                   <Pile direction="ligne" espace="xs" aligner="center">
-                    <span aria-hidden="true" style={{ fontSize: tailles.moyen }}>{a.vacanciers?.avatar_emoji || '🙂'}</span>
-                    <Texte variante="doux" as="span">{a.vacanciers?.pseudo || '—'}</Texte>
+                    {/* L'auteur ouvre sa mini-fiche — la sienne, le Profil. */}
+                    <button type="button" disabled={!a.vacanciers}
+                      aria-label={t('fiche.voir', { pseudo: a.vacanciers?.pseudo || '' })}
+                      onClick={() => setFiche({
+                        id: a.vacancier_id, apercu: a.vacanciers,
+                        contexte: {
+                          type: 'annonce', id: a.id, auteurId: a.vacancier_id, pseudo: a.vacanciers?.pseudo,
+                          texte: [a.titre, a.description, a.photo_url].filter(Boolean).join('\n'),
+                        },
+                      })}
+                      style={{
+                        display: 'flex', alignItems: 'center', gap: espace.xs, minWidth: 0, minHeight: 44,
+                        padding: '0 8px', margin: '-4px -8px', background: 'none', border: 'none',
+                        cursor: a.vacanciers ? 'pointer' : 'default', fontFamily: 'inherit', textAlign: 'left',
+                      }}>
+                      <span aria-hidden="true" style={{ fontSize: tailles.moyen }}>{a.vacanciers?.avatar_emoji || '🙂'}</span>
+                      <Texte variante="doux" as="span">{a.vacanciers?.pseudo || '—'}</Texte>
+                    </button>
                     {mien ? (
                       <Bouton variante="discret" taille="sm" onClick={() => marquerResolu(a)}
                               style={{ marginLeft: 'auto', color: 'var(--cc-accent)' }}>
@@ -222,6 +240,11 @@ export default function Annonces({ camping, vacancier }) {
       )}
 
       {!indispo && <Fab label={t('annonces.nouvelle')} onClick={() => { setErreur(''); setModal(true) }} />}
+
+      {fiche && (
+        <MiniFiche {...fiche} camping={camping} vacancier={vacancier}
+                   onClose={() => setFiche(null)} onBloque={() => setBloquesVersion(v => v + 1)} />
+      )}
 
       {moderation && (
         <MenuModeration
