@@ -87,11 +87,13 @@ const GROUPES = [
   { id: 'g4', camping_id: 'camp-demo', titre: 'Soirée jeux de société', emoji: '🎲', lieu: 'Bar du camping', heure: iso(21), max_membres: 10, actif: true, created_at: ago(30), createur_id: 'vac-5' },
 ]
 
+// Dans l'ordre des horaires : le faux client ignore .order('debut'), et
+// l'agenda de la démo affichait « Ce soir » avant « Cet après-midi ».
 const ANIMATIONS = [
   { id: 'a1', camping_id: 'camp-demo', titre: 'Cours d\'aquagym', emoji: '💦', lieu: 'Piscine', debut: iso(10), places_max: 20, publiee: true },
+  { id: 'a4', camping_id: 'camp-demo', titre: 'Atelier poterie enfants', emoji: '🏺', lieu: 'Club enfants', debut: iso(15), places_max: 12, publiee: true },
   { id: 'a2', camping_id: 'camp-demo', titre: 'Marché nocturne', emoji: '🛍️', lieu: 'Place centrale', debut: iso(19), places_max: 0, publiee: true },
   { id: 'a3', camping_id: 'camp-demo', titre: 'Concert live', emoji: '🎤', lieu: 'Scène', debut: iso(21, 30), places_max: 0, publiee: true },
-  { id: 'a4', camping_id: 'camp-demo', titre: 'Atelier poterie enfants', emoji: '🏺', lieu: 'Club enfants', debut: iso(15), places_max: 12, publiee: true },
 ]
 
 const STATUTS = [
