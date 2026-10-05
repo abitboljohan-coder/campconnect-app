@@ -129,8 +129,24 @@ const SIGNALEMENTS = [
     vacanciers: { pseudo: 'Léa', avatar_emoji: '🏊‍♀️', emplacement: 'B15' } },
 ]
 
+// Petites annonces et objets trouvés : sans elles, l'écran Annonces de la démo
+// ne montrait que son état vide.
+const dansHeures = (h) => new Date(Date.now() + h * 3600000).toISOString()
+const ANNONCES = [
+  { id: 'an1', camping_id: 'camp-demo', vacancier_id: 'vac-3', type: 'trouve', titre: 'Doudou lapin trouvé près de la piscine',
+    description: 'Gris, avec un ruban bleu. Je le garde à l’emplacement C21.', photo_url: null, resolu: false,
+    created_at: ago(50), expire_at: dansHeures(70), vacanciers: { pseudo: 'Sophie', avatar_emoji: '🧘‍♀️' } },
+  { id: 'an2', camping_id: 'camp-demo', vacancier_id: 'vac-4', type: 'perdu', titre: 'Lunettes de soleil perdues',
+    description: 'Monture écaille, sans doute au terrain de volley hier soir.', photo_url: null, resolu: false,
+    created_at: ago(180), expire_at: dansHeures(60), vacanciers: { pseudo: 'Tom', avatar_emoji: '🎸' } },
+  { id: 'an3', camping_id: 'camp-demo', vacancier_id: 'vac-2', type: 'annonce', titre: 'Je prête un jeu de pétanque',
+    description: 'Emplacement A04, passez quand vous voulez avant 18 h.', photo_url: null, resolu: false,
+    created_at: ago(300), expire_at: dansHeures(48), vacanciers: { pseudo: 'Marc', avatar_emoji: '🚴' } },
+]
+
 const SEED = {
   signalements: SIGNALEMENTS,
+  annonces: ANNONCES,
   campings: [DEMO_CAMPING],
   vacanciers: VACS,
   groupes: GROUPES,
