@@ -35,7 +35,7 @@ veille), titre, date, texte`.
 | Quand | Routine | Ce qu'elle produit |
 |---|---|---|
 | Chaque jour, 6 h 52 | Santé de l'app | « ✅ Tout va bien », ou l'alerte et quoi faire |
-| Lundi, 8 h 41 | 5 prospects de la semaine | 5 campings normands qualifiés, avec fiche, accroche et email |
+| Lundi → vendredi, 7 h 41 | 10 prospects du jour (France entière) | 10 campings qualifiés avec email trouvé (jamais deviné), fiche, accroche et email ; département par département |
 | Mardi → vendredi, 8 h 47 | Relances du jour | Les emails et appels du jour, prêts (onglet Brouillons) |
 | Mercredi, 9 h 53 | Post LinkedIn | Un post pour la page CampConnect (onglet Brouillons) |
 | Vendredi, 17 h 48 | Bilan de la semaine | Chiffres, ce qui a marché, les 3 priorités de lundi |
@@ -93,7 +93,7 @@ Un enchaînement type pour un bug signalé par un testeur : `support`
 
 ## La semaine type de Johan (environ 1 h par jour)
 
-- **Lundi** : relire et envoyer les 5 emails (15 min).
+- **Chaque matin** : dire à Claude « crée les brouillons du jour », relire et envoyer les 10 emails (15 min).
 - **Mardi → vendredi** : 3 à 5 relances ou appels (45 min), puis mettre à
   jour les fiches.
 - **Mercredi** : publier le post LinkedIn (2 min).
