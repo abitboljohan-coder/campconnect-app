@@ -1,0 +1,9 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(gh api repos/abitboljohan-coder/campconnect-app/releases:*)",
+      "Bash(gh api -X POST repos/abitboljohan-coder/campconnect-app/releases:*)",
+      "Bash(gh api -X POST https://uploads.github.com/repos/abitboljohan-coder/campconnect-app/releases/:*)"
+    ]
+  }
+}

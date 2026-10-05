@@ -44,3 +44,4 @@ fcm-service-account*.json
 .claude/*
 !.claude/skills/
 !.claude/agents/
+!.claude/settings.json
