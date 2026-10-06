@@ -4,6 +4,7 @@ import { supabase, ensureAnonSession } from './supabase'
 import { isNative } from './native'
 import { registerPush, unregisterPush } from './push'
 import { lireMonProfil } from './lib/vacanciers'
+import { usePresence } from './usePresence'
 
 import Onboarding from './pages/Onboarding'
 import Accueil from './pages/Accueil'
@@ -45,6 +46,9 @@ function App() {
   const [vacancier, setVacancier] = useState(null)
   const [finSejour, setFinSejour] = useState(null) // vacancier dont le séjour est terminé
   const [loading, setLoading] = useState(true)
+  // Présence « en ligne » tenue ici, au niveau de l'app : le vacancier compte
+  // comme en ligne sur tous les écrans, pas seulement quand l'Accueil est affiché.
+  const enLigne = usePresence(vacancier ? camping?.id : null, vacancier?.id)
 
   const sejourTermine = v => v?.date_depart && v.date_depart < new Date().toISOString().slice(0, 10)
 
@@ -171,7 +175,7 @@ function App() {
           } />
         ) : (
           <Route element={<Layout camping={camping} />}>
-            <Route path="/" element={<Accueil camping={camping} vacancier={vacancier} />} />
+            <Route path="/" element={<Accueil camping={camping} vacancier={vacancier} enLigne={enLigne} />} />
             <Route path="/groupes" element={<Groupes camping={camping} vacancier={vacancier} />} />
             <Route path="/chat/:groupeId" element={<Chat camping={camping} vacancier={vacancier} />} />
             <Route path="/map" element={<Map camping={camping} vacancier={vacancier} />} />

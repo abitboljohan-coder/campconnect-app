@@ -7,7 +7,6 @@ import { avatarsPresentsParGroupe } from '../lib/presence'
 import { lirePresents } from '../lib/vacanciers'
 import { t, useLangue } from '../i18n'
 import Meteo from '../components/Meteo'
-import { usePresence } from '../usePresence'
 import MenuModeration from '../components/MenuModeration'
 import MiniFiche from '../components/MiniFiche'
 import { chargerBlocages, estBloque } from '../lib/moderation'
@@ -22,7 +21,7 @@ import {
   couleur, espace, graisse, ombre, rayon, texte as tailles,
 } from '../design'
 
-export default function Accueil({ camping, vacancier }) {
+export default function Accueil({ camping, vacancier, enLigne = 0 }) {
   useLangue()
   const [groupes, setGroupes]           = useState([])
   const [nbGroupes, setNbGroupes]       = useState(0)
@@ -33,7 +32,6 @@ export default function Accueil({ camping, vacancier }) {
   const [loading, setLoading]           = useState(true)
   const [erreurReseau, setErreurReseau] = useState(false)
   const navigate = useNavigate()
-  const enLigne = usePresence(camping?.id, vacancier?.id)
 
   async function load() {
     const now = new Date().toISOString()
