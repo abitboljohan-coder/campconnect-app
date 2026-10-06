@@ -49,7 +49,7 @@ function DemoApp() {
   return (
     <Routes>
       <Route element={<Layout camping={c} />}>
-        <Route path="/" element={<Accueil camping={c} vacancier={v} />} />
+        <Route path="/" element={<Accueil camping={c} vacancier={v} enLigne={1} />} />
         <Route path="/groupes" element={<Groupes camping={c} vacancier={v} />} />
         <Route path="/map" element={<MapPage camping={c} vacancier={v} />} />
         <Route path="/agenda" element={<Agenda camping={c} vacancier={v} />} />

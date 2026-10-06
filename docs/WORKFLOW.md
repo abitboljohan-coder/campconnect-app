@@ -30,12 +30,28 @@ etoiles, emplacements, telephone, email, site, etape, prochaine_date
 source, cree_le, maj_le`. Brouillon : `type (linkedin | email | bilan |
 veille), titre, date, texte`.
 
+## S'y retrouver (organisation depuis le 6 octobre 2026)
+
+Tout porte le même nom, **domaine d'abord, puis étape**. Page d'accueil, avec les
+phrases à dire à Claude : https://claude.ai/artifact/CvmyeXp4uUqURkjgX7pEYu
+
+| N° | Domaine | Routines (Claude Code) | Make (dossier « CampConnect ») |
+|---|---|---|---|
+| 1 | Prospection | 1. Trouver 10 campings · 2. Relances du jour · 3. Bilan de la semaine | 1 · Créer un brouillon d'email |
+| 2 | Vidéo | 1. Fabriquer la vidéo · 2. Publier sur LinkedIn | 2 · Publier sur la page LinkedIn CampConnect |
+| 3 | LinkedIn | Texte de la semaine | (aucun) |
+| 4 | Technique | Santé de l'app | (aucun) |
+
+Les routines et scénarios marqués « ANCIEN » sont éteints, pas supprimés.
+Une nouvelle routine ou un nouveau scénario reprend le même principe de nom
+(« 2️⃣ Vidéo · 3. … ») et s'ajoute à ce tableau.
+
 ## Les routines (heure de Paris)
 
 | Quand | Routine | Ce qu'elle produit |
 |---|---|---|
 | Chaque jour, 6 h 52 | Santé de l'app | « ✅ Tout va bien », ou l'alerte et quoi faire |
-| Lundi, 8 h 41 | 5 prospects de la semaine | 5 campings normands qualifiés, avec fiche, accroche et email |
+| Lundi → vendredi, 7 h 41 | 10 prospects du jour (France entière) | 10 campings qualifiés avec email trouvé (jamais deviné), fiche, accroche et email ; département par département |
 | Mardi → vendredi, 8 h 47 | Relances du jour | Les emails et appels du jour, prêts (onglet Brouillons) |
 | Mercredi, 9 h 53 | Post LinkedIn | Un post pour la page CampConnect (onglet Brouillons) |
 | Vendredi, 17 h 48 | Bilan de la semaine | Chiffres, ce qui a marché, les 3 priorités de lundi |
@@ -93,7 +109,7 @@ Un enchaînement type pour un bug signalé par un testeur : `support`
 
 ## La semaine type de Johan (environ 1 h par jour)
 
-- **Lundi** : relire et envoyer les 5 emails (15 min).
+- **Chaque matin** : dire à Claude « crée les brouillons du jour », relire et envoyer les 10 emails (15 min).
 - **Mardi → vendredi** : 3 à 5 relances ou appels (45 min), puis mettre à
   jour les fiches.
 - **Mercredi** : publier le post LinkedIn (2 min).
