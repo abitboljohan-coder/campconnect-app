@@ -30,6 +30,22 @@ etoiles, emplacements, telephone, email, site, etape, prochaine_date
 source, cree_le, maj_le`. Brouillon : `type (linkedin | email | bilan |
 veille), titre, date, texte`.
 
+## S'y retrouver (organisation depuis le 6 octobre 2026)
+
+Tout porte le même nom, **domaine d'abord, puis étape**. Page d'accueil, avec les
+phrases à dire à Claude : https://claude.ai/artifact/CvmyeXp4uUqURkjgX7pEYu
+
+| N° | Domaine | Routines (Claude Code) | Make (dossier « CampConnect ») |
+|---|---|---|---|
+| 1 | Prospection | 1. Trouver 10 campings · 2. Relances du jour · 3. Bilan de la semaine | 1 · Créer un brouillon d'email |
+| 2 | Vidéo | 1. Fabriquer la vidéo · 2. Publier sur LinkedIn | 2 · Publier sur la page LinkedIn CampConnect |
+| 3 | LinkedIn | Texte de la semaine | (aucun) |
+| 4 | Technique | Santé de l'app | (aucun) |
+
+Les routines et scénarios marqués « ANCIEN » sont éteints, pas supprimés.
+Une nouvelle routine ou un nouveau scénario reprend le même principe de nom
+(« 2️⃣ Vidéo · 3. … ») et s'ajoute à ce tableau.
+
 ## Les routines (heure de Paris)
 
 | Quand | Routine | Ce qu'elle produit |
