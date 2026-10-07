@@ -49,12 +49,13 @@ région, saisonnalité, présence en ligne, ce qui laisse penser qu'il a le
 problème qu'on résout, et l'angle d'attaque le plus probable. Termine par la
 phrase d'accroche que Johan prononcera, adaptée à ce camping-là.
 
-**Email de premier contact** : écrit comme un commercial senior écrit à une
-personne, chaleureux et sincère, 150 à 190 mots. Un compliment précis sur un
-fait lu sur le site du camping (son histoire, son cadre, son programme), une
-phrase d'empathie sur un problème qu'il vit, un seul bénéfice concret, la
-vidéo, puis une demande de conversation — jamais de décision. Il finit par
-« un simple « non merci » me suffit : je ne vous relancerai pas ».
+**Email de premier contact** : style startup, direct (choix de Johan, le
+7 octobre 2026). « Nous lançons CampConnect, une application qui… », ce
+qu'elle fait en une phrase, une seule phrase sobre qui relie ce camping à
+l'app (un fait lu sur son site), l'offre pilote 2027, la vidéo, puis une
+demande de démonstration de 15 minutes — jamais de décision. 100 à 130 mots,
+sans compliment ni flatterie. Le modèle exact est dans la routine du matin
+(« 1. 10 campings + brouillons Infomaniak »).
 
 **L'adresse doit appartenir au camping** : elle figure telle quelle sur son
 site officiel (accueil, contact ou mentions légales). Vue seulement dans un
