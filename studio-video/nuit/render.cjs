@@ -15,7 +15,8 @@ const { chromium } = require(path.join(__dirname, '..', 'app', 'node_modules', '
 
 const FPS = 30;
 const HOOK = 4.0;   // accroche : 2 mesures à 120 BPM
-const FIN = 5.0;    // fin : logo, slogan, bouton, e-mail
+const VAL = 2.0;    // phrase « valeur pour le gérant » : 1 mesure
+const FIN = 4.0;    // fin : logo, slogan, bouton, e-mail : 2 mesures
 const FORMATS = { '9x16': [1080, 1920], '1x1': [1080, 1080], '16x9': [1920, 1080] };
 
 function chromiumPath() {
@@ -36,26 +37,34 @@ function chromiumPath() {
     const c = cap.shots[i];
     const a = t, b = t + c.images / FPS;
     t = b;
-    return { a, b, images: c.images, appuis: c.appuis, cote: s.cote, titre: s.titre, sous: s.sous,
+    return { a, b, images: c.images, appuis: c.appuis, effets: c.effets || [], cote: s.cote, titre: s.titre, sous: s.sous,
       dir: 'file://' + path.join(work, 'clips', String(i + 1)) };
   });
-  const finDebut = t, dur = finDebut + FIN;
-  const FILM = { W, H, format: plan.format, fps: FPS, langue: plan.langue, hook: plan.accroche, textes: plan.textes,
-    hookFin: HOOK, finDebut, dur, shots, capture: { largeur: cap.largeur, hauteur: cap.hauteur } };
+  const valDebut = t, finDebut = t + VAL, dur = finDebut + FIN;
+  const FILM = { W, H, format: plan.format, fps: FPS, langue: plan.langue, hook: plan.accroche, valeur: plan.valeur, textes: plan.textes,
+    hookFin: HOOK, valDebut, finDebut, dur, shots, capture: { largeur: cap.largeur, hauteur: cap.hauteur } };
   fs.writeFileSync(path.join(work, 'film.json'), JSON.stringify(FILM, null, 1));
 
   // Repères son : montées et impacts sur la révélation et sur la fin,
-  // whoosh à chaque coupe, « pop » à chaque appui du doigt.
+  // respiration filtrée sur la phrase valeur, whoosh à chaque coupe, « pop »
+  // à chaque appui du doigt, à chaque loupe et à chaque notification.
   const pops = [];
-  plan.accroche.forEach((_, i) => pops.push([0.3 + i * 0.16, 1200 + 150 * i]));
+  plan.accroche.forEach((_, i) => pops.push([0.3 + i * 0.22, 1200 + 150 * i]));
   shots.forEach(s => s.appuis.forEach(a => pops.push([s.a + (a.f - 1) / FPS + 0.2, a.long ? 1100 : 1500])));
-  pops.push([finDebut + 1.15, 1300], [finDebut + 1.55, 1500]);
+  shots.forEach(s => s.effets.forEach(e => {
+    const t0 = s.a + (e.f - 1) / FPS;
+    if (e.type === 'loupe') pops.push([t0 + 0.05, 1800]);
+    if (e.type === 'notif') pops.push([t0 + 0.1, 2200], [t0 + 0.22, 2600]);
+  }));
+  pops.push([finDebut + 1.0, 1300], [finDebut + 1.35, 1500]);
   const audio = {
     dur, out: path.join(work, 'audio'), intro: HOOK,
-    sections: [[0, 'intro'], [HOOK, 'main'], [finDebut, 'outro']],
-    fx: [[HOOK, 'riser', 1.8, 0.35], [HOOK, 'impact', 0, 0.5], [finDebut, 'riser', 1.6, 0.3], [finDebut, 'impact', 0, 0.45]],
-    fade: dur - 1.6,
-    cuts: [...shots.slice(1).map(s => s.a), finDebut],
+    sections: [[0, 'intro'], [HOOK, 'main'], [valDebut, 'break'], [finDebut, 'outro']],
+    break: [valDebut, finDebut],
+    fx: [[HOOK, 'riser', 1.8, 0.35], [HOOK, 'impact', 0, 0.5], [valDebut, 'impact', 0, 0.22],
+      [finDebut, 'riser', 1.6, 0.3], [finDebut, 'impact', 0, 0.45]],
+    fade: dur - 1.4,
+    cuts: [...shots.slice(1).map(s => s.a), valDebut, finDebut],
     pops, impacts_sfx: [[HOOK, 0.35], [finDebut, 0.3]],
   };
   fs.writeFileSync(path.join(work, 'audio.json'), JSON.stringify(audio, null, 1));
@@ -85,8 +94,8 @@ function chromiumPath() {
     return;
   }
 
-  // Vignette : le premier plan, légende entière, doigt absent.
-  await page.evaluate(t => window.seek(t), shots[0].a + 1.6);
+  // Vignette : le premier plan, légende entière (ou l'instant donné par le thème).
+  await page.evaluate(t => window.seek(t), plan.vignette != null ? plan.vignette : shots[0].a + 1.6);
   await page.screenshot({ path: path.join(work, 'vignette.png') });
 
   const out = path.join(work, 'muet.mp4');

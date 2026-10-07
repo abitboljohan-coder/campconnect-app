@@ -9,8 +9,19 @@
 // (document.getAnimations) avancent exactement de 1/30 s entre deux captures.
 // Le résultat ne dépend donc pas de la vitesse de la machine.
 //
+// Effets de caméra (sans durée propre : l'action suivante s'enchaîne aussitôt) :
+//   { "zoom": <cible>, "echelle": 1.6, "duree": 2 }   la caméra s'approche et surligne
+//   { "loupe": <cible>, "duree": 2, "marge": 6 }       le détail sort de l'écran, agrandi
+//   { "notif": { "titre": "…", "texte": "…" }, "duree": 2.6 }  notification push
+// Une cible peut aussi être un rectangle : { "rect": [x, y, largeur, hauteur] } (px CSS),
+// et "parent": n vise le n-ième conteneur de l'élément trouvé (toute la carte).
+// { "effacer": true } vide le champ touché juste avant.
+// Un plan peut demander "dialogues": "accepter" (valide les confirmations natives).
+// Un plan peut demander "geo": "loin" (le vacancier n'est pas au camping : la
+// vérification GPS échoue et l'entrée demande le code de l'heure).
+//
 // Sorties : <work>/clips/<n>/0001.jpg… et <work>/capture.json (nombre
-// d'images et appuis de chaque plan, que le moteur dessine par-dessus
+// d'images, appuis et effets de chaque plan, que le moteur dessine par-dessus
 // l'écran : l'interface capturée n'est jamais retouchée).
 const path = require('path');
 const { chromium } = require(path.join(__dirname, '..', 'app', 'node_modules', 'playwright'));
@@ -22,6 +33,8 @@ const LOCALES = { fr: 'fr-FR', en: 'en-GB', es: 'es-ES', nl: 'nl-NL' };
 // Centre du camping de démo (src/demo/mockSupabase.js) : la vérification GPS
 // de l'onboarding passe.
 const GEO = { latitude: 44.2010, longitude: 6.3013, accuracy: 15 };
+// Ailleurs (Lyon) : pour montrer qu'on n'entre pas sans être au camping.
+const GEO_LOIN = { latitude: 45.7640, longitude: 4.8357, accuracy: 15 };
 
 function chromiumPath() {
   const p = process.env.CHROMIUM_PATH || '/opt/pw-browsers/chromium-1194/chrome-linux/chrome';
@@ -35,7 +48,7 @@ async function captureShot(browser, plan, shot, idx, outDir) {
   const ctx = await browser.newContext({
     viewport: { width: VW, height: VH }, deviceScaleFactor: 3, isMobile: true, hasTouch: true,
     locale: LOCALES[lang] || 'fr-FR', timezoneId: 'Europe/Paris', colorScheme: 'light',
-    geolocation: GEO, permissions: ['geolocation'],
+    geolocation: shot.geo === 'loin' ? GEO_LOIN : GEO, permissions: ['geolocation'],
   });
   // Heure de la démo : l'après-midi du jour de la vidéo (les groupes de 18 h 30
   // sont à venir, l'agenda montre « ce soir »).
@@ -45,6 +58,9 @@ async function captureShot(browser, plan, shot, idx, outDir) {
   const page = await ctx.newPage();
   const erreurs = [];
   page.on('pageerror', e => erreurs.push(e.message));
+  // Les confirmations natives (window.confirm) ne se voient pas à l'image :
+  // "dialogues": "accepter" les valide, pour montrer le résultat du geste.
+  page.on('dialog', d => (shot.dialogues === 'accepter' ? d.accept() : d.dismiss()).catch(() => {}));
   const cdp = await ctx.newCDPSession(page);
 
   const qs = new URLSearchParams({ s: shot.ecran, ...(shot.params || {}) });
@@ -60,7 +76,7 @@ async function captureShot(browser, plan, shot, idx, outDir) {
   fs.mkdirSync(dir, { recursive: true });
   const total = Math.round(shot.duree * FPS);
   let f = 0;
-  const appuis = [];
+  const appuis = [], effets = [];
 
   async function tick(n = 1) {
     for (let i = 0; i < n; i++) {
@@ -84,7 +100,11 @@ async function captureShot(browser, plan, shot, idx, outDir) {
   async function texteI18n(cle, vars) {
     return page.evaluate(async ([k, v]) => (await import('/src/i18n.js')).t(k, v), [cle, vars || null]);
   }
-  async function cible(c) {
+  async function cible(c, boite) {
+    if (c.rect) {
+      const [x, y, width, height] = c.rect;
+      return boite ? { x, y, width, height } : { x: x + width / 2, y: y + height / 2 };
+    }
     let loc;
     if (c.css) loc = page.locator(c.css);
     else if (c.label) loc = page.getByLabel(c.label, { exact: !!c.exact });
@@ -95,10 +115,19 @@ async function captureShot(browser, plan, shot, idx, outDir) {
     else if (c.text) loc = page.getByText(c.text, { exact: !!c.exact });
     else throw new Error('cible inconnue : ' + JSON.stringify(c));
     loc = loc.nth(c.nth || 0);
+    // parent : n : le conteneur de l'élément (une carte entière plutôt que son titre)
+    for (let i = 0; i < (c.parent || 0); i++) loc = loc.locator('xpath=..');
     await loc.waitFor({ state: 'visible', timeout: 5000 }).catch(() => {
       throw new Error(`plan ${idx + 1} (${shot.ecran}) : élément introuvable ${JSON.stringify(c)}`);
     });
     const b = await loc.boundingBox();
+    if (boite) {
+      // limitée à l'écran visible
+      const x0 = Math.max(0, b.x), y0 = Math.max(0, b.y);
+      const x1 = Math.min(VW, b.x + b.width), y1 = Math.min(VH, b.y + b.height);
+      if (x1 - x0 < 4 || y1 - y0 < 4) throw new Error(`plan ${idx + 1} (${shot.ecran}) : élément hors écran ${JSON.stringify(c)}`);
+      return { x: x0, y: y0, width: x1 - x0, height: y1 - y0 };
+    }
     const x = b.x + (c.fx ?? 0.5) * b.width, y = b.y + (c.fy ?? 0.5) * b.height;
     if (x < 0 || y < 0 || x > VW || y > VH) throw new Error(`plan ${idx + 1} : élément hors écran ${JSON.stringify(c)}`);
     return { x, y };
@@ -163,6 +192,19 @@ async function captureShot(browser, plan, shot, idx, outDir) {
         await tick(1);
       }
       await tick(secondes(st.puis ?? 0.3));
+    } else if (st.zoom || st.loupe) {
+      const b = await cible(st.zoom || st.loupe, true);
+      effets.push({ type: st.zoom ? 'zoom' : 'loupe', f: f + 1, duree: st.duree ?? 2,
+        box: { x: b.x, y: b.y, w: b.width, h: b.height },
+        ...(st.echelle != null ? { echelle: st.echelle } : {}), ...(st.marge != null ? { marge: st.marge } : {}),
+        ...(st.surligner === false ? { surligner: false } : {}) });
+    } else if (st.notif) {
+      effets.push({ type: 'notif', f: f + 1, duree: st.duree ?? 2.6, titre: st.notif.titre, texte: st.notif.texte });
+    } else if (st.effacer) {
+      // vide le champ touché juste avant (un profil prérempli, par exemple)
+      await page.keyboard.press('Control+A');
+      await page.keyboard.press('Backspace');
+      await tick(1);
     } else if (st.clavierFerme) {
       await page.evaluate(() => document.activeElement && document.activeElement.blur());
     } else {
@@ -172,7 +214,8 @@ async function captureShot(browser, plan, shot, idx, outDir) {
   if (f < total) await tick(total - f);
   await ctx.close();
   if (erreurs.length) console.log(`  plan ${idx + 1} : erreurs de la page :`, erreurs.slice(0, 3).join(' | '));
-  return { images: f, appuis, ecran: shot.ecran, erreurs };
+  for (const e of effets) if (e.f > total) throw new Error(`plan ${idx + 1} (${shot.ecran}) : effet ${e.type} après la fin du plan`);
+  return { images: f, appuis, effets, ecran: shot.ecran, erreurs };
 }
 
 (async () => {
