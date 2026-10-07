@@ -76,7 +76,17 @@ def planche(mp4, work, dest, fps=2):
     return ims
 
 
-def controle_clips(work, cap):
+def regard_seul(shot):
+    """Plan sans geste (ni appui, ni saisie, ni défilement) mais avec un effet
+    de caméra : l'écran reste immobile, c'est la loupe ou le zoom qui bouge.
+    Un appui "clic": false (le doigt se pose, la vidéo coupe) ne compte pas."""
+    gestes = ('appui', 'appuiLong', 'saisir', 'defiler')
+    actions = [a for a in shot.get('actions', []) if not ('appui' in a and a.get('clic') is False)]
+    return (not any(k in a for a in actions for k in gestes)
+            and any(k in a for a in actions for k in ('zoom', 'loupe', 'notif')))
+
+
+def controle_clips(work, cap, plan):
     """Chaque plan doit bouger : sinon une action n'a pas eu lieu (écran figé)."""
     pb = []
     for i, s in enumerate(cap['shots']):
@@ -89,7 +99,7 @@ def controle_clips(work, cap):
         a = Image.open(fs[0]).convert('L').resize((195, 422))
         b = Image.open(fs[-1]).convert('L').resize((195, 422))
         diff = ImageStat.Stat(ImageChops.difference(a, b)).mean[0]
-        if diff < 1.0:
+        if diff < 1.0 and not regard_seul(plan['shots'][i]):
             pb.append(f"plan {i + 1} ({s['ecran']}) : l'écran ne change pas (écart {diff:.2f})")
         # pas d'écran blanc ou vide : il faut du contenu
         if ImageStat.Stat(b).stddev[0] < 12:
@@ -113,7 +123,7 @@ def main():
        '-c:v', 'copy', '-c:a', 'aac', '-b:a', '160k', '-shortest', '-movflags', '+faststart', mp4)
 
     # 2. contrôle qualité
-    pb = controle_clips(work, cap)
+    pb = controle_clips(work, cap, plan)
     d = duree(mp4)
     if not 15 <= d <= 25.5:
         pb.append(f'durée {d:.1f} s (15 à 25 s attendues)')

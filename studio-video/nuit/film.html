@@ -5,9 +5,18 @@
 <title>CampConnect Nuit</title>
 <!--
   Moteur du mode nuit : même charte et même grammaire que app/index.html
-  (réseau de points, téléphone 3D, typographie cinétique masquée), mais piloté
-  par window.FILM (injecté par nuit/render.cjs) : format 9:16, 1:1 ou 16:9,
-  langue, accroche, 1 à 3 plans d'écran capturés dans la démo, fin avec CTA.
+  (réseau de points, téléphone 3D, typographie cinétique masquée), piloté par
+  window.FILM (injecté par nuit/render.cjs) : format 9:16, 1:1 ou 16:9,
+  langue, accroche, 1 à 3 plans d'écran capturés dans la démo, phrase
+  « valeur pour le gérant », fin avec CTA.
+
+  Caméra : le téléphone occupe l'essentiel du cadre ; les effets enregistrés
+  pendant la capture (nuit/capture.cjs) le pilotent :
+    zoom   la caméra s'approche du détail et le surligne ;
+    loupe  le détail sort de l'écran, agrandi, puis y retourne ;
+    notif  une notification push (texte réel de l'app) descend sur l'écran.
+  Tous ces éléments sont dessinés PAR-DESSUS l'interface capturée, qui n'est
+  jamais retouchée.
   window.seek(t) dessine l'image du temps t ; window.verifier() liste les
   textes qui débordent (contrôle qualité).
 -->
@@ -32,6 +41,8 @@ canvas{position:absolute;left:0;top:0}
 .eyebrow{font-family:DMS;font-weight:700;letter-spacing:0.28em;text-transform:uppercase;white-space:nowrap}
 .hl{color:var(--salmon)}
 .sombre .hl{color:var(--lagoon)}
+#hook .hl,#val .hl{background-image:linear-gradient(var(--salmon),var(--salmon));background-repeat:no-repeat;background-position:0 96%;background-size:0% 0.075em}
+#cam{position:absolute;left:0;top:0;transform-origin:0 0}
 #phoneWrap{position:absolute;left:0;top:0;perspective:2600px}
 #phone{position:absolute;left:0;top:0;width:592px;height:1245px;border-radius:92px;transform-origin:50% 0;
   background:linear-gradient(150deg,#3b4441 0%,#151a19 30%,#0d1110 70%,#2a3130 100%);
@@ -39,10 +50,28 @@ canvas{position:absolute;left:0;top:0}
 #screen{position:absolute;left:16px;top:16px;width:560px;height:1213px;border-radius:78px;overflow:hidden;background:#f8f6f1}
 #screen .scr{position:absolute;left:0;top:0;width:560px;height:1213px}
 #screen .scr img{position:absolute;left:0;top:0;width:560px;height:1213px;display:block}
-#glare{position:absolute;inset:0;border-radius:78px;pointer-events:none;background:linear-gradient(115deg,rgba(255,255,255,0) 30%,rgba(255,255,255,.14) 45%,rgba(255,255,255,0) 60%)}
+#island{position:absolute;left:216px;top:14px;width:128px;height:36px;border-radius:18px;background:#050707;z-index:7}
+#glare{position:absolute;inset:0;border-radius:78px;pointer-events:none;background:linear-gradient(115deg,rgba(255,255,255,0) 30%,rgba(255,255,255,.12) 45%,rgba(255,255,255,0) 60%);z-index:8}
+#dim{position:absolute;inset:0;background:rgb(12,28,24);opacity:0;z-index:4}
 .btnside{position:absolute;background:#1a201f;border-radius:4px}
-#touch{position:absolute;width:70px;height:70px;margin:-35px 0 0 -35px;border-radius:50%;background:rgba(255,255,255,.42);
+#touch{position:absolute;width:62px;height:62px;margin:-31px 0 0 -31px;border-radius:50%;background:rgba(255,255,255,.45);
   border:4px solid rgba(255,255,255,.95);box-shadow:0 6px 18px rgba(0,0,0,.28);display:none;z-index:5}
+#ripple{position:absolute;width:62px;height:62px;margin:-31px 0 0 -31px;border-radius:50%;border:3px solid rgba(255,255,255,.9);display:none;z-index:5}
+#ring{position:absolute;border-radius:22px;border:5px solid var(--salmon);display:none;z-index:3;
+  box-shadow:0 0 0 6px rgba(250,128,114,.22),0 10px 30px rgba(250,128,114,.35)}
+#notif{position:absolute;left:18px;top:18px;width:524px;padding:20px 22px 22px;border-radius:36px;display:none;z-index:6;
+  background:rgba(246,246,243,.97);box-shadow:0 18px 40px rgba(0,0,0,.28);font-family:DMS;color:#111}
+#notif .top{display:flex;align-items:center;gap:16px}
+#notif .ic{width:62px;height:62px;border-radius:15px;background:#fff;display:flex;align-items:center;justify-content:center;box-shadow:0 0 0 1px rgba(0,0,0,.06);flex:none}
+#notif .ic img{width:48px}
+#notif .tx{flex:1;min-width:0}
+#notif .t1{display:flex;justify-content:space-between;align-items:baseline;gap:10px}
+#notif .t1 b{font-family:DMS;font-weight:700;font-size:25px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#notif .t1 span{font-size:21px;color:#777;flex:none}
+#notif .t2{font-size:24px;line-height:1.25;margin-top:3px;color:#222;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#loupe{position:absolute;overflow:hidden;display:none;border-radius:30px;background:#fff;z-index:20;
+  box-shadow:0 0 0 5px rgba(255,255,255,.96),0 40px 90px -10px rgba(10,30,25,.55),0 12px 30px rgba(10,30,25,.3)}
+#loupe img{position:absolute;left:0;top:0;display:block}
 #shadow{position:absolute;width:560px;height:90px;border-radius:50%;background:rgba(20,45,38,.35);filter:blur(40px)}
 .pill{display:inline-flex;align-items:center;gap:18px;padding:0.72em 1.2em;border-radius:999px;background:var(--salmon);color:#fff;font-family:Jak;font-weight:800;letter-spacing:-0.01em;white-space:nowrap;
   box-shadow:0 26px 50px -16px rgba(250,128,114,.7)}
@@ -54,8 +83,13 @@ canvas{position:absolute;left:0;top:0}
     <div class="blob" id="b1" style="width:760px;height:760px;background:rgba(121,219,220,.33)"></div>
     <div class="blob" id="b2" style="width:680px;height:680px;background:rgba(155,187,143,.38)"></div>
     <div class="blob" id="b3" style="width:520px;height:520px;background:rgba(250,128,114,.16)"></div>
+    <canvas id="bgNetC"></canvas>
   </div>
-  <div id="bgForest" class="layer" style="background:radial-gradient(120% 80% at 20% 0%,#2f5a4e 0%,#23423A 55%,#1b3530 100%)"></div>
+  <div id="bgForest" class="layer" style="background:radial-gradient(120% 80% at 20% 0%,#2f5a4e 0%,#23423A 55%,#1b3530 100%)">
+    <div class="blob" id="f1" style="width:820px;height:820px;background:rgba(121,219,220,.16)"></div>
+    <div class="blob" id="f2" style="width:640px;height:640px;background:rgba(155,187,143,.18)"></div>
+    <canvas id="bgNetF"></canvas>
+  </div>
   <canvas id="net"></canvas>
 
   <div id="hook" class="abs titre sombre" style="color:var(--cream)"></div>
@@ -64,21 +98,33 @@ canvas{position:absolute;left:0;top:0}
   <div id="eyeG" class="abs eyebrow" style="color:var(--sage)"></div>
   <div id="caps"></div>
 
-  <div id="shadow"></div>
-  <div id="phoneWrap">
-    <div id="phone">
-      <div class="btnside" style="left:-5px;top:250px;width:6px;height:70px"></div>
-      <div class="btnside" style="left:-5px;top:350px;width:6px;height:110px"></div>
-      <div class="btnside" style="left:-5px;top:480px;width:6px;height:110px"></div>
-      <div class="btnside" style="right:-5px;top:380px;width:6px;height:160px"></div>
-      <div id="screen">
-        <div class="scr" id="scrB"><img id="imgB"></div>
-        <div class="scr" id="scrA"><img id="imgA"></div>
-        <div id="touch"></div>
-        <div id="glare"></div>
+  <div id="camMask" class="layer"><div id="cam">
+    <div id="shadow"></div>
+    <div id="phoneWrap">
+      <div id="phone">
+        <div class="btnside" style="left:-5px;top:250px;width:6px;height:70px"></div>
+        <div class="btnside" style="left:-5px;top:350px;width:6px;height:110px"></div>
+        <div class="btnside" style="left:-5px;top:480px;width:6px;height:110px"></div>
+        <div class="btnside" style="right:-5px;top:380px;width:6px;height:160px"></div>
+        <div id="screen">
+          <div class="scr" id="scrB"><img id="imgB"></div>
+          <div class="scr" id="scrA"><img id="imgA"></div>
+          <div id="ring"></div>
+          <div id="dim"></div>
+          <div id="touch"></div>
+          <div id="ripple"></div>
+          <div id="notif"><div class="top"><div class="ic"><img src="../app/assets/logo_symbol.png"></div>
+            <div class="tx"><div class="t1"><b id="nT"></b><span id="nH"></span></div><div class="t2" id="nB"></div></div></div></div>
+          <div id="island"></div>
+          <div id="glare"></div>
+        </div>
       </div>
     </div>
-  </div>
+  </div></div>
+  <div id="loupe"><img id="imgL"></div>
+
+  <div id="valEye" class="abs eyebrow" style="color:var(--sage)"></div>
+  <div id="val" class="abs titre sombre" style="color:var(--cream)"></div>
 
   <div id="fin" class="layer">
     <img id="finSym" class="abs" src="../app/assets/logo_symbol.png">
@@ -101,6 +147,7 @@ const E = {
   inout3: t => t < .5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2,
   inout5: t => t < .5 ? 16 * t ** 5 : 1 - Math.pow(-2 * t + 2, 5) / 2,
   back: t => { const c1 = 1.45, c3 = c1 + 1; return 1 + c3 * Math.pow(t - 1, 3) + c1 * Math.pow(t - 1, 2); },
+  back2: t => { const c1 = 1.1, c3 = c1 + 1; return 1 + c3 * Math.pow(t - 1, 3) + c1 * Math.pow(t - 1, 2); },
 };
 const P = (t, a, b, e = 'inout3') => E[e](clamp((t - a) / (b - a)));
 const show = (el, on) => { el.style.display = on ? '' : 'none'; };
@@ -109,18 +156,27 @@ const esc = s => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(
 const md = s => esc(s).replace(/\*([^*]+)\*/g, '<span class="hl">$1</span>');
 
 // ---------- mise en page selon le format ----------
+// phone : centre, haut et échelle du téléphone au repos ; foc : point où la
+// caméra amène le détail visé ; masque : bord au-delà duquel le téléphone
+// zoomé s'efface (pour ne jamais passer sous la légende) ; loupe : zone permise.
 const W = F.W, H = F.H;
 const L = {
-  '9x16': { hook: { x: 84, y: 470, w: 912, size: 112 }, eye: { x: 84, y: 150, size: 26 },
-            cap: { x: 84, y: 205, w: 912, size: 82, sub: 38 }, phone: { cx: 540, top: 560, s: 1 },
+  '9x16': { hook: { x: 84, y: 540, w: 912, size: 124 }, eye: { x: 84, y: 108, size: 26 },
+            cap: { x: 84, y: 150, w: 912, size: 84, sub: 36 }, phone: { cx: 540, top: 446, s: 1.17 },
+            foc: [540, 1190], masque: { axe: 'y', a: 396, b: 446 }, loupe: { x0: 40, x1: 1040, y0: 470, y1: 1880, maxW: 960, maxH: 760 },
+            val: { x: 84, y: 700, w: 912, size: 108, eye: 26 },
             net: { cx: 540, cy: 1300, ty: 0, sc: 1 },
-            fin: { sym: [300, 330], word: [660, 665, 118], slogan: [800, 28], line: 900, cta: [1030, 44], mail: [1220, 44] } },
-  '1x1':  { hook: { x: 90, y: 170, w: 900, size: 92 }, eye: { x: 80, y: 300, size: 22 },
-            cap: { x: 80, y: 345, w: 470, size: 60, sub: 30 }, phone: { cx: 790, top: 70, s: 0.74 },
+            fin: { sym: [300, 360], word: [660, 690, 118], slogan: [826, 28], line: 922, cta: [1050, 44], mail: [1236, 44] } },
+  '1x1':  { hook: { x: 90, y: 170, w: 900, size: 92 }, eye: { x: 70, y: 300, size: 22 },
+            cap: { x: 70, y: 345, w: 470, size: 60, sub: 30 }, phone: { cx: 805, top: 52, s: 0.76 },
+            foc: [805, 560], masque: { axe: 'x', a: 548, b: 578 }, loupe: { x0: 570, x1: 1060, y0: 30, y1: 1050, maxW: 480, maxH: 520 },
+            val: { x: 90, y: 330, w: 900, size: 88, eye: 22 },
             net: { cx: 540, cy: 760, ty: -300, sc: 0.8 },
             fin: { sym: [190, 90], word: [470, 300, 86], slogan: [400, 22], line: 470, cta: [560, 36], mail: [740, 36] } },
-  '16x9': { hook: { x: 160, y: 250, w: 1600, size: 104 }, eye: { x: 160, y: 330, size: 24 },
-            cap: { x: 160, y: 380, w: 820, size: 78, sub: 36 }, phone: { cx: 1380, top: 64, s: 0.76 },
+  '16x9': { hook: { x: 160, y: 240, w: 1600, size: 124 }, eye: { x: 140, y: 300, size: 26 },
+            cap: { x: 140, y: 350, w: 900, size: 100, sub: 40 }, phone: { cx: 1400, top: 44, s: 0.79 },
+            foc: [1400, 560], masque: { axe: 'x', a: 1040, b: 1100 }, loupe: { x0: 1080, x1: 1890, y0: 30, y1: 1050, maxW: 800, maxH: 560 },
+            val: { x: 160, y: 330, w: 1600, size: 112, eye: 24 },
             net: { cx: 960, cy: 760, ty: -280, sc: 1 },
             fin: { sym: [200, 80], word: [520, 300, 94], slogan: [410, 24], line: 480, cta: [560, 38], mail: [745, 38] } },
 }[F.format];
@@ -130,7 +186,15 @@ stage.style.width = W + 'px'; stage.style.height = H + 'px';
 document.documentElement.style.width = document.body.style.width = W + 'px';
 document.documentElement.style.height = document.body.style.height = H + 'px';
 $('phoneWrap').style.width = W + 'px'; $('phoneWrap').style.height = H + 'px';
-$('net').width = W; $('net').height = H;
+for (const id of ['net', 'bgNetC', 'bgNetF']) { $(id).width = W; $(id).height = H; }
+// Le téléphone zoomé s'efface avant la colonne (ou la bande) des légendes.
+// Le masque est posé sur un calque fixe : sur #cam, il suivrait le zoom.
+{
+  const m = L.masque, dir = m.axe === 'y' ? 'to bottom' : 'to right';
+  const g = `linear-gradient(${dir},transparent ${m.a}px,#000 ${m.b}px)`;
+  $('camMask').style.webkitMaskImage = g; $('camMask').style.maskImage = g;
+  $('cam').style.width = W + 'px'; $('cam').style.height = H + 'px';
+}
 
 // lignes cinétiques
 function setLines(el, lignes) { el.innerHTML = lignes.map(l => `<div class="ln"><span>${md(l)}</span></div>`).join(''); }
@@ -148,7 +212,14 @@ function fit(el, size, width) {
 // accroche
 const hook = $('hook');
 setLines(hook, F.hook);
-Object.assign(hook.style, { left: L.hook.x + 'px', top: L.hook.y + 'px', width: L.hook.w + 'px' });
+Object.assign(hook.style, { left: L.hook.x + 'px', top: L.hook.y + 'px', width: L.hook.w + 'px', transformOrigin: '0 50%' });
+
+// valeur pour le gérant
+const val = $('val'), valEye = $('valEye');
+setLines(val, F.valeur || []);
+Object.assign(val.style, { left: L.val.x + 'px', top: L.val.y + 'px', width: L.val.w + 'px' });
+valEye.textContent = F.textes.valeur || '';
+Object.assign(valEye.style, { left: L.val.x + 'px', top: (L.val.y - L.val.eye * 2.6) + 'px', fontSize: L.val.eye + 'px' });
 
 // surtitres
 for (const [id, txt] of [['eyeV', F.textes.vacanciers], ['eyeG', F.textes.gerant]]) {
@@ -162,7 +233,7 @@ const capEls = F.shots.map(s => {
   w.className = 'abs' + (s.cote === 'gerant' ? ' sombre' : '');
   Object.assign(w.style, { left: L.cap.x + 'px', top: L.cap.y + 'px', width: L.cap.w + 'px' });
   w.innerHTML = `<div class="titre lignes" style="color:${s.cote === 'gerant' ? 'var(--cream)' : 'var(--forest)'}"></div>
-    <div class="sous" style="margin-top:0.55em;font-size:${L.cap.sub}px;${s.cote === 'gerant' ? 'color:#b9cfc6' : ''}">${md(s.sous || '')}</div>`;
+    <div class="sous" style="margin-top:0.5em;font-size:${L.cap.sub}px;${s.cote === 'gerant' ? 'color:#b9cfc6' : ''}">${md(s.sous || '')}</div>`;
   setLines(w.querySelector('.lignes'), s.titre);
   $('caps').appendChild(w);
   return w;
@@ -182,6 +253,7 @@ $('finPill').style.fontSize = fin.cta[1] + 'px';
 $('finArrow').setAttribute('width', fin.cta[1] * 0.9); $('finArrow').setAttribute('height', fin.cta[1] * 0.9);
 $('finMail').textContent = F.textes.mail;
 Object.assign($('finMail').style, { top: fin.mail[0] + 'px', fontSize: fin.mail[1] + 'px' });
+$('nH').textContent = F.textes.maintenant || '';
 
 // ---------- réseau de points (fil rouge : les vacanciers qui se relient) ----------
 function rnd(seed) { return () => { seed = (seed * 16807) % 2147483647; return (seed - 1) / 2147483646; }; }
@@ -225,6 +297,23 @@ function drawNet(t, o) {
   ctx.restore();
 }
 
+// réseau de fond, discret, sur tout le cadre : le fil rouge ne disparaît jamais
+const R2 = rnd(7), bgNodes = [];
+const nb = Math.round(W * H / 52000);
+for (let i = 0; i < nb; i++) bgNodes.push({ x: R2() * W, y: R2() * H, r: 4 + R2() * 7, c: Math.floor(R2() * 3), ph: R2() * 6.28, sp: 0.15 + R2() * 0.25 });
+const bgEdges = [];
+for (let i = 0; i < nb; i++) for (let j = i + 1; j < nb; j++)
+  if (Math.hypot(bgNodes[i].x - bgNodes[j].x, bgNodes[i].y - bgNodes[j].y) < 260 && R2() < 0.5) bgEdges.push([i, j]);
+function drawBg(id, t, line, dots, a) {
+  const c = $(id).getContext('2d');
+  c.clearRect(0, 0, W, H);
+  const pos = bgNodes.map(n => [n.x + Math.sin(t * n.sp + n.ph) * 26, n.y + Math.cos(t * n.sp * 0.9 + n.ph) * 22]);
+  c.lineWidth = 2; c.strokeStyle = line;
+  for (const [i, j] of bgEdges) { c.beginPath(); c.moveTo(...pos[i]); c.lineTo(...pos[j]); c.stroke(); }
+  bgNodes.forEach((n, i) => { c.fillStyle = dots[n.c]; c.beginPath(); c.arc(pos[i][0], pos[i][1], n.r, 0, 6.283); c.fill(); });
+  $(id).style.opacity = a;
+}
+
 // ---------- animations de texte ----------
 function lines(el, t, tin, tout, { stagger = 0.09, dur = 0.6, exitDur = 0.35, dist = 110 } = {}) {
   const spans = el.querySelectorAll(':scope>.ln>span');
@@ -242,9 +331,11 @@ function fadeUp(el, t, tin, tout, { dur = 0.6, dist = 30, exitDur = 0.3 } = {}) 
   const p = E.out5(clamp((t - tin) / dur)), q = E.in3(clamp((t - tout) / exitDur));
   el.style.opacity = p * (1 - q); el.style.transform = `translateY(${(1 - p) * dist - q * dist * 0.6}px)`;
 }
+// soulignement saumon qui se trace sous les mots mis en couleur
+function underline(el, t, a, b) { for (const h of el.querySelectorAll('.hl')) h.style.backgroundSize = `${P(t, a, b, 'out3') * 100}% 0.075em`; }
 
 // ---------- images des plans ----------
-const imgA = $('imgA'), imgB = $('imgB');
+const imgA = $('imgA'), imgB = $('imgB'), imgL = $('imgL');
 function frameSrc(s, t) {
   const i = clamp(Math.floor((t - s.a) * F.fps) + 1, 1, s.images);
   return `${s.dir}/${String(i).padStart(4, '0')}.jpg`;
@@ -252,19 +343,31 @@ function frameSrc(s, t) {
 async function setImg(img, src) { if (img.dataset.src !== src) { img.dataset.src = src; img.src = src; } await img.decode().catch(() => {}); }
 
 const T_HOOK = F.hookFin;                 // fin de l'accroche (= début du 1er plan)
-const T_END = F.finDebut;                 // début de la fin
+const T_VAL = F.valDebut;                 // phrase « valeur »
+const T_END = F.finDebut;                 // début de la fin (logo)
 const S = F.shots;
+const KS = 560 / F.capture.largeur;       // pixels d'écran par pixel CSS de la démo
+const Ph = L.phone;
 
-// fond forêt pendant : accroche, plans « gérant »
+// effets enregistrés à la capture, en temps du film
+S.forEach(s => {
+  s.fx = (s.effets || []).map(e => {
+    const a = s.a + (e.f - 1) / F.fps;
+    return { ...e, ta: a, tb: Math.min(a + e.duree, s.b - 0.05) };
+  });
+});
+
+// fond forêt pendant : accroche, plans « gérant », phrase valeur
 function forestOn(t) {
   if (t < T_HOOK) return true;
   if (t >= T_END) return false;
+  if (t >= T_VAL) return true;
   const s = S.find(s => t >= s.a && t < s.b) || S[S.length - 1];
   return s.cote === 'gerant';
 }
 function forestClip(t) {
   // cercle qui s'ouvre / se ferme en 0,6 s autour de chaque changement d'univers
-  const bounds = [T_HOOK, ...S.slice(1).map(s => s.a), T_END];
+  const bounds = [T_HOOK, ...S.slice(1).map(s => s.a), T_VAL, T_END];
   for (const b of bounds) {
     if (t >= b - 0.3 && t < b + 0.3) {
       const before = forestOn(b - 0.01), after = forestOn(b + 0.01);
@@ -277,6 +380,17 @@ function forestClip(t) {
   return forestOn(t) ? 150 : 0;
 }
 
+// position d'un point de l'écran de la démo (px CSS) dans le cadre, téléphone au repos
+function versCadre(x, y, phoneTop) {
+  const lx = 16 + x * KS, ly = 16 + y * KS;
+  return [Ph.cx + (lx - 296) * Ph.s, phoneTop + ly * Ph.s];
+}
+// enveloppe d'un effet : 0 → 1 → 0
+function env(e, t, inD, outD) {
+  if (t < e.ta || t >= e.tb) return 0;
+  return Math.min(E.inout3(clamp((t - e.ta) / inD)), E.inout3(clamp((e.tb - t) / outD)));
+}
+
 window.seek = async function (t) {
   // fonds
   const fc = forestClip(t), bgF = $('bgForest');
@@ -284,55 +398,96 @@ window.seek = async function (t) {
   $('b1').style.transform = `translate(${-160 + Math.sin(t * 0.35) * 90}px,${H * 0.14 + Math.cos(t * 0.3) * 70}px)`;
   $('b2').style.transform = `translate(${W - 560 + Math.cos(t * 0.28) * 90}px,${H * 0.6 + Math.sin(t * 0.33) * 80}px)`;
   $('b3').style.transform = `translate(${W * 0.6 + Math.sin(t * 0.4) * 60}px,${60 + Math.cos(t * 0.45) * 60}px)`;
+  $('f1').style.transform = `translate(${W * 0.45 + Math.sin(t * 0.3) * 80}px,${H * 0.3 + Math.cos(t * 0.25) * 90}px)`;
+  $('f2').style.transform = `translate(${-200 + Math.cos(t * 0.33) * 70}px,${H * 0.62 + Math.sin(t * 0.3) * 70}px)`;
+  const bgA = clamp(P(t, T_HOOK - 0.2, T_HOOK + 0.8) - P(t, T_END - 0.2, T_END + 0.3));
+  drawBg('bgNetC', t, 'rgba(35,66,58,.07)', ['rgba(155,187,143,.35)', 'rgba(121,219,220,.38)', 'rgba(250,128,114,.22)'], bgA);
+  if (fc > 0.01) drawBg('bgNetF', t, 'rgba(248,248,244,.07)', ['rgba(155,187,143,.30)', 'rgba(121,219,220,.30)', 'rgba(248,248,244,.16)'], bgA);
 
   // réseau : accroche (les points apparaissent, se relient, convergent) et fin
   const N = L.net;
   if (t < T_HOOK + 0.4) {
-    drawNet(t, { alpha: 1 - P(t, T_HOOK - 0.1, T_HOOK + 0.35), appear: clamp(t / 1.4) * 1.3,
-      connect: P(t, 1.2, T_HOOK - 0.6, 'out3'), converge: P(t, T_HOOK - 0.55, T_HOOK + 0.2, 'inout5'), cx: N.cx, cy: N.cy, ty: N.ty, sc: N.sc });
+    drawNet(t, { alpha: 1 - P(t, T_HOOK - 0.1, T_HOOK + 0.35), appear: clamp(t / 1.2) * 1.3,
+      connect: P(t, 0.9, T_HOOK - 0.8, 'out3'), converge: P(t, T_HOOK - 0.6, T_HOOK + 0.2, 'inout5'), cx: N.cx, cy: N.cy, ty: N.ty, sc: N.sc });
   } else if (t >= T_END + 0.1) {
     drawNet(t, { alpha: 0.5 * P(t, T_END + 0.2, T_END + 1.4), appear: P(t, T_END + 0.1, T_END + 1.4, 'lin') * 1.3,
       connect: P(t, T_END + 0.8, T_END + 2.8, 'out3'), lineCol: 'rgba(35,66,58,', cx: N.cx, cy: N.cy + (F.format === '9x16' ? 420 : 200), ty: N.ty, sc: N.sc });
   } else drawNet(t, null);
 
-  // accroche
-  lines(hook, t, 0.25, T_HOOK - 0.75, { stagger: 0.16, dur: 0.7 });
+  // accroche : lignes masquées une à une, soulignement, léger rapprochement
+  lines(hook, t, 0.2, T_HOOK - 0.6, { stagger: 0.22, dur: 0.6 });
+  hook.style.transform = `scale(${1 + 0.05 * P(t, 0, T_HOOK, 'lin')})`;
+  underline(hook, t, 0.2 + 0.22 * (F.hook.length - 1) + 0.45, 0.2 + 0.22 * (F.hook.length - 1) + 1.0);
 
   // surtitres
   const plages = c => { const r = []; for (const s of S) if (s.cote === c) { const l = r[r.length - 1]; if (l && Math.abs(l[1] - s.a) < 0.01) l[1] = s.b; else r.push([s.a, s.b]); } return r; };
   for (const [id, c] of [['eyeV', 'vacanciers'], ['eyeG', 'gerant']]) {
     const el = $(id); const pl = plages(c).find(([a, b]) => t >= a - 0.05 && t < b + 0.3);
     if (!pl) { show(el, false); continue; }
-    fadeUp(el, t, pl[0] + 0.05, Math.min(pl[1], T_END) - 0.3, { dur: 0.5, dist: 20 });
+    fadeUp(el, t, pl[0] + 0.05, Math.min(pl[1], T_VAL) - 0.3, { dur: 0.5, dist: 20 });
   }
 
   // légendes
   S.forEach((s, i) => {
-    const el = capEls[i], tin = s.a + 0.1, tout = s.b - 0.35;
+    const el = capEls[i], tin = s.a + 0.08, tout = s.b - 0.32;
     const vis = t >= tin && t < tout + 0.45; show(el, vis); if (!vis) return;
-    lines(el.querySelector('.lignes'), t, tin + 0.05, tout, { stagger: 0.08, dur: 0.55, exitDur: 0.28 });
-    const sub = el.querySelector('.sous'), p = P(t, tin + 0.3, tin + 0.8, 'out5'), q = P(t, tout, tout + 0.25, 'in3');
+    lines(el.querySelector('.lignes'), t, tin + 0.04, tout, { stagger: 0.08, dur: 0.5, exitDur: 0.26 });
+    const sub = el.querySelector('.sous'), p = P(t, tin + 0.25, tin + 0.75, 'out5'), q = P(t, tout, tout + 0.25, 'in3');
     sub.style.opacity = p * (1 - q); sub.style.transform = `translateY(${(1 - p) * 24}px)`;
   });
 
-  // téléphone
-  const Ph = L.phone, ph = $('phone');
-  const vis = t >= T_HOOK - 0.45 && t < T_END + 0.5;
-  show($('phoneWrap'), vis); show($('shadow'), vis);
+  // valeur pour le gérant
+  lines(val, t, T_VAL + 0.25, T_END - 0.35, { stagger: 0.13, dur: 0.55, exitDur: 0.3 });
+  underline(val, t, T_VAL + 0.7, T_VAL + 1.25);
+  fadeUp(valEye, t, T_VAL + 0.15, T_END - 0.35, { dur: 0.45, dist: 18 });
+
+  // ---------- téléphone et caméra ----------
+  const ph = $('phone'), cam = $('cam');
+  const vis = t >= T_HOOK - 0.45 && t < T_VAL + 0.25;
+  show(cam, vis);
+  let loupeOn = false;
   if (vis) {
-    const enter = P(t, T_HOOK - 0.45, T_HOOK + 0.45, 'out5'), exit = P(t, T_END - 0.3, T_END + 0.45, 'in3');
-    const y = lerp(H + 40, Ph.top, enter) + exit * (H + 40 - Ph.top) + Math.sin(t * 1.3) * 6;
-    const s = Ph.s * lerp(0.9, 1, enter) * (1 + 0.03 * P(t, T_HOOK, T_END, 'lin'));
-    const ry = lerp(-22, -6, enter) + Math.sin(t * 0.5) * 3, rx = lerp(18, 4, enter), rz = lerp(6, 0, enter);
-    ph.style.left = (Ph.cx - 296) + 'px'; ph.style.top = y + 'px';
+    const enter = P(t, T_HOOK - 0.45, T_HOOK + 0.4, 'back2'), exit = P(t, T_VAL - 0.35, T_VAL + 0.2, 'in3');
+    const flot = Math.sin(t * 1.3) * 5;
+    const top = lerp(H + 60, Ph.top, enter) + exit * (H + 60 - Ph.top) + flot;
+    // plan courant et transition (glissé de l'écran + petit rebond du téléphone)
+    const idx = Math.max(0, S.findIndex(s => t >= s.a && t < s.b));
+    const cur = t >= T_VAL ? S[S.length - 1] : (t < S[0].a ? S[0] : S[idx]);
+    const prev = S[S.indexOf(cur) - 1], tr = 0.42;
+    const pin = prev && t < cur.a + tr ? E.inout3(clamp((t - cur.a) / tr)) : 1;
+    const bump = prev ? Math.sin(Math.PI * clamp((t - cur.a + 0.12) / 0.55)) : 0;
+
+    // caméra : effet zoom (ou loupe, plus discret) actif
+    let k = 0, fx = null;
+    for (const e of cur.fx) if (e.type === 'zoom') { const v = env(e, t, 0.55, 0.5); if (v > k) { k = v; fx = e; } }
+    let z = 1, tx = 0, ty = 0;
+    if (fx) {
+      const Z = fx.echelle || 1.6;
+      const [px, py] = versCadre(fx.box.x + fx.box.w / 2, fx.box.y + fx.box.h / 2, Ph.top);
+      z = lerp(1, Z, k);
+      const Tx = lerp(px, L.foc[0], k), Ty = lerp(py, L.foc[1], k);
+      tx = Tx - z * px; ty = Ty - z * py;
+      // le téléphone zoomé couvre toujours sa place au repos : jamais de trou
+      // au-dessus de l'écran ni à côté, la caméra entre dans le téléphone
+      const [lx0, ly0] = versCadre(0, 0, Ph.top), [lx1, ly1] = versCadre(F.capture.largeur, F.capture.hauteur, Ph.top);
+      tx = clamp(tx, lx1 * (1 - z), lx0 * (1 - z));
+      ty = clamp(ty, Math.min(ly1, H) * (1 - z), ly0 * (1 - z));
+    }
+    // poussée lente pendant chaque plan, pour que l'image vive
+    const push = 1 + 0.025 * (t >= cur.a ? clamp((t - cur.a) / Math.max(1, cur.b - cur.a)) : 0);
+    const zp = z * push, [ox, oy] = [Ph.cx, Ph.top + 600 * Ph.s];
+    tx = push * tx + ox * (1 - push); ty = push * ty + oy * (1 - push);
+    cam.style.transform = `translate(${tx}px,${ty}px) scale(${zp})`;
+
+    const calme = 1 - k;
+    const s = Ph.s * lerp(0.88, 1, enter) * (1 - 0.03 * bump) * lerp(1, 0.9, exit);
+    const ry = (lerp(-24, -5, enter) + Math.sin(t * 0.5) * 2.5) * calme + 7 * bump, rx = lerp(18, 3, enter) * calme, rz = lerp(6, 0, enter);
+    ph.style.left = (Ph.cx - 296) + 'px'; ph.style.top = top + 'px';
     ph.style.transform = `rotateX(${rx}deg) rotateY(${ry}deg) rotateZ(${rz}deg) scale(${s})`;
     $('glare').style.transform = `translateX(${(ry + 10) * 14}px)`;
-    const sh = $('shadow'); sh.style.left = (Ph.cx - 280 + 20) + 'px'; sh.style.top = Math.min(y + 1210 * Ph.s, H + 40) + 'px';
-    sh.style.transform = `scale(${Ph.s})`; sh.style.opacity = clamp(1 - (y - Ph.top) / 900);
-    // écran : plan courant, glissé latéral entre deux plans
-    const idx = Math.max(0, S.findIndex(s => t >= s.a && t < s.b)), cur = t >= T_END ? S[S.length - 1] : (t < S[0].a ? S[0] : S[idx]);
-    const prev = S[S.indexOf(cur) - 1], tr = 0.4;
-    const pin = prev && t < cur.a + tr ? E.inout3(clamp((t - cur.a) / tr)) : 1;
+    const sh = $('shadow'); sh.style.left = (Ph.cx - 280 + 20) + 'px'; sh.style.top = Math.min(top + 1210 * Ph.s, H + 40) + 'px';
+    sh.style.transform = `scale(${Ph.s})`; sh.style.opacity = clamp(1 - (top - Ph.top) / 900) * (1 - k);
+
     await setImg(imgA, frameSrc(cur, t));
     $('scrA').style.transform = `translateX(${(1 - pin) * 100}%)`;
     if (pin < 1) {
@@ -340,38 +495,94 @@ window.seek = async function (t) {
       $('scrB').style.transform = `translateX(${-pin * 35}%) scale(${1 - 0.05 * pin})`; $('scrB').style.opacity = 1 - 0.6 * pin;
       $('scrA').style.boxShadow = '-30px 0 60px rgba(0,0,0,.18)';
     } else { show($('scrB'), false); $('scrA').style.boxShadow = 'none'; }
+
+    // surlignage du détail visé par le zoom
+    const ring = $('ring');
+    if (fx && fx.surligner !== false && k > 0.02) {
+      const pad = 7, b = fx.box, pr = P(t, fx.ta + 0.35, fx.ta + 0.75, 'out3') * env(fx, t, 0.01, 0.35);
+      Object.assign(ring.style, { display: 'block', left: (b.x - pad) * KS + 'px', top: (b.y - pad) * KS + 'px',
+        width: (b.w + 2 * pad) * KS + 'px', height: (b.h + 2 * pad) * KS + 'px', opacity: pr,
+        transform: `scale(${1.12 - 0.12 * pr})` });
+    } else ring.style.display = 'none';
+
+    // loupe : le détail sort de l'écran, agrandi
+    let kl = 0, lo = null;
+    for (const e of cur.fx) if (e.type === 'loupe') { const v = env(e, t, 0.45, 0.32); if (v > kl) { kl = v; lo = e; } }
+    $('dim').style.opacity = 0.32 * kl;
+    const lp = $('loupe');
+    if (lo && kl > 0.01 && pin >= 1) {
+      loupeOn = true;
+      const m = lo.marge ?? 6, b = { x: lo.box.x - m, y: lo.box.y - m, w: lo.box.w + 2 * m, h: lo.box.h + 2 * m };
+      // départ : le détail à sa place sur l'écran (caméra comprise)
+      const [x0, y0] = versCadre(b.x, b.y, top), [x1, y1] = versCadre(b.x + b.w, b.y + b.h, top);
+      const r0 = [x0 * zp + tx, y0 * zp + ty, (x1 - x0) * zp, (y1 - y0) * zp];
+      // arrivée : agrandi, centré sur le détail, dans la zone permise
+      const Lz = L.loupe, M = Math.min(Lz.maxW / b.w, Lz.maxH / b.h, lo.echelle ? lo.echelle * KS * Ph.s : 3.4);
+      const w1 = b.w * M, h1 = b.h * M;
+      const cx = clamp(r0[0] + r0[2] / 2, Lz.x0 + w1 / 2, Lz.x1 - w1 / 2), cy = clamp(r0[1] + r0[3] / 2 - 30, Lz.y0 + h1 / 2, Lz.y1 - h1 / 2);
+      const r1 = [cx - w1 / 2, cy - h1 / 2, w1, h1];
+      const pIn = E.back2(clamp((t - lo.ta) / 0.45)), q = 1 - E.inout3(clamp((lo.tb - t) / 0.32));
+      const pr = t < lo.tb - 0.32 ? pIn : 1 - q;
+      const r = r0.map((v, i) => lerp(v, r1[i], pr));
+      const Mc = r[2] / b.w;
+      Object.assign(lp.style, { display: 'block', left: r[0] + 'px', top: r[1] + 'px', width: r[2] + 'px', height: r[3] + 'px',
+        opacity: clamp(kl * 3), borderRadius: lerp(8, 30, pr) + 'px' });
+      await setImg(imgL, imgA.dataset.src);
+      Object.assign(imgL.style, { width: F.capture.largeur * Mc + 'px', height: F.capture.hauteur * Mc + 'px',
+        left: -b.x * Mc + 'px', top: -b.y * Mc + 'px' });
+    }
+
+    // notification push (texte réel envoyé par l'app), par-dessus l'écran
+    const nt = $('notif'); let non = false;
+    for (const e of cur.fx) if (e.type === 'notif' && t >= e.ta && t < e.tb) {
+      const pIn = E.back2(clamp((t - e.ta) / 0.5)), pOut = E.in3(clamp((t - (e.tb - 0.35)) / 0.35));
+      $('nT').textContent = e.titre; $('nB').textContent = e.texte;
+      nt.style.transform = `translateY(${(1 - pIn) * -230 - pOut * 230}px)`; nt.style.opacity = 1 - pOut * 0.3;
+      non = true;
+    }
+    nt.style.display = non ? 'block' : 'none';
+
     // doigt (appuis enregistrés pendant la capture) — dessiné par-dessus, jamais dans l'interface
-    const k = 560 / F.capture.largeur, touch = $('touch');
-    let on = false;
+    const touch = $('touch'), rip = $('ripple');
+    let on = false, ron = false;
     for (const a of (pin < 1 ? [] : cur.appuis)) {
       const ta = cur.a + (a.f - 1) / F.fps, tb = ta + a.duree + 0.25;
       if (t >= ta && t < tb) {
         const pIn = E.out3(clamp((t - ta) / 0.15)), pOut = clamp((t - (tb - 0.25)) / 0.25);
-        const press = t >= ta + 0.2 ? 0.86 : 1;
-        touch.style.left = (a.x * k) + 'px'; touch.style.top = (a.y * k) + 'px';
+        const press = t >= ta + 0.2 ? 0.84 : 1;
+        touch.style.left = (a.x * KS) + 'px'; touch.style.top = (a.y * KS) + 'px';
         touch.style.opacity = pIn * (1 - pOut);
         touch.style.transform = `scale(${(0.6 + 0.4 * pIn) * press * (1 + 0.4 * pOut)})`;
         on = true;
       }
+      const tr0 = ta + 0.2;
+      if (t >= tr0 && t < tr0 + 0.5) {
+        const p = E.out3((t - tr0) / 0.5);
+        rip.style.left = (a.x * KS) + 'px'; rip.style.top = (a.y * KS) + 'px';
+        rip.style.transform = `scale(${1 + 1.6 * p})`; rip.style.opacity = 0.9 * (1 - p);
+        ron = true;
+      }
     }
     touch.style.display = on ? 'block' : 'none';
+    rip.style.display = ron ? 'block' : 'none';
   }
+  if (!loupeOn) $('loupe').style.display = 'none';
 
   // fin
   const finOn = t >= T_END; show($('fin'), finOn);
   if (finOn) {
-    const a = T_END + 0.1;
-    const p = P(t, a, a + 0.9, 'out5'), pb = E.back(clamp((t - a) / 0.9));
+    const a = T_END + 0.05;
+    const p = P(t, a, a + 0.8, 'out5'), pb = E.back(clamp((t - a) / 0.8));
     const sym = $('finSym'); sym.style.transform = `scale(${0.5 + 0.5 * pb}) rotate(${(1 - p) * -20}deg)`; sym.style.clipPath = `circle(${p * 75}% at 50% 55%)`;
-    const w = $('finWord'), pw = P(t, a + 0.35, a + 1.05, 'out5'); w.style.transform = `translateY(${(1 - pw) * 110}%)`; w.style.opacity = pw;
-    const tg = $('finSlogan'), pt = P(t, a + 0.7, a + 1.5, 'out5'); tg.style.opacity = pt; tg.style.letterSpacing = (0.6 - 0.32 * pt) + 'em';
-    $('finLine').style.transform = `scaleX(${P(t, a + 0.9, a + 1.6, 'out5')})`;
-    const pill = $('finPill'), pp = E.back(clamp((t - (a + 1.0)) / 0.6));
-    const pulse = t > a + 2 ? 1 + 0.025 * Math.sin((t - a - 2) * Math.PI) : 1;
+    const w = $('finWord'), pw = P(t, a + 0.3, a + 0.95, 'out5'); w.style.transform = `translateY(${(1 - pw) * 110}%)`; w.style.opacity = pw;
+    const tg = $('finSlogan'), pt = P(t, a + 0.6, a + 1.3, 'out5'); tg.style.opacity = pt; tg.style.letterSpacing = (0.6 - 0.32 * pt) + 'em';
+    $('finLine').style.transform = `scaleX(${P(t, a + 0.8, a + 1.4, 'out5')})`;
+    const pill = $('finPill'), pp = E.back(clamp((t - (a + 0.85)) / 0.55));
+    const pulse = t > a + 1.8 ? 1 + 0.025 * Math.sin((t - a - 1.8) * Math.PI) : 1;
     pill.style.opacity = clamp(pp * 1.6); pill.style.transform = `translateY(${(1 - pp) * 40}px) scale(${(0.8 + 0.2 * pp) * pulse})`;
-    const sw = ((t - a - 1.8) % 2.6) / 2.6;
-    pill.style.backgroundImage = t > a + 1.8 ? `linear-gradient(105deg,transparent ${sw * 160 - 40}%,rgba(255,255,255,.28) ${sw * 160 - 25}%,transparent ${sw * 160 - 10}%)` : 'none';
-    fadeUp($('finMail'), t, a + 1.45, 999, { dur: 0.6, dist: 30 });
+    const sw = ((t - a - 1.6) % 2.4) / 2.4;
+    pill.style.backgroundImage = t > a + 1.6 ? `linear-gradient(105deg,transparent ${sw * 160 - 40}%,rgba(255,255,255,.28) ${sw * 160 - 25}%,transparent ${sw * 160 - 10}%)` : 'none';
+    fadeUp($('finMail'), t, a + 1.25, 999, { dur: 0.6, dist: 30 });
   }
   return true;
 };
@@ -390,13 +601,15 @@ window.verifier = function () {
     el.style.display = prev;
   };
   check(hook, 'accroche', L.hook.w);
+  check(val, 'valeur', L.val.w);
+  if (!(F.valeur || []).length) pb.push('valeur : phrase absente');
   capEls.forEach((c, i) => check(c, `légende ${i + 1}`, L.cap.w));
   // la légende ne doit pas passer sous le téléphone (9:16) ni à côté (1:1, 16:9)
   capEls.forEach((c, i) => {
     const prev = c.style.display; c.style.display = '';
     const r = c.getBoundingClientRect();
-    if (F.format === '9x16' && r.bottom > L.phone.top - 4) pb.push(`légende ${i + 1} : chevauche le téléphone (${Math.round(r.bottom)} > ${L.phone.top})`);
-    if (F.format !== '9x16' && r.right > L.phone.cx - 296 * L.phone.s - 10) pb.push(`légende ${i + 1} : chevauche le téléphone`);
+    if (F.format === '9x16' && r.bottom > L.masque.a + 4) pb.push(`légende ${i + 1} : chevauche le téléphone (${Math.round(r.bottom)} > ${L.masque.a})`);
+    if (F.format !== '9x16' && r.right > L.masque.a) pb.push(`légende ${i + 1} : chevauche le téléphone`);
     c.style.display = prev;
   });
   for (const id of ['finPill', 'finMail', 'finSlogan']) {
@@ -404,11 +617,17 @@ window.verifier = function () {
     const r = el.getBoundingClientRect(); if (r.left < 0 || r.right > W) pb.push(`fin : ${id} sort du cadre`);
     fin.style.display = prev;
   }
+  // effets : la cible doit être sur l'écran de la démo
+  S.forEach((s, i) => (s.effets || []).forEach(e => {
+    if (e.box && (e.box.x < -1 || e.box.y < -1 || e.box.x + e.box.w > F.capture.largeur + 1 || e.box.y + e.box.h > F.capture.hauteur + 1))
+      pb.push(`plan ${i + 1} : ${e.type} hors de l'écran`);
+  }));
   return pb;
 };
 
 window.ready = document.fonts.ready.then(() => {
   fit(hook, L.hook.size, L.hook.w);
+  fit(val, L.val.size, L.val.w);
   capEls.forEach(c => fit(c.querySelector('.lignes'), L.cap.size, L.cap.w));
   return Promise.all([...document.images].map(i => i.decode().catch(() => {})));
 });
