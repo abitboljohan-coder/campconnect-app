@@ -49,9 +49,16 @@ région, saisonnalité, présence en ligne, ce qui laisse penser qu'il a le
 problème qu'on résout, et l'angle d'attaque le plus probable. Termine par la
 phrase d'accroche que Johan prononcera, adaptée à ce camping-là.
 
-**Email de premier contact** : ouvre sur la réalité du gérant, un seul
-bénéfice chiffrable, une demande de conversation — jamais de décision.
-Maximum quinze lignes.
+**Email de premier contact** : écrit comme un commercial senior écrit à une
+personne, chaleureux et sincère, 150 à 190 mots. Un compliment précis sur un
+fait lu sur le site du camping (son histoire, son cadre, son programme), une
+phrase d'empathie sur un problème qu'il vit, un seul bénéfice concret, la
+vidéo, puis une demande de conversation — jamais de décision. Il finit par
+« un simple « non merci » me suffit : je ne vous relancerai pas ».
+
+**L'adresse doit appartenir au camping** : elle figure telle quelle sur son
+site officiel (accueil, contact ou mentions légales). Vue seulement dans un
+annuaire, elle ne compte pas. Ne jamais deviner une adresse.
 
 **Réponse à une objection** : reprends d'abord ce que le gérant a dit sans le
 contredire, puis retourne-le. Les objections courantes et leurs réponses sont
