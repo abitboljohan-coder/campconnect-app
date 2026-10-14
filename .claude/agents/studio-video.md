@@ -75,6 +75,20 @@ Fil rouge : **des points (emplacements) qui se relient** = les vacanciers qui se
 Idée directrice : « Le camping devient une communauté. »
 Deux univers visuels : **fond clair** = côté vacanciers, **fond vert forêt** = côté gérant.
 
+### Style réseaux sociaux validé par Johan (14 octobre 2026) — à garder
+
+Pour Instagram, TikTok et LinkedIn : le moteur `nuit/render.cjs` (téléphone 3D,
+légendes cinétiques, loupe, fin animée) **avec de vraies vidéos de camping en
+fond** derrière le téléphone (`plan.fonds`, dossiers d'images 1080×1920 à
+30 i/s, extraits de clips Pexels que Johan dépose dans le Drive). Côté gérant :
+fond vert forêt, sans vidéo. Fin : fond clair, sans vidéo. Environ 30 s, sans
+son (Johan ajoute une musique tendance). Référence : `out/essai-pov-camping-v5.mp4`.
+
+Rejeté par Johan, à ne pas refaire : le motion design abstrait sans téléphone,
+le cadre de téléphone plat sur fond uni (ffmpeg), les plans recadrés en plein
+écran avec textes façon TikTok (« trop zoomé, pas la mode »). Ne jamais
+montrer la carte.
+
 ## 6. STORYBOARD v2 (44 s, 1080×1920, 30 i/s, 120 BPM, coupes calées sur le temps)
 
 | Temps | Scène | Rush (source) | Texte |
