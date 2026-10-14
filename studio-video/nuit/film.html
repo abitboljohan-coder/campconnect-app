@@ -90,6 +90,8 @@ canvas{position:absolute;left:0;top:0}
     <div class="blob" id="f2" style="width:640px;height:640px;background:rgba(155,187,143,.18)"></div>
     <canvas id="bgNetF"></canvas>
   </div>
+  <div id="bgVid" class="layer" style="display:none"><img id="bgVidImg" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover">
+    <div class="layer" style="background:linear-gradient(180deg,rgba(9,20,17,.78) 0%,rgba(9,20,17,.35) 30%,rgba(9,20,17,.12) 55%,rgba(9,20,17,.5) 100%)"></div></div>
   <canvas id="net"></canvas>
 
   <div id="hook" class="abs titre sombre" style="color:var(--cream)"></div>
@@ -230,10 +232,12 @@ for (const [id, txt] of [['eyeV', F.textes.vacanciers], ['eyeG', F.textes.gerant
 // légendes des plans
 const capEls = F.shots.map(s => {
   const w = document.createElement('div');
-  w.className = 'abs' + (s.cote === 'gerant' ? ' sombre' : '');
+  const clair = s.cote === 'gerant' || (F.fonds || []).some(f => f.a < s.b && f.b > s.a);
+  w.className = 'abs' + (clair ? ' sombre' : '');
+  if (clair) w.style.textShadow = '0 4px 24px rgba(0,0,0,.35)';
   Object.assign(w.style, { left: L.cap.x + 'px', top: L.cap.y + 'px', width: L.cap.w + 'px' });
-  w.innerHTML = `<div class="titre lignes" style="color:${s.cote === 'gerant' ? 'var(--cream)' : 'var(--forest)'}"></div>
-    <div class="sous" style="margin-top:0.5em;font-size:${L.cap.sub}px;${s.cote === 'gerant' ? 'color:#b9cfc6' : ''}">${md(s.sous || '')}</div>`;
+  w.innerHTML = `<div class="titre lignes" style="color:${clair ? 'var(--cream)' : 'var(--forest)'}"></div>
+    <div class="sous" style="margin-top:0.5em;font-size:${L.cap.sub}px;${clair ? 'color:#d6e4de' : ''}">${md(s.sous || '')}</div>`;
   setLines(w.querySelector('.lignes'), s.titre);
   $('caps').appendChild(w);
   return w;
@@ -400,6 +404,10 @@ window.seek = async function (t) {
   $('b3').style.transform = `translate(${W * 0.6 + Math.sin(t * 0.4) * 60}px,${60 + Math.cos(t * 0.45) * 60}px)`;
   $('f1').style.transform = `translate(${W * 0.45 + Math.sin(t * 0.3) * 80}px,${H * 0.3 + Math.cos(t * 0.25) * 90}px)`;
   $('f2').style.transform = `translate(${-200 + Math.cos(t * 0.33) * 70}px,${H * 0.62 + Math.sin(t * 0.3) * 70}px)`;
+  // vidéo réelle derrière le téléphone (plan.fonds : [{a, b, dir, images}])
+  const fd = (F.fonds || []).find(f => t >= f.a && t < f.b);
+  show($('bgVid'), !!fd);
+  if (fd) await setImg($('bgVidImg'), `${fd.dir}/${String(clamp(Math.floor((t - fd.a) * F.fps) + 1, 1, fd.images)).padStart(4, '0')}.jpg`);
   const bgA = clamp(P(t, T_HOOK - 0.2, T_HOOK + 0.8) - P(t, T_END - 0.2, T_END + 0.3));
   drawBg('bgNetC', t, 'rgba(35,66,58,.07)', ['rgba(155,187,143,.35)', 'rgba(121,219,220,.38)', 'rgba(250,128,114,.22)'], bgA);
   if (fc > 0.01) drawBg('bgNetF', t, 'rgba(248,248,244,.07)', ['rgba(155,187,143,.30)', 'rgba(121,219,220,.30)', 'rgba(248,248,244,.16)'], bgA);

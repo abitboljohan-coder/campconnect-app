@@ -41,7 +41,11 @@ function chromiumPath() {
       dir: 'file://' + path.join(work, 'clips', String(i + 1)) };
   });
   const valDebut = t, finDebut = t + VAL, dur = finDebut + FIN;
-  const FILM = { W, H, format: plan.format, fps: FPS, langue: plan.langue, hook: plan.accroche, valeur: plan.valeur, textes: plan.textes,
+  // Vidéos réelles derrière le téléphone : plan.fonds = [{ de, a, dossier }]
+  // (dossier d'images 0001.jpg… à 30 i/s, relatif à <work>).
+  const fonds = (plan.fonds || []).map(f => ({ a: f.de, b: f.a,
+    dir: 'file://' + path.join(work, f.dossier), images: fs.readdirSync(path.join(work, f.dossier)).filter(n => n.endsWith('.jpg')).length }));
+  const FILM = { W, H, format: plan.format, fonds, fps: FPS, langue: plan.langue, hook: plan.accroche, valeur: plan.valeur, textes: plan.textes,
     hookFin: HOOK, valDebut, finDebut, dur, shots, capture: { largeur: cap.largeur, hauteur: cap.hauteur } };
   fs.writeFileSync(path.join(work, 'film.json'), JSON.stringify(FILM, null, 1));
 
