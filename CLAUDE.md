@@ -282,6 +282,18 @@ Pour démarcher un camping, invoquer la commande `/commercial`.
 Pour sortir une version sur les stores, invoquer `/livraison`. Le workflow
 complet (fichier de prospects, routines, semaine type) : `docs/WORKFLOW.md`.
 
+Organisation : **Claude est le directeur.** Il reçoit les demandes de Johan,
+décide, et répartit le travail entre quatre pôles, chacun avec son manager :
+
+| Pôle | Manager (agent) | Exécutants |
+|---|---|---|
+| 1 Prospection | `commercial` | routines 10 campings, brouillons, relances, bilan |
+| 2 Vidéo et réseaux | `marketing` | `studio-video`, routine LinkedIn |
+| 3 Produit | `developpeur` | `designer`, `testeur`, `securite`, `data` |
+| 4 Opérations | `operations` | `support`, routine santé |
+
+Le directeur vérifie tout ce qui revient avant de le présenter à Johan.
+
 Équipe d'agents (`.claude/agents/`). **Par défaut, Claude fait lui-même** :
 une correction, une question, un email, une doc, une requête n'ont pas besoin
 d'agent. Un agent démarre à froid et relit tout : il coûte du temps et du
