@@ -41,7 +41,7 @@ function chromiumPath() {
     const c = cap.shots[i];
     const a = t, b = t + c.images / FPS;
     t = b;
-    return { a, b, images: c.images, appuis: c.appuis, effets: c.effets || [], cote: s.cote, titre: s.titre, sous: s.sous,
+    return { a, b, images: c.images, appuis: c.appuis, effets: c.effets || [], cote: s.cote, titre: s.titre, sous: s.sous, sansTel: !!s.sansTel,
       dir: 'file://' + path.join(work, 'clips', String(i + 1)) };
   });
   const valDebut = t, finDebut = t + VAL, dur = finDebut + FIN;
@@ -49,7 +49,7 @@ function chromiumPath() {
   // (dossier d'images 0001.jpg… à 30 i/s, relatif à <work>).
   const fonds = (plan.fonds || []).map(f => ({ a: f.de, b: f.a,
     dir: 'file://' + path.join(work, f.dossier), images: fs.readdirSync(path.join(work, f.dossier)).filter(n => n.endsWith('.jpg')).length }));
-  const FILM = { W, H, format: plan.format, fonds, dynamique: !!plan.dynamique, fps: FPS, langue: plan.langue, hook: plan.accroche, valeur: plan.valeur, textes: plan.textes,
+  const FILM = { W, H, format: plan.format, fonds, dynamique: !!plan.dynamique, style: plan.style || '', fps: FPS, langue: plan.langue, hook: plan.accroche, valeur: plan.valeur, textes: plan.textes,
     hookFin: HOOK, valDebut, finDebut, dur, shots, capture: { largeur: cap.largeur, hauteur: cap.hauteur } };
   fs.writeFileSync(path.join(work, 'film.json'), JSON.stringify(FILM, null, 1));
 

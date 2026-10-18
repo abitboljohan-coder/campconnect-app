@@ -72,6 +72,13 @@ canvas{position:absolute;left:0;top:0}
 #loupe{position:absolute;overflow:hidden;display:none;border-radius:30px;background:#fff;z-index:20;
   box-shadow:0 0 0 5px rgba(255,255,255,.96),0 40px 90px -10px rgba(10,30,25,.55),0 12px 30px rgba(10,30,25,.3)}
 #loupe img{position:absolute;left:0;top:0;display:block}
+/* style « sticker » (réseaux sociaux) : textes en étiquettes blanches, centrés */
+.sticker .titre{text-align:center}
+.sticker .titre .ln{padding:0.1em 0 0.22em}
+.sticker .titre .ln>span{background:#fff;color:#14231f;padding:0.02em 0.3em 0.08em;border-radius:0.2em;box-shadow:0 12px 34px rgba(0,0,0,.28)}
+.sticker .titre .hl{color:var(--salmon)}
+.sticker .sous{text-align:center}
+#flash{background:#fff;opacity:0;pointer-events:none}
 #shadow{position:absolute;width:560px;height:90px;border-radius:50%;background:rgba(20,45,38,.35);filter:blur(40px)}
 .pill{display:inline-flex;align-items:center;gap:18px;padding:0.72em 1.2em;border-radius:999px;background:var(--salmon);color:#fff;font-family:Jak;font-weight:800;letter-spacing:-0.01em;white-space:nowrap;
   box-shadow:0 26px 50px -16px rgba(250,128,114,.7)}
@@ -128,6 +135,7 @@ canvas{position:absolute;left:0;top:0}
   <div id="valEye" class="abs eyebrow" style="color:var(--sage)"></div>
   <div id="val" class="abs titre sombre" style="color:var(--cream)"></div>
 
+  <div id="flash" class="layer"></div>
   <div id="fin" class="layer">
     <img id="finSym" class="abs" src="../app/assets/logo_symbol.png">
     <div id="finWordBox" class="abs" style="left:0;right:0;text-align:center;overflow:hidden"><img id="finWord" src="../app/assets/wordmark.png"></div>
@@ -185,6 +193,9 @@ const L = {
 
 const stage = $('stage');
 stage.style.width = W + 'px'; stage.style.height = H + 'px';
+if (F.style === 'sticker') stage.classList.add('sticker');
+// étiquettes plus hautes : la légende remonte et rétrécit un peu pour ne pas toucher le téléphone
+if (F.style === 'sticker' && F.format === '9x16') L.cap = { ...L.cap, y: 92, size: 74, sub: 34 };
 document.documentElement.style.width = document.body.style.width = W + 'px';
 document.documentElement.style.height = document.body.style.height = H + 'px';
 $('phoneWrap').style.width = W + 'px'; $('phoneWrap').style.height = H + 'px';
@@ -407,7 +418,17 @@ window.seek = async function (t) {
   // vidéo réelle derrière le téléphone (plan.fonds : [{a, b, dir, images}])
   const fd = (F.fonds || []).find(f => t >= f.a && t < f.b);
   show($('bgVid'), !!fd);
-  if (fd) await setImg($('bgVidImg'), `${fd.dir}/${String(clamp(Math.floor((t - fd.a) * F.fps) + 1, 1, fd.images)).padStart(4, '0')}.jpg`);
+  if (fd) {
+    await setImg($('bgVidImg'), `${fd.dir}/${String(clamp(Math.floor((t - fd.a) * F.fps) + 1, 1, fd.images)).padStart(4, '0')}.jpg`);
+    // mode dynamique : lent zoom avant sur la vidéo
+    $('bgVidImg').style.transform = F.dynamique ? `scale(${1 + 0.08 * clamp((t - fd.a) / Math.max(1, fd.b - fd.a))})` : '';
+  }
+  // mode dynamique : flash blanc bref à chaque coupe
+  if (F.dynamique) {
+    const coupes = [T_HOOK, ...S.slice(1).map(s => s.a), T_VAL, T_END];
+    const c = coupes.find(b => t >= b && t < b + 0.14);
+    $('flash').style.opacity = c != null ? 0.55 * (1 - (t - c) / 0.14) : 0;
+  }
   const bgA = clamp(P(t, T_HOOK - 0.2, T_HOOK + 0.8) - P(t, T_END - 0.2, T_END + 0.3));
   drawBg('bgNetC', t, 'rgba(35,66,58,.07)', ['rgba(155,187,143,.35)', 'rgba(121,219,220,.38)', 'rgba(250,128,114,.22)'], bgA);
   if (fc > 0.01) drawBg('bgNetF', t, 'rgba(248,248,244,.07)', ['rgba(155,187,143,.30)', 'rgba(121,219,220,.30)', 'rgba(248,248,244,.16)'], bgA);
@@ -451,7 +472,9 @@ window.seek = async function (t) {
 
   // ---------- téléphone et caméra ----------
   const ph = $('phone'), cam = $('cam');
-  const vis = t >= T_HOOK - 0.45 && t < T_VAL + 0.25;
+  // plan.shots[i].sansTel : plan plein écran sur la vidéo de fond, sans téléphone
+  const sNow = S.find(s => t >= s.a && t < s.b);
+  const vis = t >= T_HOOK - 0.45 && t < T_VAL + 0.25 && !(sNow && sNow.sansTel);
   show(cam, vis);
   let loupeOn = false;
   if (vis) {
@@ -461,7 +484,7 @@ window.seek = async function (t) {
     // plan courant et transition (glissé de l'écran + petit rebond du téléphone)
     const idx = Math.max(0, S.findIndex(s => t >= s.a && t < s.b));
     const cur = t >= T_VAL ? S[S.length - 1] : (t < S[0].a ? S[0] : S[idx]);
-    const prev = S[S.indexOf(cur) - 1], tr = F.dynamique ? 0.28 : 0.42;
+    const prev0 = S[S.indexOf(cur) - 1], prev = prev0 && !prev0.sansTel ? prev0 : null, tr = F.dynamique ? 0.28 : 0.42;
     const pin = prev && t < cur.a + tr ? E.inout3(clamp((t - cur.a) / tr)) : 1;
     const bump = prev ? Math.sin(Math.PI * clamp((t - cur.a + 0.12) / 0.55)) : 0;
 
@@ -483,7 +506,7 @@ window.seek = async function (t) {
     }
     // poussée lente pendant chaque plan, pour que l'image vive
     // mode dynamique : « punch » de caméra à chaque coupe
-    const punch = F.dynamique && prev ? 1 + 0.08 * (1 - E.out3(clamp((t - cur.a) / 0.35))) : 1;
+    const punch = F.dynamique && prev0 ? 1 + 0.08 * (1 - E.out3(clamp((t - cur.a) / 0.35))) : 1;
     const push = punch * (1 + (F.dynamique ? 0.05 : 0.025) * (t >= cur.a ? clamp((t - cur.a) / Math.max(1, cur.b - cur.a)) : 0));
     const zp = z * push, [ox, oy] = [Ph.cx, Ph.top + 600 * Ph.s];
     tx = push * tx + ox * (1 - push); ty = push * ty + oy * (1 - push);
