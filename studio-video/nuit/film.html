@@ -474,7 +474,8 @@ window.seek = async function (t) {
   const ph = $('phone'), cam = $('cam');
   // plan.shots[i].sansTel : plan plein écran sur la vidéo de fond, sans téléphone
   const sNow = S.find(s => t >= s.a && t < s.b);
-  const vis = t >= T_HOOK - 0.45 && t < T_VAL + 0.25 && !(sNow && sNow.sansTel);
+  const sVoisin = sNow || (t < S[0].a ? S[0] : S[S.length - 1]);  // avant le 1er plan / après le dernier
+  const vis = t >= T_HOOK - 0.45 && t < T_VAL + 0.25 && !sVoisin.sansTel;
   show(cam, vis);
   let loupeOn = false;
   if (vis) {
