@@ -423,9 +423,9 @@ window.seek = async function (t) {
   } else drawNet(t, null);
 
   // accroche : lignes masquées une à une, soulignement, léger rapprochement
-  lines(hook, t, 0.2, T_HOOK - 0.6, { stagger: 0.22, dur: 0.6 });
+  lines(hook, t, F.dynamique ? 0.05 : 0.2, T_HOOK - 0.6, F.dynamique ? { stagger: 0.12, dur: 0.45 } : { stagger: 0.22, dur: 0.6 });
   hook.style.transform = `scale(${1 + 0.05 * P(t, 0, T_HOOK, 'lin')})`;
-  underline(hook, t, 0.2 + 0.22 * (F.hook.length - 1) + 0.45, 0.2 + 0.22 * (F.hook.length - 1) + 1.0);
+  { const st = F.dynamique ? 0.12 : 0.22; underline(hook, t, 0.2 + st * (F.hook.length - 1) + 0.45, 0.2 + st * (F.hook.length - 1) + 1.0); }
 
   // surtitres
   const plages = c => { const r = []; for (const s of S) if (s.cote === c) { const l = r[r.length - 1]; if (l && Math.abs(l[1] - s.a) < 0.01) l[1] = s.b; else r.push([s.a, s.b]); } return r; };
@@ -461,7 +461,7 @@ window.seek = async function (t) {
     // plan courant et transition (glissé de l'écran + petit rebond du téléphone)
     const idx = Math.max(0, S.findIndex(s => t >= s.a && t < s.b));
     const cur = t >= T_VAL ? S[S.length - 1] : (t < S[0].a ? S[0] : S[idx]);
-    const prev = S[S.indexOf(cur) - 1], tr = 0.42;
+    const prev = S[S.indexOf(cur) - 1], tr = F.dynamique ? 0.28 : 0.42;
     const pin = prev && t < cur.a + tr ? E.inout3(clamp((t - cur.a) / tr)) : 1;
     const bump = prev ? Math.sin(Math.PI * clamp((t - cur.a + 0.12) / 0.55)) : 0;
 
@@ -482,14 +482,16 @@ window.seek = async function (t) {
       ty = clamp(ty, Math.min(ly1, H) * (1 - z), ly0 * (1 - z));
     }
     // poussée lente pendant chaque plan, pour que l'image vive
-    const push = 1 + 0.025 * (t >= cur.a ? clamp((t - cur.a) / Math.max(1, cur.b - cur.a)) : 0);
+    // mode dynamique : « punch » de caméra à chaque coupe
+    const punch = F.dynamique && prev ? 1 + 0.08 * (1 - E.out3(clamp((t - cur.a) / 0.35))) : 1;
+    const push = punch * (1 + (F.dynamique ? 0.05 : 0.025) * (t >= cur.a ? clamp((t - cur.a) / Math.max(1, cur.b - cur.a)) : 0));
     const zp = z * push, [ox, oy] = [Ph.cx, Ph.top + 600 * Ph.s];
     tx = push * tx + ox * (1 - push); ty = push * ty + oy * (1 - push);
     cam.style.transform = `translate(${tx}px,${ty}px) scale(${zp})`;
 
     const calme = 1 - k;
     const s = Ph.s * lerp(0.88, 1, enter) * (1 - 0.03 * bump) * lerp(1, 0.9, exit);
-    const ry = (lerp(-24, -5, enter) + Math.sin(t * 0.5) * 2.5) * calme + 7 * bump, rx = lerp(18, 3, enter) * calme, rz = lerp(6, 0, enter);
+    const ry = (lerp(-24, -5, enter) + Math.sin(t * 0.5) * 2.5) * calme + (F.dynamique ? 15 : 7) * bump, rx = lerp(18, 3, enter) * calme, rz = lerp(6, 0, enter);
     ph.style.left = (Ph.cx - 296) + 'px'; ph.style.top = top + 'px';
     ph.style.transform = `rotateX(${rx}deg) rotateY(${ry}deg) rotateZ(${rz}deg) scale(${s})`;
     $('glare').style.transform = `translateX(${(ry + 10) * 14}px)`;

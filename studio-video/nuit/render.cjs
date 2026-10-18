@@ -14,9 +14,11 @@ const { spawn } = require('child_process');
 const { chromium } = require(path.join(__dirname, '..', 'app', 'node_modules', 'playwright'));
 
 const FPS = 30;
-const HOOK = 4.0;   // accroche : 2 mesures à 120 BPM
-const VAL = 2.0;    // phrase « valeur pour le gérant » : 1 mesure
-const FIN = 4.0;    // fin : logo, slogan, bouton, e-mail : 2 mesures
+// Durées par défaut ; un plan peut les raccourcir (plan.durees) pour un
+// format réseaux sociaux plus nerveux.
+const HOOK0 = 4.0;  // accroche : 2 mesures à 120 BPM
+const VAL0 = 2.0;   // phrase « valeur pour le gérant » : 1 mesure
+const FIN0 = 4.0;   // fin : logo, slogan, bouton, e-mail : 2 mesures
 const FORMATS = { '9x16': [1080, 1920], '1x1': [1080, 1080], '16x9': [1920, 1080] };
 
 function chromiumPath() {
@@ -30,6 +32,8 @@ function chromiumPath() {
   const plan = JSON.parse(fs.readFileSync(planPath, 'utf8'));
   const cap = JSON.parse(fs.readFileSync(path.join(work, 'capture.json'), 'utf8'));
   const [W, H] = FORMATS[plan.format] || FORMATS['9x16'];
+  const d = plan.durees || {};
+  const HOOK = d.accroche || HOOK0, VAL = d.valeur || VAL0, FIN = d.fin || FIN0;
 
   // Montage : accroche, plans bout à bout, fin.
   let t = HOOK;
@@ -45,7 +49,7 @@ function chromiumPath() {
   // (dossier d'images 0001.jpg… à 30 i/s, relatif à <work>).
   const fonds = (plan.fonds || []).map(f => ({ a: f.de, b: f.a,
     dir: 'file://' + path.join(work, f.dossier), images: fs.readdirSync(path.join(work, f.dossier)).filter(n => n.endsWith('.jpg')).length }));
-  const FILM = { W, H, format: plan.format, fonds, fps: FPS, langue: plan.langue, hook: plan.accroche, valeur: plan.valeur, textes: plan.textes,
+  const FILM = { W, H, format: plan.format, fonds, dynamique: !!plan.dynamique, fps: FPS, langue: plan.langue, hook: plan.accroche, valeur: plan.valeur, textes: plan.textes,
     hookFin: HOOK, valDebut, finDebut, dur, shots, capture: { largeur: cap.largeur, hauteur: cap.hauteur } };
   fs.writeFileSync(path.join(work, 'film.json'), JSON.stringify(FILM, null, 1));
 
