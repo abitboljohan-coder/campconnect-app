@@ -134,6 +134,7 @@ canvas{position:absolute;left:0;top:0}
 
   <div id="valEye" class="abs eyebrow" style="color:var(--sage)"></div>
   <div id="val" class="abs titre sombre" style="color:var(--cream)"></div>
+  <div id="val2" class="abs titre sombre" style="color:var(--cream)"></div>
 
   <div id="flash" class="layer"></div>
   <div id="fin" class="layer">
@@ -230,7 +231,8 @@ Object.assign(hook.style, { left: L.hook.x + 'px', top: L.hook.y + 'px', width: 
 // valeur pour le gérant
 const val = $('val'), valEye = $('valEye');
 setLines(val, F.valeur || []);
-Object.assign(val.style, { left: L.val.x + 'px', top: L.val.y + 'px', width: L.val.w + 'px' });
+const val2 = $('val2'); setLines(val2, F.valeur2 || []);
+for (const v of [val, val2]) Object.assign(v.style, { left: L.val.x + 'px', top: L.val.y + 'px', width: L.val.w + 'px' });
 valEye.textContent = F.textes.valeur || '';
 Object.assign(valEye.style, { left: L.val.x + 'px', top: (L.val.y - L.val.eye * 2.6) + 'px', fontSize: L.val.eye + 'px' });
 
@@ -358,7 +360,9 @@ function frameSrc(s, t) {
 async function setImg(img, src) { if (img.dataset.src !== src) { img.dataset.src = src; img.src = src; } await img.decode().catch(() => {}); }
 
 const T_HOOK = F.hookFin;                 // fin de l'accroche (= début du 1er plan)
-const T_VAL = F.valDebut;                 // phrase « valeur »
+const T_VAL = F.valDebut;
+const T_VAL2 = F.val2Debut;               // seconde phrase (facultative)
+const T_VAL_FIN = T_VAL2 ?? F.finDebut;                 // phrase « valeur »
 const T_END = F.finDebut;                 // début de la fin (logo)
 const S = F.shots;
 const KS = 560 / F.capture.largeur;       // pixels d'écran par pixel CSS de la démo
@@ -425,7 +429,7 @@ window.seek = async function (t) {
   }
   // mode dynamique : flash blanc bref à chaque coupe
   if (F.dynamique) {
-    const coupes = [T_HOOK, ...S.slice(1).map(s => s.a), T_VAL, T_END];
+    const coupes = [T_HOOK, ...S.slice(1).map(s => s.a), T_VAL, ...(T_VAL2 ? [T_VAL2] : []), T_END];
     const c = coupes.find(b => t >= b && t < b + 0.14);
     $('flash').style.opacity = c != null ? 0.55 * (1 - (t - c) / 0.14) : 0;
   }
@@ -466,9 +470,10 @@ window.seek = async function (t) {
   });
 
   // valeur pour le gérant
-  lines(val, t, T_VAL + 0.25, T_END - 0.35, { stagger: 0.13, dur: 0.55, exitDur: 0.3 });
+  lines(val, t, T_VAL + 0.25, T_VAL_FIN - 0.35, { stagger: 0.13, dur: 0.55, exitDur: 0.3 });
+  if (T_VAL2) { lines(val2, t, T_VAL2 + 0.2, T_END - 0.35, { stagger: 0.13, dur: 0.55, exitDur: 0.3 }); underline(val2, t, T_VAL2 + 0.65, T_VAL2 + 1.2); } else show(val2, false);
   underline(val, t, T_VAL + 0.7, T_VAL + 1.25);
-  fadeUp(valEye, t, T_VAL + 0.15, T_END - 0.35, { dur: 0.45, dist: 18 });
+  fadeUp(valEye, t, T_VAL + 0.15, T_VAL_FIN - 0.35, { dur: 0.45, dist: 18 });
 
   // ---------- téléphone et caméra ----------
   const ph = $('phone'), cam = $('cam');
@@ -636,6 +641,7 @@ window.verifier = function () {
   };
   check(hook, 'accroche', L.hook.w);
   check(val, 'valeur', L.val.w);
+  if (T_VAL2) check(val2, 'valeur 2', L.val.w);
   if (!(F.valeur || []).length) pb.push('valeur : phrase absente');
   capEls.forEach((c, i) => check(c, `légende ${i + 1}`, L.cap.w));
   // la légende ne doit pas passer sous le téléphone (9:16) ni à côté (1:1, 16:9)
@@ -662,6 +668,7 @@ window.verifier = function () {
 window.ready = document.fonts.ready.then(() => {
   fit(hook, L.hook.size, L.hook.w);
   fit(val, L.val.size, L.val.w);
+  if ((F.valeur2 || []).length) fit(val2, L.val.size, L.val.w);
   capEls.forEach(c => fit(c.querySelector('.lignes'), L.cap.size, L.cap.w));
   return Promise.all([...document.images].map(i => i.decode().catch(() => {})));
 });

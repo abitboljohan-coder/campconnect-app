@@ -44,13 +44,15 @@ function chromiumPath() {
     return { a, b, images: c.images, appuis: c.appuis, effets: c.effets || [], cote: s.cote, titre: s.titre, sous: s.sous, sansTel: !!s.sansTel,
       dir: 'file://' + path.join(work, 'clips', String(i + 1)) };
   });
-  const valDebut = t, finDebut = t + VAL, dur = finDebut + FIN;
+  // plan.valeur2 : une seconde phrase de fin (ex. l'appel à nous contacter), même durée que la première
+  const val2Debut = (plan.valeur2 || []).length ? t + VAL : null;
+  const valDebut = t, finDebut = t + VAL * (val2Debut ? 2 : 1), dur = finDebut + FIN;
   // Vidéos réelles derrière le téléphone : plan.fonds = [{ de, a, dossier }]
   // (dossier d'images 0001.jpg… à 30 i/s, relatif à <work>).
   const fonds = (plan.fonds || []).map(f => ({ a: f.de, b: f.a,
     dir: 'file://' + path.join(work, f.dossier), images: fs.readdirSync(path.join(work, f.dossier)).filter(n => n.endsWith('.jpg')).length }));
   const FILM = { W, H, format: plan.format, fonds, dynamique: !!plan.dynamique, style: plan.style || '', fps: FPS, langue: plan.langue, hook: plan.accroche, valeur: plan.valeur, textes: plan.textes,
-    hookFin: HOOK, valDebut, finDebut, dur, shots, capture: { largeur: cap.largeur, hauteur: cap.hauteur } };
+    hookFin: HOOK, valDebut, val2Debut, valeur2: plan.valeur2 || [], finDebut, dur, shots, capture: { largeur: cap.largeur, hauteur: cap.hauteur } };
   fs.writeFileSync(path.join(work, 'film.json'), JSON.stringify(FILM, null, 1));
 
   // Repères son : montées et impacts sur la révélation et sur la fin,
