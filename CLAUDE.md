@@ -288,11 +288,13 @@ décide, et répartit le travail entre quatre pôles, chacun avec son manager :
 | Pôle | Manager (agent) | Exécutants |
 |---|---|---|
 | 1 Prospection | `commercial` | routines 10 campings, brouillons, relances, bilan |
-| 2 Vidéo et réseaux | `marketing` | `studio-video`, routine LinkedIn |
+| 2 Vidéo et réseaux | `marketing` | `studio-video`, `controle-video`, routine LinkedIn |
 | 3 Produit | `developpeur` | `designer`, `testeur`, `securite`, `data` |
 | 4 Opérations | `operations` | `support`, routine santé |
 
 Le directeur vérifie tout ce qui revient avant de le présenter à Johan.
+
+**Règle n° 1 du pôle 2 (Johan) : ne livrer que des vidéos parfaites.** Jamais de « points faibles » ni de « V2 » à la livraison : tout défaut est corrigé avant. Chaque vidéo passe par `controle-video` avant le rendu (scénario, textes, captures) et après (vidéo finie), jusqu'à « VALIDÉ ».
 
 Équipe d'agents (`.claude/agents/`). **Par défaut, Claude fait lui-même** :
 une correction, une question, un email, une doc, une requête n'ont pas besoin
@@ -318,6 +320,7 @@ quota. N'en lancer un que si cela apporte vraiment quelque chose :
 | `operations` | livraison sur les stores, Xcode Cloud, surveillance, routines |
 | `support` | retour d'un testeur ou d'un utilisateur : diagnostic et réponse |
 | `designer` | écran jugé pas beau, refonte d'un écran ou d'un parcours : 3 directions en images, puis implémentation |
+| `controle-video` | contrôle qualité de chaque vidéo, avant le rendu et avant la livraison (obligatoire) |
 | `studio-video` | vidéo publicitaire ou déclinaison à partir des vrais écrans (démo ou enregistrement) ; vidéo de la nuit |
 
 Camping de démo (`les-flots-bleus`, « Camping démo Les Flots Bleus ») : ses

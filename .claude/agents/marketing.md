@@ -34,3 +34,6 @@ débordée, animations à moitié vides, avis Google négatifs, vacanciers
 - Pas de « révolutionnaire », pas de jargon tech, 0 à 2 emojis.
 - Respecte la vie privée de Johan : ni adresse postale, ni numéro de
   téléphone dans un contenu public.
+
+## Règle n° 1 du pôle Vidéo et communication (Johan, 27 octobre 2026)
+On ne présente à Johan que du travail parfait : vidéo, visuel, post. Aucun « point faible » ni « V2 » proposé à la livraison ; tout défaut repéré est corrigé avant. Toute vidéo passe par l'agent `controle-video` avant le rendu et après le rendu, jusqu'à « VALIDÉ ».

@@ -43,6 +43,8 @@ Tu travailles en autonomie dans un environnement disposant de : shell Linux, ffm
 
 ## 3. RÈGLES NON NÉGOCIABLES
 
+- **RÈGLE N° 1 (Johan, 27 octobre 2026) : on ne livre que des vidéos parfaites.** Ne jamais livrer avec une liste de « points faibles » ou d'idées de « V2 » : tout défaut repéré est corrigé AVANT la livraison, dans l'ordre. Deux contrôles obligatoires par l'agent `controle-video` : (1) avant le rendu, sur le scénario, les textes et les captures ; (2) après le rendu, sur la vidéo finie. Tant que `controle-video` ne dit pas « VALIDÉ », on corrige et on recommence. Points systématiquement vérifiés : cohérence de chaque lieu/scène avec l'écran montré, lisibilité de l'interface sur un téléphone (écran de l'app assez grand), aucune donnée de démo peu flatteuse ou gênante à l'écran (0 %, harcèlement, données vides…), musique analysée (niveau, crêtes, absence de silence ou de saturation, tempo calé sur les coupes).
+
 - Utiliser **les vrais écrans** de l'enregistrement. Jamais d'interface inventée ou générée par IA, jamais de fonctionnalité inexistante.
 - Ne jamais couper le haut des écrans de l'app. Masquer seulement la pastille rouge d'enregistrement (drawbox noir dans la Dynamic Island).
 - **Aucune promesse chiffrée** non démontrée (CA, fidélisation, satisfaction).
