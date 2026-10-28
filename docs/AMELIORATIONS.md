@@ -104,6 +104,11 @@ pas de choisir la couverture. Ne plus le proposer.
 prête à copier. Johan publie lui-même et choisit dans l'app le son tendance et la
 couverture.
 
+**App Store Connect (28/10/2026)** : Johan ne veut plus s'en occuper. Le relevé « Site et
+stores » affichera « connexion demandée » pour Apple. C'est normal : ne pas le signaler et
+ne jamais lui demander de se reconnecter. Les installations se suivent avec Google Play
+et Supabase (nouveaux vacanciers).
+
 ## Propositions en attente
 
 - **Offre pilote dans la relance J+4** (proposée le 28/10/2026, Johan : « on laisse, on
