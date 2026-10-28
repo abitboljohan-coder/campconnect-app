@@ -87,14 +87,17 @@ Faire monter les vues chaque semaine. Chaque dimanche, le directeur :
 Meilleure vidéo : « la sonnette de l'accueil en août » (humour, 300 vues TikTok et 411
 vues Instagram).
 
-**Proposition en attente de Johan.** La page LinkedIn (4 abonnés) ne touche presque
-personne. Deux pistes :
+**Décision de Johan (28/10/2026)**
 
-- publier aussi depuis le profil personnel de Johan ;
-- donner la priorité à TikTok et Instagram, qui font 10 à 20 fois plus de vues avec
-  les mêmes idées.
+- Jamais de publication sur son profil LinkedIn personnel.
+- Pas de publication automatique sur Instagram ou TikTok sans un son tendance qui
+  colle à la vidéo.
 
-Aujourd'hui, les routines ne publient que sur la page CampConnect.
+Ces deux règles ne se reproposent pas.
+
+La seule voie légale pour un son tendance est la bibliothèque musicale commerciale de
+TikTok, via le connecteur Higgsfield. Le son se choisit à la main au moment de publier :
+ce n'est pas automatique. Ne la proposer que si les vues LinkedIn stagnent.
 
 ## Propositions en attente
 
