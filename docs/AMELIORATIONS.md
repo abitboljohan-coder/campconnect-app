@@ -14,6 +14,9 @@ consigne tout ici, puis envoie à Johan un résumé court.
 - Pour les mails, il ne juge une version qu'après au moins 50 envois de cette version
   (environ deux semaines). En dessous, 0 ou 1 réponse ne prouve rien : il attend au lieu
   de changer.
+- Les vidéos produites par la routine (sessions sans droit d'écriture sur le dépôt) ne
+  sont notées que dans la Vidéothèque. Chaque dimanche, il reporte celles de la semaine
+  dans `docs/CAMPAGNES.md`.
 - Il relit la semaine précédente et tranche pour chaque changement : on le garde, on
   l'ajuste ou on l'annule.
 - Il applique seul ce qui est sûr :

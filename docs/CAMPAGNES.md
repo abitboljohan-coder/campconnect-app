@@ -35,6 +35,7 @@ Les MP4 sont dans `studio-video/out/` (non versionné).
 | 27 oct. | A « Le camping se plie dans la poche » | gérants | origami illustré | toutes |
 | 27 oct. | B « Une journée de gérant » | gérants | quotidien 8 h → 22 h | toutes |
 | 27 oct. | C « Verre liquide » | gérants | keynote premium | toutes |
+| 28 oct. | « Orage sur l'affichette » (95/100, décor lac-ardeche) | gérants | humour avant/après : affiche papier rafistolée → correction en direct + notification | LinkedIn |
 
 Pistes encore jamais faites : humour (situation du gérant), mini-film avec personnages
 récurrents côté gérant, témoignage **réel** (dès qu'un pilote existe), avant/après
