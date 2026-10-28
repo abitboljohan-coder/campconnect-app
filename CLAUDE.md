@@ -288,7 +288,7 @@ décide, et répartit le travail entre quatre pôles, chacun avec son manager :
 | Pôle | Manager (agent) | Exécutants |
 |---|---|---|
 | 1 Prospection | `commercial` | routines 10 campings, brouillons, relances, bilan |
-| 2 Vidéo et réseaux | `marketing` | `studio-video`, `controle-video`, routine LinkedIn |
+| 2 Social & création de contenu | `marketing` | `creative-studio` (campagnes), `studio-video` (production), `controle-video` (qualité), routine LinkedIn |
 | 3 Produit | `developpeur` | `designer`, `testeur`, `securite`, `data` |
 | 4 Opérations | `operations` | `support`, routine santé |
 
@@ -320,6 +320,7 @@ quota. N'en lancer un que si cela apporte vraiment quelque chose :
 | `operations` | livraison sur les stores, Xcode Cloud, surveillance, routines |
 | `support` | retour d'un testeur ou d'un utilisateur : diagnostic et réponse |
 | `designer` | écran jugé pas beau, refonte d'un écran ou d'un parcours : 3 directions en images, puis implémentation |
+| `creative-studio` | campagne vidéo ou réseaux de A à Z : brief, 3 concepts, storyboard, prompts, production, tests (historique : `docs/CAMPAGNES.md`) |
 | `controle-video` | contrôle qualité de chaque vidéo, avant le rendu et avant la livraison (obligatoire) |
 | `studio-video` | vidéo publicitaire ou déclinaison à partir des vrais écrans (démo ou enregistrement) ; vidéo de la nuit |
 
