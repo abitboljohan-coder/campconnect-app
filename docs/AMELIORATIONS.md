@@ -95,9 +95,21 @@ vues Instagram).
 
 Ces deux règles ne se reproposent pas.
 
-La seule voie légale pour un son tendance est la bibliothèque musicale commerciale de
-TikTok, via le connecteur Higgsfield. Le son se choisit à la main au moment de publier :
-ce n'est pas automatique. Ne la proposer que si les vues LinkedIn stagnent.
+**Test TikTok avec un son tendance (28/10/2026)**
+
+« Orage sur l'affichette » a été publiée sur TikTok avec le son « LET ME BE » (The
+Second Voice), choisi par Johan dans la bibliothèque commerciale TikTok.
+
+Le circuit est semi-automatique :
+
+1. Claude met en ligne la version muette sur Higgsfield.
+2. Claude ouvre la fiche (tiktok_prepare_publish, connecteur
+   7623f7ce-739e-4af8-888e-8cb741e33d6c) et propose 3 sons.
+3. Johan choisit le son et publie.
+
+À comparer dimanche avec la moyenne TikTok (environ 290 vues par vidéo cette semaine).
+Si la vidéo fait mieux, proposer à Johan de refaire le circuit pour chaque nouvelle
+vidéo.
 
 ## Propositions en attente
 
