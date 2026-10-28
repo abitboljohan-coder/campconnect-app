@@ -57,6 +57,45 @@ Johan n'a plus qu'à écrire, s'il y en a :
 - les rencontres (salon, ami, gérant) ;
 - ce qui lui a fait perdre du temps.
 
+## Objectif vues (demande de Johan, 28/10/2026)
+
+Faire monter les vues chaque semaine. Chaque dimanche, le directeur :
+
+1. Compare les vues de la semaine, réseau par réseau, au point de départ et à la
+   semaine précédente.
+2. Repère les 2 vidéos qui ont le mieux marché et les 2 qui ont le moins marché, et dit
+   pourquoi : accroche, format, sujet, durée, temps de visionnage.
+3. Écrit en tête de `docs/CAMPAGNES.md` une rubrique « Ce qui marche en ce moment » :
+   - formats à refaire ;
+   - formats à abandonner ;
+   - accroches gagnantes.
+
+   La routine vidéo la lit avant chaque production. Les vidéos de la semaine suivante
+   suivent donc les gagnantes.
+4. Change une seule chose à la fois : la cadence, l'heure de publication, la longueur
+   ou le type d'accroche.
+
+**Point de départ (relevé du 28/10, 7 jours)**
+
+| Réseau | Chiffres |
+|---|---|
+| TikTok | 742 vues, 3 nouveaux abonnés, 12 abonnés |
+| Instagram | 334 vues, 180 comptes touchés, 19 abonnés |
+| LinkedIn (page) | 43 impressions, 4 abonnés ; vidéos du 25 et 27/10 à 4 et 1 impressions |
+| Site | 6 visiteurs, 0 demande de démo |
+
+Meilleure vidéo : « la sonnette de l'accueil en août » (humour, 300 vues TikTok et 411
+vues Instagram).
+
+**Proposition en attente de Johan.** La page LinkedIn (4 abonnés) ne touche presque
+personne. Deux pistes :
+
+- publier aussi depuis le profil personnel de Johan ;
+- donner la priorité à TikTok et Instagram, qui font 10 à 20 fois plus de vues avec
+  les mêmes idées.
+
+Aujourd'hui, les routines ne publient que sur la page CampConnect.
+
 ## Propositions en attente
 
 - **Offre pilote dans la relance J+4** (proposée le 28/10/2026, Johan : « on laisse, on
