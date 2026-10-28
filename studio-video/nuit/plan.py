@@ -99,6 +99,8 @@ def main():
         'langue': th['langue'], 'format': th['format'],
         'accroche': th['accroche'], 'valeur': th['valeur'], 'textes': cfg['textes'][th['langue']],
         'legende': th['legende'],
+        # décor de tournage (studio-video/decors/<slug>) : un autre camping que Les Flots Bleus
+        **({'decor': th['decor']} if th.get('decor') else {}),
         # un plan peut avoir sa propre langue (l'interface en 4 langues)
         'shots': [dict(p, langue=p.get('langue', th['langue'])) for p in th['plans']],
     }

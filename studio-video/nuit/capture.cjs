@@ -19,6 +19,9 @@
 // Un plan peut demander "dialogues": "accepter" (valide les confirmations natives).
 // Un plan peut demander "geo": "loin" (le vacancier n'est pas au camping : la
 // vérification GPS échoue et l'entrée demande le code de l'heure).
+// "decor": "<slug>" (dans le plan ou dans un shot) filme un autre camping :
+// studio-video/decors/<slug>/mockSupabase.js remplace le mock de la démo
+// (voir studio-video/decors/README.md). Sans "decor", rien ne change.
 //
 // Sorties : <work>/clips/<n>/0001.jpg… et <work>/capture.json (nombre
 // d'images, appuis et effets de chaque plan, que le moteur dessine par-dessus
@@ -36,6 +39,58 @@ const GEO = { latitude: 44.2010, longitude: 6.3013, accuracy: 15 };
 // Ailleurs (Lyon) : pour montrer qu'on n'entre pas sans être au camping.
 const GEO_LOIN = { latitude: 45.7640, longitude: 4.8357, accuracy: 15 };
 
+// Décor de tournage : le mock d'un camping fictif, servi à la place de
+// /src/demo/mockSupabase.js. Ses imports relatifs (écrits pour src/demo/)
+// deviennent absolus, comme vite les sert (/src/lib/presence.js) : la page
+// garde une seule instance de chaque module.
+const DECORS = path.join(__dirname, '..', 'decors');
+const decorsLus = {};
+function lireDecor(slug) {
+  if (decorsLus[slug]) return decorsLus[slug];
+  if (!/^[a-z0-9-]+$/.test(slug)) throw new Error(`décor invalide : ${slug}`);
+  const dir = path.join(DECORS, slug);
+  const f = path.join(dir, 'mockSupabase.js');
+  if (!fs.existsSync(f)) throw new Error(`décor inconnu : ${slug} (${f} absent)`);
+  const code = fs.readFileSync(f, 'utf8').replace(
+    /((?:from|import)\s*\(?\s*['"])(\.\.?\/[^'"]+)(['"])/g,
+    (_, a, rel, b) => {
+      let abs = path.posix.join('/src/demo', rel);
+      if (!/\.[a-z]+$/.test(abs)) abs += '.js';
+      return a + abs + b;
+    });
+  const m = code.match(/const CENTER = \{ lat: (-?[\d.]+), lng: (-?[\d.]+) \}/);
+  if (!m) throw new Error(`décor ${slug} : constante CENTER introuvable dans le mock`);
+  const slugCamping = (code.match(/slug: '([^']+)'/) || [])[1] || slug;
+  const meteoF = path.join(dir, 'meteo.json');
+  const meteo = fs.existsSync(meteoF) ? JSON.parse(fs.readFileSync(meteoF, 'utf8'))
+    : { temperature: 27, code: 0, jours: [[1, 28, 18], [0, 29, 19], [2, 27, 18]] };
+  return (decorsLus[slug] = { code, centre: { latitude: +m[1], longitude: +m[2], accuracy: 15 },
+    email: `gerant@${slugCamping.replace(/-/g, '')}.fr`, meteo });
+}
+// La météo de l'accueil (Open-Meteo) dépend du vrai temps du jour de tournage :
+// avec un décor, elle reste celle d'une journée d'été (decors/<slug>/meteo.json).
+function reponseMeteo(meteo, date) {
+  const jours = [[meteo.code, meteo.temperature + 1, meteo.temperature - 9], ...meteo.jours];
+  const time = jours.map((_, i) => { const d = new Date(`${date}T12:00:00Z`); d.setUTCDate(d.getUTCDate() + i); return d.toISOString().slice(0, 10); });
+  return { current: { temperature_2m: meteo.temperature, weather_code: meteo.code },
+    daily: { time, weather_code: jours.map(j => j[0]), temperature_2m_max: jours.map(j => j[1]), temperature_2m_min: jours.map(j => j[2]) } };
+}
+async function brancherDecor(page, decor, date) {
+  await page.route(u => u.pathname === '/src/demo/mockSupabase.js',
+    r => r.fulfill({ status: 200, contentType: 'text/javascript; charset=utf-8', body: decor.code }));
+  // L'adresse du gérant est écrite en dur dans src/demo/main.jsx (Paramètres).
+  await page.route(u => u.pathname === '/src/demo/main.jsx', async r => {
+    for (let essai = 0; essai < 3; essai++) {
+      try {
+        const rep = await r.fetch();
+        return await r.fulfill({ response: rep, body: (await rep.text()).replaceAll('gerant@flotsbleus.fr', decor.email) });
+      } catch (e) { if (essai === 2) return r.continue().catch(() => {}); }
+    }
+  });
+  await page.route(u => u.hostname === 'api.open-meteo.com',
+    r => r.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(reponseMeteo(decor.meteo, date)) }));
+}
+
 function chromiumPath() {
   const p = process.env.CHROMIUM_PATH || '/opt/pw-browsers/chromium-1194/chrome-linux/chrome';
   return fs.existsSync(p) ? p : undefined; // sinon : le Chromium de Playwright
@@ -45,10 +100,11 @@ const ease = t => (t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2);
 
 async function captureShot(browser, plan, shot, idx, outDir) {
   const lang = shot.langue || plan.langue || 'fr';
+  const decor = (shot.decor || plan.decor) ? lireDecor(shot.decor || plan.decor) : null;
   const ctx = await browser.newContext({
     viewport: { width: VW, height: VH }, deviceScaleFactor: 3, isMobile: true, hasTouch: true,
     locale: LOCALES[lang] || 'fr-FR', timezoneId: 'Europe/Paris', colorScheme: 'light',
-    geolocation: shot.geo === 'loin' ? GEO_LOIN : GEO, permissions: ['geolocation'],
+    geolocation: shot.geo === 'loin' ? GEO_LOIN : (decor ? decor.centre : GEO), permissions: ['geolocation'],
   });
   // Heure de la démo : l'après-midi du jour de la vidéo (les groupes de 18 h 30
   // sont à venir, l'agenda montre « ce soir »).
@@ -56,6 +112,7 @@ async function captureShot(browser, plan, shot, idx, outDir) {
   await ctx.clock.install({ time: t0 });
   await ctx.addInitScript(l => { try { localStorage.setItem('langue', l); } catch (e) { /* rien */ } }, lang);
   const page = await ctx.newPage();
+  if (decor) await brancherDecor(page, decor, plan.date);
   const erreurs = [];
   page.on('pageerror', e => erreurs.push(e.message));
   // Les confirmations natives (window.confirm) ne se voient pas à l'image :
@@ -215,7 +272,7 @@ async function captureShot(browser, plan, shot, idx, outDir) {
   await ctx.close();
   if (erreurs.length) console.log(`  plan ${idx + 1} : erreurs de la page :`, erreurs.slice(0, 3).join(' | '));
   for (const e of effets) if (e.f > total) throw new Error(`plan ${idx + 1} (${shot.ecran}) : effet ${e.type} après la fin du plan`);
-  return { images: f, appuis, effets, ecran: shot.ecran, erreurs };
+  return { images: f, appuis, effets, ecran: shot.ecran, erreurs, ...(decor ? { decor: shot.decor || plan.decor } : {}) };
 }
 
 (async () => {

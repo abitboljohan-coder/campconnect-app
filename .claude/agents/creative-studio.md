@@ -59,6 +59,8 @@ le directeur (Claude) : tu ne t'auto-valides jamais.
 - Démo de l'app : `node node_modules/vite/bin/vite.js --mode demo --port 5199 --strictPort`
   (dans le dépôt, après `npm ci`).
 - Captures d'écrans réels : `studio-video/nuit/capture.cjs` (plans de `studio-video/nuit/themes.json`).
+- Décors de tournage (`studio-video/decors/`, voir son README) : choisir ou faire créer par
+  l'agent `data` un décor différent pour chaque campagne ; ne plus filmer Les Flots Bleus par défaut.
 - Films pilotés image par image en HTML (téléphone 3D, textes, loupes) : moteur
   `studio-video/nuit/render.cjs` + `film.html`, ou un `film.html` sur mesure rendu image par
   image avec Playwright (Chromium : `/opt/pw-browsers/chromium-*/chrome-linux/chrome`).

@@ -1,0 +1,9 @@
+# Décors de tournage : d'autres campings que Les Flots Bleus pour la démo filmée
+
+- **Choisir** : `"decor": "<slug>"` dans le plan de `nuit/capture.cjs` (ou dans un thème de `nuit/themes.json`, ou dans un seul plan d'écran). Sans lui, la démo d'origine. Décors : `pins-landais` (Landes, 4★), `lac-ardeche` (Ardèche, 3★), `cote-bretonne` (Côte de Granit Rose, 4★).
+- **Effet** : `<slug>/mockSupabase.js` remplace `src/demo/mockSupabase.js` dans le navigateur (rien ne change dans `src/`) ; le GPS suit son `CENTER`, la météo de l'accueil vient de `<slug>/meteo.json` (été).
+- **Plans** : les textes visés (« Léa », « Tournoi de volley », « FlotsBleus-Invites »…) changent avec le décor : adaptez les cibles du plan aux données du décor.
+- **Créer** : copier un décor, ne changer QUE le bloc de données (de `const CENTER` à `ANNONCES`) ; garder les ids (`vac-1`…`vac-5`, `g1`, `m3`), les exports et tout le code. Si `src/demo/mockSupabase.js` évolue, recoller son code autour des données.
+- **Le faux client ignore les filtres** : toute ligne d'`inscriptions` compte pour le vacancier filmé (« Inscrit », compteur du Profil) → peu d'inscriptions, et une animation du soir sans inscrit (bouton « S'inscrire ») ; tous les messages vont dans le chat `g1` ; ne mettre de membres que dans `g1` (sinon tous les groupes passent dans « Mes groupes »).
+- **Règles** : camping FICTIF (vérifier qu'aucun camping réel ne porte ce nom), région réelle et cohérente (plages, marchés, activités du coin), code Wi-Fi neutre, rien de gênant (pas de 0 %, pas de liste vide, pas de « Harcèlement », météo d'été, compteurs crédibles).
+- **Tester** : lancer la démo, capturer accueil, agenda, groupes, infos, admin, admin-stats avec le décor, REGARDER chaque image, et vérifier `capture.json` (`erreurs` vides).
