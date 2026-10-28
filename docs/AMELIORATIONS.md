@@ -51,6 +51,19 @@ Johan n'a plus qu'à écrire, s'il y en a :
 - les rencontres (salon, ami, gérant) ;
 - ce qui lui a fait perdre du temps.
 
+## Propositions en attente
+
+- **Offre pilote dans la relance J+4** (proposée le 28/10/2026, Johan : « on laisse, on
+  comparera après »). Les mails restent tels quels pour l'instant, et cette période sert
+  de point de comparaison.
+  - **Mesure** : chaque dimanche, le taux de réponse aux relances « en une phrase »
+    actuelles.
+  - **Décision** : au bout de deux semaines (revue du 8 novembre), soumettre à Johan les
+    chiffres et le passage à la relance pilote :
+    > « Pour la saison 2027, je cherche 3 à 5 campings pilotes, à qui CampConnect sera
+    > offert toute la saison (ensuite, vous décidez)… Répondez juste "pilote". »
+  - Ne pas l'appliquer sans son accord.
+
 ## Journal
 
 Le plus récent est en haut. Chaque revue contient :
