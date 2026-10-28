@@ -1,0 +1,91 @@
+# Relevés automatiques du dimanche (Claude Desktop)
+
+Trois tâches planifiées tournent sur le PC de Johan, dans Claude Desktop avec Claude in
+Chrome. Comme elles passent par Chrome, elles utilisent les comptes où Johan est déjà
+connecté. Chacune relève les chiffres de la semaine et les dépose dans un Google Doc.
+Le directeur du dimanche (19 h 41) lit ces documents.
+
+## Installation (une seule fois, sur le PC)
+
+1. Avoir Claude Desktop, avec l'extension Claude in Chrome installée et activée.
+2. Dans Chrome, se connecter une fois sur chaque site en cochant « rester connecté » :
+   - le webmail Infomaniak ;
+   - Google Analytics ;
+   - App Store Connect ;
+   - Play Console ;
+   - Instagram ;
+   - TikTok ;
+   - LinkedIn.
+3. Vérifier que le connecteur Google Drive est activé dans Claude Desktop (Réglages ›
+   Connecteurs).
+4. Dans Claude Desktop, créer trois tâches planifiées avec les noms, horaires et
+   consignes ci-dessous, en copiant chaque consigne telle quelle. Les tâches planifiées
+   se créent depuis l'espace Cowork. On peut aussi taper `/schedule` dans une
+   conversation Cowork.
+5. Lancer chaque tâche une fois à la main pour tester et autoriser les sites quand Chrome
+   le demande.
+
+Le dimanche, le PC doit être allumé, Claude Desktop ouvert et Chrome lancé. Si un site
+redemande la connexion, la tâche le note et le directeur prévient Johan.
+
+---
+
+## Tâche 1 · Mails (dimanche 18 h 07)
+
+```
+Relevé hebdo CampConnect 1/3 : les mails.
+
+Avec Claude in Chrome, ouvre le webmail Infomaniak (https://mail.infomaniak.com), boîte contact@campconnect.fr.
+LECTURE SEULE : n'envoie, ne réponds, ne supprime, ne déplace et n'archive rien, ne clique sur aucun lien contenu dans un mail, ne modifie aucun réglage. Si une connexion ou un code est demandé, ne saisis rien : note « connexion demandée » et passe à la suite.
+
+Pour les 7 derniers jours, relève :
+1. Chaque mail reçu d'un camping ou d'un gérant : date, expéditeur, nom du camping, type (oui ou intéressé / non / STOP ou désinscription / absence, avec la date de retour / question / autre), et un résumé d'une phrase.
+2. Chaque mail revenu en erreur : adresse visée et raison en quelques mots (adresse inconnue, boîte pleine, refusé…).
+3. Dans « Envoyés » : combien de mails envoyés dans la semaine, et à quels campings.
+4. Dans « Brouillons » : combien de brouillons restent.
+5. Tout autre mail utile à CampConnect : Apple, Google, partenaire, salon, presse.
+
+Ensuite, avec le connecteur Google Drive, crée un Google Doc intitulé « CampConnect Relevé AAAA-MM-JJ Mails » (date du jour) qui contient ce relevé en texte simple, une ligne par élément. Si le connecteur n'est pas disponible, crée le document dans Chrome sur https://docs.google.com.
+N'invente rien : si une information manque, écris « inconnu ».
+Termine par une seule phrase : « Relevé mails : N réponses, M erreurs, document créé. »
+```
+
+## Tâche 2 · Site et stores (dimanche 18 h 27)
+
+```
+Relevé hebdo CampConnect 2/3 : le site et les stores.
+
+Avec Claude in Chrome. LECTURE SEULE : ne modifie aucun réglage, ne réponds à aucun avis, n'accepte aucune offre ni aucun contrat, n'achète rien. Si une connexion ou un code est demandé, ne saisis rien : note « connexion demandée » et passe au site suivant.
+
+1. Google Analytics (https://analytics.google.com), propriété du site campconnect.fr (ID G-PRTR7LJLGD). Relève les 7 derniers jours, comparés aux 7 précédents :
+   - utilisateurs, nouveaux utilisateurs et sessions ;
+   - les 5 principales sources de trafic ;
+   - les 5 pages les plus vues ;
+   - le nombre de chacun de ces événements : generate_lead, demande_demo, telechargement_app, contact_email, contact_telephone, reseau_social, video_presentation.
+2. App Store Connect (https://appstoreconnect.apple.com), app CampConnect, partie Analytics, 7 derniers jours : premiers téléchargements, vues de la page produit, taux de conversion. Relève aussi les nouvelles notes et les nouveaux avis, avec leur texte.
+3. Google Play Console (https://play.google.com/console), app CampConnect, 7 derniers jours :
+   - installations et désinstallations ;
+   - nouvelles notes et nouveaux avis, avec leur texte ;
+   - dans « Android vitals », les plantages et les ANR s'il y en a.
+
+Ensuite, avec le connecteur Google Drive, crée un Google Doc intitulé « CampConnect Relevé AAAA-MM-JJ Site et stores » (date du jour) qui contient ce relevé en texte simple. Si le connecteur n'est pas disponible, crée le document dans Chrome sur https://docs.google.com.
+N'invente rien : si une information manque, écris « inconnu ».
+Termine par une seule phrase : « Relevé site et stores : N visiteurs, N demandes de démo, N téléchargements, document créé. »
+```
+
+## Tâche 3 · Réseaux sociaux (dimanche 18 h 47)
+
+```
+Relevé hebdo CampConnect 3/3 : les réseaux sociaux.
+
+Avec Claude in Chrome. LECTURE SEULE : ne publie, n'aime, ne commente, ne partage et ne suis rien, n'envoie aucun message, ne lance aucune promotion ni publicité payante, ne modifie aucun profil. Si une connexion ou un code est demandé, ne saisis rien : note « connexion demandée » et passe au réseau suivant.
+
+Relève les 7 derniers jours pour le compte CampConnect sur chaque réseau :
+1. Instagram (https://www.instagram.com, tableau de bord professionnel, Statistiques) : comptes touchés, interactions et nouveaux abonnés. Pour chaque publication de la semaine : vues, j'aime, commentaires et partages. Relève aussi le texte des commentaires et des messages reçus de campings ou de gérants.
+2. TikTok (https://www.tiktok.com/tiktokstudio, Statistiques) : vues des vidéos, vues du profil et nouveaux abonnés. Pour chaque vidéo de la semaine : vues, temps de visionnage moyen, j'aime et commentaires.
+3. LinkedIn, page CampConnect (https://www.linkedin.com/company/146681187/admin/analytics/updates/) : impressions, réactions, commentaires, nouveaux abonnés. Pour chaque publication de la semaine : impressions, taux d'engagement et texte des commentaires.
+
+Ensuite, avec le connecteur Google Drive, crée un Google Doc intitulé « CampConnect Relevé AAAA-MM-JJ Réseaux » (date du jour) qui contient ce relevé en texte simple. Si le connecteur n'est pas disponible, crée le document dans Chrome sur https://docs.google.com.
+N'invente rien : si une information manque, écris « inconnu ».
+Termine par une seule phrase : « Relevé réseaux : meilleure publication = …, document créé. »
+```

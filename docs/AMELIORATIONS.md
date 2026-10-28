@@ -32,26 +32,24 @@ consigne tout ici, puis envoie à Johan un résumé court.
   - le cloisonnement par camping ;
   - la règle n° 1 vidéo.
 
-## Ce que Johan envoie, chaque dimanche avant 19 h 30
+## Les données de la semaine
 
-Il suffit de quelques captures d'écran dans la conversation, sans mise en forme. Le
-directeur fait sans ce qui manque et le signale.
+Trois tâches planifiées de Claude Desktop, sur le PC de Johan, relèvent automatiquement
+les chiffres le dimanche entre 18 h 07 et 18 h 47 :
 
-1. **Mails** : les réponses de campings reçues dans la semaine (transfert ou capture),
-   et les retours en erreur.
-2. **Google Analytics** : l'écran « Rapports › Vue d'ensemble » sur 7 jours, plus
-   « Événements » (demandes de démo, téléchargements, clics mail et téléphone).
-3. **Instagram** : l'écran « Statistiques » sur 7 jours (comptes touchés, interactions,
-   nouveaux abonnés, meilleur post).
-4. **TikTok** : « Outils pour créateurs › Statistiques » sur 7 jours (vues, temps de
-   visionnage, abonnés).
-5. **LinkedIn** : les statistiques de la page CampConnect (impressions, réactions,
-   abonnés) et les commentaires reçus.
-6. **Stores** : les téléchargements de la semaine dans App Store Connect et la Play
-   Console, et les nouveaux avis.
-7. **Appels et rendez-vous** : une phrase par appel passé (qui, réponse, suite à donner)
-   et toute rencontre (salon, ami, gérant).
-8. **Tout le reste** qui a fait perdre du temps ou agacé.
+- les mails ;
+- Google Analytics et les stores ;
+- Instagram, TikTok et LinkedIn.
+
+Elles les déposent dans des Google Docs « CampConnect Relevé … ». Installation et
+consignes : `docs/RELEVES_AUTOMATIQUES.md`. Il suffit que le PC soit allumé, avec Claude
+Desktop et Chrome ouverts.
+
+Johan n'a plus qu'à écrire, s'il y en a :
+
+- une phrase par appel passé ;
+- les rencontres (salon, ami, gérant) ;
+- ce qui lui a fait perdre du temps.
 
 ## Journal
 
