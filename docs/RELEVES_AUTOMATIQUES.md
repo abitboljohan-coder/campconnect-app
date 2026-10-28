@@ -5,6 +5,12 @@ Chrome. Comme elles passent par Chrome, elles utilisent les comptes où Johan es
 connecté. Chacune relève les chiffres de la semaine et les dépose dans un Google Doc.
 Le directeur du dimanche (19 h 41) lit ces documents.
 
+## Installation express
+
+Dans Claude Desktop, ouvrir une conversation Cowork et y coller tout le contenu de
+`docs/RELEVES_INSTALLATION.txt`. Claude Desktop crée les 3 tâches lui-même et lance un
+premier test. Les étapes ci-dessous détaillent la même installation.
+
 ## Installation (une seule fois, sur le PC)
 
 1. Avoir Claude Desktop, avec l'extension Claude in Chrome installée et activée.
