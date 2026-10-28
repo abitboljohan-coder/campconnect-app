@@ -294,6 +294,10 @@ décide, et répartit le travail entre quatre pôles, chacun avec son manager :
 
 Le directeur vérifie tout ce qui revient avant de le présenter à Johan.
 
+Chaque dimanche soir, la routine « Amélioration continue » relit les échecs de
+la semaine et confie les corrections aux pôles concernés. Elle applique ce qui
+est sûr et propose le reste. Journal et règles : `docs/AMELIORATIONS.md`.
+
 **Règle n° 1 du pôle 2 (Johan) : ne livrer que des vidéos parfaites.** Jamais de « points faibles » ni de « V2 » à la livraison : tout défaut est corrigé avant. Chaque vidéo passe par `controle-video` avant le rendu (scénario, textes, captures) et après (vidéo finie), jusqu'à « VALIDÉ ».
 
 Équipe d'agents (`.claude/agents/`). **Par défaut, Claude fait lui-même** :
