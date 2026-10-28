@@ -95,21 +95,14 @@ vues Instagram).
 
 Ces deux règles ne se reproposent pas.
 
-**Test TikTok avec un son tendance (28/10/2026)**
+**Instagram et TikTok : publication manuelle par Johan (28/10/2026)**
 
-« Orage sur l'affichette » a été publiée sur TikTok avec le son « LET ME BE » (The
-Second Voice), choisi par Johan dans la bibliothèque commerciale TikTok.
+Le circuit Higgsfield est abandonné : il n'était qu'à moitié automatique et ne permettait
+pas de choisir la couverture. Ne plus le proposer.
 
-Le circuit est semi-automatique :
-
-1. Claude met en ligne la version muette sur Higgsfield.
-2. Claude ouvre la fiche (tiktok_prepare_publish, connecteur
-   7623f7ce-739e-4af8-888e-8cb741e33d6c) et propose 3 sons.
-3. Johan choisit le son et publie.
-
-À comparer dimanche avec la moyenne TikTok (environ 290 vues par vidéo cette semaine).
-Si la vidéo fait mieux, proposer à Johan de refaire le circuit pour chaque nouvelle
-vidéo.
+À la place, chaque vidéo de la Vidéothèque se télécharge sans musique, avec sa légende
+prête à copier. Johan publie lui-même et choisit dans l'app le son tendance et la
+couverture.
 
 ## Propositions en attente
 
