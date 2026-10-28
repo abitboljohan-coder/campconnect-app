@@ -11,6 +11,9 @@ consigne tout ici, puis envoie à Johan un résumé court.
   Il n'invente rien. Quand une source manque, il l'écrit.
 - Il ne change qu'une seule chose à la fois par pôle, pour qu'on puisse mesurer l'effet
   la semaine suivante.
+- Pour les mails, il ne juge une version qu'après au moins 50 envois de cette version
+  (environ deux semaines). En dessous, 0 ou 1 réponse ne prouve rien : il attend au lieu
+  de changer.
 - Il relit la semaine précédente et tranche pour chaque changement : on le garde, on
   l'ajuste ou on l'annule.
 - Il applique seul ce qui est sûr :
