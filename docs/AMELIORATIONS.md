@@ -107,7 +107,16 @@ couverture.
 **App Store Connect (28/10/2026)** : Johan ne veut plus s'en occuper. Le relevé « Site et
 stores » affichera « connexion demandée » pour Apple. C'est normal : ne pas le signaler et
 ne jamais lui demander de se reconnecter. Les installations se suivent avec Google Play
-et Supabase (nouveaux vacanciers).
+et Supabase :
+
+- nouveaux vacanciers (hors démos) ;
+- appareils par plateforme, à relever chaque dimanche :
+  `select platform, count(distinct device_id), count(*) filter (where created_at > now()-interval '7 days') from push_tokens group by platform`.
+
+Point de départ au 28/10 : 4 iPhone et 1 Android, aucun nouveau depuis le 16/10.
+
+Supabase ne voit que les personnes qui ouvrent l'app et acceptent les notifications. Une
+installation jamais ouverte n'y apparaît pas.
 
 ## Propositions en attente
 
