@@ -5,6 +5,43 @@ continue » relit la semaine. Elle rassemble les points négatifs et en déduit 
 améliorations, chacune confiée à un pôle. Elle applique elle-même celles qui sont sûres,
 consigne tout ici, puis envoie à Johan un résumé court.
 
+## Mission du directeur (fixée par Johan le 28/10/2026)
+
+Deux objectifs, par ordre de priorité :
+
+1. **Ramener le plus de prospects possible.** Mesures :
+   - nouveaux campings dans le fichier ;
+   - réponses ;
+   - « oui » ;
+   - appels utiles ;
+   - aperçus demandés ;
+   - campings clients.
+2. **Faire croître les vues et les impressions de CampConnect.** Mesures :
+   - vues TikTok et Instagram ;
+   - impressions LinkedIn ;
+   - visiteurs du site et demandes de démo ;
+   - appareils actifs de l'app dans Supabase.
+
+Chaque dimanche, il part des analyses mises en place par Johan :
+
+- les relevés du PC (mails, Google Analytics, Play Console, réseaux) ;
+- le fichier de prospects ;
+- la Vidéothèque ;
+- Supabase ;
+- le tableau de bord.
+
+Il transmet ensuite chaque conclusion au pôle concerné, en l'écrivant là où ce pôle la
+lira à son prochain passage :
+
+| Pôle | Où il écrit |
+|---|---|
+| Prospection | prompts des routines campings, brouillons et appels ; modèles de mail ; `.claude/agents/commercial.md` |
+| Social & contenu | « Ce qui marche en ce moment » en tête de `docs/CAMPAGNES.md` ; prompt de la routine vidéo ; `.claude/agents/creative-studio.md` |
+| Produit | une proposition à Johan (jamais de changement de `src/` sans lui) |
+| Opérations | prompts des routines ; tableau de bord |
+
+Une conclusion qui n'est écrite nulle part n'est pas transmise.
+
 ## Règles du directeur
 
 - Il part des preuves : CRM, Make, Vidéothèque, Supabase, routines et ce que Johan envoie.
