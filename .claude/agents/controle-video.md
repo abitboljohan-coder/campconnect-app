@@ -82,3 +82,21 @@ Chacune avait son **propre univers visuel** de bout en bout.
 4. `controle-video` compare la planche contact aux planches des 4 vidéos précédentes. Si
    on peut se dire « on dirait la même », c'est un défaut bloquant : À CORRIGER, quelle
    que soit la note.
+
+## Règle n° 3 du pôle 2 (Johan, 29 oct. 2026) : une situation vécue, un storyboard, on VEND l'app
+
+Johan : « il faut VENDRE L'APPLICATION, pas faire un truc de mauvaise qualité. Un enfant
+qui perd son doudou, les poubelles qui débordent : soyez créatifs. »
+
+1. **Partir d'une situation de camping vécue**, prise dans `docs/SITUATIONS.md` (ou une
+   nouvelle du même genre). Ne jamais reprendre celle d'une des 6 dernières vidéos.
+2. **Suivre la structure** : accroche avec la situation (0–3 s), la galère sans l'app,
+   la fonction de CampConnect qui la règle sur de vrais écrans, puis la chute et l'appel
+   à l'action.
+3. **Le storyboard est un livrable obligatoire** du Screenwriter & Storyboard Artist,
+   remis AVANT toute production : une case par plan (image ou croquis, texte à l'écran,
+   écran de l'app montré, durée). `controle-video` le valide avant le rendu, puis il est
+   enregistré dans la Vidéothèque (champ `storyboard`). Sans storyboard validé, rien n'est
+   rendu.
+4. **Le contrôle refuse** une vidéo dont on ne comprend pas, sans le son et en moins de
+   3 secondes, quelle situation elle raconte et ce que l'app règle.
