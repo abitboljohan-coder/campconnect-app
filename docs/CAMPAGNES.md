@@ -15,6 +15,11 @@ Les MP4 sont dans `studio-video/out/` (non versionné).
 
 ## Ce que Johan a rejeté
 
+- **29 oct. 2026 : toujours le même fond.** Les vidéos « Orage sur l'affichette » et
+  « Mes vacanciers ne veulent pas d'appli » partagent le même habillage : fond vert à
+  constellation, fond pastel, même carte de fin. Johan les trouve « fades » : chaque vidéo
+  doit avoir son propre univers visuel (règle n° 2, dans `.claude/agents/creative-studio.md`).
+
 - Motion design abstrait, téléphone plat sur fond uni, plans recadrés plein écran « trop zoomés ».
 - Une vidéo qui « ressemble trop à l'autre ».
 - L'écran **carte** (jamais).

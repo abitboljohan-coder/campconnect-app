@@ -38,3 +38,47 @@ quelle que soit la note.
 - Première ligne : **VALIDÉ** ou **À CORRIGER**.
 - Si À CORRIGER : la liste numérotée des défauts, chacun avec le timecode, ce qui ne va pas et la correction précise attendue.
 - Ne valide jamais « en l'état avec réserves ». Un défaut = À CORRIGER.
+
+## Règle n° 2 du pôle 2 (Johan, 29 oct. 2026) : jamais le même décor graphique
+
+Johan : « j'en ai marre que ce soit toujours le même fond, c'est fade, il faut innover ».
+Les vidéos du 28 et du 29 octobre avaient le même habillage, et c'est ce qu'il refuse :
+
+- fond vert sombre avec constellation de points ;
+- fond pastel flou ;
+- carte de fin logo et « Demandez une démonstration » identique.
+
+**Ce qu'il a aimé :**
+
+- « Le camping dans votre poche » : style Apple, téléphone 3D entier posé sur de vraies
+  images de camping.
+- « Camping origami » : univers papier plié.
+- « Votre camping, à vos couleurs » : verre liquide.
+
+Chacune avait son **propre univers visuel** de bout en bout.
+
+**Règles :**
+
+1. Chaque vidéo a un univers visuel complet et nouveau : fond, typographie, transitions,
+   carte de fin. Il ne reprend ni le gabarit de `studio-video/nuit/film.html`, ni le fond
+   d'une des 4 vidéos précédentes. Pistes, à élargir :
+   - vraies photos de camping plein cadre (couchant, piscine, allée ombragée) ;
+   - papier découpé ou origami ;
+   - verre liquide ;
+   - carnet de croquis et aquarelle ;
+   - bande dessinée en cases ;
+   - néons d'une nuit d'été ;
+   - pellicule ou caméscope des années 90 ;
+   - maquette isométrique 3D du camping ;
+   - polaroïds en collage ;
+   - tableau de liège et punaises ;
+   - écran partagé avant/après ;
+   - carte postale vintage ;
+   - typographie géante cinétique.
+2. La carte de fin change à chaque vidéo. Le logo et le contact restent, mais la mise en
+   scène appartient à l'univers de la vidéo.
+3. L'univers est nommé dans le dossier de campagne et dans le champ `theme` de la
+   Vidéothèque, pour que la vidéo suivante en choisisse un autre.
+4. `controle-video` compare la planche contact aux planches des 4 vidéos précédentes. Si
+   on peut se dire « on dirait la même », c'est un défaut bloquant : À CORRIGER, quelle
+   que soit la note.
