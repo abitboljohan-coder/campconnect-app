@@ -3,6 +3,27 @@
 À relire avant chaque nouvelle campagne (agent `creative-studio`) pour ne pas se répéter.
 Les MP4 sont dans `studio-video/out/` (non versionné).
 
+## Ce qui marche en ce moment (relevé TikTok du 30 oct. 2026, capture de Johan)
+
+| Vidéo | Vues TikTok | Format |
+|---|---|---|
+| « Apéro pétanque : Julien rencontre Thomas » (épinglée) | 1 050 | histoire avec personnages, illustration, vraie carte de groupe de l'app |
+| Téléphone entier avec l'agenda des animations | 781 | vrai écran de l'app sur un fond qui bouge |
+| « Votre camping tient dans une poche » | 749 | plan du camping illustré et animé |
+| « Les campings en 2027 grâce à CampConnect » | 317 | photo de nuit, feu de camp |
+| « POV : t'es la sonnette de l'accueil en août » | 304 | humour illustré |
+| « Le camping en 1998 » | 289 | rétro, tableau de liège |
+
+**À refaire :**
+
+- les histoires avec des personnages ;
+- un univers illustré et animé ;
+- le vrai écran de l'app, mis en scène dans une situation de camping.
+
+Les 3 premières font 2,5 à 3,5 fois plus de vues que les autres.
+
+**À éviter :** les fonds unis, ou le même habillage d'une vidéo à l'autre (règle n° 2).
+
 ## Ce que Johan a validé
 
 - **Téléphone 3D visible en entier**, posé sur de vraies images de camping (14 oct. 2026).
