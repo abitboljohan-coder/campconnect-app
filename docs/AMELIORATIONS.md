@@ -38,7 +38,7 @@ lira à son prochain passage :
 | Prospection | prompts des routines campings, brouillons et appels ; modèles de mail ; `.claude/agents/commercial.md` |
 | Social & contenu | « Ce qui marche en ce moment » en tête de `docs/CAMPAGNES.md` ; prompt de la routine vidéo ; `.claude/agents/creative-studio.md` |
 | Produit | une proposition à Johan (jamais de changement de `src/` sans lui) |
-| Opérations | prompts des routines ; tableau de bord |
+| Opérations | prompts des routines ; tableau de bord : chiffres `kpi/global` et dates clés de la collection `agenda` ({date, heure?, titre}), à ajouter ou retirer chaque dimanche (retours de congés, relances à faire, salons, décisions à prendre) |
 
 Une conclusion qui n'est écrite nulle part n'est pas transmise.
 
