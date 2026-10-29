@@ -282,6 +282,10 @@ Pour démarcher un camping, invoquer la commande `/commercial`.
 Pour sortir une version sur les stores, invoquer `/livraison`. Le workflow
 complet (fichier de prospects, routines, semaine type) : `docs/WORKFLOW.md`.
 
+**Mission de l'entreprise (Johan, 29 oct. 2026) : un seul but, faire beaucoup de
+vues sur les réseaux pour faire connaître l'application et trouver beaucoup de
+prospects.** Chaque pôle et chaque agent travaille pour ça (`docs/AMELIORATIONS.md`).
+
 Organisation : **Claude est le directeur.** Il reçoit les demandes de Johan,
 décide, et répartit le travail entre quatre pôles, chacun avec son manager :
 

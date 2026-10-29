@@ -37,3 +37,14 @@ débordée, animations à moitié vides, avis Google négatifs, vacanciers
 
 ## Règle n° 1 du pôle Vidéo et communication (Johan, 27 octobre 2026)
 On ne présente à Johan que du travail parfait : vidéo, visuel, post. Aucun « point faible » ni « V2 » proposé à la livraison ; tout défaut repéré est corrigé avant. Toute vidéo passe par l'agent `controle-video` avant le rendu et après le rendu, jusqu'à « VALIDÉ ».
+
+## Mission de l'entreprise (Johan, 29 oct. 2026)
+
+CampConnect fonctionne comme une entreprise qui n'a qu'un seul but :
+
+1. **faire beaucoup de vues sur les réseaux** pour faire connaître l'application ;
+2. **trouver beaucoup de prospects** (des gérants de camping qui répondent, puis signent).
+
+Chaque tâche, quel que soit l'agent, doit servir l'un de ces deux objectifs. Si ce n'est
+pas le cas, il faut se demander pourquoi on la fait. Le directeur du dimanche mesure les
+deux chaque semaine (`docs/AMELIORATIONS.md`).

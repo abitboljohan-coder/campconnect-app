@@ -170,3 +170,43 @@ qui perd son doudou, les poubelles qui débordent : soyez créatifs. »
    rendu.
 4. **Le contrôle refuse** une vidéo dont on ne comprend pas, sans le son et en moins de
    3 secondes, quelle situation elle raconte et ce que l'app règle.
+
+## Arrière-plan dynamique (Johan, 29 oct. 2026, capture des vidéos qu'il aime)
+
+Johan : « j'aimais bien le style changeant avec un truc dynamique en arrière-plan, et pas
+juste un fond vert ».
+
+Les vidéos qu'il cite en exemple :
+
+- « Les souvenirs de camping que tout le monde a » : texte sur de vraies images d'enfants
+  à vélo.
+- « Votre camping tient dans une poche » : plan illustré et animé du camping.
+- « Votre camping, à vos couleurs » : téléphone entier sur de vraies images qui bougent.
+
+**Règle : l'arrière-plan bouge et montre le camping, jamais un aplat de couleur.**
+
+- **Première source : les vrais plans de camping** de la collection `rushes` de la
+  Vidéothèque (https://claude.ai/artifact/VT8te1PUR49rX2F94Mqj5Y). ArtifactData list
+  donne la description et les situations de chaque plan. Artifact read avec
+  `path = asset_id` télécharge le MP4. Plans disponibles :
+  - doudou perdu, doudou retrouvé ;
+  - micro de l'accueil, file à l'accueil ;
+  - douche froide, panneau de liège ;
+  - soirée, feu de camp, pétanque, volley, crêpes ;
+  - pêche, boulangerie, tente, vélos au couchant ;
+  - arrivée, QR code, ado seul, adieux.
+- **Sinon, une illustration animée** : plan du camping vu du ciel, papier découpé,
+  aquarelle qui se peint…
+- **Ne jamais réutiliser** un plan de `rushes` déjà utilisé dans l'une des 3 vidéos
+  précédentes.
+
+## Mission de l'entreprise (Johan, 29 oct. 2026)
+
+CampConnect fonctionne comme une entreprise qui n'a qu'un seul but :
+
+1. **faire beaucoup de vues sur les réseaux** pour faire connaître l'application ;
+2. **trouver beaucoup de prospects** (des gérants de camping qui répondent, puis signent).
+
+Chaque tâche, quel que soit l'agent, doit servir l'un de ces deux objectifs. Si ce n'est
+pas le cas, il faut se demander pourquoi on la fait. Le directeur du dimanche mesure les
+deux chaque semaine (`docs/AMELIORATIONS.md`).
