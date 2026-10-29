@@ -51,6 +51,14 @@ Une conclusion qui n'est écrite nulle part n'est pas transmise.
 - Pour les mails, il ne juge une version qu'après au moins 50 envois de cette version
   (environ deux semaines). En dessous, 0 ou 1 réponse ne prouve rien : il attend au lieu
   de changer.
+- **Pas de retour, on change.** Si une version de mail atteint 50 envois sans aucune
+  réponse positive, le directeur la remplace la semaine même. Il change d'objet,
+  d'accroche, de ciblage (départements, taille de camping, gérant nommé) ou de rythme
+  (plus d'appels, moins de mails), une chose à la fois. Il note dans le journal ce qu'il
+  essaie et pourquoi.
+- **Les vues décident du contenu.** Chaque dimanche, il relit les vues par vidéo et met à
+  jour « Ce qui marche en ce moment » dans `docs/CAMPAGNES.md` : on refait ce qui a le
+  plus de vues, on arrête ce qui en a le moins.
 - Les vidéos produites par la routine (sessions sans droit d'écriture sur le dépôt) ne
   sont notées que dans la Vidéothèque. Chaque dimanche, il reporte celles de la semaine
   dans `docs/CAMPAGNES.md`.
