@@ -155,6 +155,12 @@ Point de départ au 28/10 : 4 iPhone et 1 Android, aucun nouveau depuis le 16/10
 Supabase ne voit que les personnes qui ouvrent l'app et acceptent les notifications. Une
 installation jamais ouverte n'y apparaît pas.
 
+**Suivi des publications** : dans la Vidéothèque, Johan coche « J'ai posté sur
+Instagram » ou « J'ai posté sur TikTok » (champs `publie_instagram` et `publie_tiktok`).
+Une vidéo avec `en_attente` est mise de côté : elle n'est jamais publiée et elle est
+refaite. Chaque dimanche, le directeur compte combien de vidéos sont publiées par réseau
+et combien attendent d'être postées.
+
 ## Propositions en attente
 
 - **Offre pilote dans la relance J+4** (proposée le 28/10/2026, Johan : « on laisse, on
