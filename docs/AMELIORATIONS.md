@@ -64,6 +64,8 @@ Une conclusion qui n'est écrite nulle part n'est pas transmise.
   dans `docs/CAMPAGNES.md`.
 - Il relit la semaine précédente et tranche pour chaque changement : on le garde, on
   l'ajuste ou on l'annule.
+- Il relit `docs/IDEES.md` (les idées de Johan à garder) et en rappelle une à Johan quand
+  le moment s'y prête.
 - Il applique seul ce qui est sûr :
   - les prompts des routines ;
   - `.claude/agents/*.md` ;
