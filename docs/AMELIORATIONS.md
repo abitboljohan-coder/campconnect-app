@@ -1,6 +1,6 @@
 # Amélioration continue
 
-Chaque dimanche à 19 h 41 (heure de Paris), la routine « 0⃣ Direction · Amélioration
+Chaque dimanche à 22 h 21 (heure de Paris), la routine « 0⃣ Direction · Amélioration
 continue » relit la semaine. Elle rassemble les points négatifs et en déduit 1 à 3
 améliorations, chacune confiée à un pôle. Elle applique elle-même celles qui sont sûres,
 consigne tout ici, puis envoie à Johan un résumé court.
@@ -86,7 +86,7 @@ Une conclusion qui n'est écrite nulle part n'est pas transmise.
 ## Les données de la semaine
 
 Trois tâches planifiées de Claude Desktop, sur le PC de Johan, relèvent automatiquement
-les chiffres le dimanche entre 18 h 07 et 18 h 47 :
+les chiffres le dimanche entre 21 h 07 et 21 h 47 :
 
 - les mails ;
 - Google Analytics et les stores ;

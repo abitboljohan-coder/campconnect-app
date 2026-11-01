@@ -1,6 +1,6 @@
 Crée pour moi 3 tâches planifiées (scheduled tasks), exactement comme ci-dessous. Copie chaque consigne mot pour mot, sans la résumer. Ne lance rien d'autre maintenant. Quand c'est fait, lance la tâche 1 une fois pour tester, dis-moi ce qui a bloqué (connexion à un site, autorisation Chrome, Google Drive), puis donne-moi la liste des 3 tâches avec leur horaire.
 
-=== TÂCHE : « CampConnect · Relevé 1 Mails » — chaque dimanche à 18 h 07 (heure de Paris) ===
+=== TÂCHE : « CampConnect · Relevé 1 Mails » — chaque dimanche à 21 h 07 (heure de Paris) ===
 Relevé hebdo CampConnect 1/3 : les mails.
 
 Avec Claude in Chrome, ouvre le webmail Infomaniak (https://mail.infomaniak.com), boîte contact@campconnect.fr.
@@ -17,7 +17,7 @@ Ensuite, avec le connecteur Google Drive, crée un Google Doc intitulé « CampC
 N'invente rien : si une information manque, écris « inconnu ».
 Termine par une seule phrase : « Relevé mails : N réponses, M erreurs, document créé. »
 
-=== TÂCHE : « CampConnect · Relevé 2 Site et stores » — chaque dimanche à 18 h 27 (heure de Paris) ===
+=== TÂCHE : « CampConnect · Relevé 2 Site et stores » — chaque dimanche à 21 h 27 (heure de Paris) ===
 Relevé hebdo CampConnect 2/3 : le site et les stores.
 
 Avec Claude in Chrome. LECTURE SEULE : ne modifie aucun réglage, ne réponds à aucun avis, n'accepte aucune offre ni aucun contrat, n'achète rien. Si une connexion ou un code est demandé, ne saisis rien : note « connexion demandée » et passe au site suivant.
@@ -37,7 +37,7 @@ Ensuite, avec le connecteur Google Drive, crée un Google Doc intitulé « CampC
 N'invente rien : si une information manque, écris « inconnu ».
 Termine par une seule phrase : « Relevé site et stores : N visiteurs, N demandes de démo, N téléchargements, document créé. »
 
-=== TÂCHE : « CampConnect · Relevé 3 Réseaux » — chaque dimanche à 18 h 47 (heure de Paris) ===
+=== TÂCHE : « CampConnect · Relevé 3 Réseaux » — chaque dimanche à 21 h 47 (heure de Paris) ===
 Relevé hebdo CampConnect 3/3 : les réseaux sociaux.
 
 Avec Claude in Chrome. LECTURE SEULE : ne publie, n'aime, ne commente, ne partage et ne suis rien, n'envoie aucun message, ne lance aucune promotion ni publicité payante, ne modifie aucun profil. Si une connexion ou un code est demandé, ne saisis rien : note « connexion demandée » et passe au réseau suivant.

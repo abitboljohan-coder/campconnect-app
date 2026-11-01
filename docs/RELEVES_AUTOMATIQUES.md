@@ -3,7 +3,7 @@
 Trois tâches planifiées tournent sur le PC de Johan, dans Claude Desktop avec Claude in
 Chrome. Comme elles passent par Chrome, elles utilisent les comptes où Johan est déjà
 connecté. Chacune relève les chiffres de la semaine et les dépose dans un Google Doc.
-Le directeur du dimanche (19 h 41) lit ces documents.
+Le directeur du dimanche (22 h 21) lit ces documents.
 
 ## Installation express
 
@@ -36,7 +36,7 @@ redemande la connexion, la tâche le note et le directeur prévient Johan.
 
 ---
 
-## Tâche 1 · Mails (dimanche 18 h 07)
+## Tâche 1 · Mails (dimanche 21 h 07)
 
 ```
 Relevé hebdo CampConnect 1/3 : les mails.
@@ -56,7 +56,7 @@ N'invente rien : si une information manque, écris « inconnu ».
 Termine par une seule phrase : « Relevé mails : N réponses, M erreurs, document créé. »
 ```
 
-## Tâche 2 · Site et stores (dimanche 18 h 27)
+## Tâche 2 · Site et stores (dimanche 21 h 27)
 
 ```
 Relevé hebdo CampConnect 2/3 : le site et les stores.
@@ -79,7 +79,7 @@ N'invente rien : si une information manque, écris « inconnu ».
 Termine par une seule phrase : « Relevé site et stores : N visiteurs, N demandes de démo, N téléchargements, document créé. »
 ```
 
-## Tâche 3 · Réseaux sociaux (dimanche 18 h 47)
+## Tâche 3 · Réseaux sociaux (dimanche 21 h 47)
 
 ```
 Relevé hebdo CampConnect 3/3 : les réseaux sociaux.
