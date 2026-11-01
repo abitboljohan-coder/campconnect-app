@@ -192,4 +192,59 @@ Le plus récent est en haut. Chaque revue contient :
 - les propositions en attente de Johan ;
 - ce qu'on mesure la semaine suivante.
 
-_Première revue : dimanche 1er novembre 2026._
+### Revue du dimanche 1er novembre 2026
+
+**Chiffres de la semaine (25/10 → 31/10)**
+
+- Prospection : 213 campings dans le fichier, 63 mails envoyés dans la semaine (209 au
+  total). Réponses : 1 STOP (Les Ourmes), 3 absences (Kérantérec jusqu'au 5/11, Cabestan
+  ×2 jusqu'au 1/11). Aucune réponse positive, aucune erreur d'adresse, 0 brouillon restant.
+- Réseaux : TikTok 2 400 vues (+106 %), 1 abonné de plus (12) ; Instagram 431 vues,
+  196 comptes touchés ; LinkedIn page 25 impressions (−48 %), 4 abonnés.
+- Site : 16 visiteurs (contre 3), dont 7 venus d'assistants IA et 7 de Google ; /tarifs.html
+  vue 11 fois ; 4 clics vers le contact (événement `demande_demo`, qui ne compte que le clic
+  vers #contact, pas une demande envoyée) ; 0 demande de démo reçue par mail.
+- App : 2 installations Android, 1 désinstallation ; Supabase : 0 nouveau vacancier réel,
+  0 candidature, 1 nouvel appareil Android (6 appareils au total : 4 iPhone, 2 Android).
+- Vidéos : 4 publiées sur LinkedIn (25, 27, 29, 30/10) ; 3 nouvelles vidéos validées
+  (doudou, piscine, poubelles), 2 mises de côté et remplacées. Make : aucun échec.
+- Démo : le cron `rafraichir-demo` a réussi 7 fois sur 7.
+
+**Points négatifs et cause**
+
+1. **LinkedIn ne touche personne** : 1 à 5 impressions par vidéo. Cause : la page n'a que
+   4 abonnés, et la file publiait les vidéos les plus anciennes ; les 3 vidéos faites selon
+   les nouvelles règles n'étaient pas encore passées.
+2. **Les relevés ont échoué au premier essai** : quand le directeur les lance à la main
+   depuis le cloud, ils ne tournent pas sur le PC de Johan (pas d'approbation de l'appareil),
+   donc sans Chrome. Seuls les passages programmés tournent sur le PC. Ils ont marché à
+   21 h.
+3. **Le temps de visionnage TikTok est court** (2,1 à 2,2 s sur les deux meilleures vidéos).
+4. **Aucune réponse positive aux mails** : la nouvelle version (question sur une animation,
+   depuis le 28/10) n'a que 30 envois. Sous la barre des 50 : on attend.
+5. Les cases « posté sur Instagram / TikTok » de la Vidéothèque ne sont pas cochées, alors
+   que des vidéos sont en ligne : on ne peut pas suivre le stock à poster.
+
+**Décisions appliquées**
+
+- Pôle 2 : la routine LinkedIn publie d'abord la vidéo la plus récente faite selon les
+  règles n° 2 et n° 3 (avec storyboard), au lieu de la plus ancienne. Une seule variable.
+- Pôle 2 : « Ce qui marche en ce moment » mis à jour dans `docs/CAMPAGNES.md` (première
+  seconde = la situation en grand) ; vidéos de la semaine reportées.
+- Pôle 1 : aucun changement de mail (30 envois de la nouvelle version, sous 50). Cabestan
+  passé en « relance » au 3/11, gérant Laurent Devismes noté.
+- Pôle 4 : horaires du dimanche décalés à la demande de Johan (rappel 20 h 37, relevés
+  21 h 07 / 21 h 27 / 21 h 47, revue 22 h 21). Ne plus lancer les relevés à la main.
+  Agenda : Cabestan au 3/11.
+
+**Propositions à Johan**
+
+- Inviter ses relations LinkedIn à suivre la page CampConnect (bouton gratuit « Inviter à
+  suivre » de la page). Rien n'est publié sur son profil ; c'est le seul moyen rapide de
+  sortir des 4 abonnés.
+- Offre pilote : revue toujours prévue le 8/11.
+
+**À mesurer la semaine prochaine** : impressions LinkedIn par vidéo (objectif : plus de 5),
+temps moyen TikTok (objectif : plus de 2,5 s), réponses à la version « question sur une
+animation » une fois 50 envois atteints.
+

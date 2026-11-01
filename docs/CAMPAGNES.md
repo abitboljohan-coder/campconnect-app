@@ -3,16 +3,23 @@
 À relire avant chaque nouvelle campagne (agent `creative-studio`) pour ne pas se répéter.
 Les MP4 sont dans `studio-video/out/` (non versionné).
 
-## Ce qui marche en ce moment (relevé TikTok du 30 oct. 2026, capture de Johan)
+## Ce qui marche en ce moment (relevé du 1er nov. 2026, 7 jours)
 
-| Vidéo | Vues TikTok | Format |
-|---|---|---|
-| « Apéro pétanque : Julien rencontre Thomas » (épinglée) | 1 050 | histoire avec personnages, illustration, vraie carte de groupe de l'app |
-| Téléphone entier avec l'agenda des animations | 781 | vrai écran de l'app sur un fond qui bouge |
-| « Votre camping tient dans une poche » | 749 | plan du camping illustré et animé |
-| « Les campings en 2027 grâce à CampConnect » | 317 | photo de nuit, feu de camp |
-| « POV : t'es la sonnette de l'accueil en août » | 304 | humour illustré |
-| « Le camping en 1998 » | 289 | rétro, tableau de liège |
+TikTok : 2 400 vues (+106 %). Instagram : 431 vues, 196 comptes touchés. LinkedIn (page) : 25 impressions.
+
+| Vidéo | Vues TikTok | Temps moyen | Format |
+|---|---|---|---|
+| « Votre affiche de 9 h ne survit pas à 17 h » (28/10) | 784 | 2,2 s | situation du gérant, avant/après |
+| « Et si votre camping tenait dans une poche ? » (29/10) | 761 | 2,1 s | plan du camping illustré et animé |
+| « (mais plus pour longtemps) Tague ton camping » (27/10) | 320 | 3,6 s | humour, interpellation |
+| « Les sonnettes d'accueil en août » (25/10) | 306 | 3,5 s | humour illustré |
+
+Rappel du relevé du 30 oct. : « Julien rencontre Thomas » 1 050 vues, agenda dans le téléphone 781.
+
+**À retenir :** les situations et les univers illustrés font 2,5 fois plus de vues, mais on
+décroche vers 2 s. La première seconde doit montrer la situation en grand, en image et en
+texte, avant tout logo ou titre. Les vidéos d'humour retiennent plus longtemps (3,5 s).
+Sur LinkedIn, la page n'a que 4 abonnés : 1 à 5 impressions par vidéo.
 
 **À refaire :**
 
@@ -61,7 +68,11 @@ Les 3 premières font 2,5 à 3,5 fois plus de vues que les autres.
 | 27 oct. | A « Le camping se plie dans la poche » | gérants | origami illustré | toutes |
 | 27 oct. | B « Une journée de gérant » | gérants | quotidien 8 h → 22 h | toutes |
 | 27 oct. | C « Verre liquide » | gérants | keynote premium | toutes |
-| 28 oct. | « Orage sur l'affichette » (95/100, décor lac-ardeche) | gérants | humour avant/après : affiche papier rafistolée → correction en direct + notification | LinkedIn |
+| 28 oct. | « Orage sur l'affichette » (95/100, décor lac-ardeche) | gérants | humour avant/après : affiche papier rafistolée → correction en direct + notification | mise de côté (fond répétitif), remplacée le 30/10 |
+| 29 oct. | « Mes vacanciers ne veulent pas d'appli » (96/100) | gérants | objection | mise de côté (fond répétitif), remplacée par le doudou |
+| 29 oct. | « Le doudou perdu » | gérants | situation vécue, univers VHS | Vidéothèque |
+| 30 oct. | « Piscine fermée : une fois, depuis le téléphone » (94/100) | gérants | livret d'accueil, univers BD pop-art | Vidéothèque |
+| 1er nov. | « Les poubelles débordent » (94/100) | gérants | signalement avec photo, univers polaroïds sur nappe vichy | Vidéothèque |
 
 Pistes encore jamais faites : humour (situation du gérant), mini-film avec personnages
 récurrents côté gérant, témoignage **réel** (dès qu'un pilote existe), avant/après
