@@ -51,7 +51,7 @@ export const barre = {
   actif: '#26292E',
   texte: '#A3A6AC',
   texteActif: '#FFFFFF',
-  titre: '#7A7E84',
+  titre: '#888C92',      // 5,2:1 sur la barre (#7A7E84 : 4,3:1)
   separation: 'rgba(255,255,255,0.07)',
 }
 

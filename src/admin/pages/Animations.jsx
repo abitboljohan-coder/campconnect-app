@@ -174,7 +174,7 @@ export default function Animations({ camping }) {
         <Pile espace="lg">
           {[['À venir', aVenir], ['Passées', passees]].filter(([, liste]) => liste.length).map(([titreListe, liste]) => (
           <Pile key={titreListe} espace="sm" style={titreListe === 'Passées' ? { opacity: 0.72 } : undefined}>
-          <Texte variante="libelle" as="h2">{titreListe} · {liste.length}</Texte>
+          <Texte variante="libelle" as="h2" style={{ color: jetons.texteDoux }}>{titreListe} · {liste.length}</Texte>
           {liste.map(anim => {
             const nb = counts[anim.id] || 0
             const debut = anim.debut ? new Date(anim.debut) : null

@@ -184,7 +184,9 @@ function useDefilerVersAncre(hash) {
           .find(h => h.textContent.toLowerCase().includes(ancre.toLowerCase()))
       if (cible || ++essais > 20) clearInterval(iv)
       if (cible) {
-        cible.style.scrollMarginTop = '96px'   // sous l'en-tête collant du téléphone
+        // Sous l'en-tête collant du téléphone, dont la hauteur dépend de l'encoche.
+        const entete = document.querySelector('header.cc-sombre')
+        cible.style.scrollMarginTop = `${(entete?.offsetHeight || 0) + 16}px`
         cible.scrollIntoView({ block: 'start', behavior: 'smooth' })
       }
     }, 100)

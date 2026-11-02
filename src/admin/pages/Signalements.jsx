@@ -28,8 +28,8 @@ const CIBLES = {
 // se lisait comme un onglet plutôt que comme une action sur ce signalement.
 const STATUTS = [
   { id: 'nouveau',  label: 'Nouveaux',  action: 'Rouvrir',          couleur: jetons.danger, bg: jetons.dangerFond },
-  { id: 'en_cours', label: 'En cours',  action: 'Marquer en cours', couleur: '#d97706', bg: '#fffbeb' },
-  { id: 'resolu',   label: 'Résolus',   action: 'Marquer résolu',   couleur: '#16a34a', bg: '#f0fdf4' },
+  { id: 'en_cours', label: 'En cours',  action: 'Marquer en cours', couleur: '#B45309', bg: '#fffbeb' },
+  { id: 'resolu',   label: 'Résolus',   action: 'Marquer résolu',   couleur: '#15803D', bg: '#f0fdf4' },
 ]
 
 export default function Signalements({ camping }) {
@@ -215,7 +215,7 @@ export default function Signalements({ camping }) {
                         {CIBLES[item.cible_type] && item.cible_id && (
                           retires.has(item.cible_id)
                             ? <Texte variante="micro" style={{ color: jetons.succes, fontWeight: graisse.fort }}>✓ Contenu supprimé</Texte>
-                            : <Bouton variante="danger" taille="sm" onClick={() => supprimerContenu(item)} style={{ minHeight: 44 }}>
+                            : <Bouton variante="danger" taille="sm" onClick={() => supprimerContenu(item)} style={{ minHeight: 44, color: jetons.danger }}>
                                 Supprimer {CIBLES[item.cible_type].nom}
                               </Bouton>
                         )}
