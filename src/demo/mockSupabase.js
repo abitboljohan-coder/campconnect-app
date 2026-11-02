@@ -177,7 +177,12 @@ class Query {
       }
       return { data: [Object.fromEntries(this._eq)], error: null }
     }
-    if (this._head || this._count) return { count: rows.length, data: null, error: null }
+    // Un compte respecte les filtres .eq() : sans eux, la démo annonçait
+    // « 3 nouveaux signalements » quand l'onglet Nouveaux n'en montrait que 2.
+    if (this._head || this._count) {
+      const vise = r => this._eq.every(([c, v]) => !(c in r) || r[c] === v)
+      return { count: rows.filter(vise).length, data: null, error: null }
+    }
     if (this._ret) return { data: this._ret, error: null }
     // Les filtres .eq() comptent pour une ligne unique : la mini-fiche de Léa
     // doit ramener Léa, pas la première vacancière de la table. Sans

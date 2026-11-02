@@ -7,7 +7,8 @@ import AnimationForm from '../components/AnimationForm'
 import { dupliquerAnimation } from '../lib/animations'
 import { Bloc, EnTete } from '../components/Bloc'
 import { libelleAvecFr } from '../../lib/profil'
-import { Bouton, Texte, Pile, Badge, Squelette, Vide, Icone, couleur as jetons, espace, graisse, rayon, texte as tailles } from '../../design'
+import { Bouton, Texte, Pile, Badge, Squelette, Vide, Icone, espace, graisse, rayon, texte as tailles } from '../../design'
+import { jetons } from '../theme'
 
 export default function Animations({ camping }) {
   const [animations, setAnimations] = useState([])
@@ -173,7 +174,7 @@ export default function Animations({ camping }) {
         <Pile espace="lg">
           {[['À venir', aVenir], ['Passées', passees]].filter(([, liste]) => liste.length).map(([titreListe, liste]) => (
           <Pile key={titreListe} espace="sm" style={titreListe === 'Passées' ? { opacity: 0.72 } : undefined}>
-          <Texte variante="libelle" as="h2">{titreListe} · {liste.length}</Texte>
+          <Texte variante="libelle" as="h2" style={{ color: jetons.texteDoux }}>{titreListe} · {liste.length}</Texte>
           {liste.map(anim => {
             const nb = counts[anim.id] || 0
             const debut = anim.debut ? new Date(anim.debut) : null
@@ -181,13 +182,11 @@ export default function Animations({ camping }) {
             // animation sans limite, et React affichait ce 0 à côté du titre.
             const complet = anim.places_max > 0 && nb >= anim.places_max
             return (
-              <Bloc key={anim.id} padding="16px 18px" style={{
-                borderLeft: `4px solid ${anim.publiee ? jetons.marque : jetons.bordure}`,
-              }}>
+              <Bloc key={anim.id} padding="16px 18px">
                 <div style={{ display: 'flex', alignItems: 'flex-start', gap: 14 }}>
                 <span aria-hidden="true" style={{
                   width: 44, height: 44, borderRadius: rayon.md,
-                  background: jetons.fond, fontSize: 22, flexShrink: 0,
+                  background: jetons.surfaceDouce, fontSize: 22, flexShrink: 0,
                   display: 'flex', alignItems: 'center', justifyContent: 'center',
                 }}>
                   {anim.emoji || '🎉'}
@@ -203,55 +202,52 @@ export default function Animations({ camping }) {
                     {complet && <Badge ton="danger">Complet</Badge>}
                   </div>
                   <div style={{ fontSize: 12, color: jetons.texteDoux, marginTop: 4, display: 'flex', gap: 12, flexWrap: 'wrap' }}>
-                    {debut && <span>📅 {debut.toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })} à {debut.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}</span>}
-                    {anim.lieu && <span>📍 {anim.lieu}</span>}
+                    {debut && <span>{debut.toLocaleDateString('fr-FR', { weekday: 'short', day: 'numeric', month: 'short' })} · {debut.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}</span>}
+                    {anim.lieu && <span>{anim.lieu}</span>}
                   </div>
-                  {/* Un lien souligné de 19 px de haut : trop petit pour le
-                      doigt. Un vrai bouton, de 44 px. */}
-                  <button
-                    type="button"
-                    onClick={() => voirInscrits(anim)}
-                    aria-label={`Voir les inscrits : ${nb}${anim.places_max > 0 ? ` sur ${anim.places_max}` : ''}`}
-                    style={{
-                      whiteSpace: 'nowrap',
-                      marginTop: espace.sm, minHeight: 44, padding: `0 ${espace.md}px`,
-                      display: 'inline-flex', alignItems: 'center', gap: 6,
-                      color: jetons.marqueTexte, fontWeight: graisse.fort, cursor: 'pointer',
-                      background: jetons.fond, border: `1px solid ${jetons.bordure}`, borderRadius: rayon.sm,
-                      fontFamily: 'inherit', fontSize: tailles.petit,
-                    }}
-                  >
-                    👥 {nb}{anim.places_max > 0 ? `/${anim.places_max}` : ''} inscrit{nb > 1 ? 's' : ''}
-                    <Icone nom="chevron" taille={15} />
-                  </button>
                 </div>
                 </div>
 
                 {/* Actions, sur leur propre ligne : à côté du titre, elles
                     l'écrasaient sur trois lignes dès que l'écran rétrécissait. */}
-                <Pile direction="ligne" espace="sm" retour justifier="flex-end">
+                <Pile direction="ligne" espace="sm" retour aligner="center" style={{ marginTop: espace.md }}>
+                {/* Un lien souligné de 19 px de haut : trop petit pour le
+                    doigt. Un vrai bouton, de 44 px. */}
+                <button
+                  type="button"
+                  onClick={() => voirInscrits(anim)}
+                  aria-label={`Voir les inscrits : ${nb}${anim.places_max > 0 ? ` sur ${anim.places_max}` : ''}`}
+                  style={{
+                    whiteSpace: 'nowrap',
+                    minHeight: 44, padding: `0 ${espace.md}px`, marginRight: 'auto',
+                    display: 'inline-flex', alignItems: 'center', gap: 6,
+                    color: jetons.texte, fontWeight: graisse.fort, cursor: 'pointer',
+                    background: jetons.surfaceDouce, border: 'none', borderRadius: rayon.md,
+                    fontFamily: 'inherit', fontSize: tailles.petit,
+                  }}
+                >
+                  <Icone nom="personnes" taille={15} style={{ color: jetons.texteDoux }} />
+                  {nb}{anim.places_max > 0 ? `/${anim.places_max}` : ''} inscrit{nb > 1 ? 's' : ''}
+                  <Icone nom="chevron" taille={15} />
+                </button>
                   <Bouton
                     variante="secondaire" taille="sm"
                     onClick={() => togglePublie(anim)}
-                    style={{
-                      ...actionStyle, border: 'none',
-                      background: anim.publiee ? jetons.alerteFond : '#f0fdf4',
-                      color: anim.publiee ? jetons.alerte : jetons.succes,
-                    }}
+                    style={anim.publiee ? actionStyle : { ...actionStyle, background: jetons.marque, color: '#fff', border: `1px solid ${jetons.marque}` }}
                   >
                     {anim.publiee ? 'Dépublier' : 'Publier'}
                   </Bouton>
                   <Bouton variante="secondaire" taille="sm"
                           onClick={() => { setCopie(null); setEditAnim(anim); setShowForm(true) }}
-                          style={{ ...actionStyle, border: 'none', background: jetons.surfaceDouce }}>
+                          style={actionStyle}>
                     Modifier
                   </Bouton>
                   <Bouton variante="secondaire" taille="sm" onClick={() => dupliquer(anim)}
-                          style={{ ...actionStyle, border: 'none', background: jetons.surfaceDouce }}>
+                          style={actionStyle}>
                     Dupliquer
                   </Bouton>
                   <Bouton variante="danger" taille="sm" onClick={() => supprimer(anim.id)}
-                          style={actionStyle}>
+                          style={{ ...actionStyle, color: jetons.danger }}>
                     Supprimer
                   </Bouton>
                 </Pile>
@@ -337,4 +333,8 @@ export default function Animations({ camping }) {
 }
 
 // Boutons d'action d'une animation : 44 px, la cible minimale au doigt.
-const actionStyle = { borderRadius: rayon.sm, minHeight: 44 }
+// Actions neutres : seule « Publier », l'action qui manque, prend l'encre.
+const actionStyle = {
+  borderRadius: rayon.md, minHeight: 44,
+  background: jetons.surface, color: jetons.texte, border: `1px solid ${jetons.bordure}`,
+}

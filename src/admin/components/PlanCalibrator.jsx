@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { supabase } from '../../supabase'
-import { couleur as jetons } from '../../design'
+import { jetons } from '../theme'
 
 // Charge Leaflet + leaflet-distortableimage à la demande
 let LPromise = null

@@ -10,7 +10,8 @@ import { Bloc, EnTete } from '../components/Bloc'
 import { toast } from '../../toast'
 import { isNative } from '../../native'
 import { libelleAvecFr } from '../../lib/profil'
-import { Bouton, Texte, Pile, couleur as jetons, espace, graisse, rayon } from '../../design'
+import { Bouton, Texte, Pile, espace, graisse, rayon } from '../../design'
+import { jetons } from '../theme'
 
 export default function Parametres({ camping, session, setCamping }) {
   const [email, setEmail]       = useState(session?.user?.email || '')

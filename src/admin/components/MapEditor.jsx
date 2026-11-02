@@ -3,7 +3,7 @@ import { supabase } from '../../supabase'
 import { CAMPING_LIEUX } from '../utils/analyzeMap'
 import { esc } from '../../utils/esc'
 import { fusionnerCarteConfig } from '../lib/carteConfig'
-import { couleur as jetons } from '../../design'
+import { jetons } from '../theme'
 
 let _L = null
 async function getLeaflet() {

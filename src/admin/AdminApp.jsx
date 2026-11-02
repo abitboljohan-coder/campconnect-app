@@ -12,7 +12,7 @@ import Moderation from './pages/Moderation'
 import Signalements from './pages/Signalements'
 import Parametres from './pages/Parametres'
 import InfosAdmin from './pages/Infos'
-import { couleur as jetons } from '../design'
+import { barre, variablesAdmin } from './theme'
 import { retirerSplash } from '../splash'
 
 function slugify(nom) {
@@ -35,6 +35,21 @@ export default function AdminApp() {
   useEffect(() => {
     if (!loading) retirerSplash()
   }, [loading])
+
+  // Les boutons et champs partagés lisent leur couleur dans les propriétés CSS
+  // de la racine, réglées pour l'app vacancier. L'admin pose les siennes le
+  // temps d'être affichée, et rend les précédentes en partant.
+  useEffect(() => {
+    const racine = document.documentElement
+    const avant = Object.keys(variablesAdmin).map(k => [k, racine.style.getPropertyValue(k)])
+    for (const [k, v] of Object.entries(variablesAdmin)) racine.style.setProperty(k, v)
+    return () => {
+      for (const [k, v] of avant) {
+        if (v) racine.style.setProperty(k, v)
+        else racine.style.removeProperty(k)
+      }
+    }
+  }, [])
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session: s } }) => {
@@ -110,10 +125,10 @@ export default function AdminApp() {
 
   if (loading) return (
     <div style={{
-      minHeight: '100dvh', background: jetons.marqueSombre,
+      minHeight: '100dvh', background: barre.fond,
       display: 'flex', alignItems: 'center', justifyContent: 'center',
     }}>
-      <div style={{ color: '#97C459', fontSize: 18 }}>🌲 Chargement...</div>
+      <div style={{ color: barre.texte, fontSize: 16 }}>Chargement…</div>
     </div>
   )
 

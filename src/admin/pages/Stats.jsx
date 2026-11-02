@@ -7,10 +7,14 @@ import {
 } from 'recharts'
 import { Bloc, EnTete } from '../components/Bloc'
 import StatCard from '../components/StatCard'
-import { Pile, Texte, Vide, couleur as jetons } from '../../design'
+import { Pile, Texte, Vide } from '../../design'
+import { jetons } from '../theme'
 import { codesInterets, libelleAvecFr, libelleInteretFr } from '../../lib/profil'
 
-const COLORS = [jetons.marque, '#f59e0b', '#8b5cf6', '#ef4444', '#06b6d4', '#f97316', '#ec4899', '#14b8a6']
+// Palette des graphiques : l'encre, le saumon de la marque, puis des teintes
+// sourdes. Huit couleurs vives faisaient un camembert de fête foraine.
+const COLORS = [jetons.marque, jetons.accent, '#3BA7AA', '#C9A227', '#8E9298', '#A8402B', '#7FB7A4', '#D9CBB4']
+const GRILLE = '#ECEBE6'
 
 function groupByDate(items, dateField) {
   const counts = {}
@@ -127,8 +131,8 @@ export default function Stats({ camping }) {
       {/* Trois chiffres à présenter à la direction, avant les courbes. */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(130px, 100%), 1fr))', gap: 12 }}>
         <StatCard icone="tente"     valeur={data.totaux.vacanciers}   libelle="Nouveaux vacanciers" sous={TRENTE_JOURS} />
-        <StatCard icone="agenda"    valeur={data.totaux.inscriptions} libelle="Inscriptions aux animations" sous={TRENTE_JOURS} couleur="#6d28d9" />
-        <StatCard icone="personnes" valeur={data.totaux.groupes}      libelle="Groupes créés" sous={TRENTE_JOURS} couleur="#b45309" />
+        <StatCard icone="agenda"    valeur={data.totaux.inscriptions} libelle="Inscriptions aux animations" sous={TRENTE_JOURS} />
+        <StatCard icone="personnes" valeur={data.totaux.groupes}      libelle="Groupes créés" sous={TRENTE_JOURS} />
       </div>
 
         {/* Vacanciers par jour. « Inscriptions vacanciers » se confondait avec
@@ -136,11 +140,11 @@ export default function Stats({ camping }) {
         <ChartCard title="Nouveaux vacanciers par jour" sous={TRENTE_JOURS}>
           <ResponsiveContainer width="100%" height={220}>
             <LineChart data={data.vacParJour}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#f0ede6" />
+              <CartesianGrid strokeDasharray="3 3" stroke={GRILLE} />
               <XAxis dataKey="date" tick={{ fontSize: 11, fill: '#9ca3af' }} interval="preserveStartEnd" />
               <YAxis tick={{ fontSize: 11, fill: '#9ca3af' }} allowDecimals={false} />
               <Tooltip contentStyle={{ borderRadius: 8, border: '1px solid #e5e7eb', fontSize: 13 }} />
-              <Line type="monotone" dataKey="count" stroke="#639922" strokeWidth={2.5} dot={false} name="Inscrits" />
+              <Line type="monotone" dataKey="count" stroke={jetons.marque} strokeWidth={2.5} dot={false} name="Inscrits" />
             </LineChart>
           </ResponsiveContainer>
         </ChartCard>
@@ -150,11 +154,11 @@ export default function Stats({ camping }) {
           <ChartCard title="Top animations — nombre d'inscrits" sous={SAISON}>
             <ResponsiveContainer width="100%" height={220}>
               <BarChart data={data.animStats} layout="vertical">
-                <CartesianGrid strokeDasharray="3 3" stroke="#f0ede6" horizontal={false} />
+                <CartesianGrid strokeDasharray="3 3" stroke={GRILLE} horizontal={false} />
                 <XAxis type="number" tick={{ fontSize: 11, fill: '#9ca3af' }} allowDecimals={false} />
                 <YAxis type="category" dataKey="name" tick={{ fontSize: 11, fill: jetons.texteMoyen }} width={100} />
                 <Tooltip contentStyle={{ borderRadius: 8, border: '1px solid #e5e7eb', fontSize: 13 }} />
-                <Bar dataKey="inscrits" fill="#639922" radius={[0, 4, 4, 0]} name="Inscrits" />
+                <Bar dataKey="inscrits" fill={jetons.accent} radius={[0, 4, 4, 0]} name="Inscrits" />
               </BarChart>
             </ResponsiveContainer>
           </ChartCard>
@@ -194,11 +198,11 @@ export default function Stats({ camping }) {
           <ChartCard title="Top centres d'intérêt" sous={SAISON}>
             <ResponsiveContainer width="100%" height={200}>
               <BarChart data={data.topInterets}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#f0ede6" />
+                <CartesianGrid strokeDasharray="3 3" stroke={GRILLE} />
                 <XAxis dataKey="name" tick={{ fontSize: 12, fill: jetons.texteMoyen }} />
                 <YAxis tick={{ fontSize: 11, fill: '#9ca3af' }} allowDecimals={false} />
                 <Tooltip contentStyle={{ borderRadius: 8, border: '1px solid #e5e7eb', fontSize: 13 }} />
-                <Bar dataKey="value" fill="#8b5cf6" radius={[4, 4, 0, 0]} name="Vacanciers" />
+                <Bar dataKey="value" fill="#3BA7AA" radius={[4, 4, 0, 0]} name="Vacanciers" />
               </BarChart>
             </ResponsiveContainer>
           </ChartCard>
@@ -208,11 +212,11 @@ export default function Stats({ camping }) {
         <ChartCard title="Groupes créés par jour" sous={TRENTE_JOURS}>
           <ResponsiveContainer width="100%" height={200}>
             <LineChart data={data.grpParJour}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#f0ede6" />
+              <CartesianGrid strokeDasharray="3 3" stroke={GRILLE} />
               <XAxis dataKey="date" tick={{ fontSize: 11, fill: '#9ca3af' }} interval="preserveStartEnd" />
               <YAxis tick={{ fontSize: 11, fill: '#9ca3af' }} allowDecimals={false} />
               <Tooltip contentStyle={{ borderRadius: 8, border: '1px solid #e5e7eb', fontSize: 13 }} />
-              <Line type="monotone" dataKey="count" stroke="#f59e0b" strokeWidth={2.5} dot={false} name="Groupes" />
+              <Line type="monotone" dataKey="count" stroke={jetons.accent} strokeWidth={2.5} dot={false} name="Groupes" />
             </LineChart>
           </ResponsiveContainer>
         </ChartCard>

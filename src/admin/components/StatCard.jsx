@@ -1,38 +1,45 @@
-import { Carte, Texte, Pile, Icone, couleur as jetons, graisse, rayon } from '../../design'
+import { Carte, Texte, Pile, Icone, graisse } from '../../design'
+import { jetons } from '../theme'
 
 /**
  * Une mesure, dans une tuile.
  *
- * La teinte reste une propriété — les chiffres se distinguent entre eux, ce
- * que l'accent unique du camping ne peut pas exprimer. Mais elle ne porte plus
- * qu'un aplat discret derrière l'icône : cinq tuiles à cinq couleurs pleines
- * faisaient un arc-en-ciel où rien ne ressortait. Le chiffre, lui, garde
- * toujours la couleur du texte.
+ * Une seule couleur pour toutes les tuiles : cinq icônes de cinq couleurs
+ * faisaient un arc-en-ciel où rien ne ressortait. C'est le chiffre qui doit se
+ * lire en premier ; l'icône, discrète, accompagne le libellé.
+ *
+ * `cellule` : sans le cadre de carte, pour un panneau qui en réunit plusieurs.
  */
-export default function StatCard({ icone, valeur, libelle, sous, couleur = jetons.marqueTexte }) {
-  return (
-    <Carte hauteur="posee" padding={16} style={{ borderRadius: 14 }}>
-      {/* L'icône s'aligne sur le chiffre, et le libellé passe dessous, sur toute
-          la largeur : à côté de l'icône, deux tuiles par ligne sur un téléphone
-          lui laissaient 70 px, et « remplissage » se coupait en deux. */}
-      <Pile espace="sm">
-        <Pile direction="ligne" espace="md" aligner="center">
-          <span aria-hidden="true" style={{
-            width: 36, height: 36, borderRadius: rayon.md,
-            background: `${couleur}14`, color: couleur,
-            display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
-          }}>
-            <Icone nom={icone} taille={19} />
-          </span>
-          <Texte variante="titre" style={{ fontSize: 26, lineHeight: 1 }}>{valeur}</Texte>
-        </Pile>
-        <div style={{ minWidth: 0 }}>
-          <Texte variante="doux" style={{ fontWeight: graisse.fort, color: jetons.texte, lineHeight: 1.3 }}>
-            {libelle}
-          </Texte>
-          {sous && <Texte variante="micro" style={{ marginTop: 2 }}>{sous}</Texte>}
-        </div>
+export default function StatCard({ icone, valeur, libelle, sous, cellule = false, enfant }) {
+  const contenu = (
+    <Pile espace="sm">
+      <Pile direction="ligne" espace="sm" aligner="center" style={{ color: jetons.texteDoux }}>
+        <Icone nom={icone} taille={16} />
+        <Texte variante="doux" as="span" style={{ fontWeight: graisse.fort, color: jetons.texteDoux, lineHeight: 1.3 }}>
+          {libelle}
+        </Texte>
       </Pile>
+      <Texte variante="titre" as="p" style={{
+        fontSize: 32, lineHeight: 1.05, color: jetons.texte,
+        letterSpacing: '-0.02em', fontVariantNumeric: 'tabular-nums',
+      }}>
+        {valeur}
+      </Texte>
+      {enfant}
+      {sous && <Texte variante="micro" style={{ color: jetons.texteDoux }}>{sous}</Texte>}
+    </Pile>
+  )
+  if (cellule) {
+    return (
+      <div style={{ padding: '20px 22px', minWidth: 0, boxShadow: `1px 0 0 ${jetons.bordure}, 0 1px 0 ${jetons.bordure}` }}>
+        {contenu}
+      </div>
+    )
+  }
+  return (
+    <Carte hauteur="posee" padding="20px 22px"
+           style={{ borderRadius: 14, boxShadow: 'none', border: `1px solid ${jetons.bordure}` }}>
+      {contenu}
     </Carte>
   )
 }

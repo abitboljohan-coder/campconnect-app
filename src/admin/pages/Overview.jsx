@@ -10,7 +10,8 @@ import { lienRejoindre } from '../lib/liens'
 import { lireAccesCamping, msAvantNouveauCode } from '../lib/accesCamping'
 import { tauxRemplissage } from '../lib/animations'
 import { Bloc, EnTete } from '../components/Bloc'
-import { Bouton, Texte, Pile, Squelette, Vide, Icone, couleur as jetons, espace, graisse, rayon, texte as tailles } from '../../design'
+import { Bouton, Texte, Pile, Squelette, Vide, Icone, espace, graisse, rayon, texte as tailles } from '../../design'
+import { jetons, couleurCampingParDefaut } from '../theme'
 
 /**
  * Guide de démarrage.
@@ -25,7 +26,7 @@ function GuideDemarrage({ camping, stats }) {
   const pins      = camping?.carte_config?.pins || []
 
   const etapes = [
-    { fait: !!camping?.logo_url || (!!camping?.couleur_principale && camping.couleur_principale !== jetons.marque),
+    { fait: !!camping?.logo_url || (!!camping?.couleur_principale && camping.couleur_principale !== couleurCampingParDefaut),
       label: "Personnalisez l'apparence", detail: 'Logo et couleurs de votre camping', vers: '/admin/apparence', icone: 'apparence' },
     { fait: perimetre.length >= 3,
       label: 'Tracez le contour du camping', detail: 'Le périmètre sert à situer les vacanciers', vers: '/admin/carte', icone: 'carte' },
@@ -190,16 +191,18 @@ export default function Overview({ camping }) {
       {stats.signalements > 0 && (
         <Link to="/admin/signalements" style={{
           display: 'flex', alignItems: 'center', gap: espace.md,
-          padding: `14px ${espace.lg}px`, borderRadius: rayon.lg, textDecoration: 'none',
-          background: jetons.dangerFond, border: '1px solid #fecaca',
+          padding: `14px ${espace.lg}px`, borderRadius: rayon.md, textDecoration: 'none',
+          background: jetons.surface, border: `1px solid ${jetons.bordure}`,
+          borderLeft: `3px solid ${jetons.danger}`,
         }}>
-          <span aria-hidden="true" style={{ fontSize: 22 }}>🚩</span>
-          <Texte variante="corps" as="span" style={{ flex: 1, fontWeight: graisse.fort, color: jetons.danger }}>
+          <Icone nom="drapeau" taille={18} style={{ color: jetons.danger, flexShrink: 0 }} />
+          <Texte variante="corps" as="span" style={{ flex: 1, fontWeight: graisse.fort, color: jetons.texte }}>
             {stats.signalements === 1
               ? '1 nouveau signalement à traiter'
               : `${stats.signalements} nouveaux signalements à traiter`}
           </Texte>
-          <Icone nom="chevron" taille={17} style={{ color: jetons.danger }} />
+          <Texte variante="doux" as="span" style={{ fontWeight: graisse.fort, color: jetons.texte }}>Ouvrir</Texte>
+          <Icone nom="chevron" taille={17} style={{ color: jetons.texteDoux }} />
         </Link>
       )}
 
@@ -210,36 +213,46 @@ export default function Overview({ camping }) {
           fois par jour. Il commençait sous la ligne de flottaison du téléphone. */}
       <AccessCodeCard camping={camping} />
 
-      {/* Deux colonnes dès 320 px (288 px utiles : 2 × 130 + 12), les cinq
-          tuiles sur une ligne à l'écran. Avec 172 px, il fallait 402 px. */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(130px, 100%), 1fr))', gap: 12 }}>
-        <StatCard icone="tente"     valeur={stats.vacanciers}   libelle="Vacanciers présents" sous="Actuellement au camping" />
-        <StatCard icone="sortie"    valeur={departs.semaine}    libelle="Départs sous 7 jours"
-                  sous={departs.aujourdhui.length ? `dont ${departs.aujourdhui.length} aujourd'hui` : "Aucun aujourd'hui"}
-                  couleur="#0284c7" />
-        <StatCard icone="personnes" valeur={stats.groupes}      libelle="Groupes actifs" sous="En ce moment" couleur="#b45309" />
-        <StatCard icone="agenda"    valeur={stats.inscriptions} libelle="Inscriptions aujourd'hui" sous="Depuis minuit" couleur="#6d28d9" />
-        <StatCard icone="tendance"  valeur={`${stats.taux}%`}   libelle="Taux de remplissage" sous="Animations à venir, places limitées" couleur="#be123c" />
+      {/* Les cinq chiffres dans un seul panneau, séparés par des filets : ils
+          se lisent comme un tableau de bord, pas comme cinq cartes éparses.
+          Deux colonnes dès 320 px, les cinq sur une ligne à l'écran ; les filets
+          sont tracés par chaque cellule, sans case grise quand la ligne est incomplète. */}
+      <div style={{
+        display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(140px, 100%), 1fr))',
+        background: jetons.surface, border: `1px solid ${jetons.bordure}`,
+        borderRadius: 14, overflow: 'hidden',
+      }}>
+        <StatCard cellule icone="tente"     valeur={stats.vacanciers}   libelle="Vacanciers présents" sous="Actuellement au camping" />
+        <StatCard cellule icone="sortie"    valeur={departs.semaine}    libelle="Départs sous 7 jours"
+                  sous={departs.aujourdhui.length ? `dont ${departs.aujourdhui.length} aujourd'hui` : "Aucun aujourd'hui"} />
+        <StatCard cellule icone="personnes" valeur={stats.groupes}      libelle="Groupes actifs" sous="En ce moment" />
+        <StatCard cellule icone="agenda"    valeur={stats.inscriptions} libelle="Inscriptions du jour" sous="Depuis minuit" />
+        <StatCard cellule icone="tendance"  valeur={`${stats.taux}%`}   libelle="Taux de remplissage" sous="Animations à places limitées"
+                  enfant={(
+                    <div aria-hidden="true" style={{ height: 4, borderRadius: 999, background: jetons.surfaceDouce, overflow: 'hidden' }}>
+                      <div style={{ width: `${Math.min(100, stats.taux)}%`, height: '100%', background: jetons.accent }} />
+                    </div>
+                  )} />
       </div>
 
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(300px, 100%), 1fr))', gap: espace.xl }}>
 
         {/* Départs du jour */}
         {departs.aujourdhui.length > 0 && (
-          <Bloc titre="👋 Départs aujourd'hui">
+          <Bloc titre="Départs aujourd'hui">
             <Pile espace="sm">
               {departs.aujourdhui.map((v, idx) => (
                 <Pile key={idx} direction="ligne" espace="md" aligner="center"
-                      style={{ padding: '10px 0', borderBottom: `1px solid ${jetons.fond}` }}>
+                      style={{ padding: '10px 0', borderBottom: `1px solid ${jetons.bordure}` }}>
                   <span aria-hidden="true" style={{
-                    width: 38, height: 38, borderRadius: rayon.rond, background: '#e0f2fe',
+                    width: 38, height: 38, borderRadius: rayon.rond, background: jetons.surfaceDouce,
                     display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18, flexShrink: 0,
                   }}>
                     {v.avatar_emoji || '🙂'}
                   </span>
                   <div style={{ flex: 1 }}>
                     <Texte variante="corps" style={{ fontWeight: graisse.fort, color: jetons.texte }}>{v.pseudo}</Texte>
-                    {v.emplacement && <Texte variante="doux" style={{ marginTop: 2 }}>📍 Emplacement {v.emplacement}</Texte>}
+                    {v.emplacement && <Texte variante="doux" style={{ marginTop: 2 }}>Emplacement {v.emplacement}</Texte>}
                   </div>
                 </Pile>
               ))}
@@ -257,7 +270,7 @@ export default function Overview({ camping }) {
             <Pile espace="sm">
               {recentGroupes.map(g => (
                 <Pile key={g.id} direction="ligne" espace="md" aligner="center"
-                      style={{ padding: '10px 0', borderBottom: `1px solid ${jetons.fond}` }}>
+                      style={{ padding: '10px 0', borderBottom: `1px solid ${jetons.bordure}` }}>
                   <span aria-hidden="true" style={{
                     width: 38, height: 38, borderRadius: rayon.md, background: jetons.fond,
                     display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20, flexShrink: 0,
@@ -268,7 +281,7 @@ export default function Overview({ camping }) {
                     <Texte variante="corps" style={{ fontWeight: graisse.fort, color: jetons.texte, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{g.titre}</Texte>
                     <Texte variante="doux" style={{ marginTop: 2 }}>
                       {new Date(g.created_at).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}
-                      {g.lieu && ` · 📍 ${g.lieu}`}
+                      {g.lieu && ` · ${g.lieu}`}
                     </Texte>
                   </div>
                 </Pile>
@@ -287,19 +300,19 @@ export default function Overview({ camping }) {
             <Pile espace="sm">
               {recentInscriptions.map((ins, idx) => (
                 <Pile key={idx} direction="ligne" espace="md" aligner="center"
-                      style={{ padding: '10px 0', borderBottom: `1px solid ${jetons.fond}` }}>
+                      style={{ padding: '10px 0', borderBottom: `1px solid ${jetons.bordure}` }}>
                   <span aria-hidden="true" style={{
                     width: 38, height: 38, borderRadius: rayon.rond,
-                    background: 'var(--cc-accent-voile)',
+                    background: jetons.surfaceDouce,
                     display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    fontSize: 18, flexShrink: 0, color: jetons.marqueTexte, fontWeight: graisse.titre,
+                    fontSize: 15, flexShrink: 0, color: jetons.texteMoyen, fontWeight: graisse.titre,
                   }}>
                     {ins.vacanciers?.pseudo?.[0]?.toUpperCase() || '?'}
                   </span>
                   <div style={{ flex: 1, overflow: 'hidden' }}>
                     <Texte variante="corps" style={{ fontWeight: graisse.fort, color: jetons.texte }}>{ins.vacanciers?.pseudo || '—'}</Texte>
                     <Texte variante="doux" style={{ marginTop: 2, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                      → {ins.animations?.titre || '—'}
+                      {ins.animations?.titre || '—'}
                     </Texte>
                   </div>
                   <Texte variante="micro" style={{ flexShrink: 0 }}>
@@ -364,67 +377,40 @@ function AccessCodeCard({ camping }) {
     }
   }
 
+  // Une seule carte claire. Le bloc noir au code vert fluo prenait la moitié de
+  // l'écran : le code reste bien lisible, mais les chiffres du camping passent
+  // devant. L'adresse brute du lien, illisible, n'est plus affichée : on la copie.
   return (
-    <div style={{
-      display: 'grid',
-      gridTemplateColumns: 'repeat(auto-fit, minmax(min(260px, 100%), 1fr))',
-      gap: 14,
-    }}>
-      {/* Code tournant */}
-      <div className="cc-sombre" style={{
-        background: jetons.marqueSombre, borderRadius: rayon.lg, padding: '20px 22px',
-        display: 'flex', alignItems: 'center', gap: espace.xl,
-      }}>
-        <div style={{ flex: 1 }}>
-          <Texte variante="libelle" as="span" style={{ color: 'rgba(151,196,89,0.7)', display: 'block', marginBottom: 6 }}>
-            Code d'accès vacanciers
-          </Texte>
+    <Bloc>
+      <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: `${espace.lg}px ${espace.xl}px` }}>
+        <div style={{ flex: '1 1 200px', minWidth: 0 }}>
+          <Pile direction="ligne" espace="sm" aligner="center" style={{ color: jetons.texteDoux, marginBottom: 6 }}>
+            <Icone nom="cle" taille={16} />
+            <Texte variante="doux" as="span" style={{ fontWeight: graisse.fort, color: jetons.texteDoux }}>Code d'accès du jour</Texte>
+          </Pile>
           {/* Le code change toutes les heures : une région live l'annonce au
               lieu de le laisser muter en silence sous les yeux du gérant. */}
           <div role="status" style={{
-            fontFamily: 'monospace', fontSize: 42, fontWeight: graisse.affiche,
-            color: '#97C459', letterSpacing: 8, lineHeight: 1,
+            fontSize: 40, fontWeight: graisse.affiche, color: jetons.texte,
+            letterSpacing: 6, lineHeight: 1, fontVariantNumeric: 'tabular-nums',
           }}>
             {code}
           </div>
-          <Texte variante="micro" style={{ color: 'rgba(255,255,255,0.45)', marginTop: espace.sm }}>
+          <Texte variante="micro" style={{ color: jetons.texteDoux, marginTop: espace.sm }}>
             {echec && !acces
               ? 'Code indisponible : vérifiez la connexion et rechargez la page.'
-              : <>Change dans <strong style={{ color: 'rgba(151,196,89,0.8)' }}>{remaining}</strong></>}
+              : <>Change dans <strong style={{ color: jetons.texte }}>{remaining}</strong></>}
           </Texte>
-        </div>
-        <div style={{ textAlign: 'center' }}>
-          {/* Sur le bloc sombre, l'icône hérite d'une couleur de texte presque
-              noire et disparaît : la teinte est posée explicitement. */}
-          <Icone nom="cle" taille={26} style={{
-            marginBottom: espace.xs, marginLeft: 'auto', marginRight: 'auto',
-            color: 'rgba(151,196,89,0.85)',
-          }} />
-          <Texte variante="micro" style={{ fontSize: 10, color: 'rgba(255,255,255,0.45)' }}>
-            Affiché à<br/>la réception
-          </Texte>
-        </div>
-      </div>
-
-      {/* Lien QR / accès direct */}
-      <Bloc>
-        <Texte variante="libelle" as="span">Lien QR code direct</Texte>
-        <div style={{
-          fontFamily: 'monospace', fontSize: tailles.petit, color: jetons.marqueTexte,
-          background: '#f0fdf4', borderRadius: rayon.sm, padding: `10px ${espace.md}px`,
-          wordBreak: 'break-all',
-        }}>
-          {joinUrl}
         </div>
         {/* « Générez un QR code » laissait croire qu'il fallait un outil
             externe : l'application le génère déjà, dans Paramètres. */}
-        <Texte variante="doux" style={{ lineHeight: 1.6 }}>
-          Votre QR code est prêt dans Paramètres : affichez-le à la réception. Les vacanciers qui le scannent entrent sans code.
+        <Texte variante="doux" style={{ flex: '1 1 240px', lineHeight: 1.6, color: jetons.texteDoux }}>
+          Affichez le QR code à la réception : les vacanciers qui le scannent entrent sans code.
         </Texte>
-        <Pile direction="ligne" espace="sm" retour>
+        <Pile direction="ligne" espace="sm" retour style={{ flex: '0 0 auto' }}>
           <Link to="/admin/parametres#qr" style={{
             display: 'inline-flex', alignItems: 'center', gap: 6, minHeight: 44,
-            padding: `0 ${espace.lg}px`, borderRadius: rayon.sm, textDecoration: 'none',
+            padding: `0 ${espace.lg}px`, borderRadius: rayon.md, textDecoration: 'none',
             background: jetons.marque, color: '#fff', fontWeight: graisse.fort, fontSize: tailles.petit,
           }}>
             Voir le QR code <Icone nom="chevron" taille={15} />
@@ -432,12 +418,12 @@ function AccessCodeCard({ camping }) {
           <Bouton
             variante="secondaire" taille="sm"
             onClick={copier}
-            style={{ minHeight: 44, borderRadius: rayon.sm, border: 'none', background: jetons.fond, color: jetons.marqueTexte }}
+            style={{ minHeight: 44, borderRadius: rayon.md, border: `1px solid ${jetons.bordure}`, background: jetons.surface, color: jetons.texte }}
           >
             Copier le lien
           </Bouton>
         </Pile>
-      </Bloc>
-    </div>
+      </div>
+    </Bloc>
   )
 }
