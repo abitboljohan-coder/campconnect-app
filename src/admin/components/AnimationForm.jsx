@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import ChoixEmoji from '../../components/ChoixEmoji'
-import { couleur as jetons } from '../../design'
+import { jetons } from '../theme'
 import { dateLocale, heureLocale, creneauParDefaut, estPasse } from '../lib/animations'
 
 const EMOJIS = ['🎉', '🏊', '🎸', '⚽', '🎯', '🎤', '🧘', '🚴', '🎮', '🍕', '🎨', '🏐', '🌅', '🔥', '🎭']

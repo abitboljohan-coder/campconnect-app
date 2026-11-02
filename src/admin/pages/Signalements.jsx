@@ -3,7 +3,8 @@ import { supabase } from '../../supabase'
 import { toast } from '../../toast'
 import { lireVacanciersDuCamping } from '../../lib/vacanciers'
 import { Bloc, EnTete } from '../components/Bloc'
-import { Bouton, Texte, Pile, Squelette, Vide, couleur as jetons, espace, graisse, rayon } from '../../design'
+import { Bouton, Texte, Pile, Squelette, Vide, espace, graisse, rayon } from '../../design'
+import { jetons } from '../theme'
 
 const CAT_LABELS = {
   proprete: { emoji: '🧹', label: 'Propreté' },
@@ -136,8 +137,8 @@ export default function Signalements({ camping }) {
               display: 'flex', alignItems: 'center', gap: 7,
               padding: '9px 16px', minHeight: 44, borderRadius: 10, cursor: 'pointer',
               fontSize: 14, fontWeight: 600,
-              background: filtre === s.id ? s.couleur : '#fff',
-              border: `1.5px solid ${filtre === s.id ? s.couleur : jetons.bordure}`,
+              background: filtre === s.id ? jetons.marque : jetons.surface,
+              border: `1px solid ${filtre === s.id ? jetons.marque : jetons.bordure}`,
               color: filtre === s.id ? '#fff' : jetons.texteMoyen,
             }}
           >
@@ -242,7 +243,7 @@ export default function Signalements({ camping }) {
                           style={{
                             padding: '6px 12px', minHeight: 44, borderRadius: 8, cursor: 'pointer',
                             fontSize: 12.5, fontWeight: 600,
-                            background: s.bg, color: s.couleur, border: `1px solid ${s.couleur}33`,
+                            background: s.id === 'resolu' ? jetons.marque : jetons.surface, color: s.id === 'resolu' ? '#fff' : jetons.texte, border: `1px solid ${s.id === 'resolu' ? jetons.marque : jetons.bordure}`,
                           }}
                         >
                           {s.action}

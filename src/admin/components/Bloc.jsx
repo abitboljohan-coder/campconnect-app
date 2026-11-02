@@ -1,4 +1,5 @@
-import { Carte, Texte, Pile, couleur as jetons, espace, graisse, rayon } from '../../design'
+import { Carte, Texte, Pile, espace, graisse, rayon } from '../../design'
+import { jetons } from '../theme'
 
 // Trois pages d'administration définissaient chacune leur propre `Card` et son
 // propre `Alert`, avec trois rayons et deux gris. Ce sont les deux seules
@@ -7,9 +8,10 @@ import { Carte, Texte, Pile, couleur as jetons, espace, graisse, rayon } from '.
 /** Section titrée de l'administration. */
 export function Bloc({ titre, children, ...reste }) {
   return (
-    <Carte hauteur="posee" padding="20px 22px" style={{ borderRadius: 14 }} {...reste}>
+    <Carte hauteur="posee" padding="20px 22px" {...reste}
+           style={{ borderRadius: 14, boxShadow: 'none', border: `1px solid ${jetons.bordure}`, ...reste.style }}>
       <Pile espace="lg">
-        {titre && <Texte variante="sousTitre" as="h2" style={{ fontSize: 16 }}>{titre}</Texte>}
+        {titre && <Texte variante="sousTitre" as="h2" style={{ fontSize: 16, color: jetons.texte }}>{titre}</Texte>}
         {children}
       </Pile>
     </Carte>
@@ -46,8 +48,8 @@ export function Alerte({ type = 'succes', children }) {
 export function EnTete({ titre, sous }) {
   return (
     <Pile espace="xs">
-      <Texte variante="titre" style={{ fontSize: 24 }}>{titre}</Texte>
-      {sous && <Texte variante="corps">{sous}</Texte>}
+      <Texte variante="titre" style={{ fontSize: 28, color: jetons.texte, letterSpacing: '-0.02em' }}>{titre}</Texte>
+      {sous && <Texte variante="corps" style={{ color: jetons.texteDoux }}>{sous}</Texte>}
     </Pile>
   )
 }
