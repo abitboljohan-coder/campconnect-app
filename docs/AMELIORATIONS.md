@@ -250,3 +250,10 @@ Le plus récent est en haut. Chaque revue contient :
 temps moyen TikTok (objectif : plus de 2,5 s), réponses à la version « question sur une
 animation » une fois 50 envois atteints.
 
+
+### Bilan mails, mercredi 4/11/2026 (check-up demandé par Johan)
+
+- **Envois de la version actuelle** (« question sur une animation + je vous prépare un aperçu », depuis le 28/10) : 25 brouillons créés dans le fichier de prospects, et 30 mails partis du 28 au 30/10 d'après le relevé du 1/11. Le relevé du 4/11 (PC de Johan, 21 h 07) était absent à 21 h 46 : les envois du 2 au 4/11 ne sont pas recoupés. Relances J+4 : 20 fiches dans la collection « relances » (5 créées aujourd'hui).
+- **Réponses depuis le 28/10** : aucune réponse positive, aucune question ni demande d'aperçu. Un STOP (Les Ourmes, avant le 28/10), des absences (Kérantérec jusqu'au 5/11, Cabestan jusqu'au 1/11).
+- **Décision : on garde le mail tel quel.** Moins de 50 envois confirmés de cette version : la règle « pas de retour, on change » ne s'applique pas encore. On ne change rien aujourd'hui.
+- **Bilan reporté au dimanche 8/11**, après les relevés de 21 h, une fois les envois du 2 au 7/11 comptés. Si toujours aucune réponse positive à 50 envois : changer UNE seule chose (l'objet, ou l'accroche, ou le ciblage), jamais l'offre ni le prix.
