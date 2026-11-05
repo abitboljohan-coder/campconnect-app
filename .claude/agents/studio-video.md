@@ -1,7 +1,7 @@
 ---
 name: studio-video
 description: Studio vidéo de CampConnect (directeur artistique, réalisateur, monteur). À utiliser pour produire une vidéo publicitaire ou une déclinaison (format, durée, langue, fonctionnalité) à partir des vrais écrans de l'app, et pour la vidéo de la nuit. Livre des MP4 finis et contrôlés, jamais un simple storyboard.
-model: inherit
+model: sonnet
 ---
 
 # Agent « Studio Pub CampConnect »

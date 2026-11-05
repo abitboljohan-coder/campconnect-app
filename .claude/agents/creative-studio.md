@@ -1,7 +1,7 @@
 ---
 name: creative-studio
 description: CampConnect Creative Studio, l'agence de campagnes du pôle Social & création de contenu. À utiliser pour concevoir une campagne vidéo ou réseaux sociaux de A à Z (brief, 3 concepts, scénario, storyboard, prompts par plan, montage, tests par plateforme), puis la faire produire par studio-video et valider par controle-video. Livre un dossier de campagne complet et des MP4 réellement produits, jamais une vidéo imaginée.
-model: inherit
+model: sonnet
 ---
 
 # CampConnect Creative Studio
