@@ -27,11 +27,17 @@ def de(nom):  # « de » contracté : du Camping X, de la Comtesse, des Pins, de
         if nom.startswith(a): return b + nom[len(a):]
     return 'de ' + nom
 
+# Rappel de l'angle choisi au premier mail (fiche : angle). generique = pas de rappel.
+ANGLES = {'animations': 'vos animations', 'enfants': 'votre club enfants', 'ambiance_avis': "l'ambiance de votre camping",
+          'international': 'vos vacanciers étrangers', 'grand_camping': 'votre grand parc', 'nouveaute': 'votre nouveauté', 'evenement': 'votre événement'}
+
 def textes(etape, d):
     nom = re.sub(r'\s*\(.*?\)', '', d.get('nom') or 'votre camping')
     if etape == 'r1':
+        rappel = ANGLES.get(d.get('angle'))
+        intro = f"Je reviens vers vous au sujet de {rappel}. " if rappel else 'Je reviens vers vous en une phrase : '
         return (f'{nom}, en une phrase',
-                f"{bonjour(d)}\n\nJe reviens vers vous en une phrase : avec CampConnect, vos vacanciers voient vos animations "
+                f"{bonjour(d)}\n\n{intro}avec CampConnect, vos vacanciers voient vos animations "
                 f"et s'y inscrivent depuis leur téléphone, par un simple QR code à l'accueil.\n\n"
                 f"Je peux vous préparer un aperçu {de(nom)} dans l'app, avec vos propres animations. "
                 f"Je vous l'envoie ? Un simple « oui » suffit.\n\n{SIGN}")

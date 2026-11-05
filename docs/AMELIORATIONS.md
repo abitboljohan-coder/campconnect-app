@@ -184,6 +184,12 @@ et combien attendent d'être postées.
     > offert toute la saison (ensuite, vous décidez)… Répondez juste "pilote". »
   - Ne pas l'appliquer sans son accord.
 
+## Ce qui marche
+
+*Rubrique alimentée chaque dimanche par la revue de direction : taux de réponse et taux de oui par angle, par objet, par type de mail, par région et par taille de camping, avec le nombre d'envois de chaque groupe. Première mesure : à partir de 15 envois par angle (fin novembre 2026).*
+
+État au 5/11/2026 : 0 réponse positive sur 183 envois. Réponses reçues : 1 STOP (Les Ourmes), 2 refus parce qu'une appli ou un livret existe déjà (Le Tiradou, Le Picard), 2 absences.
+
 ## Journal
 
 Le plus récent est en haut. Chaque revue contient :
