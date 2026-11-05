@@ -401,6 +401,13 @@ Quand plusieurs solutions sont possibles :
 
 Choisir celle qui apporte le plus de valeur aux vacanciers et aux gérants avec le minimum de complexité technique.
 
+## Économie de tokens (demande de Johan, 5/11/2026)
+
+- Réponses courtes par défaut : l'essentiel, sans recapitulatif.
+- Ne lancer un agent que s'il apporte vraiment quelque chose ; un seul contrôle vidéo complet par passage.
+- Ne pas relire des planches d'images ni des documents déjà lus.
+- Nouvelle conversation toutes les semaines : lire `docs/REPRISE.md` en premier.
+
 ## graphify
 
 This project has a knowledge graph at graphify-out/ with god nodes, community structure, and cross-file relationships.
