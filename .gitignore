@@ -44,3 +44,6 @@ fcm-service-account*.json
 .claude/*
 !.claude/skills/
 !.claude/agents/
+
+# graphify : carte du code régénérée à chaque session, ne pas commiter
+graphify-out/
