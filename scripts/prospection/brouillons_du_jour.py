@@ -19,8 +19,9 @@ for f in sorted(glob.glob(f'{S}/crm-{jour}/prospects/*.json')):
     if d.get('note_brouillon') or not d.get('email') or not d.get('email_brouillon'): continue
     texte = d['email_brouillon'].strip()
     paras = texte.split('\n\n')
-    if d.get('perso') and paras and paras[0].startswith('Bonjour'):
-        paras.insert(1, d['perso'].strip())  # fait vérifié relié à CampConnect (fiche : perso, angle, perso_source)
+    i = next((k for k, p in enumerate(paras) if p.startswith('Bonjour')), None)
+    if d.get('perso') and i is not None:
+        paras.insert(i + 1, d['perso'].strip())  # fait vérifié relié à CampConnect (fiche : perso, angle, perso_source)
     texte = '\n\n'.join(paras)
     objet = d.get('email_objet', '')
     if texte.startswith('Objet :'):
