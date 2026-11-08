@@ -33,6 +33,7 @@ for f in sorted(glob.glob(f'{S}/crm-{jour}/prospects/*.json')):
     print(f'{doc} | {d["email"]} | {objet} | {r.stdout.strip() or r.stderr.strip()}')
     if r.stdout.strip() == 'Accepted':
         p = f'{S}/mails-{jour}/{doc}.json'
-        json.dump({'note_brouillon': f'Brouillon Infomaniak créé le {date}'}, open(p, 'w'), ensure_ascii=False)
+        json.dump({'note_brouillon': f'Brouillon Infomaniak créé le {date}', 'version_mail': 'question_animation_apercu',
+                   'angle': d.get('angle') or 'generique'}, open(p, 'w'), ensure_ascii=False)  # suivi par version et par angle
         ecritures.append({'op': 'update', 'collection': 'prospects', 'doc_id': doc, 'if_version': version, 'file_path': p})
 print(json.dumps(ecritures, ensure_ascii=False))

@@ -200,6 +200,41 @@ Le plus récent est en haut. Chaque revue contient :
 - les propositions en attente de Johan ;
 - ce qu'on mesure la semaine suivante.
 
+### Revue du dimanche 8 novembre 2026 (faite à la demande de Johan, avant les relevés)
+
+**Chiffres de la semaine (2 au 8/11)**
+
+- 17 nouveaux campings (objectif 50), 17 premiers mails et 20 relances en brouillon (37), Make : 0 échec.
+- Réponses : 2, deux « déjà équipé » (Le Tiradou : appli Flower ; Le Picard : livret numérique). Aucun oui. Clients : 0.
+- Total : 230 fiches, ~175 mails partis, 6 réponses depuis le début (1 « pourquoi pas », 2 STOP, 3 refus).
+- Contact chaud : Les Étangs Mina, recommandé par Samy (mail du 5/11) ; appel prévu le 10/11 au 05 46 22 82 61 si pas de réponse.
+- Envois réels de la semaine : donnée manquante (Johan envoie à la main ; relevé Mails non fait, voir plus bas).
+
+**Ce qui a marché** : la recommandation (Mina, via Samy) est le seul contact chaud de la semaine. Aucun angle mesurable (2 envois avec angle).
+
+**Points négatifs et cause**
+
+1. **La recherche de campings tourne au ralenti** (17 au lieu de 50). Cause prouvée : les routines créées par Johan tournent dans l'environnement cloud « Default », réseau limité ; les sites des campings y sont bloqués (« outside the session's allowed network domains »). L'environnement « Par défaut » est en accès complet.
+2. **La phrase personnalisée n'entrait pas dans les mails** jusqu'au 6/11 (le script cherchait « Bonjour » en tête, alors que la tête est « Objet : »). Corrigé le 6/11.
+3. **Relevés du PC** : « Relevé 1 Mails » et « Relevé 2 Site et stores » ont été mis en pause le 8/11 (« appareil absent ») : le PC n'était pas connecté à 21 h. Aucun relevé depuis le 2/11.
+4. **Objection « déjà équipé »** : 3 refus sur 6 réponses ; Le Tiradou et 15 fiches du fichier sont dans le réseau Flower.
+5. Revue du 6/11 (test de la routine) : push GitHub impossible, son journal est resté dans le tableau de bord (taches/direction-journal) ; sa décision (suivi `version_mail` + `angle`) est réappliquée ici.
+
+**Décisions appliquées**
+
+- Pôle 4 : `brouillons_du_jour.py` écrit `version_mail` et `angle` dans chaque fiche au moment du brouillon (suivi seulement, pas de changement de texte).
+- Pôle 4 : routines en double coupées le 6/11 (brouillons et revue) ; celles de Johan, avec connecteurs, restent.
+- Pôle 1 : aucun changement de mail (moins de 50 envois confirmés de la version actuelle).
+
+**Propositions en attente de Johan**
+
+- Passer l'environnement « Default » en accès réseau complet (ou mettre la routine de recherche sur « Par défaut ») : condition pour revenir à 10 campings par jour.
+- Passer la routine de recherche de 5 à 10 campings par jour.
+- Campings Flower : ajouter une phrase « ça complète l'app Flower » ou les mettre de côté.
+- Réactiver les relevés 1 et 2 et laisser le PC allumé le dimanche soir.
+
+**À mesurer la semaine prochaine** : nombre de campings trouvés par jour après le changement de réseau, envois par version et par angle, réponse de Mina.
+
 ### Revue du dimanche 1er novembre 2026
 
 **Chiffres de la semaine (25/10 → 31/10)**
