@@ -192,7 +192,17 @@ et combien attendent d'être postées.
 
 ## Journal
 
-Le plus récent est en haut. Chaque revue contient :
+Le plus récent est en haut.
+
+### Bilan des 50 envois, dimanche 8/11/2026 (routine « Bilan mails 50 envois », reportée du 4/11)
+
+- Version « question sur une animation + aperçu » : **non mesurable**. Aucune fiche n'a encore de `version_mail` (suivi ajouté le 8/11). Le seul envoi daté depuis le 28/10 avec un type renseigné est 1 (type « générique »).
+- Envois réels : **donnée manquante**. Les brouillons partent depuis l'Infomaniak de Johan, à la main. Le relevé Mails de dimanche 8/11 n'existe pas dans Drive (la tâche était en pause, « appareil absent »).
+- Réponses positives : 0. Seule réponse notée au total : 1 « perdu » (refus).
+- Seuil de 50 envois confirmés : **non atteint**, donc on garde. Aucun changement de mail.
+- Prochaine étape : relevé Mails à réactiver (PC allumé dimanche 21h), puis rebilan quand le nombre d'envois confirmé atteint 50.
+
+ Chaque revue contient :
 
 - les chiffres de la semaine ;
 - les points négatifs et leur cause ;
