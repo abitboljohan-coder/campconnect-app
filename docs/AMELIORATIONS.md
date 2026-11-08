@@ -194,6 +194,15 @@ et combien attendent d'être postées.
 
 Le plus récent est en haut.
 
+### Bilan des 50 envois, recompté avec les relevés Mails du 1/11 et du 8/11
+
+- Premiers mails de la version « question sur une animation + aperçu » depuis le 28/10 : **47** (30 du 28 au 30/10, puis 17 du 2 au 6/11), plus le mail recommandé à Mina (« Samy m'a parlé de vous »).
+- Relances « en une phrase » envoyées du 2 au 6/11 : 19. Réponses : 0.
+- Réponses à la version : 2 sur 47 (4 %), 2 refus « déjà équipé » (Le Tiradou : appli Flower ; Le Picard : livret numérique), toutes deux en variante A (objet « moules-frites »). 0 oui, 0 STOP, 0 erreur.
+- Johan a tout envoyé : 39 mails la semaine du 2/11, 0 brouillon restant.
+- Décision : **47 < 50, on attend.** Les 10 premiers mails de lundi 9/11 font passer le seuil. Bilan final le mercredi 11/11, avec le relevé Mails du mercredi soir. Si c'est encore 0 oui à ce moment-là, une seule chose changera (piste : l'objet, ou exclure les campings déjà équipés d'une appli).
+- Constat : les 2 refus portent sur l'outil déjà en place, pas sur le mail. Les mails sont lus.
+
 ### Relevés du dimanche 8/11/2026 (lancés à la main par Johan)
 
 - Site (1–7/11) : 19 visiteurs (+27 %), 38 sessions, 3 clics « demande de démo », 3 clics « télécharger l'app », 1 formulaire (« Jojinours camping », probablement un test). Sources : direct 25, Google 10.
