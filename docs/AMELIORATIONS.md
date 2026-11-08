@@ -194,6 +194,17 @@ et combien attendent d'être postées.
 
 Le plus récent est en haut.
 
+### Relevés du dimanche 8/11/2026 (lancés à la main par Johan)
+
+- Site (1–7/11) : 19 visiteurs (+27 %), 38 sessions, 3 clics « demande de démo », 3 clics « télécharger l'app », 1 formulaire (« Jojinours camping », probablement un test). Sources : direct 25, Google 10.
+- Play Store : 2 installations, 1 désinstallation, 0 plantage, 0 avis.
+- TikTok : 1,7 k vues (−28 %), +3 abonnés (15). Meilleure vidéo : « Le camping où tu connais personne le 1er jour… » (776 vues), mais 2,65 s de visionnage moyen et 0,9 % vont au bout : l'accroche décroche.
+- Instagram : 85 comptes touchés, 282 vues. Meilleur Reel : le même thème (« POV : t'arrives et tu connais personne », 312 vues).
+- LinkedIn : 61 impressions sur la semaine, 0 commentaire, 4 abonnés.
+- Mails : relevé non fait (onglet Infomaniak absent). Le bilan des 50 envois reste en attente.
+- Décision pôle 2 : le thème « tu connais personne » gagne sur TikTok et sur Instagram, on le garde. À corriger : la première seconde (texte choc dès l'image 1) et des vidéos plus courtes (10–15 s).
+- Piste : message Instagram de Camping Canoë Gorges du Tarn (réponse automatique), à relancer par téléphone au 05 65 59 85 17.
+
 ### Bilan des 50 envois, dimanche 8/11/2026 (routine « Bilan mails 50 envois », reportée du 4/11)
 
 - Version « question sur une animation + aperçu » : **non mesurable**. Aucune fiche n'a encore de `version_mail` (suivi ajouté le 8/11). Le seul envoi daté depuis le 28/10 avec un type renseigné est 1 (type « générique »).
