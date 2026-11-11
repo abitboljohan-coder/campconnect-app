@@ -110,6 +110,17 @@ const STRINGS = {
   'accueil.aucun_groupe':  { fr: "Aucun groupe actif pour l'instant.", en: 'No active groups right now.', es: 'No hay grupos activos ahora.', nl: 'Nu geen actieve groepen.' },
   'accueil.premier_creer': { fr: 'Soyez le premier à en créer un !', en: 'Be the first to create one!', es: '¡Sé el primero en crear uno!', nl: 'Wees de eerste die er een aanmaakt!' },
   'accueil.creer_groupe':  { fr: '+ Créer un groupe', en: '+ Create a group', es: '+ Crear un grupo', nl: '+ Groep aanmaken' },
+
+  // ── Bandeau « gérant ? » des campings de démo ────────────────────────────
+  'apercu.question':     { fr: 'Vous êtes gérant de camping ?', en: 'Do you run a campsite?', es: '¿Gestiona un camping?', nl: 'Beheert u een camping?' },
+  'apercu.promesse':     { fr: 'Je prépare le même aperçu pour le vôtre.', en: 'I’ll prepare the same preview for yours.', es: 'Preparo la misma vista previa para el suyo.', nl: 'Ik maak dezelfde preview voor die van u.' },
+  'apercu.ouvrir':       { fr: 'Ça m’intéresse', en: 'I’m interested', es: 'Me interesa', nl: 'Ik heb interesse' },
+  'apercu.camping':      { fr: 'Nom du camping', en: 'Campsite name', es: 'Nombre del camping', nl: 'Naam van de camping' },
+  'apercu.contact':      { fr: 'Email ou téléphone', en: 'Email or phone', es: 'Email o teléfono', nl: 'E-mail of telefoon' },
+  'apercu.envoyer':      { fr: 'Recevoir mon aperçu', en: 'Get my preview', es: 'Recibir mi vista previa', nl: 'Mijn preview ontvangen' },
+  'apercu.merci':        { fr: 'C’est noté, vous recevez votre aperçu sous 48 h.', en: 'Got it, you’ll receive your preview within 48 hours.', es: 'Anotado, recibirá su vista previa en 48 h.', nl: 'Genoteerd, u ontvangt uw preview binnen 48 uur.' },
+  'apercu.err_camping':  { fr: 'Indiquez le nom de votre camping.', en: 'Please enter your campsite’s name.', es: 'Indique el nombre de su camping.', nl: 'Vul de naam van uw camping in.' },
+  'apercu.err_contact':  { fr: 'Indiquez un email ou un numéro de téléphone valide.', en: 'Please enter a valid email or phone number.', es: 'Indique un email o un teléfono válido.', nl: 'Vul een geldig e-mailadres of telefoonnummer in.' },
   'accueil.visible24':     { fr: '(visible 24h)', en: '(visible for 24h)', es: '(visible 24h)', nl: '(24u zichtbaar)' },
   'accueil.statut_ph':     { fr: 'ex : BBQ ce soir emplacement 47, tous invités !', en: 'e.g. BBQ tonight at pitch 47, everyone welcome!', es: 'ej.: ¡Barbacoa esta noche en la parcela 47, todos invitados!', nl: 'bijv. BBQ vanavond op plek 47, iedereen welkom!' },
   'accueil.publier':       { fr: 'Publier', en: 'Post', es: 'Publicar', nl: 'Plaatsen' },
