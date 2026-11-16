@@ -9,6 +9,9 @@ CLE = open(os.environ.get('CLE_BROUILLON_FICHIER', f'{S}/cle-brouillon.txt')).re
 LEGAL = ('<p style="font-size:12px;color:#888;margin-top:24px">CampConnect, entreprise immatriculée au RCS d\'Évry '
          '(SIREN 109 189 803). Vous recevez ce message car votre adresse figure sur le site de votre camping. '
          'Pour ne plus être contacté, répondez simplement STOP.</p>')
+LEGAL_EN = ('<p style="font-size:12px;color:#888;margin-top:24px">CampConnect, a company registered in Évry, France '
+            '(SIREN 109 189 803). You are receiving this message because your address is listed on your campsite\'s website. '
+            'To stop hearing from us, simply reply STOP.</p>')
 def para(t):
     t = html.escape(t).replace('\n', '<br>')
     return re.sub(r'(https://[^\s<]+)', r'<a href="\1">\1</a>', t)
@@ -19,7 +22,7 @@ for f in sorted(glob.glob(f'{S}/crm-{jour}/prospects/*.json')):
     if d.get('note_brouillon') or not d.get('email') or not d.get('email_brouillon'): continue
     texte = d['email_brouillon'].strip()
     paras = texte.split('\n\n')
-    i = next((k for k, p in enumerate(paras) if p.startswith('Bonjour')), None)
+    i = next((k for k, p in enumerate(paras) if p.startswith(('Bonjour', 'Hello'))), None)
     if d.get('perso') and i is not None:
         paras.insert(i + 1, d['perso'].strip())  # fait vérifié relié à CampConnect (fiche : perso, angle, perso_source)
     texte = '\n\n'.join(paras)
@@ -27,7 +30,7 @@ for f in sorted(glob.glob(f'{S}/crm-{jour}/prospects/*.json')):
     if texte.startswith('Objet :'):
         premiere, _, texte = texte.partition('\n')
         objet = premiere.replace('Objet :', '').strip(); texte = texte.strip()
-    corps = ''.join(f'<p>{para(p)}</p>' for p in texte.split('\n\n') if p.strip()) + LEGAL
+    corps = ''.join(f'<p>{para(p)}</p>' for p in texte.split('\n\n') if p.strip()) + (LEGAL_EN if d.get('langue') == 'en' else LEGAL)
     r = subprocess.run(['curl', '-s', '-m', '60', '--form-string', f'cle={CLE}', '--form-string', f'destinataire={d["email"]}',
                         '--form-string', f'objet={objet}', '--form-string', f'html={corps}', HOOK], capture_output=True, text=True)
     print(f'{doc} | {d["email"]} | {objet} | {r.stdout.strip() or r.stderr.strip()}')

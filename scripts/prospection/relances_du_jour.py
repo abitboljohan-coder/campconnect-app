@@ -31,7 +31,29 @@ def de(nom):  # « de » contracté : du Camping X, de la Comtesse, des Pins, de
 ANGLES = {'animations': 'vos animations', 'enfants': 'votre club enfants', 'ambiance_avis': "l'ambiance de votre camping",
           'international': 'vos vacanciers étrangers', 'grand_camping': 'votre grand parc', 'nouveaute': 'votre nouveauté', 'evenement': 'votre événement'}
 
+LEGAL_EN = ('<p style="font-size:12px;color:#888;margin-top:24px">CampConnect, a company registered in Évry, France '
+            '(SIREN 109 189 803). You are receiving this message because your address is listed on your campsite\'s website. '
+            'To stop hearing from us, simply reply STOP.</p>')
+SIGN_EN = 'Johan Abitbol\nCampConnect · +33 6 51 74 94 93'
+
+def textes_en(etape, d):  # campings tenus par des anglophones (fiche : langue = « en »)
+    nom = re.sub(r'\s*\(.*?\)', '', d.get('nom') or 'your campsite')
+    n = (d.get('contact_nom') or '').split()
+    hello = f'Hello {n[0]},' if n else 'Hello,'
+    if etape == 'r1':
+        return (f'{nom}, in one sentence',
+                f"{hello}\n\nJust following up in one sentence: with CampConnect, your guests see your events "
+                f"and sign up from their phone, with a simple QR code at reception.\n\n"
+                f"I'm looking for a few campsites to use it free of charge for the 2027 season, in exchange for their feedback; "
+                f"I take care of the whole set-up.\n\n"
+                f"I can prepare a preview of {nom} in the app, with your own events. Shall I send it? A simple \"yes\" is enough.\n\n{SIGN_EN}")
+    return ('Closing the loop',
+            f"{hello}\n\nI don't want to clutter your inbox, so I'll close the loop on my side.\n\n"
+            f"If, while preparing the 2027 season, you'd like to see what your campsite would look like in the app, "
+            f"just reply \"preview\" and I'll send it over.\n\nBest wishes,\n{SIGN_EN}")
+
 def textes(etape, d):
+    if d.get('langue') == 'en': return textes_en(etape, d)
     nom = re.sub(r'\s*\(.*?\)', '', d.get('nom') or 'votre camping')
     if etape == 'r1':
         rappel = ANGLES.get(d.get('angle'))
@@ -73,7 +95,7 @@ os.makedirs(f'{S}/relances-{date}', exist_ok=True)
 ecritures = []
 for _, _, k, etape in choix:
     d = prospects[k]; objet, texte = textes(etape, d)
-    corps = ''.join(f'<p>{html.escape(p).replace(chr(10), "<br>")}</p>' for p in texte.split('\n\n')) + LEGAL
+    corps = ''.join(f'<p>{html.escape(p).replace(chr(10), "<br>")}</p>' for p in texte.split('\n\n')) + (LEGAL_EN if d.get('langue') == 'en' else LEGAL)
     if essai:
         print(f'--- {k} | {d["email"]} | {etape} | {objet}\n{texte}\n'); continue
     r = subprocess.run(['curl', '-s', '-m', '60', '--form-string', f'cle={CLE}', '--form-string', f'destinataire={d["email"]}',
