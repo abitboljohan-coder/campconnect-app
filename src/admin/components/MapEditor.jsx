@@ -307,9 +307,10 @@ function LieuPicker({ onAdd, existingLabels }) {
     : search.trim()
       ? CAMPING_LIEUX.filter(l => l.label.toLowerCase().includes(search.toLowerCase()) || l.keywords.some(k => k.includes(search.toLowerCase())))
       : []
+  const nomLibre = search.trim().replace(/\s+/g, ' ').slice(0, 40)
   return (
     <div style={{ marginTop: 4 }}>
-      <input value={search} onChange={e => { setSearch(e.target.value); setGroupe(null) }} placeholder="Rechercher un lieu..."
+      <input value={search} onChange={e => { setSearch(e.target.value); setGroupe(null) }} placeholder="Rechercher ou créer un lieu..."
         // 44 px de haut et 16 px de texte : cible tactile, et pas de zoom iOS à la saisie.
         style={{ width: '100%', minHeight: 44, padding: '8px 10px', borderRadius: 8, border: '1px solid #e5e7eb', fontSize: 16, outline: 'none', marginBottom: 6, boxSizing: 'border-box' }} />
       {!search && (
@@ -321,6 +322,15 @@ function LieuPicker({ onAdd, existingLabels }) {
             </button>
           ))}
         </div>
+      )}
+      {/* Lieu propre au camping (« Bar Route 36 », « Sanitaires B »…) : la
+          liste toute faite ne peut pas tout prévoir. */}
+      {nomLibre && !existingLabels.includes(nomLibre) && !lieux.some(l => l.label.toLowerCase() === nomLibre.toLowerCase()) && (
+        <button onClick={() => { onAdd({ label: nomLibre, emoji: '📍', color: '#60a5fa' }); setSearch('') }}
+          style={{ display: 'flex', alignItems: 'center', gap: 8, width: '100%', minHeight: 44, padding: '6px 8px', marginBottom: 6, borderRadius: 7, background: '#63992218', border: `1px dashed ${jetons.marque}`, cursor: 'pointer', textAlign: 'left' }}>
+          <span style={{ fontSize: 18, flexShrink: 0 }}>📍</span>
+          <span style={{ fontSize: 12, fontWeight: 600, color: jetons.marque, flex: 1 }}>Créer le lieu « {nomLibre} »</span>
+        </button>
       )}
       {lieux.length > 0 && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 3, maxHeight: 180, overflowY: 'auto' }}>
