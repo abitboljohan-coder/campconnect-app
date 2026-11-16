@@ -39,6 +39,8 @@ def textes(etape, d):
         return (f'{nom}, en une phrase',
                 f"{bonjour(d)}\n\n{intro}avec CampConnect, vos vacanciers voient vos animations "
                 f"et s'y inscrivent depuis leur téléphone, par un simple QR code à l'accueil.\n\n"
+                f"Je cherche quelques campings pour l'utiliser gratuitement pendant la saison 2027, en échange de leurs retours ; "
+                f"je m'occupe de tout mettre en place.\n\n"
                 f"Je peux vous préparer un aperçu {de(nom)} dans l'app, avec vos propres animations. "
                 f"Je vous l'envoie ? Un simple « oui » suffit.\n\n{SIGN}")
     return ('Je clos le sujet',

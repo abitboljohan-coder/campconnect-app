@@ -298,6 +298,13 @@ décide, et répartit le travail entre quatre pôles, chacun avec son manager :
 
 Le directeur vérifie tout ce qui revient avant de le présenter à Johan.
 
+**Décision de Johan (16/11/2026) : plus aucune création de vidéo.** Johan a
+assez de vidéos en stock et reprend ce travail lui-même. Ne lancer ni
+`studio-video`, ni `creative-studio`, ni `controle-video`, ni routine vidéo.
+Tout le reste continue. Prospection : 20 campings par jour, chaque mail
+personnalisé avec une vraie animation du camping, et l'offre « gratuit pendant
+la saison 2027, en échange de vos retours » figure dans la relance J+4.
+
 Chaque dimanche soir, la routine « Amélioration continue » relit les échecs de
 la semaine et confie les corrections aux pôles concernés. Elle applique ce qui
 est sûr et propose le reste. Journal et règles : `docs/AMELIORATIONS.md`.
