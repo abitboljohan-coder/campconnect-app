@@ -282,6 +282,35 @@ Pour démarcher un camping, invoquer la commande `/commercial`.
 Pour sortir une version sur les stores, invoquer `/livraison`. Le workflow
 complet (fichier de prospects, routines, semaine type) : `docs/WORKFLOW.md`.
 
+**Mission de l'entreprise (Johan, 29 oct. 2026) : un seul but, faire beaucoup de
+vues sur les réseaux pour faire connaître l'application et trouver beaucoup de
+prospects.** Chaque pôle et chaque agent travaille pour ça (`docs/AMELIORATIONS.md`).
+
+Organisation : **Claude est le directeur.** Il reçoit les demandes de Johan,
+décide, et répartit le travail entre quatre pôles, chacun avec son manager :
+
+| Pôle | Manager (agent) | Exécutants |
+|---|---|---|
+| 1 Prospection | `commercial` | routines 10 campings, brouillons, relances, bilan |
+| 2 Social & création de contenu | `marketing` | `creative-studio` (campagnes), `studio-video` (production), `controle-video` (qualité), routine LinkedIn |
+| 3 Produit | `developpeur` | `designer`, `testeur`, `securite`, `data` |
+| 4 Opérations | `operations` | `support`, routine santé |
+
+Le directeur vérifie tout ce qui revient avant de le présenter à Johan.
+
+**Décision de Johan (16/11/2026) : plus aucune création de vidéo.** Johan a
+assez de vidéos en stock et reprend ce travail lui-même. Ne lancer ni
+`studio-video`, ni `creative-studio`, ni `controle-video`, ni routine vidéo.
+Tout le reste continue. Prospection : 20 campings par jour, chaque mail
+personnalisé avec une vraie animation du camping, et l'offre « gratuit pendant
+la saison 2027, en échange de vos retours » figure dans la relance J+4.
+
+Chaque dimanche soir, la routine « Amélioration continue » relit les échecs de
+la semaine et confie les corrections aux pôles concernés. Elle applique ce qui
+est sûr et propose le reste. Journal et règles : `docs/AMELIORATIONS.md`.
+
+**Règle n° 1 du pôle 2 (Johan) : ne livrer que des vidéos parfaites.** Jamais de « points faibles » ni de « V2 » à la livraison : tout défaut est corrigé avant. Chaque vidéo passe par `controle-video` avant le rendu (scénario, textes, captures) et après (vidéo finie), jusqu'à « VALIDÉ ».
+
 Équipe d'agents (`.claude/agents/`). **Par défaut, Claude fait lui-même** :
 une correction, une question, un email, une doc, une requête n'ont pas besoin
 d'agent. Un agent démarre à froid et relit tout : il coûte du temps et du
@@ -306,6 +335,8 @@ quota. N'en lancer un que si cela apporte vraiment quelque chose :
 | `operations` | livraison sur les stores, Xcode Cloud, surveillance, routines |
 | `support` | retour d'un testeur ou d'un utilisateur : diagnostic et réponse |
 | `designer` | écran jugé pas beau, refonte d'un écran ou d'un parcours : 3 directions en images, puis implémentation |
+| `creative-studio` | campagne vidéo ou réseaux de A à Z : brief, 3 concepts, storyboard, prompts, production, tests (historique : `docs/CAMPAGNES.md`) |
+| `controle-video` | contrôle qualité de chaque vidéo, avant le rendu et avant la livraison (obligatoire) |
 | `studio-video` | vidéo publicitaire ou déclinaison à partir des vrais écrans (démo ou enregistrement) ; vidéo de la nuit |
 
 Camping de démo (`les-flots-bleus`, « Camping démo Les Flots Bleus ») : ses
@@ -376,3 +407,21 @@ Toujours demander confirmation avant :
 Quand plusieurs solutions sont possibles :
 
 Choisir celle qui apporte le plus de valeur aux vacanciers et aux gérants avec le minimum de complexité technique.
+
+## Économie de tokens (demande de Johan, 5/11/2026)
+
+- Réponses courtes par défaut : l'essentiel, sans recapitulatif.
+- Ne lancer un agent que s'il apporte vraiment quelque chose ; un seul contrôle vidéo complet par passage.
+- Ne pas relire des planches d'images ni des documents déjà lus.
+- Nouvelle conversation toutes les semaines : lire `docs/REPRISE.md` en premier.
+
+## graphify
+
+This project has a knowledge graph at graphify-out/ with god nodes, community structure, and cross-file relationships.
+
+Rules:
+- When graphify-out/graph.json exists, run `graphify query "<question>"` before your first grep, search or source-file read for a codebase question, and put this rule in every subagent prompt that explores code. Read raw files only for lines the graph or an earlier read already located. Use `graphify path "<A>" "<B>"` for relationships and `graphify explain "<concept>"` for focused concepts. These return a scoped subgraph, usually much smaller than GRAPH_REPORT.md or raw grep output.
+- If graphify-out/wiki/index.md exists, use it for broad navigation instead of raw source browsing.
+- Read graphify-out/GRAPH_REPORT.md only for broad architecture review or when query/path/explain do not surface enough context.
+- After modifying code, run `graphify update .` to keep the graph current (AST-only, no API cost).
+- A committed graphify-out/graph.json is rewritten whole on every build, so a large diff to it in a pull request is expected. Do not flag it as churn or suggest skipping the graph rebuild or its hooks.

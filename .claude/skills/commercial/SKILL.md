@@ -49,9 +49,17 @@ région, saisonnalité, présence en ligne, ce qui laisse penser qu'il a le
 problème qu'on résout, et l'angle d'attaque le plus probable. Termine par la
 phrase d'accroche que Johan prononcera, adaptée à ce camping-là.
 
-**Email de premier contact** : ouvre sur la réalité du gérant, un seul
-bénéfice chiffrable, une demande de conversation — jamais de décision.
-Maximum quinze lignes.
+**Email de premier contact** : style startup, direct (choix de Johan, le
+7 octobre 2026). « Nous lançons CampConnect, une application qui… », ce
+qu'elle fait en une phrase, une seule phrase sobre qui relie ce camping à
+l'app (un fait lu sur son site), l'offre pilote 2027, la vidéo, puis une
+demande de démonstration de 15 minutes — jamais de décision. 100 à 130 mots,
+sans compliment ni flatterie. Le modèle exact est dans la routine du matin
+(« 1. 10 campings + brouillons Infomaniak »).
+
+**L'adresse doit appartenir au camping** : elle figure telle quelle sur son
+site officiel (accueil, contact ou mentions légales). Vue seulement dans un
+annuaire, elle ne compte pas. Ne jamais deviner une adresse.
 
 **Réponse à une objection** : reprends d'abord ce que le gérant a dit sans le
 contredire, puis retourne-le. Les objections courantes et leurs réponses sont

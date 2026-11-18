@@ -16,6 +16,8 @@ import { SUGGESTIONS_STATUTS } from '../lib/emojis'
 import { estActuel } from '../lib/groupes'
 import { toutCharger } from '../lib/reseau'
 import ErreurReseau from '../components/ErreurReseau'
+import BandeauGerantDemo from '../components/BandeauGerantDemo'
+import { estCampingDemo } from '../lib/apercuDemo'
 import {
   Bouton, Carte, Champ, Texte, Pile, Squelette, Vide,
   couleur, espace, graisse, ombre, rayon, texte as tailles,
@@ -123,6 +125,12 @@ export default function Accueil({ camping, vacancier, enLigne = 0 }) {
         <AccesRapide emoji="📣" fond="var(--cc-accent-voile)"
                      libelle={t('annonces.court')} onClick={() => navigate('/annonces')} />
       </Pile>
+
+      {/* Campings de démo seulement. Pas dans le build simulé (mode « demo ») :
+          il sert aux captures des stores et des vidéos, et n'enregistre rien. */}
+      {estCampingDemo(camping) && vacancier && import.meta.env.MODE !== 'demo' && (
+        <BandeauGerantDemo camping={camping} />
+      )}
 
       <StatutsStrip camping={camping} vacancier={vacancier} />
 

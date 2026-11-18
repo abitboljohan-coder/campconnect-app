@@ -9,8 +9,22 @@
 // (document.getAnimations) avancent exactement de 1/30 s entre deux captures.
 // Le résultat ne dépend donc pas de la vitesse de la machine.
 //
+// Effets de caméra (sans durée propre : l'action suivante s'enchaîne aussitôt) :
+//   { "zoom": <cible>, "echelle": 1.6, "duree": 2 }   la caméra s'approche et surligne
+//   { "loupe": <cible>, "duree": 2, "marge": 6 }       le détail sort de l'écran, agrandi
+//   { "notif": { "titre": "…", "texte": "…" }, "duree": 2.6 }  notification push
+// Une cible peut aussi être un rectangle : { "rect": [x, y, largeur, hauteur] } (px CSS),
+// et "parent": n vise le n-ième conteneur de l'élément trouvé (toute la carte).
+// { "effacer": true } vide le champ touché juste avant.
+// Un plan peut demander "dialogues": "accepter" (valide les confirmations natives).
+// Un plan peut demander "geo": "loin" (le vacancier n'est pas au camping : la
+// vérification GPS échoue et l'entrée demande le code de l'heure).
+// "decor": "<slug>" (dans le plan ou dans un shot) filme un autre camping :
+// studio-video/decors/<slug>/mockSupabase.js remplace le mock de la démo
+// (voir studio-video/decors/README.md). Sans "decor", rien ne change.
+//
 // Sorties : <work>/clips/<n>/0001.jpg… et <work>/capture.json (nombre
-// d'images et appuis de chaque plan, que le moteur dessine par-dessus
+// d'images, appuis et effets de chaque plan, que le moteur dessine par-dessus
 // l'écran : l'interface capturée n'est jamais retouchée).
 const path = require('path');
 const { chromium } = require(path.join(__dirname, '..', 'app', 'node_modules', 'playwright'));
@@ -22,6 +36,60 @@ const LOCALES = { fr: 'fr-FR', en: 'en-GB', es: 'es-ES', nl: 'nl-NL' };
 // Centre du camping de démo (src/demo/mockSupabase.js) : la vérification GPS
 // de l'onboarding passe.
 const GEO = { latitude: 44.2010, longitude: 6.3013, accuracy: 15 };
+// Ailleurs (Lyon) : pour montrer qu'on n'entre pas sans être au camping.
+const GEO_LOIN = { latitude: 45.7640, longitude: 4.8357, accuracy: 15 };
+
+// Décor de tournage : le mock d'un camping fictif, servi à la place de
+// /src/demo/mockSupabase.js. Ses imports relatifs (écrits pour src/demo/)
+// deviennent absolus, comme vite les sert (/src/lib/presence.js) : la page
+// garde une seule instance de chaque module.
+const DECORS = path.join(__dirname, '..', 'decors');
+const decorsLus = {};
+function lireDecor(slug) {
+  if (decorsLus[slug]) return decorsLus[slug];
+  if (!/^[a-z0-9-]+$/.test(slug)) throw new Error(`décor invalide : ${slug}`);
+  const dir = path.join(DECORS, slug);
+  const f = path.join(dir, 'mockSupabase.js');
+  if (!fs.existsSync(f)) throw new Error(`décor inconnu : ${slug} (${f} absent)`);
+  const code = fs.readFileSync(f, 'utf8').replace(
+    /((?:from|import)\s*\(?\s*['"])(\.\.?\/[^'"]+)(['"])/g,
+    (_, a, rel, b) => {
+      let abs = path.posix.join('/src/demo', rel);
+      if (!/\.[a-z]+$/.test(abs)) abs += '.js';
+      return a + abs + b;
+    });
+  const m = code.match(/const CENTER = \{ lat: (-?[\d.]+), lng: (-?[\d.]+) \}/);
+  if (!m) throw new Error(`décor ${slug} : constante CENTER introuvable dans le mock`);
+  const slugCamping = (code.match(/slug: '([^']+)'/) || [])[1] || slug;
+  const meteoF = path.join(dir, 'meteo.json');
+  const meteo = fs.existsSync(meteoF) ? JSON.parse(fs.readFileSync(meteoF, 'utf8'))
+    : { temperature: 27, code: 0, jours: [[1, 28, 18], [0, 29, 19], [2, 27, 18]] };
+  return (decorsLus[slug] = { code, centre: { latitude: +m[1], longitude: +m[2], accuracy: 15 },
+    email: `gerant@${slugCamping.replace(/-/g, '')}.fr`, meteo });
+}
+// La météo de l'accueil (Open-Meteo) dépend du vrai temps du jour de tournage :
+// avec un décor, elle reste celle d'une journée d'été (decors/<slug>/meteo.json).
+function reponseMeteo(meteo, date) {
+  const jours = [[meteo.code, meteo.temperature + 1, meteo.temperature - 9], ...meteo.jours];
+  const time = jours.map((_, i) => { const d = new Date(`${date}T12:00:00Z`); d.setUTCDate(d.getUTCDate() + i); return d.toISOString().slice(0, 10); });
+  return { current: { temperature_2m: meteo.temperature, weather_code: meteo.code },
+    daily: { time, weather_code: jours.map(j => j[0]), temperature_2m_max: jours.map(j => j[1]), temperature_2m_min: jours.map(j => j[2]) } };
+}
+async function brancherDecor(page, decor, date) {
+  await page.route(u => u.pathname === '/src/demo/mockSupabase.js',
+    r => r.fulfill({ status: 200, contentType: 'text/javascript; charset=utf-8', body: decor.code }));
+  // L'adresse du gérant est écrite en dur dans src/demo/main.jsx (Paramètres).
+  await page.route(u => u.pathname === '/src/demo/main.jsx', async r => {
+    for (let essai = 0; essai < 3; essai++) {
+      try {
+        const rep = await r.fetch();
+        return await r.fulfill({ response: rep, body: (await rep.text()).replaceAll('gerant@flotsbleus.fr', decor.email) });
+      } catch (e) { if (essai === 2) return r.continue().catch(() => {}); }
+    }
+  });
+  await page.route(u => u.hostname === 'api.open-meteo.com',
+    r => r.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(reponseMeteo(decor.meteo, date)) }));
+}
 
 function chromiumPath() {
   const p = process.env.CHROMIUM_PATH || '/opt/pw-browsers/chromium-1194/chrome-linux/chrome';
@@ -32,10 +100,11 @@ const ease = t => (t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2);
 
 async function captureShot(browser, plan, shot, idx, outDir) {
   const lang = shot.langue || plan.langue || 'fr';
+  const decor = (shot.decor || plan.decor) ? lireDecor(shot.decor || plan.decor) : null;
   const ctx = await browser.newContext({
     viewport: { width: VW, height: VH }, deviceScaleFactor: 3, isMobile: true, hasTouch: true,
     locale: LOCALES[lang] || 'fr-FR', timezoneId: 'Europe/Paris', colorScheme: 'light',
-    geolocation: GEO, permissions: ['geolocation'],
+    geolocation: shot.geo === 'loin' ? GEO_LOIN : (decor ? decor.centre : GEO), permissions: ['geolocation'],
   });
   // Heure de la démo : l'après-midi du jour de la vidéo (les groupes de 18 h 30
   // sont à venir, l'agenda montre « ce soir »).
@@ -43,8 +112,12 @@ async function captureShot(browser, plan, shot, idx, outDir) {
   await ctx.clock.install({ time: t0 });
   await ctx.addInitScript(l => { try { localStorage.setItem('langue', l); } catch (e) { /* rien */ } }, lang);
   const page = await ctx.newPage();
+  if (decor) await brancherDecor(page, decor, plan.date);
   const erreurs = [];
   page.on('pageerror', e => erreurs.push(e.message));
+  // Les confirmations natives (window.confirm) ne se voient pas à l'image :
+  // "dialogues": "accepter" les valide, pour montrer le résultat du geste.
+  page.on('dialog', d => (shot.dialogues === 'accepter' ? d.accept() : d.dismiss()).catch(() => {}));
   const cdp = await ctx.newCDPSession(page);
 
   const qs = new URLSearchParams({ s: shot.ecran, ...(shot.params || {}) });
@@ -60,7 +133,7 @@ async function captureShot(browser, plan, shot, idx, outDir) {
   fs.mkdirSync(dir, { recursive: true });
   const total = Math.round(shot.duree * FPS);
   let f = 0;
-  const appuis = [];
+  const appuis = [], effets = [];
 
   async function tick(n = 1) {
     for (let i = 0; i < n; i++) {
@@ -84,7 +157,11 @@ async function captureShot(browser, plan, shot, idx, outDir) {
   async function texteI18n(cle, vars) {
     return page.evaluate(async ([k, v]) => (await import('/src/i18n.js')).t(k, v), [cle, vars || null]);
   }
-  async function cible(c) {
+  async function cible(c, boite) {
+    if (c.rect) {
+      const [x, y, width, height] = c.rect;
+      return boite ? { x, y, width, height } : { x: x + width / 2, y: y + height / 2 };
+    }
     let loc;
     if (c.css) loc = page.locator(c.css);
     else if (c.label) loc = page.getByLabel(c.label, { exact: !!c.exact });
@@ -95,10 +172,19 @@ async function captureShot(browser, plan, shot, idx, outDir) {
     else if (c.text) loc = page.getByText(c.text, { exact: !!c.exact });
     else throw new Error('cible inconnue : ' + JSON.stringify(c));
     loc = loc.nth(c.nth || 0);
+    // parent : n : le conteneur de l'élément (une carte entière plutôt que son titre)
+    for (let i = 0; i < (c.parent || 0); i++) loc = loc.locator('xpath=..');
     await loc.waitFor({ state: 'visible', timeout: 5000 }).catch(() => {
       throw new Error(`plan ${idx + 1} (${shot.ecran}) : élément introuvable ${JSON.stringify(c)}`);
     });
     const b = await loc.boundingBox();
+    if (boite) {
+      // limitée à l'écran visible
+      const x0 = Math.max(0, b.x), y0 = Math.max(0, b.y);
+      const x1 = Math.min(VW, b.x + b.width), y1 = Math.min(VH, b.y + b.height);
+      if (x1 - x0 < 4 || y1 - y0 < 4) throw new Error(`plan ${idx + 1} (${shot.ecran}) : élément hors écran ${JSON.stringify(c)}`);
+      return { x: x0, y: y0, width: x1 - x0, height: y1 - y0 };
+    }
     const x = b.x + (c.fx ?? 0.5) * b.width, y = b.y + (c.fy ?? 0.5) * b.height;
     if (x < 0 || y < 0 || x > VW || y > VH) throw new Error(`plan ${idx + 1} : élément hors écran ${JSON.stringify(c)}`);
     return { x, y };
@@ -163,6 +249,19 @@ async function captureShot(browser, plan, shot, idx, outDir) {
         await tick(1);
       }
       await tick(secondes(st.puis ?? 0.3));
+    } else if (st.zoom || st.loupe) {
+      const b = await cible(st.zoom || st.loupe, true);
+      effets.push({ type: st.zoom ? 'zoom' : 'loupe', f: f + 1, duree: st.duree ?? 2,
+        box: { x: b.x, y: b.y, w: b.width, h: b.height },
+        ...(st.echelle != null ? { echelle: st.echelle } : {}), ...(st.marge != null ? { marge: st.marge } : {}),
+        ...(st.surligner === false ? { surligner: false } : {}) });
+    } else if (st.notif) {
+      effets.push({ type: 'notif', f: f + 1, duree: st.duree ?? 2.6, titre: st.notif.titre, texte: st.notif.texte });
+    } else if (st.effacer) {
+      // vide le champ touché juste avant (un profil prérempli, par exemple)
+      await page.keyboard.press('Control+A');
+      await page.keyboard.press('Backspace');
+      await tick(1);
     } else if (st.clavierFerme) {
       await page.evaluate(() => document.activeElement && document.activeElement.blur());
     } else {
@@ -172,7 +271,8 @@ async function captureShot(browser, plan, shot, idx, outDir) {
   if (f < total) await tick(total - f);
   await ctx.close();
   if (erreurs.length) console.log(`  plan ${idx + 1} : erreurs de la page :`, erreurs.slice(0, 3).join(' | '));
-  return { images: f, appuis, ecran: shot.ecran, erreurs };
+  for (const e of effets) if (e.f > total) throw new Error(`plan ${idx + 1} (${shot.ecran}) : effet ${e.type} après la fin du plan`);
+  return { images: f, appuis, effets, ecran: shot.ecran, erreurs, ...(decor ? { decor: shot.decor || plan.decor } : {}) };
 }
 
 (async () => {

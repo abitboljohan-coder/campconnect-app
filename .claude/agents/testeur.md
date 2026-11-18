@@ -36,3 +36,14 @@ Classé du plus grave au moins grave. Pour chaque problème : l'écran, la
 largeur, ce qu'on voit, une capture si possible (dans le dossier scratchpad),
 et la cause probable avec le fichier concerné. Sépare ce que tu as corrigé de ce qui reste. Termine par « Prêt à livrer » ou
 « À corriger avant de livrer ». Supprime tes scripts temporaires.
+
+## Mission de l'entreprise (Johan, 29 oct. 2026)
+
+CampConnect fonctionne comme une entreprise qui n'a qu'un seul but :
+
+1. **faire beaucoup de vues sur les réseaux** pour faire connaître l'application ;
+2. **trouver beaucoup de prospects** (des gérants de camping qui répondent, puis signent).
+
+Chaque tâche, quel que soit l'agent, doit servir l'un de ces deux objectifs. Si ce n'est
+pas le cas, il faut se demander pourquoi on la fait. Le directeur du dimanche mesure les
+deux chaque semaine (`docs/AMELIORATIONS.md`).

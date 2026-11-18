@@ -87,11 +87,13 @@ const GROUPES = [
   { id: 'g4', camping_id: 'camp-demo', titre: 'Soirée jeux de société', emoji: '🎲', lieu: 'Bar du camping', heure: iso(21), max_membres: 10, actif: true, created_at: ago(30), createur_id: 'vac-5' },
 ]
 
+// Dans l'ordre des horaires : le faux client ignore .order('debut'), et
+// l'agenda de la démo affichait « Ce soir » avant « Cet après-midi ».
 const ANIMATIONS = [
   { id: 'a1', camping_id: 'camp-demo', titre: 'Cours d\'aquagym', emoji: '💦', lieu: 'Piscine', debut: iso(10), places_max: 20, publiee: true },
+  { id: 'a4', camping_id: 'camp-demo', titre: 'Atelier poterie enfants', emoji: '🏺', lieu: 'Club enfants', debut: iso(15), places_max: 12, publiee: true },
   { id: 'a2', camping_id: 'camp-demo', titre: 'Marché nocturne', emoji: '🛍️', lieu: 'Place centrale', debut: iso(19), places_max: 0, publiee: true },
   { id: 'a3', camping_id: 'camp-demo', titre: 'Concert live', emoji: '🎤', lieu: 'Scène', debut: iso(21, 30), places_max: 0, publiee: true },
-  { id: 'a4', camping_id: 'camp-demo', titre: 'Atelier poterie enfants', emoji: '🏺', lieu: 'Club enfants', debut: iso(15), places_max: 12, publiee: true },
 ]
 
 const STATUTS = [
@@ -129,8 +131,24 @@ const SIGNALEMENTS = [
     vacanciers: { pseudo: 'Léa', avatar_emoji: '🏊‍♀️', emplacement: 'B15' } },
 ]
 
+// Petites annonces et objets trouvés : sans elles, l'écran Annonces de la démo
+// ne montrait que son état vide.
+const dansHeures = (h) => new Date(Date.now() + h * 3600000).toISOString()
+const ANNONCES = [
+  { id: 'an1', camping_id: 'camp-demo', vacancier_id: 'vac-3', type: 'trouve', titre: 'Doudou lapin trouvé près de la piscine',
+    description: 'Gris, avec un ruban bleu. Je le garde à l’emplacement C21.', photo_url: null, resolu: false,
+    created_at: ago(50), expire_at: dansHeures(70), vacanciers: { pseudo: 'Sophie', avatar_emoji: '🧘‍♀️' } },
+  { id: 'an2', camping_id: 'camp-demo', vacancier_id: 'vac-4', type: 'perdu', titre: 'Lunettes de soleil perdues',
+    description: 'Monture écaille, sans doute au terrain de volley hier soir.', photo_url: null, resolu: false,
+    created_at: ago(180), expire_at: dansHeures(60), vacanciers: { pseudo: 'Tom', avatar_emoji: '🎸' } },
+  { id: 'an3', camping_id: 'camp-demo', vacancier_id: 'vac-2', type: 'annonce', titre: 'Je prête un jeu de pétanque',
+    description: 'Emplacement A04, passez quand vous voulez avant 18 h.', photo_url: null, resolu: false,
+    created_at: ago(300), expire_at: dansHeures(48), vacanciers: { pseudo: 'Marc', avatar_emoji: '🚴' } },
+]
+
 const SEED = {
   signalements: SIGNALEMENTS,
+  annonces: ANNONCES,
   campings: [DEMO_CAMPING],
   vacanciers: VACS,
   groupes: GROUPES,

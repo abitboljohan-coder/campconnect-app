@@ -13,7 +13,8 @@ set -euo pipefail
 
 STUDIO="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 RACINE="$(dirname "$STUDIO")"
-OUT="$STUDIO/out/nuit"
+# NUIT_OUT : un autre dossier de sortie (pour tester plusieurs thèmes en parallèle).
+OUT="${NUIT_OUT:-$STUDIO/out/nuit}"
 WORK="$OUT/work"
 DATE="$(TZ=Europe/Paris date +%F)"
 THEME=""
@@ -27,11 +28,13 @@ while [ $# -gt 0 ]; do
     --liste)
       python3 - "$STUDIO/nuit/themes.json" <<'EOF'
 import json, sys, datetime as dt
-c = json.load(open(sys.argv[1], encoding='utf-8')); t = c['themes']
+c = json.load(open(sys.argv[1], encoding='utf-8')); t = [x for x in c['themes'] if x.get('verifie')]
 d0 = dt.date.fromisoformat(c['rotation_depuis']); auj = dt.date.today()
 for i, th in enumerate(t):
     n = (auj - d0).days % len(t); j = (i - n) % len(t)
     print(f"{i:2d}  {th['slug']:26s} {th['langue']}  {th['format']:5s} prochain : {auj + dt.timedelta(days=j)}  {th['titre']}")
+hors = [x['slug'] for x in c['themes'] if not x.get('verifie')]
+if hors: print('hors rotation (à tester) : ' + ', '.join(hors))
 EOF
       exit 0 ;;
     *) echo "Option inconnue : $1 (voir l'en-tête de $0)" >&2; exit 2 ;;

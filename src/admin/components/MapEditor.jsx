@@ -40,6 +40,7 @@ function saveLocal(id, config) { localStorage.setItem(localKey(id), JSON.stringi
 
 export default function MapEditor({ camping, setCamping }) {
   const mapDivRef   = useRef(null)
+  const cadreRef    = useRef(null)
   const lfRef       = useRef(null)
   const markersRef  = useRef({})
   const selectedRef = useRef(null)
@@ -55,6 +56,11 @@ export default function MapEditor({ camping, setCamping }) {
   const etroit = useEtroit()
 
   useEffect(() => { selectedRef.current = selected }, [selected])
+  // Au téléphone, la carte est sous la liste : sans ce défilement, toucher un
+  // lieu ne montrait rien et le gérant croyait que le bouton ne marchait pas.
+  useEffect(() => {
+    if (selected && etroit) cadreRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' })
+  }, [selected, etroit])
   useEffect(() => { pinsRef.current = pins }, [pins])
 
   useEffect(() => {
@@ -256,7 +262,7 @@ export default function MapEditor({ camping, setCamping }) {
       {/* isolation : les bandeaux posés sur la carte (z-index 1000) restent
           dans son cadre. Sans elle, ils passaient devant la barre de
           navigation et l'en-tête de la console dès qu'on faisait défiler. */}
-      <div style={{ position: 'relative', isolation: 'isolate', height: etroit ? 420 : 560, borderRadius: 14, overflow: 'hidden', border: selected ? '2px solid #639922' : '2px solid #e5e7eb', cursor: selected ? 'crosshair' : 'grab', boxShadow: '0 4px 20px rgba(0,0,0,0.1)' }}>
+      <div ref={cadreRef} style={{ position: 'relative', isolation: 'isolate', height: etroit ? 420 : 560, borderRadius: 14, overflow: 'hidden', border: selected ? '2px solid #639922' : '2px solid #e5e7eb', cursor: selected ? 'crosshair' : 'grab', boxShadow: '0 4px 20px rgba(0,0,0,0.1)' }}>
 
         {!etroit && panneau}
 
@@ -307,9 +313,10 @@ function LieuPicker({ onAdd, existingLabels }) {
     : search.trim()
       ? CAMPING_LIEUX.filter(l => l.label.toLowerCase().includes(search.toLowerCase()) || l.keywords.some(k => k.includes(search.toLowerCase())))
       : []
+  const nomLibre = search.trim().replace(/\s+/g, ' ').slice(0, 40)
   return (
     <div style={{ marginTop: 4 }}>
-      <input value={search} onChange={e => { setSearch(e.target.value); setGroupe(null) }} placeholder="Rechercher un lieu..."
+      <input value={search} onChange={e => { setSearch(e.target.value); setGroupe(null) }} placeholder="Rechercher ou créer un lieu..."
         // 44 px de haut et 16 px de texte : cible tactile, et pas de zoom iOS à la saisie.
         style={{ width: '100%', minHeight: 44, padding: '8px 10px', borderRadius: 8, border: '1px solid #e5e7eb', fontSize: 16, outline: 'none', marginBottom: 6, boxSizing: 'border-box' }} />
       {!search && (
@@ -321,6 +328,15 @@ function LieuPicker({ onAdd, existingLabels }) {
             </button>
           ))}
         </div>
+      )}
+      {/* Lieu propre au camping (« Bar Route 36 », « Sanitaires B »…) : la
+          liste toute faite ne peut pas tout prévoir. */}
+      {nomLibre && !existingLabels.includes(nomLibre) && !lieux.some(l => l.label.toLowerCase() === nomLibre.toLowerCase()) && (
+        <button onClick={() => { onAdd({ label: nomLibre, emoji: '📍', color: '#60a5fa' }); setSearch('') }}
+          style={{ display: 'flex', alignItems: 'center', gap: 8, width: '100%', minHeight: 44, padding: '6px 8px', marginBottom: 6, borderRadius: 7, background: '#63992218', border: `1px dashed ${jetons.marque}`, cursor: 'pointer', textAlign: 'left' }}>
+          <span style={{ fontSize: 18, flexShrink: 0 }}>📍</span>
+          <span style={{ fontSize: 12, fontWeight: 600, color: jetons.marque, flex: 1 }}>Créer le lieu « {nomLibre} »</span>
+        </button>
       )}
       {lieux.length > 0 && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 3, maxHeight: 180, overflowY: 'auto' }}>
