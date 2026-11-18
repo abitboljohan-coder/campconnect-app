@@ -1,10 +1,11 @@
-import { useCallback, useEffect, useState, useSyncExternalStore } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { Outlet, NavLink, useLocation } from 'react-router-dom'
 import Sheet from '../components/Sheet'
 import { supabase } from '../supabase'
 import { isNative, setAppMode } from '../native'
 import { Bouton, Texte, Pile, Icone, espace, graisse, rayon, texte as tailles } from '../design'
 import { jetons, barre } from './theme'
+import { useEtroit } from './lib/useEtroit'
 
 /**
  * Les neuf entrées n'ont pas le même rythme.
@@ -20,7 +21,7 @@ const QUOTIDIEN = [
   { path: '/admin/animations',   icone: 'agenda',     label: 'Animations', court: 'Agenda' },
   // « court » : le libellé de la barre du bas, où « Signalements » ne tenait
   // pas dans ses 64 px sur un petit téléphone et mordait sur ses voisins.
-  { path: '/admin/signalements', icone: 'outil',      label: 'Signalements', court: 'Alertes' },
+  { path: '/admin/signalements', icone: 'drapeau',    label: 'Signalements', court: 'Alertes' },
   { path: '/admin/moderation',   icone: 'bouclier',   label: 'Modération', court: 'Modérer' },
 ]
 
@@ -38,49 +39,35 @@ const CONFIGURATION = [
 const LARGEUR_MENU = 240
 
 /**
- * Le point de bascule est celui du menu latéral, pas une taille d'appareil.
+ * Le camping d'abord.
  *
- * `useSyncExternalStore` plutôt qu'un état recopié dans un effet : la valeur
- * est lue à chaque rendu à sa source. Une rotation d'iPad survenue entre le
- * premier rendu et l'abonnement ne peut donc pas passer inaperçue, et il n'y a
- * pas de rendu en cascade pour rattraper l'écart.
+ * Le bandeau affichait « CampConnect » en grand et le nom du camping en petit
+ * dessous : chez lui, le gérant lisait notre marque avant la sienne. Le logo
+ * du camping s'il en a un, sinon le nôtre, sur une plaque claire.
  */
-const REQUETE_ETROIT = '(max-width: 767px)'
-
-function abonner(rappel) {
-  const mq = window.matchMedia(REQUETE_ETROIT)
-  mq.addEventListener('change', rappel)
-  return () => mq.removeEventListener('change', rappel)
-}
-
-function useEtroit() {
-  return useSyncExternalStore(
-    abonner,
-    () => window.matchMedia(REQUETE_ETROIT).matches,
-    () => false,   // au rendu serveur, on suppose l'écran large
-  )
-}
-
-/**
- * Marque CampConnect.
- *
- * Sur le vert sombre du bandeau, le logo seul s'efface — sa tente et son sol
- * sont eux-mêmes vert foncé. La plaque claire lui rend son contraste.
- */
-function Marque({ taille = 26, texte: tailleTexte = 18 }) {
+function Marque({ camping, sous, uneLigne = false }) {
   return (
-    <span style={{ display: 'inline-flex', alignItems: 'center', gap: espace.sm }}>
+    <span style={{ display: 'flex', alignItems: 'center', gap: espace.md, minWidth: 0 }}>
       <span style={{
-        width: taille + 10, height: taille + 10, borderRadius: rayon.md,
-        background: jetons.fondClair, flexShrink: 0,
-        display: 'flex', alignItems: 'center', justifyContent: 'center',
+        width: 38, height: 38, borderRadius: 10, background: jetons.fondClair, flexShrink: 0,
+        display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden',
       }}>
-        <img src="/logo-mark.png" alt="" width={taille} height={taille}
-             style={{ display: 'block', objectFit: 'contain' }} />
+        <img src={camping?.logo_url || '/logo-mark.png'} alt="" width={camping?.logo_url ? 38 : 26} height={camping?.logo_url ? 38 : 26}
+             style={{ display: 'block', objectFit: camping?.logo_url ? 'cover' : 'contain' }} />
       </span>
-      <Texte variante="sousTitre" as="span" style={{ color: barre.texteActif, fontSize: tailleTexte }}>
-        CampConnect
-      </Texte>
+      <span style={{ minWidth: 0 }}>
+        <Texte variante="sousTitre" as="span" style={{
+          display: 'block', color: barre.texteActif, fontSize: 15.5, lineHeight: 1.25,
+          // Au téléphone, une ligne (l'en-tête reste bas) ; dans le menu, le
+          // nom entier sur deux lignes plutôt que « Camping Les Flots… ».
+          ...(uneLigne ? { overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' } : null),
+        }}>
+          {camping?.nom || 'Mon camping'}
+        </Texte>
+        <Texte variante="micro" as="span" style={{ display: 'block', color: barre.texte, fontSize: 12.5, marginTop: 1 }}>
+          {sous}
+        </Texte>
+      </span>
     </span>
   )
 }
@@ -111,6 +98,12 @@ function useSignalementsNouveaux(campingId, pathname) {
     return () => { actif = false; supabase.removeChannel(canal) }
   }, [campingId, pathname])
   return n
+}
+
+/** « Mercredi 18 novembre » : la date du jour, sous le nom du camping. */
+function dateCourte() {
+  const d = new Date().toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' })
+  return d.charAt(0).toUpperCase() + d.slice(1)
 }
 
 /** Pastille rouge d'un compte à traiter. */
@@ -228,11 +221,8 @@ export default function AdminLayout({ gerant, camping, onLogout }) {
           position: 'fixed', top: 0, left: 0, bottom: 0, zIndex: 100,
           overflowY: 'auto',
         }}>
-          <div style={{ padding: '28px 20px 4px' }}>
-            <Marque />
-            <Texte variante="doux" style={{ color: barre.texte, marginTop: espace.sm }}>
-              {camping?.nom}
-            </Texte>
+          <div style={{ padding: '24px 16px 8px' }}>
+            <Marque camping={camping} sous="Espace gérant" />
           </div>
 
           <nav style={{ flex: 1, padding: `0 ${espace.md}px ${espace.lg}px` }}
@@ -268,20 +258,13 @@ export default function AdminLayout({ gerant, camping, onLogout }) {
 
         {etroit ? (
           <header className="cc-sombre" style={{
-            background: barre.fond, padding: `14px ${espace.lg}px`,
-            paddingTop: 'calc(14px + var(--cc-safe-top, 0px))',
+            background: barre.fond, padding: `10px ${espace.sm}px 10px ${espace.lg}px`,
+            paddingTop: 'calc(10px + var(--cc-safe-top, 0px))',
             display: 'flex', alignItems: 'center', justifyContent: 'space-between',
             gap: espace.md, position: 'sticky', top: 0, zIndex: 50,
           }}>
-            <div style={{ minWidth: 0 }}>
-              <Marque taille={22} texte={tailles.grand} />
-              <Texte variante="micro" style={{
-                color: barre.texte,
-                overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
-              }}>
-                {camping?.nom}
-              </Texte>
-            </div>
+            <Marque camping={camping} uneLigne
+                    sous={dateCourte()} />
             {/* Dans l'app, le gérant qui touchait « Quitter » voulait revenir
                 côté vacancier et se retrouvait déconnecté. Le bouton y mène
                 donc à l'espace vacancier ; la déconnexion passe dans Réglages. */}
@@ -292,7 +275,7 @@ export default function AdminLayout({ gerant, camping, onLogout }) {
               </Bouton>
             ) : (
               <Bouton variante="discret" taille="sm" onClick={seDeconnecter}
-                      style={{ color: '#fca5a5', flexShrink: 0, minHeight: 44 }}>
+                      style={{ color: barre.texte, flexShrink: 0, minHeight: 44 }}>
                 Quitter
               </Bouton>
             )}

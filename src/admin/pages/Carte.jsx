@@ -9,8 +9,8 @@ import { barycentre } from '../lib/geo'
 import { traduireErreur } from '../lib/erreurs'
 import { EnTete } from '../components/Bloc'
 import { toast } from '../../toast'
-import { Texte, Pile } from '../../design'
-import { jetons } from '../theme'
+import { Texte, Pile, Icone } from '../../design'
+import { jetons, bouton, titreSection } from '../theme'
 
 async function compressToBlob(file, maxWidth = 2000, quality = 0.82) {
   const bmp = await createImageBitmap(file)
@@ -231,15 +231,15 @@ export default function Carte({ camping, setCamping }) {
               done={perimeter.length >= 3}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
             {perimeter.length >= 3
-              ? <Badge ok>✅ Contour tracé ({perimeter.length} points)</Badge>
-              : <Badge>⚠️ Pas encore tracé</Badge>}
+              ? <Badge ok>Contour tracé ({perimeter.length} points)</Badge>
+              : <Badge>Pas encore tracé</Badge>}
             <button onClick={() => setShowPerimeter(true)}
-              style={btnPrimary}>
-              🗺️ {perimeter.length >= 3 ? 'Modifier le contour' : 'Tracer le contour'}
+              style={bouton.principal}>
+              <Icone nom="carte" taille={18} /> {perimeter.length >= 3 ? 'Modifier le contour' : 'Tracer le contour'}
             </button>
-            <span style={{ fontSize: 12, color: jetons.texteDoux }}>
-              (détection auto, rectangle ou clic-à-clic — au choix dans l'éditeur)
-            </span>
+          </div>
+          <div style={{ marginTop: 10, fontSize: 13.5, color: jetons.texteDoux, lineHeight: 1.5 }}>
+            Dans l’éditeur : détection automatique, rectangle ou tracé point par point.
           </div>
         </Step>
 
@@ -251,17 +251,19 @@ export default function Carte({ camping, setCamping }) {
               done={(camping?.carte_config?.pins || []).length > 0}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
             {(camping?.carte_config?.pins || []).length > 0
-              ? <Badge ok>✅ {(camping?.carte_config?.pins || []).length} lieu{(camping?.carte_config?.pins || []).length > 1 ? 'x' : ''} sur la carte</Badge>
-              : <Badge>⚠️ Aucun lieu placé</Badge>}
+              ? <Badge ok>{(camping?.carte_config?.pins || []).length} lieu{(camping?.carte_config?.pins || []).length > 1 ? 'x' : ''} sur la carte</Badge>
+              : <Badge>Aucun lieu placé</Badge>}
             <button onClick={autoDetectPois}
               disabled={detecting || perimeter.length < 3}
-              style={perimeter.length < 3 ? btnDisabled : btnPrimary}>
-              {detecting ? '⏳ Détection…' : '🎯 Détecter automatiquement'}
+              aria-busy={detecting || undefined}
+              style={perimeter.length < 3 ? bouton.inactif : bouton.principal}>
+              <Icone nom="cible" taille={18} /> {detecting ? 'Détection…' : 'Détecter automatiquement'}
             </button>
           </div>
           {perimeter.length < 3 && (
-            <div style={{ marginTop: 8, fontSize: 12, color: jetons.texteDoux }}>
-              🔒 La détection automatique demande le contour (étape 1). Vous pouvez déjà placer les lieux à la main.
+            <div style={{ marginTop: 10, fontSize: 13.5, color: jetons.texteDoux, display: 'flex', gap: 8, alignItems: 'flex-start', lineHeight: 1.5 }}>
+              <Icone nom="cadenas" taille={16} style={{ marginTop: 2 }} />
+              La détection automatique demande le contour (étape 1). Vous pouvez déjà placer les lieux à la main.
             </div>
           )}
           <div style={{ marginTop: 14 }}>
@@ -276,25 +278,21 @@ export default function Carte({ camping, setCamping }) {
         {/* ÉTAPE 3 — PLAN (OPTIONNEL) */}
         <Step n={3} title="Ajouter votre plan (optionnel)"
               subtitle="Si vous avez un plan illustré du camping, envoyez-le puis ajustez-le sur la vue satellite."
-              done={!!planUrl && !!planBounds}
-              optional>
+              done={!!planUrl && !!planBounds}>
           {!planUrl ? (
             <label style={{ display: 'block', cursor: 'pointer' }}>
               <div style={{
                 border: '2px dashed #d1d5db', borderRadius: 14,
                 padding: '40px 20px', textAlign: 'center', background: '#fafaf8',
               }}>
-                <div style={{ fontSize: 44, marginBottom: 12 }}>🗺️</div>
+                <Icone nom="carte" taille={40} epaisseur={1.4} style={{ color: jetons.texteDoux, margin: '0 auto 12px' }} />
                 <div style={{ fontWeight: 700, fontSize: 15, color: jetons.texteMoyen, marginBottom: 6 }}>
                   Aucun plan pour l'instant
                 </div>
                 <div style={{ fontSize: 13, color: jetons.texteDoux, marginBottom: 20 }}>
                   Envoyez le plan de votre camping (JPG ou PNG, 10 Mo maximum)
                 </div>
-                <span style={{
-                  background: jetons.marque, color: '#fff',
-                  padding: '10px 22px', borderRadius: 8, fontSize: 14, fontWeight: 600,
-                }}>
+                <span style={bouton.principal}>
                   Choisir un fichier
                 </span>
                 <input type="file" accept="image/png,image/jpeg"
@@ -310,32 +308,31 @@ export default function Carte({ camping, setCamping }) {
                          background: jetons.surfaceDouce }} />
 
               <div style={{
-                padding: '10px 14px', borderRadius: 10, fontSize: 13, fontWeight: 500,
+                padding: '10px 14px', borderRadius: 10, fontSize: 13.5, fontWeight: 500,
                 background: planBounds ? '#dcfce7' : jetons.alerteFond,
                 color:      planBounds ? jetons.succes : jetons.alerte,
+                display: 'flex', gap: 8, alignItems: 'flex-start', lineHeight: 1.45,
               }}>
+                <Icone nom={planBounds ? 'coche' : 'alerte'} taille={17} style={{ marginTop: 1 }} />
                 {planBounds
-                  ? '✅ Plan ajusté sur la vue satellite — visible pour vos vacanciers'
-                  : '⚠️ Plan pas encore ajusté — touchez « Ajuster sur la vue satellite » pour l\'aligner'}
+                  ? 'Plan ajusté sur la vue satellite — visible pour vos vacanciers'
+                  : 'Plan pas encore ajusté — touchez « Ajuster sur la vue satellite » pour l\'aligner'}
               </div>
 
               <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
-                <button onClick={() => setShowCalibrator(true)} style={btnPrimary}>
-                  🎯 Ajuster sur la vue satellite
+                <button onClick={() => setShowCalibrator(true)} style={bouton.principal}>
+                  <Icone nom="cible" taille={18} /> Ajuster sur la vue satellite
                 </button>
                 <label style={{ cursor: 'pointer' }}>
-                  <span style={{ background: jetons.surfaceDouce, color: jetons.texteMoyen, padding: '10px 18px',
-                                 borderRadius: 8, fontSize: 13, fontWeight: 600, display: 'inline-flex',
-                                 alignItems: 'center', minHeight: 44, boxSizing: 'border-box' }}>
+                  <span style={bouton.secondaire}>
                     Remplacer le plan
                   </span>
                   <input type="file" accept="image/png,image/jpeg"
                     onChange={e => handleUpload(e.target.files[0])}
                     style={{ display: 'none' }} />
                 </label>
-                <button onClick={supprimerPlan}
-                  style={{ ...btnPrimary, background: jetons.dangerFond, color: jetons.danger }}>
-                  🗑 Supprimer le plan
+                <button onClick={supprimerPlan} style={bouton.danger}>
+                  <Icone nom="corbeille" taille={18} /> Supprimer le plan
                 </button>
               </div>
             </div>
@@ -372,36 +369,31 @@ function UploadProgress({ label }) {
   )
 }
 
-const btnPrimary = {
-  background: jetons.marque, color: '#fff', padding: '10px 18px', minHeight: 44,
-  borderRadius: 8, border: 'none', fontSize: 13, fontWeight: 600, cursor: 'pointer',
-}
-const btnDisabled = {
-  ...btnPrimary, background: jetons.bordure, color: jetons.texteDoux, cursor: 'not-allowed',
-}
-
 function Badge({ ok, children }) {
   return (
     <span style={{
-      padding: '6px 12px', borderRadius: 999, fontSize: 12, fontWeight: 600,
+      display: 'inline-flex', alignItems: 'center', gap: 6,
+      padding: '6px 12px', borderRadius: 999, fontSize: 13.5, fontWeight: 600,
       background: ok ? '#dcfce7' : jetons.alerteFond,
       color:      ok ? jetons.succes : jetons.alerte,
       whiteSpace: 'nowrap',
-    }}>{children}</span>
+    }}>
+      <Icone nom={ok ? 'coche' : 'alerte'} taille={15} epaisseur={2} />
+      {children}
+    </span>
   )
 }
 
-function Step({ n, title, subtitle, done, disabled, disabledReason, optional, children }) {
+function Step({ n, title, subtitle, done, disabled, disabledReason, children }) {
   const state = disabled ? 'disabled' : done ? 'done' : 'active'
   const numBg = state === 'done'     ? jetons.marque
               : state === 'disabled' ? jetons.bordure
-                                     : '#1a4d1a'
-  const numFg = state === 'disabled' ? '#9ca3af' : '#fff'
+                                     : jetons.surface
+  const numFg = state === 'disabled' ? '#9ca3af' : state === 'done' ? '#fff' : jetons.texte
   return (
     <div style={{
       background: '#fff', borderRadius: 16,
-      border: '1px solid ' + (state === 'active' ? jetons.marque : 'rgba(0,0,0,0.07)'),
-      boxShadow: state === 'active' ? '0 4px 20px rgba(23,25,28,0.08)' : 'none',
+      border: `1px solid ${jetons.bordure}`,
       opacity: state === 'disabled' ? 0.55 : 1,
       overflow: 'hidden', transition: 'all 0.2s',
     }}>
@@ -409,28 +401,26 @@ function Step({ n, title, subtitle, done, disabled, disabledReason, optional, ch
                     borderBottom: '1px solid rgba(0,0,0,0.05)' }}>
         <div style={{
           width: 36, height: 36, borderRadius: 12, background: numBg, color: numFg,
-          fontSize: 16, fontWeight: 800, display: 'flex', alignItems: 'center', justifyContent: 'center',
-          flexShrink: 0,
+          fontSize: 16, fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center',
+          flexShrink: 0, boxSizing: 'border-box',
+          border: state === 'active' ? `2px solid ${jetons.texte}` : 'none',
         }}>
-          {state === 'done' ? '✓' : n}
+          {state === 'done' ? <Icone nom="coche" taille={18} epaisseur={2.4} /> : n}
         </div>
         <div style={{ flex: 1 }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-            <Texte variante="sousTitre" as="h2" style={{ fontSize: 16 }}>{title}</Texte>
-            {optional && <span style={{ fontSize: 11, padding: '2px 8px', borderRadius: 6,
-                                        background: jetons.surfaceDouce, color: jetons.texteDoux, fontWeight: 600 }}>
-              OPTIONNEL
-            </span>}
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+            <Texte variante="sousTitre" as="h2" style={titreSection}>{title}</Texte>
+
           </div>
-          <p style={{ margin: '4px 0 0', fontSize: 13, color: jetons.texteDoux, lineHeight: 1.5 }}>
+          <p style={{ margin: '4px 0 0', fontSize: 14, color: jetons.texteDoux, lineHeight: 1.5 }}>
             {subtitle}
           </p>
         </div>
       </div>
       <div style={{ padding: '18px 22px' }}>
         {disabled ? (
-          <div style={{ fontSize: 13, color: jetons.texteDoux, fontStyle: 'italic' }}>
-            🔒 {disabledReason || 'Terminez l\'étape précédente.'}
+          <div style={{ fontSize: 13.5, color: jetons.texteDoux, display: 'flex', gap: 8, alignItems: 'center' }}>
+            <Icone nom="cadenas" taille={16} /> {disabledReason || 'Terminez l\'étape précédente.'}
           </div>
         ) : children}
       </div>

@@ -4,6 +4,7 @@ import { CAMPING_LIEUX } from '../utils/analyzeMap'
 import { esc } from '../../utils/esc'
 import { fusionnerCarteConfig } from '../lib/carteConfig'
 import { jetons } from '../theme'
+import { Icone } from '../../design'
 
 let _L = null
 async function getLeaflet() {
@@ -174,7 +175,7 @@ export default function MapEditor({ camping, setCamping }) {
       popupEl.style.textAlign = 'center'
       popupEl.innerHTML = `<b style="font-size:14px">${esc(pin.emoji)} ${esc(pin.label)}</b>`
       const delBtn = document.createElement('button')
-      delBtn.textContent = '🗑 Supprimer'
+      delBtn.textContent = 'Supprimer'
       delBtn.style.cssText = 'display:block;margin:8px auto 0;padding:6px 14px;border:none;border-radius:8px;background:#fef2f2;color:#dc2626;font-weight:600;font-size:13px;cursor:pointer'
       delBtn.onclick = () => { marker.closePopup(); removePin(pin.ref_id) }
       popupEl.appendChild(delBtn)
@@ -198,8 +199,9 @@ export default function MapEditor({ camping, setCamping }) {
       borderRadius: 12, boxShadow: '0 4px 24px rgba(0,0,0,0.15)',
       display: 'flex', flexDirection: 'column', gap: 4, padding: '10px 10px',
     }}>
-      <div style={{ fontSize: 12, color: selected ? jetons.marque : jetons.texteDoux, fontWeight: 600, marginBottom: 4, lineHeight: 1.3 }}>
-        {selected ? `🎯 Touchez la carte pour placer « ${selected.label} »` : '💡 Choisissez un lieu, puis touchez la carte'}
+      <div style={{ fontSize: 13, color: selected ? jetons.marque : jetons.texteDoux, fontWeight: 600, marginBottom: 4, lineHeight: 1.35, display: 'flex', gap: 6, alignItems: 'flex-start' }}>
+        <Icone nom={selected ? 'cible' : 'pin'} taille={15} style={{ marginTop: 1 }} />
+        <span>{selected ? `Touchez la carte pour placer « ${selected.label} »` : 'Choisissez un lieu, puis touchez la carte'}</span>
       </div>
 
       {animations.length > 0 && (
@@ -252,7 +254,7 @@ export default function MapEditor({ camping, setCamping }) {
         <div style={{ marginBottom: 10, padding: '8px 12px', background: '#fffbeb', border: '1px solid #fcd34d', borderRadius: 8, fontSize: 12, color: jetons.alerte }}>
           {/* Un gérant n'a pas à lire une commande SQL : la cause courante est
               le réseau. Les lieux restent gardés sur cet appareil en attendant. */}
-          ⚠️ Enregistrement impossible, vérifiez la connexion et réessayez.
+          Enregistrement impossible, vérifiez la connexion et réessayez.
         </div>
       )}
 
@@ -272,19 +274,19 @@ export default function MapEditor({ camping, setCamping }) {
         {/* Indicateur sauvegarde */}
         {saving && (
           <div style={{ position: 'absolute', top: 10, right: 10, zIndex: 1000, background: 'rgba(255,255,255,0.95)', borderRadius: 20, padding: '4px 12px', fontSize: 12, color: jetons.marqueTexte, fontWeight: 700, boxShadow: '0 2px 8px rgba(0,0,0,0.1)' }}>
-            💾 Sauvegarde...
+            Enregistrement…
           </div>
         )}
         {/* La consigne du panneau sort vite de la vue (liste défilée, panneau
             au-dessus de la carte au téléphone) : on la rappelle sur la carte. */}
         {!saving && selected && (
           <div style={{ position: 'absolute', bottom: 24, left: etroit ? 10 : 250, right: 10, zIndex: 1000, background: jetons.marque, color: '#fff', borderRadius: 12, padding: '8px 12px', fontSize: 13, fontWeight: 600, textAlign: 'center', boxShadow: '0 2px 8px rgba(0,0,0,0.2)', pointerEvents: 'none' }}>
-            🎯 Touchez la carte pour placer « {selected.label} »
+            Touchez la carte pour placer « {selected.label} »
           </div>
         )}
         {!saving && !selected && pins.length > 0 && (
           <div style={{ position: 'absolute', top: 10, right: 10, zIndex: 1000, background: 'rgba(255,255,255,0.95)', borderRadius: 20, padding: '4px 12px', fontSize: 12, color: jetons.texteDoux, boxShadow: '0 2px 8px rgba(0,0,0,0.1)' }}>
-            ✓ {pins.length} lieu{pins.length > 1 ? 'x' : ''} placé{pins.length > 1 ? 's' : ''}
+            {pins.length} lieu{pins.length > 1 ? 'x' : ''} placé{pins.length > 1 ? 's' : ''}
           </div>
         )}
       </div>
@@ -295,14 +297,14 @@ export default function MapEditor({ camping, setCamping }) {
 // ── Composants utilitaires ──────────────────────────────────────────────────
 
 const GROUPES_LIEUX = [
-  { label: '💧 Aquatique',    ids: ['piscine', 'toboggan', 'pataugeoire', 'jacuzzi', 'plage'] },
-  { label: '🍽️ Restauration', ids: ['bar', 'restaurant', 'epicerie', 'boulangerie', 'pizzeria', 'bbq', 'distributeur'] },
-  { label: '⚽ Sports',       ids: ['tennis', 'foot', 'volley', 'petanque', 'pingpong', 'basket', 'minigolf', 'velo', 'fitness', 'skate', 'archery'] },
-  { label: '🛝 Enfants',      ids: ['jeux', 'miniclub', 'trampoline'] },
-  { label: '🎪 Animations',   ids: ['animation', 'jeux_salle', 'cinema', 'disco'] },
-  { label: '🏠 Services',     ids: ['reception', 'sanitaires', 'laverie', 'infirmerie', 'wifi', 'poubelles', 'borne_elec', 'point_eau'] },
-  { label: '🅿️ Transport',    ids: ['parking', 'parking_velo', 'navette', 'station_gaz'] },
-  { label: '🌲 Nature',       ids: ['foret', 'rando'] },
+  { label: 'Aquatique',    ids: ['piscine', 'toboggan', 'pataugeoire', 'jacuzzi', 'plage'] },
+  { label: 'Restauration', ids: ['bar', 'restaurant', 'epicerie', 'boulangerie', 'pizzeria', 'bbq', 'distributeur'] },
+  { label: 'Sports',       ids: ['tennis', 'foot', 'volley', 'petanque', 'pingpong', 'basket', 'minigolf', 'velo', 'fitness', 'skate', 'archery'] },
+  { label: 'Enfants',      ids: ['jeux', 'miniclub', 'trampoline'] },
+  { label: 'Animations',   ids: ['animation', 'jeux_salle', 'cinema', 'disco'] },
+  { label: 'Services',     ids: ['reception', 'sanitaires', 'laverie', 'infirmerie', 'wifi', 'poubelles', 'borne_elec', 'point_eau'] },
+  { label: 'Transport',    ids: ['parking', 'parking_velo', 'navette', 'station_gaz'] },
+  { label: 'Nature',       ids: ['foret', 'rando'] },
 ]
 
 function LieuPicker({ onAdd, existingLabels }) {

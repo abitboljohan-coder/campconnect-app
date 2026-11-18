@@ -97,11 +97,11 @@ export default function Moderation({ camping }) {
       {/* Les onglets passent à la ligne : en ligne qui défile, « Vacanciers »
           était hors de l'écran à 320 px et personne ne le trouvait. */}
       <Pile direction="ligne" espace="sm" retour role="group" aria-label="Type de contenu">
-        {[['messages', `💬 Messages (${messages.length})`],
-          ['statuts', `📣 Statuts (${statuts.length})`],
-          ['annonces', `📌 Annonces (${annonces.length})`],
-          ['groupes', `🏕️ Groupes (${groupes.length})`],
-          ['vacanciers', `👥 Vacanciers (${vacanciers.length})`]].map(([k, l]) => (
+        {[['messages', `Messages (${messages.length})`],
+          ['statuts', `Statuts (${statuts.length})`],
+          ['annonces', `Annonces (${annonces.length})`],
+          ['groupes', `Groupes (${groupes.length})`],
+          ['vacanciers', `Vacanciers (${vacanciers.length})`]].map(([k, l]) => (
           <Puce key={k} taille="sm" actif={tab === k} onClick={() => setTab(k)} style={{ flexShrink: 0, minHeight: 44 }}>{l}</Puce>
         ))}
       </Pile>

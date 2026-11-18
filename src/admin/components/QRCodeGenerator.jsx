@@ -1,6 +1,7 @@
 import { useRef } from 'react'
 import { QRCodeSVG } from 'qrcode.react'
-import { jetons } from '../theme'
+import { jetons, bouton as styleBouton } from '../theme'
+import { Icone } from '../../design'
 import { isNative } from '../../native'
 import { esc } from '../../utils/esc'
 import { MESSAGE_ORDINATEUR } from '../lib/liens'
@@ -89,10 +90,10 @@ export default function QRCodeGenerator({ url, campingNom }) {
         ) : (
           <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
             <button onClick={imprimerAffiche} style={bouton(true)}>
-              🖨️ Imprimer l’affiche
+              <Icone nom="qr" taille={18} /> Imprimer l’affiche
             </button>
             <button onClick={telecharger} style={bouton(false)}>
-              ⬇️ Télécharger l’image
+              Télécharger l’image
             </button>
           </div>
         )}
@@ -101,9 +102,5 @@ export default function QRCodeGenerator({ url, campingNom }) {
   )
 }
 
-const bouton = (principal) => ({
-  minHeight: 44, padding: '10px 18px', borderRadius: 10,
-  background: principal ? jetons.marque : jetons.surfaceDouce,
-  color: principal ? '#fff' : jetons.texteMoyen,
-  fontSize: 14, fontWeight: 600,
-})
+// Les boutons communs aux neuf pages (voir ../theme).
+const bouton = (principal) => (principal ? styleBouton.principal : styleBouton.secondaire)

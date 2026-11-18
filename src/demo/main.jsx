@@ -28,6 +28,7 @@ import MiniFiche from '../components/MiniFiche'
 import { DEMO_CAMPING, DEMO_VACANCIER } from './mockSupabase'
 import { ToastHost } from '../components/Toast'
 import { appliquerTheme } from '../design'
+import { variablesAdmin } from '../admin/theme'
 
 const params = new URLSearchParams(location.search)
 // ?accent=e8590c : la démo aux couleurs d'un autre camping (profil, paysage).
@@ -38,6 +39,12 @@ const v = params.get('profil') === 'vide'
   : DEMO_VACANCIER
 appliquerTheme(c)
 const s = params.get('s') || 'accueil'
+// L'espace gérant a sa propre encre (charte Ardoise), posée par AdminApp en
+// production. Sans elle, la démo montrée aux prospects mêlait boutons noirs
+// et boutons à la couleur du camping.
+if (s.startsWith('admin')) {
+  for (const [k, val] of Object.entries(variablesAdmin)) document.documentElement.style.setProperty(k, val)
+}
 const routeFor = { minifiche: '/chat/g1', accueil: '/', groupes: '/groupes', map: '/map', agenda: '/agenda', infos: '/infos', profil: '/profil', chat: '/chat/g1', admin: '/admin/overview', onboarding: '/onboarding',
   'admin-animations': '/admin/animations', 'admin-signalements': '/admin/signalements',
   'admin-moderation': '/admin/moderation', 'admin-parametres': '/admin/parametres', 'admin-stats': '/admin/stats',

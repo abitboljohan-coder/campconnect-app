@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { creneauParDefaut, estPasse, dupliquerAnimation, dateLocale, heureLocale, tauxRemplissage } from './animations'
+import { creneauParDefaut, estPasse, dupliquerAnimation, dateLocale, heureLocale, tauxRemplissage, remplissage, animationsDuJour } from './animations'
 
 // Dates construites en heure locale : le test ne dépend pas du fuseau de la machine.
 const local = (a, m, j, h, min = 0) => new Date(a, m - 1, j, h, min)
@@ -89,5 +89,27 @@ describe('taux de remplissage', () => {
   it('vaut 0 sans animation comptable', () => {
     expect(tauxRemplissage([], [], maintenant)).toBe(0)
     expect(tauxRemplissage([anims[1]], inscrits('concert', 5), maintenant)).toBe(0)
+  })
+})
+
+describe('détail du remplissage', () => {
+  const maintenant = new Date('2026-10-02T12:00:00Z').getTime()
+  it('dit qu’il n’y a rien à mesurer sans places limitées', () => {
+    expect(remplissage([{ id: 'c', places_max: null, debut: '2026-10-03T19:00:00Z' }], [], maintenant))
+      .toEqual({ places: 0, occupees: 0, taux: 0 })
+  })
+  it('donne places offertes et places prises', () => {
+    const anims = [{ id: 'p', places_max: 12, debut: '2026-10-03T14:00:00Z' }]
+    expect(remplissage(anims, [{ animation_id: 'p' }, { animation_id: 'p' }, { animation_id: 'p' }], maintenant))
+      .toEqual({ places: 12, occupees: 3, taux: 25 })
+  })
+})
+
+describe('animations du jour', () => {
+  it('garde le jour local, dans l’ordre des horaires', () => {
+    const midi = new Date(2026, 10, 18, 12, 0)
+    const a = (id, h, j = 18) => ({ id, debut: new Date(2026, 10, j, h, 0).toISOString() })
+    const liste = [a('soir', 21), a('hier', 10, 17), a('matin', 10), a('demain', 9, 19), { id: 'sans' }]
+    expect(animationsDuJour(liste, midi).map(x => x.id)).toEqual(['matin', 'soir'])
   })
 })
