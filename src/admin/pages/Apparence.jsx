@@ -4,7 +4,8 @@ import ColorPicker from '../components/ColorPicker'
 import { Bloc, EnTete } from '../components/Bloc'
 import { traduireErreur } from '../lib/erreurs'
 import { toast } from '../../toast'
-import { Bouton, Champ, Texte, Pile, couleur as jetons, espace, graisse, rayon } from '../../design'
+import { Bouton, Champ, Texte, Pile, espace, graisse, rayon } from '../../design'
+import { jetons, couleurCampingParDefaut, couleurCampingSecondaireParDefaut } from '../theme'
 
 function compressImage(file, maxWidth = 800, quality = 0.75) {
   // Un PNG ou un SVG détouré devenait un JPEG, qui n'a pas de transparence :
@@ -33,8 +34,8 @@ function compressImage(file, maxWidth = 800, quality = 0.75) {
 
 export default function Apparence({ camping, setCamping }) {
   const [nom, setNom]           = useState(camping?.nom || '')
-  const [couleur1, setCouleur1] = useState(camping?.couleur_principale || jetons.marque)
-  const [couleur2, setCouleur2] = useState(camping?.couleur_secondaire || jetons.marqueSombre)
+  const [couleur1, setCouleur1] = useState(camping?.couleur_principale || couleurCampingParDefaut)
+  const [couleur2, setCouleur2] = useState(camping?.couleur_secondaire || couleurCampingSecondaireParDefaut)
   const [saving, setSaving]     = useState(false)
   const [uploadingLogo, setUploadingLogo] = useState(false)
   const [logoPreview, setLogoPreview] = useState(camping?.logo_url || null)
@@ -182,15 +183,15 @@ function UploadProgress({ label }) {
   return (
     <div role="status" style={{
       display: 'flex', alignItems: 'center', gap: espace.sm,
-      padding: `${espace.sm}px ${espace.md}px`, background: '#f0fdf4',
-      borderRadius: rayon.sm, border: '1px solid #bbf7d0',
+      padding: `${espace.sm}px ${espace.md}px`, background: jetons.surfaceDouce,
+      borderRadius: rayon.sm, border: `1px solid ${jetons.bordure}`,
     }}>
       <span aria-hidden="true" style={{
         width: 16, height: 16, border: `2px solid ${jetons.marque}`,
         borderTopColor: 'transparent', borderRadius: rayon.rond,
         animation: 'spin 0.8s linear infinite', flexShrink: 0,
       }} />
-      <Texte variante="corps" as="span" style={{ color: jetons.succes }}>{label}</Texte>
+      <Texte variante="corps" as="span" style={{ color: jetons.texteMoyen }}>{label}</Texte>
     </div>
   )
 }

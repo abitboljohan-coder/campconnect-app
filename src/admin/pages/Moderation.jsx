@@ -3,7 +3,8 @@ import { supabase } from '../../supabase'
 import { toast } from '../../toast'
 import { lireVacanciersDuCamping } from '../../lib/vacanciers'
 import { Bloc, EnTete } from '../components/Bloc'
-import { Bouton, Champ, Pile, Puce, Squelette, Vide, Badge as Pastille, couleur as jetons, espace, graisse, rayon } from '../../design'
+import { Bouton, Champ, Pile, Puce, Squelette, Vide, Badge as Pastille, espace, graisse, rayon } from '../../design'
+import { jetons } from '../theme'
 
 export default function Moderation({ camping }) {
   const [messages, setMessages] = useState([])

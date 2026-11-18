@@ -9,7 +9,8 @@ import { barycentre } from '../lib/geo'
 import { traduireErreur } from '../lib/erreurs'
 import { EnTete } from '../components/Bloc'
 import { toast } from '../../toast'
-import { Texte, Pile, couleur as jetons } from '../../design'
+import { Texte, Pile } from '../../design'
+import { jetons } from '../theme'
 
 async function compressToBlob(file, maxWidth = 2000, quality = 0.82) {
   const bmp = await createImageBitmap(file)
@@ -363,8 +364,8 @@ export default function Carte({ camping, setCamping }) {
 function UploadProgress({ label }) {
   return (
     <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 12, padding: '8px 12px',
-                  background: '#f0fdf4', borderRadius: 8, border: '1px solid #bbf7d0' }}>
-      <div style={{ width: 16, height: 16, border: '2px solid #639922', borderTopColor: 'transparent',
+                  background: jetons.surfaceDouce, borderRadius: 8, border: `1px solid ${jetons.bordure}` }}>
+      <div style={{ width: 16, height: 16, border: `2px solid ${jetons.marque}`, borderTopColor: 'transparent',
                     borderRadius: '50%', animation: 'spin 0.8s linear infinite', flexShrink: 0 }} />
       <span style={{ fontSize: 13, color: jetons.succes, fontWeight: 500 }}>{label}</span>
     </div>
@@ -400,7 +401,7 @@ function Step({ n, title, subtitle, done, disabled, disabledReason, optional, ch
     <div style={{
       background: '#fff', borderRadius: 16,
       border: '1px solid ' + (state === 'active' ? jetons.marque : 'rgba(0,0,0,0.07)'),
-      boxShadow: state === 'active' ? '0 4px 20px rgba(99,153,34,0.10)' : 'none',
+      boxShadow: state === 'active' ? '0 4px 20px rgba(23,25,28,0.08)' : 'none',
       opacity: state === 'disabled' ? 0.55 : 1,
       overflow: 'hidden', transition: 'all 0.2s',
     }}>

@@ -3,10 +3,8 @@ import { Outlet, NavLink, useLocation } from 'react-router-dom'
 import Sheet from '../components/Sheet'
 import { supabase } from '../supabase'
 import { isNative, setAppMode } from '../native'
-import {
-  Bouton, Texte, Pile, Icone,
-  couleur as jetons, espace, graisse, rayon, texte as tailles,
-} from '../design'
+import { Bouton, Texte, Pile, Icone, espace, graisse, rayon, texte as tailles } from '../design'
+import { jetons, barre } from './theme'
 
 /**
  * Les neuf entrées n'ont pas le même rythme.
@@ -34,13 +32,10 @@ const CONFIGURATION = [
   { path: '/admin/parametres', icone: 'curseurs',  label: 'Paramètres' },
 ]
 
-// L'administration garde la charte CampConnect — vert sombre et vert clair —
-// et non l'accent du camping : c'est l'outil du gérant, pas la vitrine de son
-// établissement. Le vacancier voit ses couleurs ; le gérant voit les nôtres.
-const VERT_CLAIR = '#C0DD97'
-const VERT_ETEINT = 'rgba(192,221,151,0.55)'
-const LARGEUR_MENU = 232
-const SEPARATION = 'rgba(255,255,255,0.08)'
+// L'administration garde sa propre charte, et non l'accent du camping : c'est
+// l'outil du gérant, pas la vitrine de son établissement. Barre ardoise neutre,
+// repère saumon sur l'entrée active (voir ./theme).
+const LARGEUR_MENU = 240
 
 /**
  * Le point de bascule est celui du menu latéral, pas une taille d'appareil.
@@ -83,7 +78,7 @@ function Marque({ taille = 26, texte: tailleTexte = 18 }) {
         <img src="/logo-mark.png" alt="" width={taille} height={taille}
              style={{ display: 'block', objectFit: 'contain' }} />
       </span>
-      <Texte variante="sousTitre" as="span" style={{ color: VERT_CLAIR, fontSize: tailleTexte }}>
+      <Texte variante="sousTitre" as="span" style={{ color: barre.texteActif, fontSize: tailleTexte }}>
         CampConnect
       </Texte>
     </span>
@@ -140,17 +135,21 @@ function LienMenu({ item, badge }) {
       to={item.path}
       style={({ isActive }) => ({
         display: 'flex', alignItems: 'center', gap: espace.sm + 2,
-        padding: `10px ${espace.md}px`, borderRadius: rayon.md, marginBottom: 2,
-        color: isActive ? jetons.marqueSombre : VERT_CLAIR,
-        background: isActive ? VERT_CLAIR : 'transparent',
+        padding: `9px ${espace.md}px`, borderRadius: rayon.sm, marginBottom: 2,
+        color: isActive ? barre.texteActif : barre.texte,
+        background: isActive ? barre.actif : 'transparent',
         fontWeight: isActive ? graisse.fort : graisse.normal,
         fontSize: tailles.base, textDecoration: 'none',
         transition: 'background 0.15s, color 0.15s',
       })}
     >
-      <Icone nom={item.icone} taille={19} />
-      <span style={{ flex: 1 }}>{item.label}</span>
-      <Pastille n={badge} />
+      {({ isActive }) => (
+        <>
+          <Icone nom={item.icone} taille={18} style={{ color: isActive ? jetons.accent : 'inherit' }} />
+          <span style={{ flex: 1 }}>{item.label}</span>
+          <Pastille n={badge} />
+        </>
+      )}
     </NavLink>
   )
 }
@@ -158,7 +157,7 @@ function LienMenu({ item, badge }) {
 function TitreGroupe({ children }) {
   return (
     <Texte variante="micro" as="h2" style={{
-      color: VERT_ETEINT, textTransform: 'uppercase', letterSpacing: '0.08em',
+      color: barre.titre, textTransform: 'uppercase', letterSpacing: '0.08em',
       fontWeight: graisse.fort, padding: `0 ${espace.md}px`,
       marginTop: espace.lg, marginBottom: espace.xs,
     }}>
@@ -185,7 +184,9 @@ function useDefilerVersAncre(hash) {
           .find(h => h.textContent.toLowerCase().includes(ancre.toLowerCase()))
       if (cible || ++essais > 20) clearInterval(iv)
       if (cible) {
-        cible.style.scrollMarginTop = '96px'   // sous l'en-tête collant du téléphone
+        // Sous l'en-tête collant du téléphone, dont la hauteur dépend de l'encoche.
+        const entete = document.querySelector('header.cc-sombre')
+        cible.style.scrollMarginTop = `${(entete?.offsetHeight || 0) + 16}px`
         cible.scrollIntoView({ block: 'start', behavior: 'smooth' })
       }
     }, 100)
@@ -222,14 +223,14 @@ export default function AdminLayout({ gerant, camping, onLogout }) {
       {/* ─── Menu latéral, écrans larges ─────────────────────────────────── */}
       {!etroit && (
         <aside className="cc-sombre" style={{
-          width: LARGEUR_MENU, background: jetons.marqueSombre,
+          width: LARGEUR_MENU, background: barre.fond,
           display: 'flex', flexDirection: 'column',
           position: 'fixed', top: 0, left: 0, bottom: 0, zIndex: 100,
           overflowY: 'auto',
         }}>
           <div style={{ padding: '28px 20px 4px' }}>
             <Marque />
-            <Texte variante="doux" style={{ color: VERT_ETEINT, marginTop: espace.xs }}>
+            <Texte variante="doux" style={{ color: barre.texte, marginTop: espace.sm }}>
               {camping?.nom}
             </Texte>
           </div>
@@ -243,12 +244,15 @@ export default function AdminLayout({ gerant, camping, onLogout }) {
             {CONFIGURATION.map(item => <LienMenu key={item.path} item={item} />)}
           </nav>
 
-          <div style={{ padding: `${espace.lg}px 20px`, borderTop: `1px solid ${SEPARATION}` }}>
-            <Texte variante="doux" style={{ color: VERT_ETEINT, marginBottom: espace.md }}>
+          <div style={{ padding: `${espace.lg}px 20px`, borderTop: `1px solid ${barre.separation}` }}>
+            <Texte variante="doux" style={{
+              color: barre.texte, marginBottom: espace.md,
+              overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+            }}>
               {gerant?.email || 'Gérant'}
             </Texte>
-            <Bouton variante="danger" taille="sm" pleineLargeur onClick={seDeconnecter}
-                    style={{ background: 'rgba(220,38,38,0.15)', color: '#fca5a5', border: '1px solid rgba(220,38,38,0.2)' }}>
+            <Bouton variante="discret" taille="sm" pleineLargeur onClick={seDeconnecter}
+                    style={{ background: 'transparent', color: barre.texte, border: `1px solid ${barre.separation}` }}>
               Se déconnecter
             </Bouton>
           </div>
@@ -264,7 +268,7 @@ export default function AdminLayout({ gerant, camping, onLogout }) {
 
         {etroit ? (
           <header className="cc-sombre" style={{
-            background: jetons.marqueSombre, padding: `14px ${espace.lg}px`,
+            background: barre.fond, padding: `14px ${espace.lg}px`,
             paddingTop: 'calc(14px + var(--cc-safe-top, 0px))',
             display: 'flex', alignItems: 'center', justifyContent: 'space-between',
             gap: espace.md, position: 'sticky', top: 0, zIndex: 50,
@@ -272,7 +276,7 @@ export default function AdminLayout({ gerant, camping, onLogout }) {
             <div style={{ minWidth: 0 }}>
               <Marque taille={22} texte={tailles.grand} />
               <Texte variante="micro" style={{
-                color: VERT_ETEINT,
+                color: barre.texte,
                 overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
               }}>
                 {camping?.nom}
@@ -283,7 +287,7 @@ export default function AdminLayout({ gerant, camping, onLogout }) {
                 donc à l'espace vacancier ; la déconnexion passe dans Réglages. */}
             {isNative ? (
               <Bouton variante="discret" taille="sm" onClick={() => setAppMode('vacancier')}
-                      style={{ color: VERT_CLAIR, flexShrink: 0, minHeight: 44 }}>
+                      style={{ color: barre.texteActif, flexShrink: 0, minHeight: 44 }}>
                 Espace vacancier
               </Bouton>
             ) : (
@@ -293,24 +297,11 @@ export default function AdminLayout({ gerant, camping, onLogout }) {
               </Bouton>
             )}
           </header>
-        ) : (
-          <header style={{
-            background: jetons.surface, borderBottom: `1px solid ${jetons.bordure}`,
-            padding: '14px 28px',
-            display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-          }}>
-            <Texte variante="corps">
-              Connecté en tant que <strong style={{ color: jetons.texte }}>{gerant?.email || 'Gérant'}</strong>
-            </Texte>
-            <Texte variante="corps" as="span" style={{ fontWeight: graisse.fort, color: jetons.marqueTexte }}>
-              {camping?.nom}
-            </Texte>
-          </header>
-        )}
+        ) : null}
 
         <main style={{
-          padding: etroit ? `${espace.xl}px ${espace.lg}px` : 28,
-          maxWidth: 1100, margin: '0 auto',
+          padding: etroit ? `${espace.xl}px ${espace.lg}px` : '40px 40px 56px',
+          maxWidth: 1180, margin: '0 auto',
         }}>
           <Outlet />
         </main>
@@ -320,13 +311,13 @@ export default function AdminLayout({ gerant, camping, onLogout }) {
       {etroit && (
         <nav className="cc-sombre" aria-label="Administration" data-barre="bas" style={{
           position: 'fixed', bottom: 0, left: 0, right: 0,
-          background: jetons.marqueSombre, borderTop: `1px solid ${SEPARATION}`,
+          background: barre.fond, borderTop: `1px solid ${barre.separation}`,
           display: 'flex', zIndex: 100,
           paddingBottom: 'var(--cc-safe-bottom, 0px)',
         }}>
           {QUOTIDIEN.map(item => (
             <NavLink key={item.path} to={item.path} aria-label={item.label} style={({ isActive }) => ({
-              ...styleOnglet, color: isActive ? VERT_CLAIR : VERT_ETEINT,
+              ...styleOnglet, color: isActive ? barre.texteActif : barre.texte,
               fontWeight: isActive ? graisse.fort : graisse.normal,
             })}>
               <span style={{ position: 'relative', display: 'inline-flex' }}>
@@ -350,7 +341,7 @@ export default function AdminLayout({ gerant, camping, onLogout }) {
               // document et ferait déborder le libellé : seule la famille est
               // à reprendre, la taille vient de styleOnglet.
               fontFamily: 'inherit',
-              color: dansConfiguration ? VERT_CLAIR : VERT_ETEINT,
+              color: dansConfiguration ? barre.texteActif : barre.texte,
               fontWeight: dansConfiguration ? graisse.fort : graisse.normal,
             }}
           >

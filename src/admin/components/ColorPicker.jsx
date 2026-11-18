@@ -1,5 +1,6 @@
 import { useId } from 'react'
-import { Texte, Pile, couleur as jetons, espace, graisse, rayon } from '../../design'
+import { Texte, Pile, espace, graisse, rayon } from '../../design'
+import { jetons } from '../theme'
 
 export default function ColorPicker({ label, value, onChange }) {
   // Le libellé était un <label> sans `for` : un lecteur d'écran annonçait

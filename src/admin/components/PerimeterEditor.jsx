@@ -4,7 +4,7 @@ import { searchCampsiteByName } from '../lib/osmPois'
 import { fusionnerCarteConfig } from '../lib/carteConfig'
 import { barycentre } from '../lib/geo'
 import { traduireErreur } from '../lib/erreurs'
-import { couleur as jetons } from '../../design'
+import { jetons, couleurCampingParDefaut } from '../theme'
 
 let LPromise = null
 function loadLeaflet() {
@@ -158,7 +158,7 @@ export default function PerimeterEditor({ camping, onClose, onSaved }) {
     setDropdownRect({ top: r.bottom + 4, left: r.left, width: Math.max(r.width, 300) })
   }, [searchResults])
 
-  const couleur = camping?.couleur_principale || jetons.marque
+  const couleur = camping?.couleur_principale || couleurCampingParDefaut
 
   useEffect(() => {
     let mounted = true

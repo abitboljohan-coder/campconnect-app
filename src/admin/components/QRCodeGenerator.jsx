@@ -1,6 +1,6 @@
 import { useRef } from 'react'
 import { QRCodeSVG } from 'qrcode.react'
-import { couleur as jetons } from '../../design'
+import { jetons } from '../theme'
 import { isNative } from '../../native'
 import { esc } from '../../utils/esc'
 import { MESSAGE_ORDINATEUR } from '../lib/liens'

@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { supabase } from '../supabase'
 import { isNative, setAppMode } from '../native'
-import { couleur as jetons } from '../design'
+import { jetons } from './theme'
 import { traduireErreur } from './lib/erreurs'
 
 // Lien du mail « mot de passe oublié ». Dans l'app native, l'origine vaut
@@ -124,7 +124,7 @@ export default function AdminLogin({ onLogin, erreurInitiale = '' }) {
             <img src="/logo-mark.png" alt="" width={60} height={64}
                  style={{ display: 'block', objectFit: 'contain' }} />
           </span>
-          <div style={{ color: '#C0DD97', fontSize: 24, fontWeight: 700, letterSpacing: -0.5 }}>CampConnect</div>
+          <div style={{ color: '#FFFFFF', fontSize: 24, fontWeight: 700, letterSpacing: -0.5 }}>CampConnect</div>
           <div style={{ color: 'rgba(255,255,255,0.55)', fontSize: 14, marginTop: 4 }}>Espace gérant</div>
         </div>
 
@@ -184,7 +184,7 @@ export default function AdminLogin({ onLogin, erreurInitiale = '' }) {
             disabled={loading}
             style={{
               padding: '14px', borderRadius: 12,
-              background: loading ? '#4a6a20' : jetons.marque,
+              background: loading ? '#3A3D42' : jetons.marque,
               color: '#fff', fontWeight: 700, fontSize: 15,
               marginTop: 4, transition: 'background 0.15s',
             }}
@@ -208,7 +208,7 @@ export default function AdminLogin({ onLogin, erreurInitiale = '' }) {
           <button
             type="button"
             onClick={() => { setMode(mode === 'login' ? 'signup' : 'login'); setError(''); setInfo('') }}
-            style={{ background: 'none', border: 'none', color: '#C0DD97', fontSize: 13, cursor: 'pointer', minHeight: 44, textDecoration: 'underline' }}
+            style={{ background: 'none', border: 'none', color: '#A3A6AC', fontSize: 13, cursor: 'pointer', minHeight: 44, textDecoration: 'underline' }}
           >
             {mode === 'login'
               ? "Nouveau ? Créer l'espace de mon camping"

@@ -3,7 +3,8 @@ import { supabase } from '../../supabase'
 import { Bloc, EnTete } from '../components/Bloc'
 import { toast } from '../../toast'
 import { MODELES_INFOS, infosPubliables } from '../../lib/infos'
-import { Bouton, Pile, couleur as jetons, espace, graisse, rayon } from '../../design'
+import { Bouton, Pile, espace, graisse, rayon } from '../../design'
+import { jetons } from '../theme'
 
 // Les modèles ne sont que des exemples : on les propose avec leur titre et un
 // contenu vide, l'exemple restant en texte indicatif. Pré-remplis, ils

@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import { couleur as jetons } from '../../design'
+import { jetons } from '../theme'
 
 let L = null
 async function getLeaflet() {
