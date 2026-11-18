@@ -10,8 +10,8 @@ import { Bloc, EnTete } from '../components/Bloc'
 import { toast } from '../../toast'
 import { isNative } from '../../native'
 import { libelleAvecFr } from '../../lib/profil'
-import { Bouton, Texte, Pile, espace, graisse, rayon } from '../../design'
-import { jetons } from '../theme'
+import { Bouton, Texte, Pile, Icone, espace, graisse, rayon } from '../../design'
+import { jetons, bouton, titreSection } from '../theme'
 
 export default function Parametres({ camping, session, setCamping }) {
   const [email, setEmail]       = useState(session?.user?.email || '')
@@ -256,15 +256,15 @@ export default function Parametres({ camping, session, setCamping }) {
             <p style={{ fontSize: 14, color: jetons.texteMoyen, margin: 0 }}>{MESSAGE_ORDINATEUR}</p>
           ) : (
             <button onClick={exporterCsv} disabled={exporting} style={btnStyle(exporting)}>
-              {exporting ? 'Export…' : '📥 Exporter les vacanciers (CSV)'}
+              {exporting ? 'Export…' : 'Exporter les vacanciers (CSV)'}
             </button>
           )}
         </Bloc>
 
       {/* Zone danger */}
       <Bloc style={{ background: jetons.dangerFond, border: '1.5px solid #fecaca' }}>
-        <Texte variante="sousTitre" as="h2" style={{ fontSize: 16, color: jetons.danger }}>
-          ⚠️ Zone de danger
+        <Texte variante="sousTitre" as="h2" style={{ ...titreSection, color: jetons.danger, display: 'flex', alignItems: 'center', gap: 8 }}>
+          <Icone nom="alerte" taille={19} /> Zone de danger
         </Texte>
         <Texte variante="corps">
           Supprime tous les vacanciers, groupes, messages et inscriptions de cette saison. Les animations et la configuration du camping sont conservées.
@@ -291,10 +291,9 @@ const inputStyle = {
   border: `1.5px solid ${jetons.bordure}`, fontSize: 16, outline: 'none',
   background: jetons.fondClair, boxSizing: 'border-box',
 }
+// Le bouton principal commun aux neuf pages (voir ../theme).
 const btnStyle = (disabled) => ({
-  // 44 px : taille minimale d'une cible tactile confortable.
-  minHeight: 44, padding: '12px 18px', borderRadius: 10,
-  background: disabled ? '#9ca3af' : jetons.marque,
-  color: '#fff', fontWeight: 600, fontSize: 14,
+  ...bouton.principal,
   alignSelf: 'flex-start',
+  ...(disabled ? { opacity: 0.55, cursor: 'default' } : null),
 })

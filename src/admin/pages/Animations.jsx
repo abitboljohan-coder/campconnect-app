@@ -7,8 +7,9 @@ import AnimationForm from '../components/AnimationForm'
 import { dupliquerAnimation } from '../lib/animations'
 import { Bloc, EnTete } from '../components/Bloc'
 import { libelleAvecFr } from '../../lib/profil'
-import { Bouton, Texte, Pile, Badge, Squelette, Vide, Icone, espace, graisse, rayon, texte as tailles } from '../../design'
-import { jetons } from '../theme'
+import { Bouton, Texte, Pile, Badge, Squelette, Vide, Icone, espace, graisse, rayon } from '../../design'
+import { jetons, bouton, titreSection } from '../theme'
+import { useEtroit } from '../lib/useEtroit'
 
 export default function Animations({ camping }) {
   const [animations, setAnimations] = useState([])
@@ -19,6 +20,10 @@ export default function Animations({ camping }) {
   const [copie, setCopie]           = useState(null) // animation dupliquée, à créer
   const [saving, setSaving]         = useState(false)
   const [inscritsModal, setInscritsModal] = useState(null) // { anim, vacanciers, chargement, erreur }
+  // Au téléphone, cinq boutons par animation faisaient un formulaire, et
+  // « Supprimer » tombait sous le pouce : les actions rares passent dans « ⋯ ».
+  const etroit = useEtroit()
+  const [menuAnim, setMenuAnim] = useState(null)
 
   async function load() {
     const { data: anims } = await supabase
@@ -150,8 +155,9 @@ export default function Animations({ camping }) {
           titre="Animations"
           sous={`${animations.length} animation${animations.length !== 1 ? 's' : ''} au total`}
         />
-        <Bouton onClick={() => { setEditAnim(null); setShowForm(true) }} style={{ flexShrink: 0 }}>
-          + Nouvelle animation
+        <Bouton onClick={() => { setEditAnim(null); setShowForm(true) }} style={{ flexShrink: 0 }}
+                icone={<Icone nom="plus" taille={18} epaisseur={2} />}>
+          Nouvelle animation
         </Bouton>
       </Pile>
 
@@ -164,8 +170,9 @@ export default function Animations({ camping }) {
             titre="Aucune animation pour le moment"
             texte="Cours de natation, tournoi de pétanque, soirée barbecue… créez votre première animation !"
             action={
-              <Bouton onClick={() => { setEditAnim(null); setShowForm(true) }}>
-                + Créer ma première animation
+              <Bouton onClick={() => { setEditAnim(null); setShowForm(true) }}
+                      icone={<Icone nom="plus" taille={18} epaisseur={2} />}>
+                Créer ma première animation
               </Bouton>
             }
           />
@@ -174,7 +181,9 @@ export default function Animations({ camping }) {
         <Pile espace="lg">
           {[['À venir', aVenir], ['Passées', passees]].filter(([, liste]) => liste.length).map(([titreListe, liste]) => (
           <Pile key={titreListe} espace="sm" style={titreListe === 'Passées' ? { opacity: 0.72 } : undefined}>
-          <Texte variante="libelle" as="h2" style={{ color: jetons.texteDoux }}>{titreListe} · {liste.length}</Texte>
+          <h2 style={{ ...titreSection, margin: `${espace.sm}px 2px ${espace.xs}px` }}>
+            {titreListe} <span style={{ color: jetons.texteDoux, fontWeight: graisse.normal }}>· {liste.length}</span>
+          </h2>
           {liste.map(anim => {
             const nb = counts[anim.id] || 0
             const debut = anim.debut ? new Date(anim.debut) : null
@@ -195,13 +204,13 @@ export default function Animations({ camping }) {
                 {/* Infos */}
                 <div style={{ flex: 1, overflow: 'hidden' }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
-                    <Texte variante="sousTitre" as="span" style={{ fontSize: tailles.moyen }}>{anim.titre}</Texte>
+                    <Texte variante="sousTitre" as="span" style={{ fontSize: 16 }}>{anim.titre}</Texte>
                     <Badge ton={anim.publiee ? 'succes' : 'neutre'}>
                       {anim.publiee ? 'Publié' : 'Brouillon'}
                     </Badge>
                     {complet && <Badge ton="danger">Complet</Badge>}
                   </div>
-                  <div style={{ fontSize: 12, color: jetons.texteDoux, marginTop: 4, display: 'flex', gap: 12, flexWrap: 'wrap' }}>
+                  <div style={{ fontSize: 13.5, color: jetons.texteDoux, marginTop: 4, display: 'flex', gap: '2px 12px', flexWrap: 'wrap' }}>
                     {debut && <span>{debut.toLocaleDateString('fr-FR', { weekday: 'short', day: 'numeric', month: 'short' })} · {debut.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}</span>}
                     {anim.lieu && <span>{anim.lieu}</span>}
                   </div>
@@ -210,7 +219,7 @@ export default function Animations({ camping }) {
 
                 {/* Actions, sur leur propre ligne : à côté du titre, elles
                     l'écrasaient sur trois lignes dès que l'écran rétrécissait. */}
-                <Pile direction="ligne" espace="sm" retour aligner="center" style={{ marginTop: espace.md }}>
+                <Pile direction="ligne" espace="sm" retour aligner="center">
                 {/* Un lien souligné de 19 px de haut : trop petit pour le
                     doigt. Un vrai bouton, de 44 px. */}
                 <button
@@ -223,33 +232,45 @@ export default function Animations({ camping }) {
                     display: 'inline-flex', alignItems: 'center', gap: 6,
                     color: jetons.texte, fontWeight: graisse.fort, cursor: 'pointer',
                     background: jetons.surfaceDouce, border: 'none', borderRadius: rayon.md,
-                    fontFamily: 'inherit', fontSize: tailles.petit,
+                    fontFamily: 'inherit', fontSize: 14,
                   }}
                 >
                   <Icone nom="personnes" taille={15} style={{ color: jetons.texteDoux }} />
                   {nb}{anim.places_max > 0 ? `/${anim.places_max}` : ''} inscrit{nb > 1 ? 's' : ''}
                   <Icone nom="chevron" taille={15} />
                 </button>
-                  <Bouton
-                    variante="secondaire" taille="sm"
-                    onClick={() => togglePublie(anim)}
-                    style={anim.publiee ? actionStyle : { ...actionStyle, background: jetons.marque, color: '#fff', border: `1px solid ${jetons.marque}` }}
-                  >
-                    {anim.publiee ? 'Dépublier' : 'Publier'}
-                  </Bouton>
-                  <Bouton variante="secondaire" taille="sm"
-                          onClick={() => { setCopie(null); setEditAnim(anim); setShowForm(true) }}
-                          style={actionStyle}>
-                    Modifier
-                  </Bouton>
-                  <Bouton variante="secondaire" taille="sm" onClick={() => dupliquer(anim)}
-                          style={actionStyle}>
-                    Dupliquer
-                  </Bouton>
-                  <Bouton variante="danger" taille="sm" onClick={() => supprimer(anim.id)}
-                          style={{ ...actionStyle, color: jetons.danger }}>
-                    Supprimer
-                  </Bouton>
+                  {/* Les actions restent groupées : si la ligne manque de place,
+                      elles passent ensemble à la ligne, « ⋯ » jamais seul. */}
+                  <div style={{ display: 'flex', gap: espace.sm, flexWrap: etroit ? 'nowrap' : 'wrap' }}>
+                  {/* « Publier » reste en vue tant qu'il manque : c'est l'action qui
+                      fait exister l'animation pour les vacanciers. */}
+                  {(!etroit || !anim.publiee) && (
+                    <button type="button" onClick={() => togglePublie(anim)}
+                            style={anim.publiee ? bouton.secondaire : bouton.principal}>
+                      {anim.publiee ? 'Dépublier' : 'Publier'}
+                    </button>
+                  )}
+                  <button type="button" onClick={() => { setCopie(null); setEditAnim(anim); setShowForm(true) }}
+                          style={bouton.secondaire}>
+                    <Icone nom="crayon" taille={16} /> Modifier
+                  </button>
+                  {etroit ? (
+                    <button type="button" onClick={() => setMenuAnim(anim)}
+                            aria-label={`Autres actions : ${anim.titre}`} aria-haspopup="dialog"
+                            style={{ ...bouton.secondaire, width: 44, padding: 0 }}>
+                      <Icone nom="points" taille={22} epaisseur={2.6} />
+                    </button>
+                  ) : (
+                    <>
+                      <button type="button" onClick={() => dupliquer(anim)} style={bouton.secondaire}>
+                        <Icone nom="copier" taille={16} /> Dupliquer
+                      </button>
+                      <button type="button" onClick={() => supprimer(anim.id)} style={bouton.danger}>
+                        <Icone nom="corbeille" taille={16} /> Supprimer
+                      </button>
+                    </>
+                  )}
+                  </div>
                 </Pile>
               </Bloc>
             )
@@ -257,6 +278,36 @@ export default function Animations({ camping }) {
           </Pile>
           ))}
         </Pile>
+      )}
+
+      {/* Actions rares, au téléphone */}
+      {menuAnim && (
+        <Sheet onClose={() => setMenuAnim(null)}>
+          <Pile espace="md">
+            <Texte variante="sousTitre" as="h2" style={titreSection}>{menuAnim.titre}</Texte>
+            <Pile espace="sm">
+              {menuAnim.publiee && (
+                <button type="button" style={actionMenu}
+                        onClick={() => { const a = menuAnim; setMenuAnim(null); togglePublie(a) }}>
+                  <Icone nom="interdit" taille={20} /> Dépublier
+                  <span style={{ marginLeft: 'auto', fontSize: 13, fontWeight: 400, color: jetons.texteDoux }}>repasse en brouillon</span>
+                </button>
+              )}
+              <button type="button" style={actionMenu}
+                      onClick={() => { const a = menuAnim; setMenuAnim(null); dupliquer(a) }}>
+                <Icone nom="copier" taille={20} /> Dupliquer
+              </button>
+              {/* La confirmation reste celle de supprimer(). */}
+              <button type="button" style={{ ...actionMenu, color: jetons.danger }}
+                      onClick={() => { const a = menuAnim; setMenuAnim(null); supprimer(a.id) }}>
+                <Icone nom="corbeille" taille={20} /> Supprimer
+              </button>
+            </Pile>
+            <Bouton variante="secondaire" taille="lg" pleineLargeur onClick={() => setMenuAnim(null)}>
+              Annuler
+            </Bouton>
+          </Pile>
+        </Sheet>
       )}
 
       {/* Modal formulaire */}
@@ -332,9 +383,10 @@ export default function Animations({ camping }) {
   )
 }
 
-// Boutons d'action d'une animation : 44 px, la cible minimale au doigt.
-// Actions neutres : seule « Publier », l'action qui manque, prend l'encre.
-const actionStyle = {
-  borderRadius: rayon.md, minHeight: 44,
-  background: jetons.surface, color: jetons.texte, border: `1px solid ${jetons.bordure}`,
+// Une ligne du menu « ⋯ » : 52 px, toute la largeur, au pouce.
+const actionMenu = {
+  display: 'flex', alignItems: 'center', gap: espace.md, width: '100%', minHeight: 52,
+  padding: `0 ${espace.lg}px`, borderRadius: rayon.md, border: `1px solid ${jetons.bordure}`,
+  background: jetons.surface, color: jetons.texte, fontFamily: 'inherit', fontSize: 16, fontWeight: 600,
+  cursor: 'pointer', textAlign: 'left',
 }

@@ -47,14 +47,36 @@ export function dupliquerAnimation(anim) {
  * inscrits à un concert libre plus 10 sur 10 à l'aquagym donnaient 400 %.
  */
 export function tauxRemplissage(animations, inscriptions, maintenant = Date.now()) {
+  return remplissage(animations, inscriptions, maintenant).taux
+}
+
+/**
+ * Le détail du taux : places offertes et places prises. « 0 % » et une barre
+ * vide se lisaient comme une panne quand aucune animation n'avait de limite ;
+ * avec `places`, l'écran peut dire qu'il n'y a rien à mesurer.
+ */
+export function remplissage(animations, inscriptions, maintenant = Date.now()) {
   const comptees = (animations || []).filter(a =>
     a.places_max > 0 && a.debut && new Date(a.debut).getTime() >= maintenant)
   const places = comptees.reduce((s, a) => s + a.places_max, 0)
-  if (places === 0) return 0
+  if (places === 0) return { places: 0, occupees: 0, taux: 0 }
   const ids = new Set(comptees.map(a => a.id))
   // Une animation surbookée ne compense pas les places vides d'une autre.
   const parAnim = {}
   for (const i of inscriptions || []) if (ids.has(i.animation_id)) parAnim[i.animation_id] = (parAnim[i.animation_id] || 0) + 1
   const occupees = comptees.reduce((s, a) => s + Math.min(parAnim[a.id] || 0, a.places_max), 0)
-  return Math.min(100, Math.round((occupees / places) * 100))
+  return { places, occupees, taux: Math.min(100, Math.round((occupees / places) * 100)) }
+}
+
+/**
+ * Animations du jour local, dans l'ordre des horaires. Le filtre de la
+ * requête suffit en production ; on le refait ici pour ne jamais montrer
+ * « aujourd'hui » une animation d'un autre jour.
+ */
+export function animationsDuJour(animations, maintenant = new Date()) {
+  const debutJour = new Date(maintenant); debutJour.setHours(0, 0, 0, 0)
+  const finJour = new Date(debutJour); finJour.setDate(finJour.getDate() + 1)
+  return (animations || [])
+    .filter(a => a.debut && new Date(a.debut) >= debutJour && new Date(a.debut) < finJour)
+    .sort((a, b) => new Date(a.debut) - new Date(b.debut))
 }

@@ -70,3 +70,28 @@ export const variablesAdmin = {
   '--cc-texte': jetons.texte,
   '--cc-texte-doux': jetons.texteDoux,
 }
+
+/**
+ * Boutons et titres de section, communs aux neuf pages.
+ *
+ * Chaque page avait son bouton : 13 px et rayon 8 sur la Carte, 14 px et
+ * rayon 10 dans Paramètres, un troisième dans le QR code. Mêmes mesures que le
+ * `Bouton` « md » du design : un seul bouton, quelle que soit la page.
+ */
+const baseBouton = {
+  display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 8,
+  minHeight: 44, padding: '10px 18px', borderRadius: 12,
+  fontFamily: 'inherit', fontSize: 14, fontWeight: 600, lineHeight: 1.2,
+  textDecoration: 'none', whiteSpace: 'nowrap', cursor: 'pointer', boxSizing: 'border-box',
+}
+export const bouton = {
+  principal:  { ...baseBouton, background: jetons.marque, color: '#fff', border: `1px solid ${jetons.marque}` },
+  secondaire: { ...baseBouton, background: jetons.surface, color: jetons.texte, border: `1px solid ${jetons.bordure}` },
+  danger:     { ...baseBouton, background: jetons.dangerFond, color: jetons.danger, border: '1px solid #FECDCA' },
+  inactif:    { ...baseBouton, background: jetons.bordure, color: jetons.texteDoux, border: `1px solid ${jetons.bordure}`, cursor: 'not-allowed' },
+}
+
+/** Titre de section : une seule taille, une seule graisse, sur toutes les pages. */
+export const titreSection = {
+  fontSize: 17, fontWeight: 700, color: jetons.texte, letterSpacing: '-0.01em', lineHeight: 1.3, margin: 0,
+}

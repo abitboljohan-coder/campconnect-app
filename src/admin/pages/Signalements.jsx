@@ -3,7 +3,7 @@ import { supabase } from '../../supabase'
 import { toast } from '../../toast'
 import { lireVacanciersDuCamping } from '../../lib/vacanciers'
 import { Bloc, EnTete } from '../components/Bloc'
-import { Bouton, Texte, Pile, Squelette, Vide, espace, graisse, rayon } from '../../design'
+import { Bouton, Texte, Pile, Squelette, Vide, Icone, espace, graisse, rayon } from '../../design'
 import { jetons } from '../theme'
 
 const CAT_LABELS = {
@@ -184,7 +184,7 @@ export default function Signalements({ camping }) {
                     <span style={{ fontSize: 12, fontWeight: 700, padding: '3px 9px', borderRadius: 12, background: jetons.surfaceDouce, color: jetons.texteMoyen }}>
                       {c.emoji} {c.label}
                     </span>
-                    {item.lieu && <span style={{ fontSize: 12.5, color: jetons.texteDoux }}>📍 {item.lieu}</span>}
+                    {item.lieu && <span style={{ fontSize: 12.5, color: jetons.texteDoux, display: 'inline-flex', alignItems: 'center', gap: 4 }}><Icone nom="pin" taille={14} />{item.lieu}</span>}
                     <span style={{ fontSize: 12, color: jetons.texteDoux, marginLeft: 'auto' }}>
                       {new Date(item.created_at).toLocaleString('fr-FR', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}
                     </span>

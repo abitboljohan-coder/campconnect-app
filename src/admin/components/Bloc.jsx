@@ -1,5 +1,5 @@
-import { Carte, Texte, Pile, espace, graisse, rayon } from '../../design'
-import { jetons } from '../theme'
+import { Carte, Texte, Pile, Icone, espace, graisse, rayon } from '../../design'
+import { jetons, titreSection } from '../theme'
 
 // Trois pages d'administration définissaient chacune leur propre `Card` et son
 // propre `Alert`, avec trois rayons et deux gris. Ce sont les deux seules
@@ -11,7 +11,7 @@ export function Bloc({ titre, children, ...reste }) {
     <Carte hauteur="posee" padding="20px 22px" {...reste}
            style={{ borderRadius: 14, boxShadow: 'none', border: `1px solid ${jetons.bordure}`, ...reste.style }}>
       <Pile espace="lg">
-        {titre && <Texte variante="sousTitre" as="h2" style={{ fontSize: 16, color: jetons.texte }}>{titre}</Texte>}
+        {titre && <Texte variante="sousTitre" as="h2" style={titreSection}>{titre}</Texte>}
         {children}
       </Pile>
     </Carte>
@@ -37,9 +37,11 @@ export function Alerte({ type = 'succes', children }) {
         borderRadius: rayon.md,
         fontSize: 14, fontWeight: graisse.normal,
         border: `1px solid ${ok ? '#bbf7d0' : '#fecaca'}`,
+        display: 'flex', alignItems: 'flex-start', gap: espace.sm,
       }}
     >
-      {ok ? '✅ ' : '❌ '}{children}
+      <Icone nom={ok ? 'coche' : 'alerte'} taille={18} style={{ marginTop: 1 }} />
+      <span>{children}</span>
     </div>
   )
 }
