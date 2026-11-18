@@ -40,6 +40,7 @@ function saveLocal(id, config) { localStorage.setItem(localKey(id), JSON.stringi
 
 export default function MapEditor({ camping, setCamping }) {
   const mapDivRef   = useRef(null)
+  const cadreRef    = useRef(null)
   const lfRef       = useRef(null)
   const markersRef  = useRef({})
   const selectedRef = useRef(null)
@@ -55,6 +56,11 @@ export default function MapEditor({ camping, setCamping }) {
   const etroit = useEtroit()
 
   useEffect(() => { selectedRef.current = selected }, [selected])
+  // Au téléphone, la carte est sous la liste : sans ce défilement, toucher un
+  // lieu ne montrait rien et le gérant croyait que le bouton ne marchait pas.
+  useEffect(() => {
+    if (selected && etroit) cadreRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' })
+  }, [selected, etroit])
   useEffect(() => { pinsRef.current = pins }, [pins])
 
   useEffect(() => {
@@ -256,7 +262,7 @@ export default function MapEditor({ camping, setCamping }) {
       {/* isolation : les bandeaux posés sur la carte (z-index 1000) restent
           dans son cadre. Sans elle, ils passaient devant la barre de
           navigation et l'en-tête de la console dès qu'on faisait défiler. */}
-      <div style={{ position: 'relative', isolation: 'isolate', height: etroit ? 420 : 560, borderRadius: 14, overflow: 'hidden', border: selected ? '2px solid #639922' : '2px solid #e5e7eb', cursor: selected ? 'crosshair' : 'grab', boxShadow: '0 4px 20px rgba(0,0,0,0.1)' }}>
+      <div ref={cadreRef} style={{ position: 'relative', isolation: 'isolate', height: etroit ? 420 : 560, borderRadius: 14, overflow: 'hidden', border: selected ? '2px solid #639922' : '2px solid #e5e7eb', cursor: selected ? 'crosshair' : 'grab', boxShadow: '0 4px 20px rgba(0,0,0,0.1)' }}>
 
         {!etroit && panneau}
 
